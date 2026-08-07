@@ -63,6 +63,12 @@ body{background:#090d1a;color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFo
 .acc-body{display:none;border-top:1px solid #1f2d45}
 .acc-item.open .acc-body{display:block}
 
+/* ── Order filters ── */
+.ord-filters{display:flex;gap:6px;padding:12px 16px 0;flex-wrap:wrap}
+.ord-f{background:transparent;border:1px solid #1f3050;color:#94a3b8;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;cursor:pointer;transition:all .15s}
+.ord-f:hover{border-color:#60a5fa;color:#60a5fa}
+.ord-f.active{background:#1d3a5f;border-color:#60a5fa;color:#e2e8f0}
+
 /* ── Tables ── */
 .tscroll{overflow-x:auto;max-height:340px;overflow-y:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
@@ -196,7 +202,18 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 
   <div class="acc-item" id="acc-ord">
     <div class="acc-hd" onclick="tog('acc-ord')"><span id="ordHdr">Orderdetail (alle orders)</span><span class="acc-chv">›</span></div>
-    <div class="acc-body"><div class="tscroll"><table id="ordTable"></table></div></div>
+    <div class="acc-body">
+      <div class="ord-filters" id="ordFilters">
+        <button class="ord-f active" onclick="setOrdFilter('alle')">Alle</button>
+        <button class="ord-f" onclick="setOrdFilter('Prime')">Prime</button>
+        <button class="ord-f" onclick="setOrdFilter('Atlas')">Atlas</button>
+        <button class="ord-f" onclick="setOrdFilter('Titan')">Titan</button>
+        <button class="ord-f" onclick="setOrdFilter('Scherm')">Scherm</button>
+        <button class="ord-f" onclick="setOrdFilter('Standaard')">Standaard</button>
+        <button class="ord-f" onclick="setOrdFilter('Bundel')">Bundel</button>
+      </div>
+      <div class="tscroll" style="margin-top:10px"><table id="ordTable"></table></div>
+    </div>
   </div>
 
 </div>
@@ -241,6 +258,8 @@ const ROWS = [
 
 const TB_JUL = {from:"2026-07-20",to:"2026-07-31",spend:2017.29,rev7:4510.10,rev1v:746.20,purch:32,impr:202988,cl:2847};
 const TB_AUG = {from:"2026-08-01",to:"2026-08-07",spend:1315.61,rev7:2622.30,rev1v:298.00,purch:17,impr:186506,cl:2598};
+// Betrouwbare data: CAPI Gateway extra uit per 5 aug → geen dubbele aankopen meer
+const TB_AUG_CLEAN = {from:"2026-08-05",to:"2026-08-07",spend:878.97,rev7:1581.20,rev1v:298.00,purch:11,impr:134448,cl:1940};
 
 /* Kostprijscalculatie — marges per product (bron: KP-sheet v2, winst op werkelijke webshopprijs) */
 const KP = [
@@ -435,15 +454,25 @@ const PERIODS = {
   gisteren: {label:"Gisteren",          from:"2026-08-06",to:"2026-08-06",tb:null},
   week:     {label:"Deze week",         from:"2026-08-03",to:"2026-08-07",tb:null},
   prevweek: {label:"Vorige week",       from:"2026-07-28",to:"2026-08-03",tb:null},
-  aug:      {label:"Augustus",          from:"2026-08-01",to:"2026-08-07",tb:[TB_AUG]},
+  aug:      {label:"Augustus",          from:"2026-08-01",to:"2026-08-07",tb:[TB_AUG_CLEAN],capiNote:true},
   jul:      {label:"Juli",              from:"2026-07-16",to:"2026-07-31",tb:[TB_JUL]},
-  contract: {label:"Volledige periode", from:"2026-07-16",to:"2026-08-07",tb:[TB_JUL,TB_AUG]},
+  contract: {label:"Volledige periode", from:"2026-07-16",to:"2026-08-07",tb:[TB_JUL,TB_AUG_CLEAN]},
 };
 
 /* ═══ STATE ══════════════════════════════════════════════════════ */
 let P="aug", CX, CT, CB;
+let ordFilter="alle";
 
 function setPeriod(v){P=v;render()}
+
+function setOrdFilter(v){
+  ordFilter=v;
+  document.querySelectorAll(".ord-f").forEach(b=>{
+    b.classList.toggle("active", b.textContent.toLowerCase()===v||b.textContent==="Alle"&&v==="alle");
+  });
+  const pd=PERIODS[P]||PERIODS.aug;
+  renderOrders(pd.from,pd.to);
+}
 
 /* ═══ RENDER ═════════════════════════════════════════════════════ */
 function render(){
@@ -477,8 +506,12 @@ function render(){
   /* card meta */
   if(hasTB){
     const mn=maandNr(SNAP);
+    const tbFrom=tbs[0].from, tbTo=tbs[tbs.length-1].to;
+    const capiWarn=pd.capiNote
+      ? ` <span class="info-i" style="background:#78350f;border-color:#92400e;color:#fde68a" title="CAPI Gateway dubbeltelling gerepareerd per 5 aug · Meta ROAS op basis van ${fmtS(tbFrom)} t/m ${fmtS(tbTo)}">CAPI fix</span>`
+      : "";
     document.getElementById("cardMeta").innerHTML=
-      `Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · Maand ${mn} <span class="info-i" title="Maand ${mn} van het contract (start 16 jul 2026)">i</span>`;
+      `Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · Maand ${mn}${capiWarn} <span class="info-i" title="Maand ${mn} van het contract (start 16 jul 2026)">i</span>`;
   } else {
     document.getElementById("cardMeta").innerHTML=
       `Shopify · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · ${fxRws.length} dag${fxRws.length!==1?"en":""}`;
@@ -523,7 +556,8 @@ function render(){
       return a+Math.floor((to-f)/86400000)+1;
     },0);
     const dek=tbDays>=fxRws.length?"volledig":`${tbDays} van ${fxRws.length} dagen`;
-    document.getElementById("metaInfo").textContent=`Adspend ${eur(CT.spend)} · Datadekking TrackBee: ${dek}`;
+    const roasRange=pd.capiNote?` · ROAS ${fmtS(tbs[0].from)}–${fmtS(tbs[0].to)}`:"";
+    document.getElementById("metaInfo").textContent=`Adspend ${eur(CT.spend)} · Datadekking TrackBee: ${dek}${roasRange}`;
   } else {
     document.getElementById("metaInfo").textContent=`Revenue excl. BTW ${eur(CX.rex)} · TrackBee adspend: niet beschikbaar`;
   }
@@ -562,7 +596,7 @@ function render(){
 
   /* tables */
   renderOrders(fxFrom,fxTo);
-  renderBeroas(CT,CX.be,CX);
+  renderBeroas(CT,CX.be,CX,fxFrom,fxTo);
   renderKern(CX,CT);
 
   /* sim — alleen updaten bij TB periodes */
@@ -612,9 +646,15 @@ function renderGauge(be,schaal,comfy,roas){
 }
 
 /* ═══ TABLES ═════════════════════════════════════════════════════ */
+function matchesOrdFilter(o){
+  if(ordFilter==="alle") return true;
+  if(ordFilter==="Bundel") return o.items.length>1;
+  return o.items.some(it=>it.includes(ordFilter));
+}
+
 function renderOrders(from,to){
   const sorted=[...ORDERS]
-    .filter(o=>(!from||o.d>=from)&&(!to||o.d<=to))
+    .filter(o=>(!from||o.d>=from)&&(!to||o.d<=to)&&matchesOrdFilter(o))
     .sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
   let html="", totEx=0, totCost=0, totWi=0, totExKnown=0, totInclKnown=0;
   for(const o of sorted){
@@ -652,39 +692,50 @@ function renderOrders(from,to){
 </tr></tbody>`;
 }
 
-function renderBeroas(ct, be, fx){
-  const avgIncl = ct&&ct.purch>0 ? ct.ri/ct.purch : (fx&&fx.oc>0?fx.rev/fx.oc:KP[0].incl);
-  // Bepaal gewogen productmix
-  let rows=[], wExcl=0, wWinst=0;
-  for(let i=0;i<KP.length;i++){
-    const lo=KP[i], hi=KP[Math.min(i+1,KP.length-1)];
-    if(avgIncl<=hi.incl || i===KP.length-2){
-      const x = i===KP.length-1 ? 1 :
-                Math.max(0,Math.min(1,(hi.incl-avgIncl)/(hi.incl-lo.incl)));
-      wExcl  = x*lo.excl  + (1-x)*hi.excl;
-      wWinst = x*lo.winst + (1-x)*hi.winst;
-      rows=[
-        {p:lo, w:Math.round(x*100)},
-        {p:hi, w:Math.round((1-x)*100)},
-      ].filter(r=>r.w>0);
-      break;
-    }
+function renderBeroas(ct, be, fx, from, to){
+  // Werkelijke productmix op basis van Shopify ORDERS (zelfde filter als hoofdkaart)
+  const grps={};
+  let totIncl=0,totWinst=0,totCnt=0;
+  for(const o of ORDERS){
+    if(o.test||(from&&o.d<from)||(to&&o.d>to)) continue;
+    const p=calcOrder(o);
+    if(p.winst===null) continue;
+    const key=p.name;
+    if(!grps[key]) grps[key]={label:key,count:0,inclTotal:0,winstTotal:0,exclTotal:0};
+    grps[key].count++;
+    grps[key].inclTotal+=o.incl;
+    grps[key].winstTotal+=p.winst;
+    grps[key].exclTotal+=p.excl;
+    totIncl+=o.incl; totWinst+=p.winst; totCnt++;
   }
+  const avgIncl=totCnt>0?totIncl/totCnt:KP[0].incl;
+  const avgExcl=avgIncl/BTW;
+  const wMarg=totIncl>0?(totWinst/(totIncl/BTW)*100).toFixed(1):"—";
+  const sorted=Object.values(grps).sort((a,b)=>b.inclTotal-a.inclTotal);
 
-  const avgExcl = avgIncl / BTW;
-  const srcLabel=ct?"TB":"Shopify";
   document.getElementById("beSummary").innerHTML=`
-<div class="be-stat"><div class="be-lbl">Gem. orderwaarde (${srcLabel})</div><div class="be-val">${eur(avgIncl)} incl.</div><div style="font-size:11px;color:#64748b;margin-top:2px">${eur(avgExcl)} excl. BTW</div></div>
-<div class="be-stat"><div class="be-lbl">Gewogen marge</div><div class="be-val">${(wWinst/wExcl*100).toFixed(1)}%</div></div>
+<div class="be-stat"><div class="be-lbl">Gem. orderwaarde (Shopify)</div><div class="be-val">${eur(avgIncl)} incl.</div><div style="font-size:11px;color:#64748b;margin-top:2px">${eur(avgExcl)} excl. BTW · ${totCnt} orders</div></div>
+<div class="be-stat"><div class="be-lbl">Gewogen marge</div><div class="be-val">${wMarg}%</div></div>
 <div class="be-stat"><div class="be-lbl">BEROAS (incl. BTW)</div><div class="be-val">${x2(be)}</div></div>`;
 
   document.getElementById("beTable").innerHTML=`
-<thead><tr><th>Product</th><th class="r">Prijs incl.</th><th class="r">Winst vóór ads</th><th class="r">Marge</th><th class="r">BEROAS</th><th class="r">Gewicht</th></tr></thead>
+<thead><tr><th>Product(mix)</th><th class="r">Orders</th><th class="r">Volume%</th><th class="r">Gem. incl. BTW</th><th class="r">Gem. winst</th><th class="r">BEROAS</th></tr></thead>
 <tbody>
-${rows.map(({p,w})=>`
-<tr><td>${p.name}</td><td class="r">${eur(p.incl)}</td><td class="r">${eur(p.winst)}</td><td class="r">${(p.winst/p.excl*100).toFixed(1)}%</td><td class="r">${x2(p.incl/p.winst)}</td><td class="r">${w}%</td></tr>`).join("")}
-<tr class="tot"><td>Gewogen gemiddelde</td><td class="r">${eur(avgIncl)}</td><td class="r">${eur(wWinst)}</td><td class="r">${(wWinst/wExcl*100).toFixed(1)}%</td><td class="r">${x2(be)}</td><td class="r">100%</td></tr>
-</tbody>`;
+${sorted.map(g=>`<tr>
+  <td>${g.label}</td>
+  <td class="r">${g.count}</td>
+  <td class="r">${totCnt>0?(g.count/totCnt*100).toFixed(0):0}%</td>
+  <td class="r">${eur(g.inclTotal/g.count)}</td>
+  <td class="r">${eur(g.winstTotal/g.count)}</td>
+  <td class="r">${g.winstTotal>0?x2(g.inclTotal/g.winstTotal):"—"}</td>
+</tr>`).join("")}
+<tr class="tot">
+  <td>Gewogen totaal · ${totCnt} orders</td>
+  <td class="r">${totCnt}</td><td class="r">100%</td>
+  <td class="r">${eur(avgIncl)}</td>
+  <td class="r">${totCnt>0?eur(totWinst/totCnt):"—"}</td>
+  <td class="r">${x2(be)}</td>
+</tr></tbody>`;
 }
 
 function renderKern(fx,tb){
