@@ -469,9 +469,9 @@ function render(){
   document.getElementById("mScaleSub").textContent=`+${(SCALE_T*100).toFixed(0)}% boven break-even`;
   if(prevRoas!==null){
     const rd=(CT.roas-prevRoas)/prevRoas*100;
-    document.getElementById("mRoasSub").textContent="incl. BTW ·"+(rd>=0?"+":"")+rd.toFixed(1)+"% t.o.v. juli";
+    document.getElementById("mRoasSub").textContent="incl. BTW · "+(rd>=0?"+":"")+rd.toFixed(1)+"% t.o.v. juli";
   } else {
-    document.getElementById("mRoasSub").textContent="incl. BTW ·Meta attributed";
+    document.getElementById("mRoasSub").textContent="incl. BTW · Meta attributed";
   }
 
   /* gauge */
