@@ -96,6 +96,71 @@ with open("$INDEX", "w") as f:
 print(f"✓ Constanten bijgewerkt voor {snap}")
 PYTHON
 
+# ── Stap 2: Shopify orders ophalen ──────────────────────────────────────────
+echo "Shopify orders ophalen..."
+
+ORDERS_PROMPT="Fetch all Shopify orders created since $AUG_S using the Shopify GraphQL API.
+Use this query:
+{ orders(first:50, query:\"created_at:>=$AUG_S\", sortKey:CREATED_AT, reverse:false) { edges { node { name createdAt totalPriceSet { shopMoney { amount } } discountCodes lineItems(first:5) { edges { node { title quantity } } } } } } }
+
+Output ONLY this JSON between the markers (fill in real data, no markdown):
+
+---ORDERS_START---
+[{\"num\":\"#1066\",\"d\":\"2026-08-01\",\"items\":[\"LumeWorks Prime\"],\"code\":\"\",\"incl\":149}]
+---ORDERS_END---
+
+Rules:
+- d = date in YYYY-MM-DD format (createdAt date only, no time)
+- items = array of lineItem titles (quantity>1: repeat the title)
+- code = first discountCode or empty string
+- incl = totalPrice as number
+- test = true only if discountCode is pim100, Koen100, JOB100, or price < 10"
+
+ORDERS_OUT=$(~/.npm-global/bin/claude --dangerously-skip-permissions -p "$ORDERS_PROMPT" 2>/dev/null || true)
+ORDERS_JSON=$(echo "$ORDERS_OUT" | awk '/---ORDERS_START---/{f=1;next}/---ORDERS_END---/{f=0}f' | tr -d '\n')
+
+if [ -z "$ORDERS_JSON" ]; then
+  echo "⚠️  Geen Shopify orders JSON — skip orders update"
+else
+  python3 << PYORDERS
+import json, re, sys
+
+raw = r"""$ORDERS_JSON"""
+try:
+    orders = json.loads(raw)
+except Exception as e:
+    print(f"⚠️  Orders JSON parse fout: {e}")
+    sys.exit(0)
+
+with open("$INDEX") as f:
+    html = f.read()
+
+TEST_CODES = {"pim100","koen100","job100"}
+
+lines = []
+for o in orders:
+    d    = o.get("d","")
+    num  = o.get("num","")
+    items= o.get("items",[])
+    code = o.get("code","")
+    incl = o.get("incl",0)
+    test = o.get("test", code.lower() in TEST_CODES or incl < 10)
+    items_js = json.dumps(items)
+    test_part = ",test:true" if test else ""
+    lines.append(f'  {{d:"{d}",num:"{num}",items:{items_js},code:"{code}",incl:{incl}{test_part}}}')
+
+block = "const ORDERS_SHOPIFY = [\n" + ",\n".join(lines) + "\n];"
+new_html = re.sub(r'const ORDERS_SHOPIFY\s*=\s*\[[^\]]*\];', block, html, flags=re.DOTALL)
+
+if new_html == html:
+    print("⚠️  ORDERS_SHOPIFY patroon niet gevonden")
+else:
+    with open("$INDEX","w") as f:
+        f.write(new_html)
+    print(f"✓ {len(orders)} Shopify orders bijgewerkt")
+PYORDERS
+fi
+
 # Commit en push als er wijzigingen zijn
 cd "$REPO_DIR"
 if ! git diff --quiet index.html; then
