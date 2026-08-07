@@ -109,13 +109,46 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .footer{text-align:center;font-size:11px;color:#374151;padding:16px 0 4px}
 .day-sum td{color:#f1f5f9}
 
+/* ── ROAS hero ── */
+.roas-hero{margin-bottom:18px}
+.roas-hero-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;color:#64748b;text-transform:uppercase;margin-bottom:6px}
+.roas-hero-val{font-size:52px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.roas-delta{margin-top:10px}
+.rdelta{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;padding:5px 11px;border-radius:6px}
+.rdelta.neg{background:rgba(248,113,113,.12);color:#f87171}
+.rdelta.mid{background:rgba(245,158,11,.12);color:#f59e0b}
+.rdelta.pos{background:rgba(74,222,128,.12);color:#4ade80}
+
+/* ── AI status box ── */
+.ai-box{border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.ai-box.red{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.22)}
+.ai-box.amber{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.22)}
+.ai-box.green{background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.22)}
+.ai-box-head{font-size:14px;font-weight:700;margin-bottom:5px}
+.ai-box-body{font-size:13px;color:#94a3b8;line-height:1.55}
+
+/* ── Trend row ── */
+.trend-row-inner{display:grid;border:1px solid #1f3050;border-radius:10px;overflow:hidden;margin-top:2px;margin-bottom:18px}
+.trend-item{padding:12px 16px;border-right:1px solid #1f3050}
+.trend-item:last-child{border-right:none}
+.trend-lbl{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#64748b;margin-bottom:4px}
+.trend-val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;margin-bottom:3px;line-height:1.1}
+.trend-chg{font-size:11px;font-weight:600}
+
+/* ── Analysis block ── */
+.analysis-block{margin-top:14px;padding:14px 16px;background:#0a1525;border-radius:8px;border:1px solid #1f2d45}
+.analysis-hdr{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#475569;margin-bottom:10px}
+.analysis-row{font-size:13px;color:#cbd5e1;line-height:1.55;margin-bottom:8px}
+.analysis-row:last-child{margin-bottom:0}
+
 @media(max-width:540px){
-  .bonus-amt{font-size:38px}
+  .roas-hero-val{font-size:38px}
   .mrow{grid-template-columns:1fr}
   .mc{border-right:none;border-bottom:1px solid #1f3050}
   .mc:last-child{border-bottom:none}
   .sim-cards{grid-template-columns:1fr 1fr}
   .be-sum{grid-template-columns:1fr 1fr}
+  .trend-row-inner{grid-template-columns:1fr 1fr!important}
 }
 </style>
 </head>
@@ -145,19 +178,28 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 <!-- Main card -->
 <div class="card">
   <div class="card-meta" id="cardMeta"></div>
-  <div class="bonus-lbl" id="bonusLbl">BONUS TOT NU TOE</div>
-  <div class="bonus-amt" id="bonusAmt"></div>
-  <div id="bonusBadge"></div>
-  <div class="status" id="statusLine"></div>
-  <div class="meta-info" id="metaInfo"></div>
 
-  <div class="mrow">
-    <div class="mc"><div class="mc-lbl" id="mRoasLbl">META ROAS</div><div class="mc-val" id="mRoas"></div><div class="mc-sub" id="mRoasSub"></div></div>
-    <div class="mc"><div class="mc-lbl">BREAK-EVEN</div><div class="mc-val" id="mBe"></div><div class="mc-sub" id="mBeSub">incl. BTW</div></div>
-    <div class="mc"><div class="mc-lbl" id="mScaleLbl">SCHAALDREMPEL</div><div class="mc-val" id="mScale"></div><div class="mc-sub" id="mScaleSub"></div></div>
+  <div class="roas-hero">
+    <div class="roas-hero-lbl" id="roasHeroLbl">META ROAS</div>
+    <div class="roas-hero-val" id="roasHeroVal">—</div>
+    <div class="roas-delta" id="roasDelta"></div>
   </div>
 
+  <div id="aiStatusBox"></div>
+
   <div class="gauge-outer" id="gaugeOuter"></div>
+
+  <div id="trendRow"></div>
+
+  <div class="mrow">
+    <div class="mc"><div class="mc-lbl">BREAK-EVEN</div><div class="mc-val" id="mBe"></div><div class="mc-sub" id="mBeSub">incl. BTW</div></div>
+    <div class="mc"><div class="mc-lbl" id="mScaleLbl">DOEL ROAS</div><div class="mc-val" id="mScale"></div><div class="mc-sub" id="mScaleSub"></div></div>
+    <div class="mc"><div class="mc-lbl" id="bonusLbl">BONUS</div><div class="mc-val" id="bonusAmt"></div><div id="bonusBadge" style="font-size:11px;margin-top:3px"></div></div>
+  </div>
+
+  <div class="meta-info" id="metaInfo" style="margin-top:10px"></div>
+  <div id="statusLine" style="display:none"></div>
+  <div id="aiAnalysis"></div>
 </div>
 
 <!-- Accordion -->
@@ -522,6 +564,96 @@ function setOrdFilter(v){
   renderOrders(pd.from,pd.to);
 }
 
+/* ═══ AI STATUS ══════════════════════════════════════════════════ */
+function renderAiStatus(ct, be, schaal, comfy){
+  const el=document.getElementById("aiStatusBox");
+  if(!ct){el.innerHTML="";return;}
+  const roas=ct.roas;
+  const delta=roas-be;
+  const needForBe=Math.max(0,-delta);
+  const needForSchaal=Math.max(0,schaal-roas);
+  const bePct=(Math.abs(delta)/be*100).toFixed(1);
+  let cls,emoji,head,body;
+  if(roas>=comfy){
+    cls="green";emoji="🟢";
+    head=`Comfortabel boven doel ROAS · ${(SCALE_H*100).toFixed(0)}% nettomarge`;
+    body=`Account draait sterk. Verdere schaalverhogingen zijn mogelijk met beperkt risico.`;
+  } else if(roas>=schaal){
+    cls="green";emoji="🟢";
+    head=`Op doel ROAS · ${(SCALE_T*100).toFixed(0)}% nettomarge op omzet`;
+    body=`Account draait winstgevend op doelrendement. Nog ${needForSchaal===0?"":x2(comfy-roas).replace("×","")} ROAS nodig voor comfortabele ${(SCALE_H*100).toFixed(0)}% marge.`;
+  } else if(roas>=be){
+    cls="amber";emoji="🟡";
+    const needRev=(needForSchaal*ct.spend).toFixed(0);
+    head=`Boven break-even · nog ${x2(needForSchaal).replace("×","")} ROAS nodig voor ${(SCALE_T*100).toFixed(0)}% nettomarge`;
+    body=`Account is winstgevend maar nog niet op doel. Nog ≈€${needRev} extra omzet nodig bij het huidige adspend.`;
+  } else {
+    cls="red";emoji="🔴";
+    const needRev=(needForBe*ct.spend).toFixed(0);
+    head=`Onder break-even · ${bePct}% verbetering nodig`;
+    body=`Account is nog niet winstgevend. Nog ${x2(needForBe).replace("×","")} ROAS (≈€${needRev} extra omzet bij ${eur(ct.spend)} adspend) nodig voor break-even.`;
+  }
+  const col=cls==="red"?"#f87171":cls==="amber"?"#fbbf24":"#4ade80";
+  el.innerHTML=`<div class="ai-box ${cls}">
+    <div class="ai-box-head" style="color:${col}">${emoji} ${head}</div>
+    <div class="ai-box-body">${body}</div>
+  </div>`;
+}
+
+/* ═══ TRENDS ═════════════════════════════════════════════════════ */
+function renderTrends(ct, prevCt, prevLabel, ctDays, prevDays){
+  const el=document.getElementById("trendRow");
+  if(!prevCt){el.innerHTML="";return;}
+  const ratio=prevDays>0&&ctDays>0?Math.max(prevDays,ctDays)/Math.min(prevDays,ctDays):1;
+  const showAll=ratio<=3;
+  const norm=showAll&&Math.abs(prevDays-ctDays)>1;
+  const dayNote=norm?" / dag":"";
+  const td=(cur,prev)=>{if(!prev)return null;const d=(cur-prev)/prev*100;return{pct:Math.abs(d).toFixed(1),up:d>=0};};
+  const tRoas=td(ct.roas,prevCt.roas);
+  const curS=norm?ct.spend/ctDays:ct.spend, prevS=norm?prevCt.spend/prevDays:prevCt.spend;
+  const tSpend=showAll?td(curS,prevS):null;
+  const curP=norm?ct.purch/ctDays:ct.purch, prevP=norm?prevCt.purch/prevDays:prevCt.purch;
+  const tPurch=showAll?td(curP,prevP):null;
+  const cell=(lbl,val,t)=>{
+    const col=t?t.up?"#4ade80":"#f87171":"#64748b";
+    return `<div class="trend-item"><div class="trend-lbl">${lbl}</div><div class="trend-val">${val}</div>${t?`<div class="trend-chg" style="color:${col}">${t.up?"▲":"▼"} ${t.pct}% vs. ${prevLabel}</div>`:""}</div>`;
+  };
+  const cols=[cell("ROAS",x2(ct.roas),tRoas)];
+  if(showAll){
+    cols.push(cell(`Spend${dayNote}`,eur(norm?curS:ct.spend),tSpend));
+    cols.push(cell(`Aankopen${dayNote}`,norm?curP.toFixed(1):ct.purch,tPurch));
+  }
+  el.innerHTML=`<div class="trend-row-inner" style="grid-template-columns:repeat(${cols.length},1fr)">${cols.join("")}</div>`;
+}
+
+/* ═══ AI ANALYSE ═════════════════════════════════════════════════ */
+function renderAnalysis(adsRaw, beroas, ct){
+  const el=document.getElementById("aiAnalysis");
+  if(!adsRaw||!adsRaw.length||!ct){el.innerHTML="";return;}
+  const map={};
+  for(const a of adsRaw){
+    if(!map[a.n])map[a.n]={n:a.n,spend:0,rev7:0,rev1v:0,purch:0};
+    const m=map[a.n];m.spend+=a.spend;m.rev7+=a.rev7;m.rev1v+=a.rev1v;m.purch+=a.purch;
+  }
+  const rows=Object.values(map);
+  const noConv=rows.filter(r=>r.rev7+r.rev1v===0&&r.spend>20);
+  const wastedSpend=noConv.reduce((s,r)=>s+r.spend,0);
+  const totSpend=rows.reduce((s,r)=>s+r.spend,0);
+  const wastedPct=totSpend>0?(wastedSpend/totSpend*100).toFixed(0):0;
+  const roasRows=rows.filter(r=>r.spend>50).map(r=>({...r,roas:r.spend>0?(r.rev7+r.rev1v)/r.spend:0}));
+  const topAdsets=roasRows.filter(r=>r.roas>=beroas).sort((a,b)=>b.roas-a.roas).slice(0,3);
+  const badAdsets=noConv.filter(r=>r.spend>80).sort((a,b)=>b.spend-a.spend).slice(0,3);
+  let causeHtml="",adviceHtml="";
+  if(noConv.length>0){
+    const bad=badAdsets.length>0?` Grootste: ${badAdsets.map(a=>`${a.n} (${eur(a.spend)})`).join(", ")}.`:"";
+    causeHtml=`<div class="analysis-row">📊 <strong>Oorzaak</strong> · <strong>${noConv.length} van ${rows.length}</strong> groepen genereerden €0 omzet (${eur(wastedSpend)} · ${wastedPct}% van het budget).${bad}</div>`;
+  }
+  if(topAdsets.length>0){
+    adviceHtml=`<div class="analysis-row">💡 <strong>Aanbeveling</strong> · ${topAdsets.map(a=>`<strong>${a.n}</strong> (${x2(a.roas)})`).join(", ")} ${topAdsets.length===1?"draait":"draaien"} boven BEROAS. Extra budget hier verhoogt de totale ROAS direct.</div>`;
+  }
+  el.innerHTML=`<div class="analysis-block"><div class="analysis-hdr">Analyse · Advertentiegroepen</div>${causeHtml}${adviceHtml}</div>`;
+}
+
 /* ═══ RENDER ═════════════════════════════════════════════════════ */
 function render(){
   const pd=PERIODS[P]||PERIODS.aug;
@@ -529,7 +661,6 @@ function render(){
   const hasTB=tbs!==null;
 
   CX=ordCalc(fxFrom,fxTo);
-
   if(hasTB){
     CT=tbCalc(tbs);
     CX.be=shopifyBeroas(fxFrom,fxTo);
@@ -538,17 +669,20 @@ function render(){
     CT=null; CB=null;
     CX.be=shopifyBeroas(fxFrom,fxTo);
   }
-  // Schaaldrempel = ROAS waarbij nettomarge op omzet = SCALE_T (1/BEROAS - margin = 1/ROAS)
   const schaal=1/(1/CX.be-SCALE_T), comfy=1/(1/CX.be-SCALE_H);
 
-  // Vergelijking aug → jul
-  let prevBon=null,prevRoas=null;
-  if(P==="aug"){
+  // Prev period voor trends + bonus vergelijking
+  const tbDC=t=>Math.floor((new Date(t.to)-new Date(t.from))/86400000)+1;
+  let prevCT=null, prevLabel=null, prevDays=0, ctDays=0, prevBon=null;
+  if(P==="vandaag"){
+    prevCT=tbCalc([TB_GISTEREN]); prevLabel="gisteren"; ctDays=tbDC(TB_VANDAAG); prevDays=tbDC(TB_GISTEREN);
+  } else if(P==="week"){
+    prevCT=tbCalc([TB_PREVWEEK]); prevLabel="vorige week"; ctDays=tbDC(TB_WEEK); prevDays=tbDC(TB_PREVWEEK);
+  } else if(P==="aug"){
+    prevCT=tbCalc([TB_JUL]); prevLabel="juli"; ctDays=tbDC(TB_AUG_CLEAN); prevDays=tbDC(TB_JUL);
     const px=ordCalc("2026-07-16","2026-07-31");
-    const pt=tbCalc([TB_JUL]);
     px.be=shopifyBeroas("2026-07-16","2026-07-31");
-    prevBon=bonCalc(px,pt).raw;
-    prevRoas=pt.roas;
+    prevBon=bonCalc(px,prevCT).raw;
   }
 
   /* card meta */
@@ -556,55 +690,76 @@ function render(){
     const mn=maandNr(SNAP);
     const tbFrom=tbs[0].from, tbTo=tbs[tbs.length-1].to;
     const capiWarn=pd.capiNote
-      ? ` <span class="capi-badge" data-tip="CAPI Gateway dubbeltelling gerepareerd per 5 aug · Meta ROAS op basis van ${fmtS(tbFrom)} t/m ${fmtS(tbTo)}">CAPI fix</span>`
+      ? ` <span class="capi-badge" data-tip="CAPI Gateway dubbeltelling gerepareerd per 5 aug · Meta ROAS op basis van ${fmtS(tbFrom)} t/m ${fmtS(tbTo)}">CAPI optimalisatie</span>`
       : "";
     document.getElementById("cardMeta").innerHTML=
       `Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · Maand ${mn}${capiWarn} <span class="info-i" data-tip="Maand ${mn} van het contract · start 16 jul 2026 · BEROAS op basis van werkelijke Shopify orders">i</span>`;
   } else {
     const nDays=Math.floor((new Date(fxTo)-new Date(fxFrom))/86400000)+1;
-    document.getElementById("cardMeta").innerHTML=
-      `Shopify · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · ${nDays} dag${nDays!==1?"en":""}`;
+    document.getElementById("cardMeta").innerHTML=`Shopify · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · ${nDays} dag${nDays!==1?"en":""}`;
   }
 
-  /* bonus / omzet */
+  /* ROAS hero (hoofdprestatie) */
+  if(hasTB){
+    document.getElementById("roasHeroLbl").textContent="META ROAS";
+    document.getElementById("roasHeroVal").textContent=x2(CT.roas);
+    const delta=CT.roas-CX.be;
+    const dAbs=Math.abs(delta).toFixed(2);
+    const dPct=(Math.abs(delta)/CX.be*100).toFixed(1);
+    const below=delta<0, above=CT.roas>=schaal;
+    const cls=below?"neg":above?"pos":"mid";
+    const txt=below
+      ?`−${dAbs} · ${dPct}% onder break-even`
+      :above
+        ?`+${dAbs} · boven doel ROAS`
+        :`+${dAbs} · ${dPct}% boven break-even`;
+    document.getElementById("roasDelta").innerHTML=`<span class="rdelta ${cls}">${txt}</span>`;
+  } else {
+    document.getElementById("roasHeroLbl").textContent="OMZET EXCL. BTW";
+    document.getElementById("roasHeroVal").textContent=eur(CX.rex);
+    document.getElementById("roasDelta").innerHTML="";
+  }
+
+  /* AI status box */
+  if(hasTB) renderAiStatus(CT, CX.be, schaal, comfy);
+  else document.getElementById("aiStatusBox").innerHTML="";
+
+  /* bonus (nu mc-val) */
   const bonusLabels={vandaag:"BONUS VANDAAG",gisteren:"BONUS GISTEREN",week:"BONUS DEZE WEEK",prevweek:"BONUS VORIGE WEEK",aug:"BONUS TOT NU TOE",jul:"BONUS JULI",contract:"BONUS TOTAAL"};
   document.getElementById("bonusLbl").textContent=bonusLabels[P]||"BONUS";
-  document.getElementById("bonusAmt").textContent=eur(CB.raw);
+  document.getElementById("bonusAmt").textContent=hasTB?eur(CB.raw):"—";
 
-  /* badge */
+  /* bonus badge (nu mc-sub) */
   const shortLabel={vandaag:"Vandaag",gisteren:"Gisteren",week:"Deze week",prevweek:"Vorige week"};
-  let badgeHtml;
+  let bHtml;
   if(shortLabel[P]){
-    badgeHtml=`<span class="badge ne">${shortLabel[P]} · ${CX.oc} orders</span>`;
+    bHtml=`<span style="color:#64748b">${CX.oc} orders</span>`;
   } else if(prevBon!==null){
     const d=CB.raw-prevBon, up=d>=0;
-    badgeHtml=`<span class="badge ${up?"up":"dn"}">${up?"▲":"▼"} ${eur(Math.abs(d))} t.o.v. juli</span>`;
+    bHtml=`<span style="color:${up?"#4ade80":"#f87171"}">${up?"▲":"▼"} ${eur(Math.abs(d))} vs. juli</span>`;
   } else if(P==="jul"){
-    badgeHtml=`<span class="badge ne">Juli · campagnestart</span>`;
+    bHtml=`<span style="color:#64748b">campagnestart</span>`;
   } else {
-    badgeHtml=`<span class="badge ne">Gehele contractperiode</span>`;
+    bHtml=`<span style="color:#64748b">gehele periode</span>`;
   }
-  document.getElementById("bonusBadge").innerHTML=badgeHtml;
+  document.getElementById("bonusBadge").innerHTML=bHtml;
 
-  /* status */
+  /* metrics: BE | Doel ROAS */
+  document.getElementById("mScaleLbl").textContent=hasTB?"DOEL ROAS":"WINST VOOR ADS";
   if(hasTB){
-    const [dotC,txt]=CT.roas>=comfy?["g","Comfortabel boven de schaaldrempel"]
-      :CT.roas>=schaal?["g","Boven de schaaldrempel"]
-      :CT.roas>=CX.be?["a","Boven break-even, nog niet op schaaldrempel"]
-      :["r","Onder break-even"];
-    document.getElementById("statusLine").innerHTML=`<span class="dot ${dotC}"></span>${txt}`;
+    document.getElementById("mScale").textContent=x2(schaal);
+    document.getElementById("mScaleSub").textContent=`${(SCALE_T*100).toFixed(0)}% nettomarge op omzet`;
+    document.getElementById("mBeSub").textContent="incl. BTW";
   } else {
-    const mgPct=(CX.rex>0?CX.pro/CX.rex*100:0).toFixed(1);
-    document.getElementById("statusLine").innerHTML=
-      `<span class="dot a"></span>Marge ${mgPct}% · winst voor ads ${eur(CX.pro)}`;
+    document.getElementById("mScale").textContent=eur(CX.pro);
+    document.getElementById("mScaleSub").textContent=`${(CX.rex>0?CX.pro/CX.rex*100:0).toFixed(1)}% marge`;
+    document.getElementById("mBeSub").textContent="incl. BTW · geschat";
   }
+  document.getElementById("mBe").textContent=x2(CX.be);
 
   /* meta info */
   if(hasTB){
-    const tbDays=tbs.reduce((a,t)=>{
-      const f=new Date(t.from),to=new Date(t.to);
-      return a+Math.floor((to-f)/86400000)+1;
-    },0);
+    const tbDays=tbs.reduce((a,t)=>a+Math.floor((new Date(t.to)-new Date(t.from))/86400000)+1,0);
     const periodDays=Math.floor((new Date(fxTo)-new Date(fxFrom))/86400000)+1;
     const dek=tbDays>=periodDays?"volledig":`${tbDays} van ${periodDays} dagen`;
     const roasRange=pd.capiNote?` · ROAS ${fmtS(tbs[0].from)}–${fmtS(tbs[0].to)}`:"";
@@ -613,45 +768,23 @@ function render(){
     document.getElementById("metaInfo").textContent=`Revenue excl. BTW ${eur(CX.rex)} · TrackBee adspend: niet beschikbaar`;
   }
 
-  /* metrics */
-  document.getElementById("mRoasLbl").textContent=hasTB?"META ROAS":"OMZET EXCL. BTW";
-  document.getElementById("mScaleLbl").textContent=hasTB?"SCHAALDREMPEL":"WINST VOOR ADS";
-  if(hasTB){
-    document.getElementById("mRoas").textContent=x2(CT.roas);
-    document.getElementById("mScale").textContent=x2(schaal);
-    document.getElementById("mScaleSub").textContent=`${(SCALE_T*100).toFixed(0)}% nettomarge op omzet`;
-    document.getElementById("mBeSub").textContent="incl. BTW";
-    if(prevRoas!==null){
-      const rd=(CT.roas-prevRoas)/prevRoas*100;
-      document.getElementById("mRoasSub").textContent="incl. BTW · "+(rd>=0?"+":"")+rd.toFixed(1)+"% t.o.v. jul";
-    } else {
-      document.getElementById("mRoasSub").textContent="incl. BTW";
-    }
-  } else {
-    document.getElementById("mRoas").textContent=eur(CX.rex);
-    document.getElementById("mRoasSub").textContent=`${CX.oc} orders`;
-    document.getElementById("mScale").textContent=eur(CX.pro);
-    document.getElementById("mScaleSub").textContent=`${(CX.rex>0?CX.pro/CX.rex*100:0).toFixed(1)}% marge`;
-    document.getElementById("mBeSub").textContent="incl. BTW · geschat";
-  }
-  document.getElementById("mBe").textContent=x2(CX.be);
-
-  /* gauge: alleen bij TB-periodes */
+  /* gauge */
   const go=document.getElementById("gaugeOuter");
-  if(hasTB){
-    go.style.display="";
-    renderGauge(CX.be,schaal,comfy,CT.roas);
-  } else {
-    go.style.display="none";
-  }
+  if(hasTB){ go.style.display=""; renderGauge(CX.be,schaal,comfy,CT.roas); }
+  else go.style.display="none";
+
+  /* trends */
+  if(hasTB&&prevCT) renderTrends(CT,prevCT,prevLabel,ctDays,prevDays);
+  else document.getElementById("trendRow").innerHTML="";
 
   /* tables */
   renderOrders(fxFrom,fxTo);
   renderBeroas(CT,CX.be,CX,fxFrom,fxTo);
   renderKern(CX,CT);
   renderAds(pd.ads||null, CX.be);
+  renderAnalysis(pd.ads||null, CX.be, CT);
 
-  /* sim — alleen updaten bij TB periodes */
+  /* simulator */
   if(hasTB){
     const sl=document.getElementById("simSlider");
     sl.min=Math.max(0.5,CX.be*0.5).toFixed(2);
@@ -669,11 +802,15 @@ function render(){
 /* ═══ GAUGE ══════════════════════════════════════════════════════ */
 function renderGauge(be,schaal,comfy,roas){
   const gMin=Math.max(0,be*0.5);
-  const gMax=Math.max(roas*1.35,comfy*1.3);
+  const gMax=Math.max(roas*1.4,comfy*1.25);
   const pct=v=>Math.max(1,Math.min(99,(v-gMin)/(gMax-gMin)*100));
 
-  const pBe=pct(be), pSc=pct(schaal), pRo=Math.min(97,pct(roas));
+  const pBe=pct(be), pSc=pct(schaal), pCo=pct(comfy), pRo=Math.min(97,pct(roas));
   const mc=roas>=comfy?"#4ade80":roas>=schaal?"#4ade80":roas>=be?"#f59e0b":"#f87171";
+  const needForSchaal=schaal-roas;
+  const gapNote=roas>=schaal
+    ?`${x2(roas)} · ${roas>=comfy?"comfortabel boven doel ROAS ✓":"op of boven doel ROAS ✓"}`
+    :`Nog <strong>${needForSchaal.toFixed(2)}×</strong> ROAS nodig voor doel ROAS (${(SCALE_T*100).toFixed(0)}% nettomarge op omzet)`;
 
   document.getElementById("gaugeOuter").innerHTML=`
 <div class="gauge-bar" style="background:linear-gradient(to right,#f87171 0%,#f87171 ${pBe}%,#f59e0b ${pBe}%,#f59e0b ${pSc}%,#4ade80 ${pSc}%,#4ade80 100%)">
@@ -683,18 +820,18 @@ function renderGauge(be,schaal,comfy,roas){
   </div>
   <div class="g-tick" style="left:${pBe}%">
     <div class="g-tick-line"></div>
-    <div class="g-tick-val">${x2(be)}</div>
+    <div class="g-tick-val">${x2(be)}<br><span style="font-size:9px;color:#94a3b8">break-even</span></div>
   </div>
   <div class="g-tick" style="left:${pSc}%">
     <div class="g-tick-line"></div>
-    <div class="g-tick-val">${x2(schaal)}</div>
+    <div class="g-tick-val">${x2(schaal)}<br><span style="font-size:9px;color:#94a3b8">12% doel</span></div>
+  </div>
+  <div class="g-tick" style="left:${pCo}%">
+    <div class="g-tick-line"></div>
+    <div class="g-tick-val">${x2(comfy)}<br><span style="font-size:9px;color:#94a3b8">15% doel</span></div>
   </div>
 </div>
-<div class="g-legend" style="position:relative;top:0;margin-top:52px">
-  <div class="g-legend-item"><div class="g-legend-swatch" style="background:#f87171"></div>break-even (${x2(be)})</div>
-  <div class="g-legend-item"><div class="g-legend-swatch" style="background:#f59e0b"></div>schaaldrempel ${(SCALE_T*100).toFixed(0)}% (${x2(schaal)})</div>
-  <div class="g-legend-item"><div class="g-legend-swatch" style="background:#4ade80"></div>comfortabel ${(SCALE_H*100).toFixed(0)}% (${x2(comfy)})</div>
-</div>`;
+<div style="position:relative;top:0;margin-top:58px;font-size:12px;color:#64748b;text-align:center">${gapNote}</div>`;
 }
 
 /* ═══ TABLES ═════════════════════════════════════════════════════ */
