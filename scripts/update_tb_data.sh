@@ -11,6 +11,8 @@ TODAY=$(date +%Y-%m-%d)
 YEST=$(date -v-1d +%Y-%m-%d)
 DOW=$(date +%u)                            # 1=maandag ... 7=zondag
 WK_S=$(date -v-$((DOW-1))d +%Y-%m-%d)    # Maandag van deze week
+# Gebruik CLEAN_S als WK_S voor de CAPI-fix valt
+WK_S_CLEAN=$(python3 -c "a='$WK_S';b='$CLEAN_S';print(a if a>=b else b)" 2>/dev/null || echo "$WK_S")
 PWK_E=$(date -v-${DOW}d +%Y-%m-%d)        # Zondag van vorige week
 PWK_S=$(date -v-$((DOW+6))d +%Y-%m-%d)   # Maandag van vorige week
 AUG_S="2026-08-01"                         # Start augustus (contractmaand)
@@ -23,7 +25,7 @@ PROMPT="Haal TrackBee Meta campaign insights op voor store 53920, campaign 12024
 Haal data op voor precies deze 5 periodes via get_meta_campaign_insights:
 1. Vandaag:      from=$TODAY    to=$TODAY
 2. Gisteren:     from=$YEST     to=$YEST
-3. Deze week:    from=$WK_S     to=$TODAY
+3. Deze week:    from=$WK_S_CLEAN to=$TODAY
 4. Vorige week:  from=$PWK_S    to=$PWK_E
 5. Augustus:     from=$AUG_S    to=$TODAY
 
@@ -32,7 +34,7 @@ Voor elke periode noteer: spend, revenue_7d_click (rev7), revenue_1d_view (rev1v
 Output NA het ophalen van alle data ALLEEN dit JSON-blok tussen de markers (vul echte getallen in):
 
 ---JSON_START---
-{\"snap\":\"$TODAY\",\"vandaag\":{\"spend\":0,\"rev7\":0,\"rev1v\":0,\"purch\":0,\"impr\":0,\"cl\":0},\"gisteren\":{\"spend\":0,\"rev7\":0,\"rev1v\":0,\"purch\":0,\"impr\":0,\"cl\":0},\"week\":{\"from\":\"$WK_S\",\"spend\":0,\"rev7\":0,\"rev1v\":0,\"purch\":0,\"impr\":0,\"cl\":0},\"prevweek\":{\"from\":\"$PWK_S\",\"to\":\"$PWK_E\",\"spend\":0,\"rev7\":0,\"rev1v\":0,\"purch\":0,\"impr\":0,\"cl\":0},\"aug\":{\"spend\":0,\"rev7\":0,\"rev1v\":0,\"purch\":0,\"impr\":0,\"cl\":0}}
+{\"snap\":\"$TODAY\",\"vandaag\":{\"spend\":0,\"rev7\":0,\"rev1v\":0,\"purch\":0,\"impr\":0,\"cl\":0},\"gisteren\":{\"spend\":0,\"rev7\":0,\"rev1v\":0,\"purch\":0,\"impr\":0,\"cl\":0},\"week\":{\"from\":\"$WK_S_CLEAN\",\"spend\":0,\"rev7\":0,\"rev1v\":0,\"purch\":0,\"impr\":0,\"cl\":0},\"prevweek\":{\"from\":\"$PWK_S\",\"to\":\"$PWK_E\",\"spend\":0,\"rev7\":0,\"rev1v\":0,\"purch\":0,\"impr\":0,\"cl\":0},\"aug\":{\"spend\":0,\"rev7\":0,\"rev1v\":0,\"purch\":0,\"impr\":0,\"cl\":0}}
 ---JSON_END---"
 
 # Roep claude aan (gebruikt jouw bestaande claude.ai authenticatie + TrackBee connector)
@@ -79,7 +81,7 @@ html = re.sub(r'const SNAP_TIME\s*=\s*"[^"]+"', f'const SNAP_TIME = "{snap_time}
 replacements = [
     (r'const TB_VANDAAG\s*=\s*\{[^;]+\};',   tb("TB_VANDAAG",  snap,                   snap,                   v)),
     (r'const TB_GISTEREN\s*=\s*\{[^;]+\};',  tb("TB_GISTEREN", "$YEST",                 "$YEST",                 g)),
-    (r'const TB_WEEK\s*=\s*\{[^;]+\};',      tb("TB_WEEK",     w.get("from","$WK_S"),   snap,                   w)),
+    (r'const TB_WEEK\s*=\s*\{[^;]+\};',      tb("TB_WEEK",     w.get("from","$WK_S_CLEAN"), snap,               w)),
     (r'const TB_PREVWEEK\s*=\s*\{[^;]+\};',  tb("TB_PREVWEEK", pw.get("from","$PWK_S"), pw.get("to","$PWK_E"), pw)),
     (r'const TB_AUG_CLEAN\s*=\s*\{[^;]+\};', tb("TB_AUG_CLEAN","$CLEAN_S",              snap,                   a)),
 ]
