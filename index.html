@@ -136,7 +136,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 
   <div class="mrow">
     <div class="mc"><div class="mc-lbl">META ROAS</div><div class="mc-val" id="mRoas"></div><div class="mc-sub" id="mRoasSub"></div></div>
-    <div class="mc"><div class="mc-lbl">BREAK-EVEN</div><div class="mc-val" id="mBe"></div><div class="mc-sub">excl. BTW</div></div>
+    <div class="mc"><div class="mc-lbl">BREAK-EVEN</div><div class="mc-val" id="mBe"></div><div class="mc-sub">incl. BTW</div></div>
     <div class="mc"><div class="mc-lbl">SCHAALDREMPEL</div><div class="mc-val" id="mScale"></div><div class="mc-sub" id="mScaleSub"></div></div>
   </div>
 
@@ -372,24 +372,23 @@ function fxCalc(rws){
 }
 
 function kpBeroas(revInclTotal, purch){
-  if(!purch) return KP[0].excl/KP[0].winst;
+  if(!purch) return KP[0].incl/KP[0].winst;
   const avg = revInclTotal / purch;
-  // Interpoleer tussen producten op basis van gem. orderwaarde
   for(let i=0;i<KP.length-1;i++){
     const lo=KP[i], hi=KP[i+1];
     if(avg<=hi.incl){
       const x = Math.max(0,Math.min(1,(hi.incl-avg)/(hi.incl-lo.incl)));
-      return (x*lo.excl+(1-x)*hi.excl)/(x*lo.winst+(1-x)*hi.winst);
+      return (x*lo.incl+(1-x)*hi.incl)/(x*lo.winst+(1-x)*hi.winst);
     }
   }
   const top=KP[KP.length-1];
-  return top.excl/top.winst;
+  return top.incl/top.winst;
 }
 
 function tbCalc(tbs){
   let spend=0,rev7=0,rev1v=0,purch=0,impr=0,cl=0;
   tbs.forEach(t=>{spend+=t.spend;rev7+=t.rev7;rev1v+=t.rev1v;purch+=t.purch;impr+=t.impr;cl+=t.cl});
-  const ri=rev7+rev1v, re=ri/BTW, roas=spend>0?re/spend:0, ctr=impr>0?cl/impr*100:0;
+  const ri=rev7+rev1v, re=ri/BTW, roas=spend>0?ri/spend:0, ctr=impr>0?cl/impr*100:0;
   return{spend,rev7,rev1v,ri,re,roas,purch,impr,cl,ctr};
 }
 
@@ -470,9 +469,9 @@ function render(){
   document.getElementById("mScaleSub").textContent=`+${(SCALE_T*100).toFixed(0)}% boven break-even`;
   if(prevRoas!==null){
     const rd=(CT.roas-prevRoas)/prevRoas*100;
-    document.getElementById("mRoasSub").textContent="excl. BTW · "+(rd>=0?"+":"")+rd.toFixed(1)+"% t.o.v. juli";
+    document.getElementById("mRoasSub").textContent="incl. BTW ·"+(rd>=0?"+":"")+rd.toFixed(1)+"% t.o.v. juli";
   } else {
-    document.getElementById("mRoasSub").textContent="excl. BTW · Meta attributed";
+    document.getElementById("mRoasSub").textContent="incl. BTW ·Meta attributed";
   }
 
   /* gauge */
@@ -527,13 +526,13 @@ function renderGauge(be,schaal,comfy,roas){
 /* ═══ TABLES ═════════════════════════════════════════════════════ */
 function renderOrders(){
   const sorted = [...ORDERS].sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
-  let html="", totEx=0, totCost=0, totWi=0, totExKnown=0;
+  let html="", totEx=0, totCost=0, totWi=0, totExKnown=0, totInclKnown=0;
   for(const o of sorted){
     const p = calcOrder(o);
     if(!o.test) totEx += p.excl;
-    if(!o.test && p.winst!==null){totExKnown+=p.excl; totCost+=p.cost; totWi+=p.winst;}
+    if(!o.test && p.winst!==null){totExKnown+=p.excl; totInclKnown+=o.incl; totCost+=p.cost; totWi+=p.winst;}
     const marg = p.winst!==null ? (p.winst/p.excl*100).toFixed(1)+"%" : "—";
-    const be   = p.winst!==null && p.winst>0 ? x2(p.excl/p.winst) : "—";
+    const be   = p.winst!==null && p.winst>0 ? x2(o.incl/p.winst) : "—";
     const note = o.test ? ' <span style="font-size:10px;color:#475569">test</span>' : '';
     html+=`<tr>
       <td>${o.num}</td><td>${fmtS(o.d)}</td>
@@ -544,7 +543,7 @@ function renderOrders(){
       <td class="r">${be}</td></tr>`;
   }
   const totMarg = totExKnown>0 ? (totWi/totExKnown*100).toFixed(1)+"%" : "—";
-  const totBe   = totWi>0 ? x2(totExKnown/totWi) : "—";
+  const totBe   = totWi>0 ? x2(totInclKnown/totWi) : "—";
   document.getElementById("ordTable").innerHTML=`
 <thead><tr>
   <th>Order</th><th>Datum</th><th>Producten</th><th>Kortingscode</th>
@@ -581,16 +580,16 @@ function renderBeroas(ct, be){
 
   const avgExcl = avgIncl / BTW;
   document.getElementById("beSummary").innerHTML=`
-<div class="be-stat"><div class="be-lbl">Gem. orderwaarde (TB)</div><div class="be-val">${eur(avgExcl)} excl.</div><div style="font-size:11px;color:#64748b;margin-top:2px">${eur(avgIncl)} incl. ÷ 1,21</div></div>
+<div class="be-stat"><div class="be-lbl">Gem. orderwaarde (TB)</div><div class="be-val">${eur(avgIncl)} incl.</div><div style="font-size:11px;color:#64748b;margin-top:2px">${eur(avgExcl)} excl. BTW</div></div>
 <div class="be-stat"><div class="be-lbl">Gewogen marge</div><div class="be-val">${(wWinst/wExcl*100).toFixed(1)}%</div></div>
-<div class="be-stat"><div class="be-lbl">BEROAS (excl. BTW)</div><div class="be-val">${x2(be)}</div></div>`;
+<div class="be-stat"><div class="be-lbl">BEROAS (incl. BTW)</div><div class="be-val">${x2(be)}</div></div>`;
 
   document.getElementById("beTable").innerHTML=`
-<thead><tr><th>Product</th><th class="r">Prijs excl.</th><th class="r">Winst vóór ads</th><th class="r">Marge</th><th class="r">BEROAS</th><th class="r">Gewicht</th></tr></thead>
+<thead><tr><th>Product</th><th class="r">Prijs incl.</th><th class="r">Winst vóór ads</th><th class="r">Marge</th><th class="r">BEROAS</th><th class="r">Gewicht</th></tr></thead>
 <tbody>
 ${rows.map(({p,w})=>`
-<tr><td>${p.name}</td><td class="r">${eur(p.excl)}</td><td class="r">${eur(p.winst)}</td><td class="r">${(p.winst/p.excl*100).toFixed(1)}%</td><td class="r">${x2(p.excl/p.winst)}</td><td class="r">${w}%</td></tr>`).join("")}
-<tr class="tot"><td>Gewogen gemiddelde</td><td class="r">${eur(wExcl)}</td><td class="r">${eur(wWinst)}</td><td class="r">${(wWinst/wExcl*100).toFixed(1)}%</td><td class="r">${x2(be)}</td><td class="r">100%</td></tr>
+<tr><td>${p.name}</td><td class="r">${eur(p.incl)}</td><td class="r">${eur(p.winst)}</td><td class="r">${(p.winst/p.excl*100).toFixed(1)}%</td><td class="r">${x2(p.incl/p.winst)}</td><td class="r">${w}%</td></tr>`).join("")}
+<tr class="tot"><td>Gewogen gemiddelde</td><td class="r">${eur(ct.ri/ct.purch)}</td><td class="r">${eur(wWinst)}</td><td class="r">${(wWinst/wExcl*100).toFixed(1)}%</td><td class="r">${x2(be)}</td><td class="r">100%</td></tr>
 </tbody>`;
 }
 
@@ -606,7 +605,7 @@ function renderKern(fx,tb){
     ["CTR",tb.ctr.toFixed(2)+"%"],
     ["CPC",eur(tb.spend/Math.max(1,tb.cl))],
     ["CPO",eur(tb.spend/Math.max(1,tb.purch))],
-    ["ROAS excl. BTW",x2(tb.roas)],
+    ["ROAS incl. BTW",x2(tb.roas)],
     ["BEROAS",x2(fx.be)],
   ];
   document.getElementById("kernGrid").innerHTML=cells.map(([l,v])=>
