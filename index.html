@@ -401,13 +401,17 @@ const mo   = ["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov",
 const fmtS = s=>{const[,m,d]=s.split("-");return`${+d} ${mo[+m-1]}`};
 const fmtL = s=>{const[y,m,d]=s.split("-");return`${+d} ${mo[+m-1]} ${y}`};
 
-function rows(from,to){return ROWS.filter(r=>r.d>=from&&r.d<=to)}
-
-function fxCalc(rws){
-  let rex=0,pro=0,rev=0,oc=0;
-  rws.forEach(r=>{rex+=r.rex;pro+=r.pro;rev+=r.rev;oc+=r.oc});
-  const k=rex-pro;
-  return{rex,pro,rev,oc,k,be:0};
+function ordCalc(from,to){
+  let oc=0,rev=0,rex=0,pro=0;
+  for(const o of ORDERS){
+    if(o.test||(from&&o.d<from)||(to&&o.d>to)) continue;
+    const p=calcOrder(o);
+    oc++;
+    rev+=o.incl;
+    rex+=o.incl/BTW;
+    if(p.winst!==null) pro+=p.winst;
+  }
+  return{oc,rev,rex,pro,be:0};
 }
 
 function shopifyBeroas(from,to){
@@ -483,8 +487,7 @@ function render(){
   const {from:fxFrom,to:fxTo,tb:tbs}=pd;
   const hasTB=tbs!==null;
 
-  const fxRws=rows(fxFrom,fxTo);
-  CX=fxCalc(fxRws);
+  CX=ordCalc(fxFrom,fxTo);
 
   if(hasTB){
     CT=tbCalc(tbs);
@@ -500,7 +503,7 @@ function render(){
   // Vergelijking aug → jul
   let prevBon=null,prevRoas=null;
   if(P==="aug"){
-    const px=fxCalc(rows("2026-07-16","2026-07-31"));
+    const px=ordCalc("2026-07-16","2026-07-31");
     const pt=tbCalc([TB_JUL]);
     px.be=shopifyBeroas("2026-07-16","2026-07-31");
     prevBon=bonCalc(px,pt).raw;
@@ -559,7 +562,8 @@ function render(){
       const f=new Date(t.from),to=new Date(t.to);
       return a+Math.floor((to-f)/86400000)+1;
     },0);
-    const dek=tbDays>=fxRws.length?"volledig":`${tbDays} van ${fxRws.length} dagen`;
+    const periodDays=Math.floor((new Date(fxTo)-new Date(fxFrom))/86400000)+1;
+    const dek=tbDays>=periodDays?"volledig":`${tbDays} van ${periodDays} dagen`;
     const roasRange=pd.capiNote?` · ROAS ${fmtS(tbs[0].from)}–${fmtS(tbs[0].to)}`:"";
     document.getElementById("metaInfo").textContent=`Adspend ${eur(CT.spend)} · Datadekking TrackBee: ${dek}${roasRange}`;
   } else {
@@ -574,14 +578,11 @@ function render(){
     document.getElementById("mScale").textContent=x2(schaal);
     document.getElementById("mScaleSub").textContent=`${(SCALE_T*100).toFixed(0)}% nettomarge op omzet`;
     document.getElementById("mBeSub").textContent="incl. BTW";
-    const r7sub=x2(CT.rev7/CT.spend);
-    const r1vSub=CT.rev1v>0?` · 1v +${x2(CT.rev1v/CT.spend)}`:"";
-    const attrSub=`7k: ${r7sub}${r1vSub}`;
     if(prevRoas!==null){
       const rd=(CT.roas-prevRoas)/prevRoas*100;
-      document.getElementById("mRoasSub").textContent=attrSub+" · "+(rd>=0?"+":"")+rd.toFixed(1)+"% t.o.v. jul";
+      document.getElementById("mRoasSub").textContent="incl. BTW · "+(rd>=0?"+":"")+rd.toFixed(1)+"% t.o.v. jul";
     } else {
-      document.getElementById("mRoasSub").textContent=attrSub;
+      document.getElementById("mRoasSub").textContent="incl. BTW";
     }
   } else {
     document.getElementById("mRoas").textContent=eur(CX.rex);
