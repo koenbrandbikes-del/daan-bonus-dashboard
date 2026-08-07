@@ -5,395 +5,440 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Daan · Meta Bonusdashboard</title>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg:      #0d1117;
-  --surface: #161b22;
-  --border:  #30363d;
-  --text:    #e6edf3;
-  --muted:   #8b949e;
-  --blue:    #2f81f7;
-  --green:   #3fb950;
-  --yellow:  #d29922;
-  --red:     #f85149;
-}
-body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; line-height: 1.5; padding: 20px; }
-a { color: var(--blue); }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh}
+body{background:#090d1a;color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.5}
 
-.header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 8px; }
-.header h1 { font-size: 20px; font-weight: 600; }
-.header .meta { font-size: 12px; color: var(--muted); text-align: right; }
+.page{max-width:820px;margin:0 auto;padding:0 20px 48px}
 
-.tabs { display: flex; gap: 2px; margin-bottom: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 4px; width: fit-content; }
-.tab { padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--muted); border: none; background: transparent; transition: all .15s; }
-.tab.active { background: var(--border); color: var(--text); }
-.tab:hover:not(.active) { color: var(--text); }
+/* ── Header ── */
+.hd{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:32px 0 20px}
+.hd h1{font-size:22px;font-weight:700;margin-bottom:3px}
+.hd p{font-size:13px;color:#64748b}
+.period-sel{background:#141e33;border:1px solid #1f3050;color:#f1f5f9;font-size:13px;font-weight:500;padding:8px 32px 8px 12px;border-radius:8px;cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
 
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
-.card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
-.card .value { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
-.card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
-.card.bonus .value { color: var(--green); }
-.card.warn .value { color: var(--yellow); }
-.card.neg .value { color: var(--red); }
+/* ── Main card ── */
+.card{background:#111827;border:1px solid #1f2d45;border-radius:16px;padding:24px;margin-bottom:12px}
+.card-meta{font-size:11px;color:#64748b;margin-bottom:14px;display:flex;align-items:center;gap:5px}
+.info-i{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;border:1px solid #64748b;font-size:8px;color:#64748b;cursor:default;flex-shrink:0}
+.bonus-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;color:#64748b;text-transform:uppercase;margin-bottom:5px}
+.bonus-amt{font-size:52px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;margin-bottom:12px}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:10px}
+.badge.up{background:rgba(74,222,128,.12);color:#4ade80}
+.badge.dn{background:rgba(245,158,11,.12);color:#f59e0b}
+.badge.ne{background:rgba(100,116,139,.12);color:#94a3b8}
+.status{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;margin-bottom:6px}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot.g{background:#4ade80}.dot.a{background:#f59e0b}.dot.r{background:#f87171}
+.meta-info{font-size:12px;color:#64748b;margin-bottom:24px}
 
-.section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
-.section-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th { padding: 8px 12px; text-align: left; font-weight: 500; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); }
-th.r, td.r { text-align: right; }
-td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
-tr:last-child td { border-bottom: none; }
-tbody tr:hover { background: rgba(255,255,255,.03); }
-.total-row td { font-weight: 600; background: rgba(47,129,247,.06); border-top: 1px solid var(--border); }
+/* ── Metrics row ── */
+.mrow{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #1f3050;border-radius:10px;overflow:hidden;margin-bottom:22px}
+.mc{padding:14px 16px;border-right:1px solid #1f3050}
+.mc:last-child{border-right:none}
+.mc-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#64748b;margin-bottom:4px}
+.mc-val{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.mc-sub{font-size:11px;color:#64748b;margin-top:2px}
 
-.formula-box { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; margin: 12px 16px 16px; font-size: 12px; color: var(--muted); }
-.formula-box strong { color: var(--text); }
+/* ── Gauge ── */
+.gauge-outer{position:relative;padding:40px 0 44px}
+.gauge-bar{position:absolute;top:36px;left:0;right:0;height:8px;border-radius:4px;overflow:visible}
+.g-marker{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translateX(-50%);top:-32px}
+.g-marker-lbl{font-size:11px;font-weight:700;white-space:nowrap;padding:1px 5px;border-radius:3px;border-width:1px;border-style:solid}
+.g-marker-line{width:2px;height:34px;border-radius:1px;margin-top:2px}
+.g-tick{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translateX(-50%);top:12px}
+.g-tick-line{width:1px;height:6px;background:rgba(255,255,255,.25);margin-bottom:3px}
+.g-tick-val{font-size:10px;color:#64748b;white-space:nowrap}
+.g-legend{display:flex;flex-wrap:wrap;gap:12px 20px;font-size:11px;color:#64748b;position:absolute;bottom:0;left:0}
+.g-legend-item{display:flex;align-items:center;gap:5px}
+.g-legend-swatch{width:14px;height:3px;border-radius:2px;flex-shrink:0}
 
-.note { font-size: 12px; color: var(--muted); padding: 8px 16px 12px; }
-.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-.badge.green { background: rgba(63,185,80,.15); color: var(--green); }
-.badge.yellow { background: rgba(210,153,34,.15); color: var(--yellow); }
-.badge.blue { background: rgba(47,129,247,.15); color: var(--blue); }
+/* ── Accordion ── */
+.acc{display:flex;flex-direction:column;gap:4px}
+.acc-item{background:#111827;border:1px solid #1f2d45;border-radius:10px;overflow:hidden}
+.acc-hd{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;cursor:pointer;user-select:none;font-size:14px;font-weight:500}
+.acc-hd:hover{background:rgba(255,255,255,.025)}
+.acc-chv{color:#64748b;font-size:18px;transition:transform .2s;line-height:1}
+.acc-item.open .acc-chv{transform:rotate(90deg)}
+.acc-body{display:none;border-top:1px solid #1f2d45}
+.acc-item.open .acc-body{display:block}
 
-@media (max-width: 600px) {
-  .cards { grid-template-columns: 1fr 1fr; }
-  .card .value { font-size: 22px; }
+/* ── Tables ── */
+.tscroll{overflow-x:auto;max-height:340px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:9px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #1f2d45;white-space:nowrap}
+th.r,td.r{text-align:right}
+td{padding:8px 14px;border-bottom:1px solid rgba(31,45,69,.5);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+.tot td{font-weight:700;background:rgba(96,165,250,.05);border-top:1px solid #1f2d45}
+
+/* ── Simulator ── */
+.sim-wrap{padding:18px 20px}
+.sim-wrap label{font-size:12px;color:#64748b;display:block;margin-bottom:8px}
+.sim-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.sim-row input[type=range]{flex:1;accent-color:#60a5fa;height:4px}
+.sim-rval{font-size:16px;font-weight:700;min-width:44px;text-align:right;font-variant-numeric:tabular-nums}
+.sim-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sim-card{background:#1a2133;border-radius:8px;padding:12px 14px}
+.sim-card .sl{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.sim-card .sv{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* ── BEROAS summary ── */
+.be-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid #1f2d45}
+.be-stat{padding:14px 16px;border-right:1px solid #1f2d45}
+.be-stat:last-child{border-right:none}
+.be-lbl{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.be-val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* ── Kerncijfers grid ── */
+.kern-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1px;background:#1f2d45}
+.kern-cell{padding:13px 16px;background:#111827}
+.kern-lbl{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.kern-val{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* ── Footer ── */
+.footer{text-align:center;font-size:11px;color:#374151;padding:16px 0 4px}
+
+@media(max-width:540px){
+  .bonus-amt{font-size:38px}
+  .mrow{grid-template-columns:1fr}
+  .mc{border-right:none;border-bottom:1px solid #1f3050}
+  .mc:last-child{border-bottom:none}
+  .sim-cards{grid-template-columns:1fr 1fr}
+  .be-sum{grid-template-columns:1fr 1fr}
 }
 </style>
 </head>
 <body>
+<div class="page">
 
-<div class="header">
+<div class="hd">
   <div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">LumeWorks · Meta Ads</div>
-    <h1>Daan · Bonusdashboard</h1>
+    <h1>Meta bonusdashboard</h1>
+    <p>Hoeveel bonus Daan nu verdient met Meta advertenties</p>
   </div>
-  <div class="meta" id="snapMeta"></div>
+  <select class="period-sel" id="periodSel" onchange="setPeriod(this.value)">
+    <option value="aug">Deze maand</option>
+    <option value="contract">Volledige periode</option>
+  </select>
 </div>
 
-<div class="tabs">
-  <button class="tab active" onclick="setPeriod('aug')">Augustus 2026</button>
-  <button class="tab" onclick="setPeriod('contract')">Contract (20 jul – nu)</button>
+<!-- Main card -->
+<div class="card">
+  <div class="card-meta" id="cardMeta"></div>
+  <div class="bonus-lbl">BONUS TOT NU TOE</div>
+  <div class="bonus-amt" id="bonusAmt"></div>
+  <div id="bonusBadge"></div>
+  <div class="status" id="statusLine"></div>
+  <div class="meta-info" id="metaInfo"></div>
+
+  <div class="mrow">
+    <div class="mc"><div class="mc-lbl">META ROAS</div><div class="mc-val" id="mRoas"></div><div class="mc-sub" id="mRoasSub"></div></div>
+    <div class="mc"><div class="mc-lbl">BREAK-EVEN</div><div class="mc-val" id="mBe"></div><div class="mc-sub">excl. BTW</div></div>
+    <div class="mc"><div class="mc-lbl">SCHAALDREMPEL</div><div class="mc-val" id="mScale"></div><div class="mc-sub" id="mScaleSub"></div></div>
+  </div>
+
+  <div class="gauge-outer" id="gaugeOuter"></div>
 </div>
 
-<div class="cards" id="cards"></div>
+<!-- Accordion -->
+<div class="acc">
 
-<div class="section">
-  <div class="section-header">
-    <span>Bonusberekening</span>
-    <span id="periodLabel" style="font-weight:400;font-size:12px;color:var(--muted)"></span>
+  <div class="acc-item" id="acc-sim">
+    <div class="acc-hd" onclick="tog('acc-sim')"><span>Bonussimulator</span><span class="acc-chv">›</span></div>
+    <div class="acc-body">
+      <div class="sim-wrap">
+        <label>Stel een hypothetische ROAS excl. BTW in</label>
+        <div class="sim-row">
+          <input type="range" id="simSlider" min="0.5" max="5" step="0.01" value="1.83" oninput="updateSim(+this.value)">
+          <div class="sim-rval" id="simRval">1.83×</div>
+        </div>
+        <div class="sim-cards">
+          <div class="sim-card"><div class="sl">Bonus</div><div class="sv" id="simBonus">—</div></div>
+          <div class="sim-card"><div class="sl">ROAS – BEROAS</div><div class="sv" id="simDiff">—</div></div>
+          <div class="sim-card"><div class="sl">% van spend</div><div class="sv" id="simPct">—</div></div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="formula-box" id="formulaBox"></div>
+
+  <div class="acc-item" id="acc-be">
+    <div class="acc-hd" onclick="tog('acc-be')"><span>Onderbouwing BEROAS</span><span class="acc-chv">›</span></div>
+    <div class="acc-body">
+      <div class="be-sum" id="beSummary"></div>
+      <div class="tscroll"><table id="beTable"></table></div>
+    </div>
+  </div>
+
+  <div class="acc-item" id="acc-kern">
+    <div class="acc-hd" onclick="tog('acc-kern')"><span>Kerncijfers</span><span class="acc-chv">›</span></div>
+    <div class="acc-body"><div class="kern-grid" id="kernGrid"></div></div>
+  </div>
+
+  <div class="acc-item" id="acc-ord">
+    <div class="acc-hd" onclick="tog('acc-ord')"><span>Orderdetail (alle orders)</span><span class="acc-chv">›</span></div>
+    <div class="acc-body"><div class="tscroll"><table id="ordTable"></table></div></div>
+  </div>
+
 </div>
 
-<div class="section">
-  <div class="section-header">Campagnes (Meta)</div>
-  <div style="overflow-x:auto">
-    <table id="campaignTable"></table>
-  </div>
-</div>
-
-<div class="section">
-  <div class="section-header">
-    <span>Dagelijkse omzet (FiveX)</span>
-    <span id="fiveXNote" style="font-weight:400;font-size:12px;color:var(--muted)"></span>
-  </div>
-  <div style="overflow-x:auto;max-height:400px;overflow-y:auto">
-    <table id="dailyTable"></table>
-  </div>
+<div class="footer">Bijgewerkt: <span id="footerDate"></span> · Data: FiveX & TrackBee</div>
 </div>
 
 <script>
-/* ─── DATA ───────────────────────────────────────────────── */
-const SNAP_DATE      = "2026-08-07";
-const CONTRACT_START = "2026-07-16";
-const TB_START       = "2026-07-20"; // TrackBee onboarding
-const BONUS_PCT      = 0.10;
-const BTW            = 1.21;
+/* ═══ DATA ═══════════════════════════════════════════════════════ */
+const SNAP        = "2026-08-07";
+const TB_ONBOARD  = "2026-07-20";
+const BONUS_PCT   = 0.10;
+const BTW         = 1.21;
+const SCALE_T     = 0.12;
+const SCALE_H     = 0.15;
 
-const ROWS_ALL = [
-  {day:"2026-07-16",order_count:16,revenue:1604.10,revenue_ex_vat:1325.70,profit:492.41},
-  {day:"2026-07-17",order_count:23,revenue:2387.05,revenue_ex_vat:1972.77,profit:641.33},
-  {day:"2026-07-18",order_count:16,revenue:1726.00,revenue_ex_vat:1426.45,profit:535.39},
-  {day:"2026-07-19",order_count:16,revenue:1481.25,revenue_ex_vat:1226.75,profit:270.82},
-  {day:"2026-07-20",order_count:25,revenue:2754.90,revenue_ex_vat:2276.78,profit:600.06},
-  {day:"2026-07-21",order_count:25,revenue:2345.80,revenue_ex_vat:1938.68,profit:466.56},
-  {day:"2026-07-22",order_count:21,revenue:2628.20,revenue_ex_vat:2172.07,profit:613.14},
-  {day:"2026-07-23",order_count:27,revenue:2822.05,revenue_ex_vat:2332.27,profit:699.67},
-  {day:"2026-07-24",order_count:16,revenue:1596.35,revenue_ex_vat:1319.30,profit:389.96},
-  {day:"2026-07-25",order_count:16,revenue:1625.35,revenue_ex_vat:1343.26,profit:329.81},
-  {day:"2026-07-26",order_count:23,revenue:2385.05,revenue_ex_vat:1971.12,profit:525.30},
-  {day:"2026-07-27",order_count:33,revenue:3306.20,revenue_ex_vat:2732.40,profit:825.01},
-  {day:"2026-07-28",order_count:17,revenue:2078.45,revenue_ex_vat:1717.73,profit:523.65},
-  {day:"2026-07-29",order_count:21,revenue:2267.55,revenue_ex_vat:1874.01,profit:627.33},
-  {day:"2026-07-30",order_count:19,revenue:1985.25,revenue_ex_vat:1640.70,profit:400.69},
-  {day:"2026-07-31",order_count:10,revenue:1411.60,revenue_ex_vat:1166.61,profit:419.52},
-  {day:"2026-08-01",order_count:12,revenue:1188.60,revenue_ex_vat:982.31,profit:209.23},
-  {day:"2026-08-02",order_count:24,revenue:2729.90,revenue_ex_vat:2256.12,profit:452.20},
-  {day:"2026-08-03",order_count:16,revenue:1492.35,revenue_ex_vat:1233.35,profit:256.14},
-  {day:"2026-08-04",order_count:20,revenue:2222.45,revenue_ex_vat:1836.74,profit:210.83},
-  {day:"2026-08-05",order_count:24,revenue:3302.20,revenue_ex_vat:2729.09,profit:1048.37},
-  {day:"2026-08-06",order_count:28,revenue:3002.05,revenue_ex_vat:2481.03,profit:805.17},
-  {day:"2026-08-07",order_count:4,revenue:446.00,revenue_ex_vat:368.60,profit:124.79},
+const ROWS = [
+  {d:"2026-07-16",oc:16,rev:1604.10,rex:1325.70,pro:492.41},
+  {d:"2026-07-17",oc:23,rev:2387.05,rex:1972.77,pro:641.33},
+  {d:"2026-07-18",oc:16,rev:1726.00,rex:1426.45,pro:535.39},
+  {d:"2026-07-19",oc:16,rev:1481.25,rex:1226.75,pro:270.82},
+  {d:"2026-07-20",oc:25,rev:2754.90,rex:2276.78,pro:600.06},
+  {d:"2026-07-21",oc:25,rev:2345.80,rex:1938.68,pro:466.56},
+  {d:"2026-07-22",oc:21,rev:2628.20,rex:2172.07,pro:613.14},
+  {d:"2026-07-23",oc:27,rev:2822.05,rex:2332.27,pro:699.67},
+  {d:"2026-07-24",oc:16,rev:1596.35,rex:1319.30,pro:389.96},
+  {d:"2026-07-25",oc:16,rev:1625.35,rex:1343.26,pro:329.81},
+  {d:"2026-07-26",oc:23,rev:2385.05,rex:1971.12,pro:525.30},
+  {d:"2026-07-27",oc:33,rev:3306.20,rex:2732.40,pro:825.01},
+  {d:"2026-07-28",oc:17,rev:2078.45,rex:1717.73,pro:523.65},
+  {d:"2026-07-29",oc:21,rev:2267.55,rex:1874.01,pro:627.33},
+  {d:"2026-07-30",oc:19,rev:1985.25,rex:1640.70,pro:400.69},
+  {d:"2026-07-31",oc:10,rev:1411.60,rex:1166.61,pro:419.52},
+  {d:"2026-08-01",oc:12,rev:1188.60,rex:982.31, pro:209.23},
+  {d:"2026-08-02",oc:24,rev:2729.90,rex:2256.12,pro:452.20},
+  {d:"2026-08-03",oc:16,rev:1492.35,rex:1233.35,pro:256.14},
+  {d:"2026-08-04",oc:20,rev:2222.45,rex:1836.74,pro:210.83},
+  {d:"2026-08-05",oc:24,rev:3302.20,rex:2729.09,pro:1048.37},
+  {d:"2026-08-06",oc:28,rev:3002.05,rex:2481.03,pro:805.17},
+  {d:"2026-08-07",oc:4, rev:446.00, rex:368.60, pro:124.79},
 ];
 
-// TrackBee: augustus 1-7
-const TB_AUG = {
-  period_from: "2026-08-01",
-  period_to:   "2026-08-07",
-  spend:       1315.61,
-  revenue_7d_click: 2622.30,
-  revenue_1d_view:  298.00,
-  campaigns: [{
-    name:       "NL/BE | TESTING ABO - PRIME",
-    spend:      1315.61,
-    impressions:186506,
-    clicks:     2598,
-    ctr:        1.393,
-    purchases:  17,
-    revenue_7d_click: 2622.30,
-    revenue_1d_view:  298.00,
-  }]
-};
+const TB_JUL = {from:"2026-07-20",to:"2026-07-31",spend:2017.29,rev7:4510.10,rev1v:746.20,purch:32,impr:202988,cl:2847};
+const TB_AUG = {from:"2026-08-01",to:"2026-08-07",spend:1315.61,rev7:2622.30,rev1v:298.00,purch:17,impr:186506,cl:2598};
 
-// TrackBee: 20-31 juli
-const TB_JUL = {
-  period_from: "2026-07-20",
-  period_to:   "2026-07-31",
-  spend:       2017.29,
-  revenue_7d_click: 4510.10,
-  revenue_1d_view:  746.20,
-  campaigns: [{
-    name:       "NL/BE | TESTING ABO - PRIME",
-    spend:      2017.29,
-    impressions:202988,
-    clicks:     2847,
-    ctr:        1.403,
-    purchases:  32,
-    revenue_7d_click: 4510.10,
-    revenue_1d_view:  746.20,
-  }]
-};
+/* ═══ HELPERS ════════════════════════════════════════════════════ */
+const eur  = v=>"€"+v.toLocaleString("nl-NL",{minimumFractionDigits:2,maximumFractionDigits:2});
+const x2   = v=>v.toFixed(2)+"×";
+const mo   = ["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
+const fmtS = s=>{const[,m,d]=s.split("-");return`${+d} ${mo[+m-1]}`};
+const fmtL = s=>{const[y,m,d]=s.split("-");return`${+d} ${mo[+m-1]} ${y}`};
 
-/* ─── HELPERS ─────────────────────────────────────────────── */
-const eur  = v => "€" + v.toLocaleString("nl-NL", {minimumFractionDigits:2, maximumFractionDigits:2});
-const pct  = v => v.toFixed(1) + "%";
-const x    = v => v.toFixed(2) + "×";
-const fmtD = s => { const [y,m,d] = s.split("-"); return `${+d} ${["","jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"][+m]}`; };
+function rows(from,to){return ROWS.filter(r=>r.d>=from&&r.d<=to)}
 
-function filterRows(from, to) {
-  return ROWS_ALL.filter(r => r.day >= from && r.day <= to);
+function fxCalc(rws){
+  let rex=0,pro=0,rev=0,oc=0;
+  rws.forEach(r=>{rex+=r.rex;pro+=r.pro;rev+=r.rev;oc+=r.oc});
+  const k=rex-pro, be=k>0?rex/k:0;
+  return{rex,pro,rev,oc,k,be};
 }
 
-function calcFX(rows) {
-  let rev = 0, prof = 0, orders = 0;
-  rows.forEach(r => { rev += r.revenue_ex_vat; prof += r.profit; orders += r.order_count; });
-  const kosten = rev - prof;
-  const beroas = kosten > 0 ? rev / kosten : 0;
-  return { rev, prof, kosten, beroas, orders };
+function tbCalc(tbs){
+  let spend=0,rev7=0,rev1v=0,purch=0,impr=0,cl=0;
+  tbs.forEach(t=>{spend+=t.spend;rev7+=t.rev7;rev1v+=t.rev1v;purch+=t.purch;impr+=t.impr;cl+=t.cl});
+  const ri=rev7+rev1v, re=ri/BTW, roas=spend>0?re/spend:0, ctr=impr>0?cl/impr*100:0;
+  return{spend,rev7,rev1v,ri,re,roas,purch,impr,cl,ctr};
 }
 
-function calcTB(tbs) {
-  // Merge multiple TB periods
-  let spend = 0, rev7 = 0, rev1v = 0, campaigns = [], impr = 0, clicks = 0, purch = 0;
-  tbs.forEach(tb => {
-    spend  += tb.spend;
-    rev7   += tb.revenue_7d_click;
-    rev1v  += tb.revenue_1d_view;
-    impr   += tb.campaigns.reduce((a,c) => a + c.impressions, 0);
-    clicks += tb.campaigns.reduce((a,c) => a + c.clicks, 0);
-    purch  += tb.campaigns.reduce((a,c) => a + c.purchases, 0);
-    campaigns.push(...tb.campaigns);
-  });
-  const revIncl = rev7 + rev1v;
-  const revEx   = revIncl / BTW;
-  const roas    = spend > 0 ? revEx / spend : 0;
-  const ctr     = impr > 0 ? (clicks / impr) * 100 : 0;
-  return { spend, rev7, rev1v, revIncl, revEx, roas, impr, clicks, purch, ctr, campaigns };
+function bonCalc(fx,tb){
+  const diff=tb.roas-fx.be;
+  return{diff,raw:Math.max(0,tb.spend*diff)*BONUS_PCT};
 }
 
-function calcBonus(fxData, tbData) {
-  const diff = tbData.roas - fxData.beroas;
-  const raw  = Math.max(0, tbData.spend * diff) * BONUS_PCT;
-  return { diff, raw };
+function maandNr(snap){
+  const days=Math.floor((new Date(snap)-new Date("2026-07-16"))/86400000);
+  return Math.floor(days/30)+1;
 }
 
-/* ─── RENDER ──────────────────────────────────────────────── */
-let currentPeriod = "aug";
+/* ═══ STATE ══════════════════════════════════════════════════════ */
+let P="aug", CX, CT, CB;
 
-function setPeriod(p) {
-  currentPeriod = p;
-  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.textContent.startsWith(p === "aug" ? "Aug" : "Con")));
-  render();
-}
+function setPeriod(v){P=v;render()}
 
-function render() {
-  const p = currentPeriod;
+/* ═══ RENDER ═════════════════════════════════════════════════════ */
+function render(){
+  const aug = P==="aug";
+  const fxFrom = aug?"2026-08-01":TB_ONBOARD;
+  const tbs    = aug?[TB_AUG]:[TB_JUL,TB_AUG];
 
-  let fxRows, tbList, periodLabel, fxFrom;
-  if (p === "aug") {
-    fxFrom    = "2026-08-01";
-    fxRows    = filterRows("2026-08-01", SNAP_DATE);
-    tbList    = [TB_AUG];
-    periodLabel = "1 aug – " + fmtD(SNAP_DATE);
-  } else {
-    fxFrom    = TB_START; // Match TrackBee start
-    fxRows    = filterRows(TB_START, SNAP_DATE);
-    tbList    = [TB_JUL, TB_AUG];
-    periodLabel = "20 jul – " + fmtD(SNAP_DATE);
+  const fxRws = rows(fxFrom,SNAP);
+  CX=fxCalc(fxRws); CT=tbCalc(tbs); CB=bonCalc(CX,CT);
+  const schaal=CX.be*(1+SCALE_T), comfy=CX.be*(1+SCALE_H);
+
+  // Previous period (july) for comparison when in aug view
+  let prevBon=null,prevRoas=null;
+  if(aug){
+    const px=fxCalc(rows(TB_ONBOARD,"2026-07-31"));
+    const pt=tbCalc([TB_JUL]);
+    prevBon=bonCalc(px,pt).raw;
+    prevRoas=pt.roas;
   }
 
-  const fx  = calcFX(fxRows);
-  const tb  = calcTB(tbList);
-  const bon = calcBonus(fx, tb);
+  /* card meta */
+  const mn=maandNr(SNAP);
+  document.getElementById("cardMeta").innerHTML=
+    `Meta · ${fmtS(fxFrom)} t/m ${fmtS(SNAP)} · Maand ${mn} <span class="info-i" title="Maand ${mn} van het contract (start 16 jul 2026)">i</span>`;
 
-  // Update period label
-  document.getElementById("periodLabel").textContent = periodLabel;
-  document.getElementById("snapMeta").innerHTML =
-    `Bijgewerkt: ${fmtD(SNAP_DATE)} 2026<br>Snapdatum FiveX & TrackBee`;
-  document.getElementById("fiveXNote").textContent =
-    p === "aug" ? "augustus 2026" : "20 jul – " + fmtD(SNAP_DATE) + " (TB-dekking)";
+  /* bonus */
+  document.getElementById("bonusAmt").textContent=eur(CB.raw);
 
-  // Cards
-  const bonClass = bon.raw > 0 ? "bonus" : "";
-  const roasClass = tb.roas > fx.beroas ? "" : "warn";
-  document.getElementById("cards").innerHTML = `
-    <div class="card ${bonClass}">
-      <div class="label">Bonus verdiend</div>
-      <div class="value">${eur(bon.raw)}</div>
-      <div class="sub">bij ROAS ${x(tb.roas)} vs BE ${x(fx.beroas)}</div>
-    </div>
-    <div class="card ${roasClass}">
-      <div class="label">ROAS excl. BTW</div>
-      <div class="value">${x(tb.roas)}</div>
-      <div class="sub">Meta attributed (7d klik + 1d view)</div>
-    </div>
-    <div class="card">
-      <div class="label">BEROAS excl. BTW</div>
-      <div class="value">${x(fx.beroas)}</div>
-      <div class="sub">Break-even drempel</div>
-    </div>
-    <div class="card">
-      <div class="label">Meta spend</div>
-      <div class="value">${eur(tb.spend)}</div>
-      <div class="sub">${tb.purch} aankopen · CTR ${pct(tb.ctr)}</div>
-    </div>
-    <div class="card">
-      <div class="label">TB revenue excl.</div>
-      <div class="value">${eur(tb.revEx)}</div>
-      <div class="sub">incl. ${eur(tb.revIncl)}</div>
-    </div>
-    <div class="card">
-      <div class="label">Omzet excl. BTW</div>
-      <div class="value">${eur(fx.rev)}</div>
-      <div class="sub">${fxRows.reduce((a,r)=>a+r.order_count,0)} orders</div>
-    </div>
-  `;
+  /* badge */
+  let badgeHtml;
+  if(prevBon!==null){
+    const d=CB.raw-prevBon, up=d>=0;
+    badgeHtml=`<span class="badge ${up?"up":"dn"}">${up?"▲":"▼"} ${eur(Math.abs(d))} t.o.v. juli</span>`;
+  } else {
+    badgeHtml=`<span class="badge ne">Gehele contractperiode</span>`;
+  }
+  document.getElementById("bonusBadge").innerHTML=badgeHtml;
 
-  // Formula box
-  const diff = (tb.roas - fx.beroas).toFixed(3);
-  document.getElementById("formulaBox").innerHTML = `
-    <strong>Bonus</strong> = max(0, spend × (ROAS<sub>excl</sub> − BEROAS<sub>excl</sub>)) × 10%<br><br>
-    = max(0, ${eur(tb.spend)} × (${x(tb.roas)} − ${x(fx.beroas)})) × 10%<br>
-    = max(0, ${eur(tb.spend)} × ${parseFloat(diff) >= 0 ? "+" : ""}${diff}) × 10%<br>
-    = <strong style="color:var(--green)">${eur(bon.raw)}</strong>
-    ${bon.diff < 0 ? ' <span style="color:var(--muted);font-size:11px">(ROAS onder break-even → €0)</span>' : ''}
-    <br><br>
-    <span style="font-size:11px">BEROAS = rev_ex_vat / (rev_ex_vat − profit) = ${eur(fx.rev)} / ${eur(fx.kosten)} = ${x(fx.beroas)}</span>
-  `;
+  /* status */
+  const [dotC,txt]=CT.roas>=comfy?["g","Comfortabel boven de schaaldrempel"]
+    :CT.roas>=schaal?["g","Boven de schaaldrempel"]
+    :CT.roas>=CX.be?["a","Boven break-even, nog niet op schaaldrempel"]
+    :["r","Onder break-even"];
+  document.getElementById("statusLine").innerHTML=`<span class="dot ${dotC}"></span>${txt}`;
 
-  // Campaign table
-  // Merge campaigns by name
-  const byName = {};
-  tbList.forEach(tb => {
-    tb.campaigns.forEach(c => {
-      if (!byName[c.name]) byName[c.name] = {name:c.name, spend:0, impressions:0, clicks:0, purchases:0, rev7:0, rev1v:0};
-      byName[c.name].spend += c.spend;
-      byName[c.name].impressions += c.impressions;
-      byName[c.name].clicks += c.clicks;
-      byName[c.name].purchases += c.purchases;
-      byName[c.name].rev7 += c.revenue_7d_click;
-      byName[c.name].rev1v += c.revenue_1d_view;
-    });
-  });
-  const campaigns = Object.values(byName);
-  document.getElementById("campaignTable").innerHTML = `
-    <thead><tr>
-      <th>Campagne</th>
-      <th class="r">Spend</th>
-      <th class="r">Impr.</th>
-      <th class="r">Clicks</th>
-      <th class="r">CTR</th>
-      <th class="r">Aankopen</th>
-      <th class="r">Rev 7d klik</th>
-      <th class="r">Rev 1d view</th>
-      <th class="r">Rev totaal excl.</th>
-      <th class="r">ROAS excl.</th>
-    </tr></thead>
-    <tbody>
-      ${campaigns.map(c => {
-        const revTot = (c.rev7 + c.rev1v) / BTW;
-        const roas   = c.spend > 0 ? revTot / c.spend : 0;
-        const ctr    = c.impressions > 0 ? (c.clicks / c.impressions) * 100 : 0;
-        return `<tr>
-          <td>${c.name}</td>
-          <td class="r">${eur(c.spend)}</td>
-          <td class="r">${c.impressions.toLocaleString("nl-NL")}</td>
-          <td class="r">${c.clicks.toLocaleString("nl-NL")}</td>
-          <td class="r">${pct(ctr)}</td>
-          <td class="r">${c.purchases}</td>
-          <td class="r">${eur(c.rev7)}</td>
-          <td class="r">${eur(c.rev1v)}</td>
-          <td class="r">${eur(revTot)}</td>
-          <td class="r">${x(roas)}</td>
-        </tr>`;
-      }).join("")}
-    </tbody>
-  `;
+  /* meta info */
+  const tbDays=tbs.reduce((a,t)=>{
+    const f=new Date(t.from),to=new Date(t.to);
+    return a+Math.floor((to-f)/86400000)+1;
+  },0);
+  const dek=tbDays>=fxRws.length?"volledig":`${tbDays} van ${fxRws.length} dagen`;
+  document.getElementById("metaInfo").textContent=`Adspend ${eur(CT.spend)} · Datadekking TrackBee: ${dek}`;
 
-  // Daily table
-  const showRows = [...fxRows].reverse();
-  const totRev = fxRows.reduce((a,r)=>a+r.revenue_ex_vat,0);
-  const totProf = fxRows.reduce((a,r)=>a+r.profit,0);
-  const totOrd  = fxRows.reduce((a,r)=>a+r.order_count,0);
-  document.getElementById("dailyTable").innerHTML = `
-    <thead><tr>
-      <th>Datum</th>
-      <th class="r">Orders</th>
-      <th class="r">Revenue incl.</th>
-      <th class="r">Revenue excl.</th>
-      <th class="r">Marge</th>
-      <th class="r">BEROAS dag</th>
-    </tr></thead>
-    <tbody>
-      ${showRows.map(r => {
-        const k = r.revenue_ex_vat - r.profit;
-        const br = k > 0 ? r.revenue_ex_vat / k : 0;
-        return `<tr>
-          <td>${fmtD(r.day)}</td>
-          <td class="r">${r.order_count}</td>
-          <td class="r">${eur(r.revenue)}</td>
-          <td class="r">${eur(r.revenue_ex_vat)}</td>
-          <td class="r">${eur(r.profit)}</td>
-          <td class="r">${x(br)}</td>
-        </tr>`;
-      }).join("")}
-      <tr class="total-row">
-        <td>Totaal</td>
-        <td class="r">${totOrd}</td>
-        <td class="r">—</td>
-        <td class="r">${eur(totRev)}</td>
-        <td class="r">${eur(totProf)}</td>
-        <td class="r">${x(fx.beroas)}</td>
-      </tr>
-    </tbody>
-  `;
+  /* metrics */
+  document.getElementById("mRoas").textContent=x2(CT.roas);
+  document.getElementById("mBe").textContent=x2(CX.be);
+  document.getElementById("mScale").textContent=x2(schaal);
+  document.getElementById("mScaleSub").textContent=`+${(SCALE_T*100).toFixed(0)}% boven break-even`;
+  if(prevRoas!==null){
+    const rd=(CT.roas-prevRoas)/prevRoas*100;
+    document.getElementById("mRoasSub").textContent=(rd>=0?"+":"")+rd.toFixed(1)+"% t.o.v. juli";
+  } else {
+    document.getElementById("mRoasSub").textContent="Meta attributed (7d klik + 1d view)";
+  }
+
+  /* gauge */
+  renderGauge(CX.be,schaal,comfy,CT.roas);
+
+  /* tables */
+  renderOrders(fxRws,CX);
+  renderBeroas(fxRws,CX);
+  renderKern(CX,CT);
+
+  /* sim */
+  const sl=document.getElementById("simSlider");
+  sl.min=Math.max(0.5,CX.be*0.5).toFixed(2);
+  sl.max=(Math.max(CT.roas,comfy)*2).toFixed(2);
+  sl.value=CT.roas.toFixed(2);
+  updateSim(CT.roas);
+
+  document.getElementById("footerDate").textContent=fmtL(SNAP);
 }
 
+/* ═══ GAUGE ══════════════════════════════════════════════════════ */
+function renderGauge(be,schaal,comfy,roas){
+  const gMin=Math.max(0,be*0.5);
+  const gMax=Math.max(roas*1.35,comfy*1.3);
+  const pct=v=>Math.max(1,Math.min(99,(v-gMin)/(gMax-gMin)*100));
+
+  const pBe=pct(be), pSc=pct(schaal), pRo=Math.min(97,pct(roas));
+  const mc=roas>=comfy?"#4ade80":roas>=schaal?"#4ade80":roas>=be?"#f59e0b":"#f87171";
+
+  document.getElementById("gaugeOuter").innerHTML=`
+<div class="gauge-bar" style="background:linear-gradient(to right,#f87171 0%,#f87171 ${pBe}%,#f59e0b ${pBe}%,#f59e0b ${pSc}%,#4ade80 ${pSc}%,#4ade80 100%)">
+  <div class="g-marker" style="left:${pRo}%">
+    <div class="g-marker-lbl" style="color:${mc};border-color:${mc}33;background:#111827">${x2(roas)}</div>
+    <div class="g-marker-line" style="background:${mc}"></div>
+  </div>
+  <div class="g-tick" style="left:${pBe}%">
+    <div class="g-tick-line"></div>
+    <div class="g-tick-val">${x2(be)}</div>
+  </div>
+  <div class="g-tick" style="left:${pSc}%">
+    <div class="g-tick-line"></div>
+    <div class="g-tick-val">${x2(schaal)}</div>
+  </div>
+</div>
+<div class="g-legend" style="position:relative;top:0;margin-top:52px">
+  <div class="g-legend-item"><div class="g-legend-swatch" style="background:#f87171"></div>break-even (${x2(be)})</div>
+  <div class="g-legend-item"><div class="g-legend-swatch" style="background:#f59e0b"></div>schaaldrempel ${(SCALE_T*100).toFixed(0)}% (${x2(schaal)})</div>
+  <div class="g-legend-item"><div class="g-legend-swatch" style="background:#4ade80"></div>comfortabel ${(SCALE_H*100).toFixed(0)}% (${x2(comfy)})</div>
+</div>`;
+}
+
+/* ═══ TABLES ═════════════════════════════════════════════════════ */
+function renderOrders(rws,fx){
+  const rev=[...rws].reverse();
+  document.getElementById("ordTable").innerHTML=`
+<thead><tr><th>Datum</th><th class="r">Orders</th><th class="r">Revenue incl.</th><th class="r">Revenue excl.</th><th class="r">Marge</th><th class="r">Marge%</th></tr></thead>
+<tbody>
+${rev.map(r=>{const mp=r.rex>0?r.pro/r.rex*100:0;return`
+<tr><td>${fmtS(r.d)}</td><td class="r">${r.oc}</td><td class="r">${eur(r.rev)}</td><td class="r">${eur(r.rex)}</td><td class="r">${eur(r.pro)}</td><td class="r">${mp.toFixed(1)}%</td></tr>`}).join("")}
+<tr class="tot"><td>Totaal</td><td class="r">${fx.oc}</td><td class="r">—</td><td class="r">${eur(fx.rex)}</td><td class="r">${eur(fx.pro)}</td><td class="r">${(fx.rex>0?fx.pro/fx.rex*100:0).toFixed(1)}%</td></tr>
+</tbody>`;
+}
+
+function renderBeroas(rws,fx){
+  document.getElementById("beSummary").innerHTML=`
+<div class="be-stat"><div class="be-lbl">Omzet excl. BTW</div><div class="be-val">${eur(fx.rex)}</div></div>
+<div class="be-stat"><div class="be-lbl">Vaste kosten</div><div class="be-val">${eur(fx.k)}</div></div>
+<div class="be-stat"><div class="be-lbl">BEROAS = omzet / kosten</div><div class="be-val">${x2(fx.be)}</div></div>`;
+
+  const rev=[...rws].reverse();
+  document.getElementById("beTable").innerHTML=`
+<thead><tr><th>Dag</th><th class="r">Omzet excl.</th><th class="r">Marge (CM)</th><th class="r">Kosten</th><th class="r">BEROAS dag</th></tr></thead>
+<tbody>
+${rev.map(r=>{const k=r.rex-r.pro,b=k>0?r.rex/k:0;return`
+<tr><td>${fmtS(r.d)}</td><td class="r">${eur(r.rex)}</td><td class="r">${eur(r.pro)}</td><td class="r">${eur(k)}</td><td class="r">${x2(b)}</td></tr>`}).join("")}
+<tr class="tot"><td>Totaal</td><td class="r">${eur(fx.rex)}</td><td class="r">${eur(fx.pro)}</td><td class="r">${eur(fx.k)}</td><td class="r">${x2(fx.be)}</td></tr>
+</tbody>`;
+}
+
+function renderKern(fx,tb){
+  const cells=[
+    ["Orders",fx.oc],
+    ["Revenue excl. BTW",eur(fx.rex)],
+    ["Marge (CM)",eur(fx.pro)],
+    ["Marge%",(fx.rex>0?fx.pro/fx.rex*100:0).toFixed(1)+"%"],
+    ["Meta spend",eur(tb.spend)],
+    ["TB revenue excl.",eur(tb.re)],
+    ["Aankopen (Meta)",tb.purch],
+    ["CTR",tb.ctr.toFixed(2)+"%"],
+    ["CPC",eur(tb.spend/Math.max(1,tb.cl))],
+    ["CPO",eur(tb.spend/Math.max(1,tb.purch))],
+    ["ROAS excl. BTW",x2(tb.roas)],
+    ["BEROAS",x2(fx.be)],
+  ];
+  document.getElementById("kernGrid").innerHTML=cells.map(([l,v])=>
+    `<div class="kern-cell"><div class="kern-lbl">${l}</div><div class="kern-val">${v}</div></div>`).join("");
+}
+
+/* ═══ SIMULATOR ══════════════════════════════════════════════════ */
+function updateSim(v){
+  v=parseFloat(v);
+  document.getElementById("simRval").textContent=x2(v);
+  const diff=v-(CX?CX.be:1.35);
+  const raw=Math.max(0,(CT?CT.spend:1315.61)*diff)*BONUS_PCT;
+  const pctS=CT&&CT.spend>0?raw/CT.spend*100:0;
+  document.getElementById("simBonus").textContent=eur(raw);
+  document.getElementById("simDiff").textContent=(diff>=0?"+":"")+diff.toFixed(3)+"×";
+  document.getElementById("simPct").textContent=pctS.toFixed(2)+"%";
+}
+
+/* ═══ ACCORDION ══════════════════════════════════════════════════ */
+function tog(id){document.getElementById(id).classList.toggle("open")}
+
+/* ═══ INIT ═══════════════════════════════════════════════════════ */
 render();
 </script>
-
 </body>
 </html>
