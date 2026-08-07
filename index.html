@@ -274,7 +274,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 
 <script>
 /* ═══ DATA ═══════════════════════════════════════════════════════ */
-const SNAP        = "2026-08-07";
+const SNAP = "2026-08-07";
 const TB_ONBOARD  = "2026-07-20";
 const BONUS_PCT   = 0.10;
 const BTW         = 1.21;
@@ -308,15 +308,15 @@ const ROWS = [
 ];
 
 // Dagelijkse & wekelijkse TB data — opgehaald via TrackBee Campaign Insights API
-const TB_VANDAAG  = {from:"2026-08-07",to:"2026-08-07",spend:301.83, rev7:581.10, rev1v:0,     purch:4,  impr:47471,  cl:667};
-const TB_GISTEREN = {from:"2026-08-06",to:"2026-08-06",spend:342.79, rev7:596.00, rev1v:149.00,purch:5,  impr:50898,  cl:758};
-const TB_WEEK     = {from:"2026-08-03",to:"2026-08-07",spend:1222.94,rev7:1879.20,rev1v:298.00,purch:13, impr:184329, cl:2592};
-const TB_PREVWEEK = {from:"2026-07-28",to:"2026-08-03",spend:923.44, rev7:3009.20,rev1v:314.10,purch:21, impr:101559, cl:1349};
+const TB_VANDAAG = {from:"2026-08-07",to:"2026-08-07",spend:313.74,rev7:581.1,rev1v:0,purch:4,impr:49403,cl:685};
+const TB_GISTEREN = {from:"2026-08-06",to:"2026-08-06",spend:342.8,rev7:596,rev1v:149,purch:4,impr:50899,cl:758};
+const TB_WEEK = {from:"2026-08-03",to:"2026-08-07",spend:1234.86,rev7:1879.2,rev1v:298,purch:11,impr:186262,cl:2610};
+const TB_PREVWEEK = {from:"2026-07-27",to:"2026-08-02",spend:970.53,rev7:3307.2,rev1v:314.1,purch:20,impr:104946,cl:1419};
 // TB_JUL: Platform Summary cijfers (volledige juli, betrouwbaarder dan skill API)
 const TB_JUL = {from:"2026-07-01",to:"2026-07-31",spend:4030.15,rev7:8787.00,rev1v:0,purch:32,impr:202988,cl:2847};
 const TB_AUG = {from:"2026-08-01",to:"2026-08-07",spend:1315.61,rev7:2622.30,rev1v:298.00,purch:17,impr:186506,cl:2598};
 // Betrouwbare data: CAPI Gateway extra uit per 5 aug → geen dubbele aankopen meer
-const TB_AUG_CLEAN = {from:"2026-08-05",to:"2026-08-07",spend:878.97,rev7:1581.20,rev1v:298.00,purch:11,impr:134448,cl:1940};
+const TB_AUG_CLEAN = {from:"2026-08-05",to:"2026-08-07",spend:1512.58,rev7:3069.3,rev1v:298,purch:18,impr:218349,cl:3030};
 
 /* Kostprijscalculatie — marges per product (bron: KP-sheet v2, winst op werkelijke webshopprijs) */
 const KP = [
