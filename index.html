@@ -202,6 +202,13 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     <div class="acc-body"><div class="kern-grid" id="kernGrid"></div></div>
   </div>
 
+  <div class="acc-item" id="acc-ads">
+    <div class="acc-hd" onclick="tog('acc-ads')"><span id="adsHdr">Meta advertentiegroepen</span><span class="acc-chv">›</span></div>
+    <div class="acc-body">
+      <div class="tscroll"><table id="adsTable"></table></div>
+    </div>
+  </div>
+
   <div class="acc-item" id="acc-ord">
     <div class="acc-hd" onclick="tog('acc-ord')"><span id="ordHdr">Orderdetail (alle orders)</span><span class="acc-chv">›</span></div>
     <div class="acc-body">
@@ -455,15 +462,44 @@ function maandNr(snap){
   return Math.floor(days/30)+1;
 }
 
+/* ═══ ADS DATA (per adset, gesorteerd op spend) ══════════════════ */
+const ADS_JUL = [
+  {n:"001_002",          spend:715.70, rev7:740,   rev1v:432, purch:8,  ctr:1.84, cpc:0.64, atc:17},
+  {n:"006_002",          spend:491.69, rev7:1192,  rev1v:180, purch:10, ctr:1.27, cpc:0.71, atc:24},
+  {n:"006_002 · New Size",spend:422.70,rev7:1341,  rev1v:0,   purch:9,  ctr:1.23, cpc:0.74, atc:18},
+  {n:"007_002",          spend:208.41, rev7:1237,  rev1v:134, purch:5,  ctr:0.78, cpc:1.27, atc:20},
+  {n:"003_001",          spend:73.53,  rev7:0,     rev1v:0,   purch:0,  ctr:2.12, cpc:0.85, atc:2},
+  {n:"000_000 (Ally)",   spend:50.00,  rev7:0,     rev1v:0,   purch:0,  ctr:1.62, cpc:0.28, atc:0},
+  {n:"005_001 · New Size",spend:45.61, rev7:0,     rev1v:0,   purch:0,  ctr:0.53, cpc:2.40, atc:0},
+  {n:"007_002 · New Size",spend:9.65,  rev7:0,     rev1v:0,   purch:0,  ctr:0.73, cpc:1.38, atc:0},
+];
+const ADS_AUG = [ // aug 5–7, clean CAPI data
+  {n:"001_002",          spend:126.27, rev7:447.0, rev1v:0,   purch:3,  ctr:2.05, cpc:0.58, atc:4},
+  {n:"004_003",          spend:52.98,  rev7:0,     rev1v:0,   purch:0,  ctr:1.92, cpc:0.14, atc:0},
+  {n:"001_003",          spend:47.09,  rev7:0,     rev1v:0,   purch:0,  ctr:1.23, cpc:0.17, atc:0},
+  {n:"007_003",          spend:49.08,  rev7:0,     rev1v:149, purch:1,  ctr:1.08, cpc:0.91, atc:1},
+  {n:"006_002 · New Size",spend:89.28, rev7:761.1, rev1v:0,   purch:4,  ctr:1.09, cpc:0.77, atc:4},
+  {n:"006_002",          spend:88.61,  rev7:239.0, rev1v:149, purch:2,  ctr:1.31, cpc:0.55, atc:3},
+  {n:"002_004",          spend:95.73,  rev7:134.1, rev1v:0,   purch:1,  ctr:2.65, cpc:0.33, atc:2},
+  {n:"007_002",          spend:43.47,  rev7:0,     rev1v:0,   purch:0,  ctr:0.62, cpc:1.09, atc:0},
+  {n:"008_003",          spend:42.09,  rev7:0,     rev1v:0,   purch:0,  ctr:1.57, cpc:0.53, atc:0},
+  {n:"011_003",          spend:41.78,  rev7:0,     rev1v:0,   purch:0,  ctr:0.26, cpc:2.09, atc:0},
+  {n:"012_003",          spend:41.85,  rev7:0,     rev1v:0,   purch:0,  ctr:0.77, cpc:1.23, atc:0},
+  {n:"010-003",          spend:42.41,  rev7:0,     rev1v:0,   purch:0,  ctr:1.43, cpc:0.65, atc:0},
+  {n:"002-003",          spend:42.44,  rev7:0,     rev1v:0,   purch:0,  ctr:1.41, cpc:0.83, atc:0},
+  {n:"005-003 · Copy",   spend:42.73,  rev7:0,     rev1v:0,   purch:0,  ctr:1.16, cpc:0.60, atc:0},
+  {n:"006_003",          spend:42.71,  rev7:0,     rev1v:0,   purch:0,  ctr:1.67, cpc:0.43, atc:0},
+];
+
 /* ═══ PERIODS ════════════════════════════════════════════════════ */
 const PERIODS = {
-  vandaag:  {label:"Vandaag",           from:"2026-08-07",to:"2026-08-07",tb:null},
-  gisteren: {label:"Gisteren",          from:"2026-08-06",to:"2026-08-06",tb:null},
-  week:     {label:"Deze week",         from:"2026-08-03",to:"2026-08-07",tb:null},
-  prevweek: {label:"Vorige week",       from:"2026-07-28",to:"2026-08-03",tb:null},
-  aug:      {label:"Augustus",          from:"2026-08-01",to:"2026-08-07",tb:[TB_AUG_CLEAN],capiNote:true},
-  jul:      {label:"Juli",              from:"2026-07-16",to:"2026-07-31",tb:[TB_JUL]},
-  contract: {label:"Volledige periode", from:"2026-07-16",to:"2026-08-07",tb:[TB_JUL,TB_AUG_CLEAN]},
+  vandaag:  {label:"Vandaag",           from:"2026-08-07",to:"2026-08-07",tb:null,   ads:null},
+  gisteren: {label:"Gisteren",          from:"2026-08-06",to:"2026-08-06",tb:null,   ads:null},
+  week:     {label:"Deze week",         from:"2026-08-03",to:"2026-08-07",tb:null,   ads:null},
+  prevweek: {label:"Vorige week",       from:"2026-07-28",to:"2026-08-03",tb:null,   ads:null},
+  aug:      {label:"Augustus",          from:"2026-08-01",to:"2026-08-07",tb:[TB_AUG_CLEAN],capiNote:true,ads:ADS_AUG},
+  jul:      {label:"Juli",              from:"2026-07-16",to:"2026-07-31",tb:[TB_JUL],ads:ADS_JUL},
+  contract: {label:"Volledige periode", from:"2026-07-16",to:"2026-08-07",tb:[TB_JUL,TB_AUG_CLEAN],ads:[...ADS_JUL,...ADS_AUG]},
 };
 
 /* ═══ STATE ══════════════════════════════════════════════════════ */
@@ -520,8 +556,9 @@ function render(){
     document.getElementById("cardMeta").innerHTML=
       `Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · Maand ${mn}${capiWarn} <span class="info-i" data-tip="Maand ${mn} van het contract · start 16 jul 2026 · BEROAS op basis van werkelijke Shopify orders">i</span>`;
   } else {
+    const nDays=Math.floor((new Date(fxTo)-new Date(fxFrom))/86400000)+1;
     document.getElementById("cardMeta").innerHTML=
-      `Shopify · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · ${fxRws.length} dag${fxRws.length!==1?"en":""}`;
+      `Shopify · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · ${nDays} dag${nDays!==1?"en":""}`;
   }
 
   /* bonus / omzet */
@@ -606,6 +643,7 @@ function render(){
   renderOrders(fxFrom,fxTo);
   renderBeroas(CT,CX.be,CX,fxFrom,fxTo);
   renderKern(CX,CT);
+  renderAds(pd.ads||null, CX.be);
 
   /* sim — alleen updaten bij TB periodes */
   if(hasTB){
@@ -791,6 +829,76 @@ function updateSim(){
   document.getElementById("simBonus").textContent=eur(raw);
   document.getElementById("simDiff").textContent=(diff>=0?"+":"")+diff.toFixed(3)+"×";
   document.getElementById("simPct").textContent=pctS.toFixed(2)+"%";
+}
+
+/* ═══ ADS BREAKDOWN ══════════════════════════════════════════════ */
+function renderAds(adsRaw, beroas){
+  const acc=document.getElementById("acc-ads");
+  if(!adsRaw){acc.style.display="none";return;}
+  acc.style.display="";
+
+  // Merge duplicate adset names (contract period combineert jul+aug)
+  const map={};
+  for(const a of adsRaw){
+    if(!map[a.n]) map[a.n]={n:a.n,spend:0,rev7:0,rev1v:0,purch:0,atc:0,_ctr:0,_cpc:0,_cnt:0};
+    const m=map[a.n];
+    m.spend+=a.spend; m.rev7+=a.rev7; m.rev1v+=a.rev1v;
+    m.purch+=a.purch; m.atc+=a.atc;
+    m._ctr+=a.ctr; m._cpc+=a.cpc; m._cnt++;
+  }
+  const rows=Object.values(map).sort((a,b)=>b.spend-a.spend);
+  const totSpend=rows.reduce((s,r)=>s+r.spend,0);
+
+  document.getElementById("adsHdr").textContent=`Meta advertentiegroepen · ${rows.length} groepen`;
+
+  let html=`<thead><tr>
+    <th>Advertentiegroep</th>
+    <th class="r">Spend</th>
+    <th class="r">% spend</th>
+    <th class="r">Aankopen</th>
+    <th class="r">Revenue</th>
+    <th class="r">ROAS</th>
+    <th class="r">CTR</th>
+    <th class="r">CPC</th>
+    <th class="r">ATC</th>
+  </tr></thead><tbody>`;
+
+  for(const r of rows){
+    const ri=r.rev7+r.rev1v;
+    const roas=r.spend>0?ri/r.spend:0;
+    const pct=(r.spend/totSpend*100).toFixed(1);
+    const avgCtr=(r._cnt>0?r._ctr/r._cnt:0).toFixed(2);
+    const avgCpc=(r._cnt>0?r._cpc/r._cnt:0).toFixed(2);
+    const roasColor=roas===0?"#ef4444":roas>=beroas?"#4ade80":"#f59e0b";
+    html+=`<tr>
+      <td>${r.n}</td>
+      <td class="r">${eur(r.spend)}</td>
+      <td class="r" style="color:#64748b">${pct}%</td>
+      <td class="r">${r.purch||"—"}</td>
+      <td class="r">${ri>0?eur(ri):"—"}</td>
+      <td class="r" style="color:${roasColor};font-weight:700">${roas>0?x2(roas):"—"}</td>
+      <td class="r">${avgCtr}%</td>
+      <td class="r">€${avgCpc}</td>
+      <td class="r">${r.atc||"—"}</td>
+    </tr>`;
+  }
+  // Totaalrij
+  const totRi=rows.reduce((s,r)=>s+r.rev7+r.rev1v,0);
+  const totRoas=totSpend>0?totRi/totSpend:0;
+  const totPurch=rows.reduce((s,r)=>s+r.purch,0);
+  const totAtc=rows.reduce((s,r)=>s+r.atc,0);
+  html+=`</tbody><tfoot><tr class="tot">
+    <td>Totaal · ${rows.length} groepen</td>
+    <td class="r">${eur(totSpend)}</td>
+    <td class="r">100%</td>
+    <td class="r">${totPurch}</td>
+    <td class="r">${totRi>0?eur(totRi):"—"}</td>
+    <td class="r" style="font-weight:700">${totRoas>0?x2(totRoas):"—"}</td>
+    <td class="r">—</td><td class="r">—</td>
+    <td class="r">${totAtc}</td>
+  </tr></tfoot>`;
+
+  document.getElementById("adsTable").innerHTML=html;
 }
 
 /* ═══ ACCORDION ══════════════════════════════════════════════════ */
