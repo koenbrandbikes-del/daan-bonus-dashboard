@@ -232,84 +232,118 @@ const KP = [
   {name:"Prime complete",    incl:269, excl:222.31, winst:112.78},
 ];
 
-/* Shopify individuele orders — bekende data (FiveX exports + vorige sessie) */
-const SH_ORDERS = [
-  // pre-campagne (bekende individuen)
-  {d:"2026-06-24",num:"—",    incl:4.95},
-  {d:"2026-07-11",num:"—",    incl:149},
-  {d:"2026-07-16",num:"#1020",incl:90},
-  {d:"2026-07-16",num:"#1019",incl:222.55},
-  {d:"2026-07-16",num:"#1018",incl:149},
-  {d:"2026-07-16",num:"#1017",incl:134.10},
-  {d:"2026-07-16",num:"#1016",incl:149},
-  {d:"2026-07-17",num:"—",    incl:149},
-  {d:"2026-07-17",num:"—",    incl:149},
-  {d:"2026-07-17",num:"—",    incl:149},
-  {d:"2026-07-18",num:"#1027",incl:270.55},
-  {d:"2026-07-18",num:"#1026",incl:149},
-  {d:"2026-07-18",num:"#1025",incl:149},
-  {d:"2026-07-18",num:"#1024",incl:149},
-  {d:"2026-07-19",num:"#1032",incl:239},
-  {d:"2026-07-19",num:"#1031",incl:149},
-  {d:"2026-07-19",num:"#1030",incl:4.95},
-  {d:"2026-07-19",num:"#1029",incl:4.95},
-  {d:"2026-07-19",num:"#1028",incl:4.95},
-  // campagne (bekende individuen)
-  {d:"2026-07-21",num:"—",    incl:149},
-  {d:"2026-07-22",num:"#1036",incl:377},
-  {d:"2026-07-22",num:"#1035",incl:149},
-  {d:"2026-07-22",num:"#1034",incl:149},
-  {d:"2026-07-23",num:"#1040",incl:149},
-  {d:"2026-07-23",num:"#1039",incl:149},
-  {d:"2026-07-23",num:"#1038",incl:149},
-  {d:"2026-07-23",num:"#1037",incl:149},
-  {d:"2026-07-24",num:"—",    incl:149},
-  {d:"2026-07-24",num:"—",    incl:149},
-  {d:"2026-07-24",num:"—",    incl:149},
-  {d:"2026-07-25",num:"—",    incl:149},
-  {d:"2026-07-25",num:"—",    incl:149},
-  {d:"2026-07-26",num:"—",    incl:149},
-  {d:"2026-07-26",num:"—",    incl:134.10},
-  {d:"2026-07-27",num:"#1050",incl:149},
-  {d:"2026-07-27",num:"#1049",incl:222.55},
-  {d:"2026-07-27",num:"#1048",incl:90},
-  {d:"2026-07-30",num:"—",    incl:149},
-  {d:"2026-07-30",num:"—",    incl:149},
-  {d:"2026-08-01",num:"—",    incl:149},
-  {d:"2026-08-01",num:"—",    incl:90},
-  {d:"2026-08-03",num:"—",    incl:90},
-  {d:"2026-08-07",num:"#1086",incl:239},
-  {d:"2026-08-07",num:"#1085",incl:149},
-  {d:"2026-08-07",num:"#1084",incl:134.10},
+/* Kosten per product excl. BTW (inkoopprijs + fulfillment) */
+const ITEM_COST = {
+  "LumeWorks Prime":          51.71,
+  "Projectiescherm 100 inch": 39.98,
+  "Pro stand":                21.65,
+  // LumeWorks Atlas + Titan: kostprijs nog niet ingevoerd
+};
+
+/* Alle 86 Shopify orders — live via Shopify GraphQL API */
+const ORDERS = [
+  {d:"2026-06-24",num:"#1001",items:["LumeWorks Prime"],                                        code:"pim100",        incl:4.95,   test:true},
+  {d:"2026-07-10",num:"#1002",items:["De complete Titan setup"],                                code:"Koen100",       incl:4.95,   test:true},
+  {d:"2026-07-10",num:"#1003",items:["LumeWorks Titan"],                                        code:"",              incl:299},
+  {d:"2026-07-11",num:"#1004",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-13",num:"#1005",items:["LumeWorks Prime"],                                        code:"Tiktok10",      incl:134.10},
+  {d:"2026-07-13",num:"#1006",items:["LumeWorks Prime","Projectiescherm 100 inch"],             code:"",              incl:222.55},
+  {d:"2026-07-13",num:"#1007",items:["Projectiescherm 100 inch","LumeWorks Prime"],             code:"",              incl:239},
+  {d:"2026-07-13",num:"#1008",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-14",num:"#1009",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-14",num:"#1010",items:["LumeWorks Prime","Projectiescherm 100 inch"],             code:"",              incl:222.55},
+  {d:"2026-07-14",num:"#1011",items:["LumeWorks Prime"],                                        code:"Prime25",       incl:111.75},
+  {d:"2026-07-14",num:"#1012",items:["LumeWorks Atlas","Projectiescherm 100 inch"],             code:"",              incl:308.05},
+  {d:"2026-07-14",num:"#1013",items:["Projectiescherm 100 inch","LumeWorks Prime"],             code:"",              incl:239},
+  {d:"2026-07-15",num:"#1014",items:["Projectiescherm 100 inch","Pro stand"],                   code:"JOS15",         incl:117.30},
+  {d:"2026-07-15",num:"#1015",items:["Projectiescherm 100 inch"],                               code:"",              incl:90},
+  {d:"2026-07-16",num:"#1016",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-16",num:"#1017",items:["LumeWorks Prime"],                                        code:"Anniek10",      incl:134.10},
+  {d:"2026-07-16",num:"#1018",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-16",num:"#1019",items:["LumeWorks Prime","Projectiescherm 100 inch"],             code:"",              incl:222.55},
+  {d:"2026-07-16",num:"#1020",items:["Projectiescherm 100 inch"],                               code:"",              incl:90},
+  {d:"2026-07-17",num:"#1021",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-17",num:"#1022",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-17",num:"#1023",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-17",num:"#1024",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-18",num:"#1025",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-18",num:"#1026",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-18",num:"#1027",items:["Pro stand","LumeWorks Prime","Projectiescherm 100 inch"], code:"",              incl:270.55},
+  {d:"2026-07-19",num:"#1028",items:["LumeWorks Prime"],                                        code:"JOB100",        incl:4.95,   test:true},
+  {d:"2026-07-19",num:"#1029",items:["LumeWorks Prime"],                                        code:"JOB100 · FRSHPJOB", incl:0, test:true},
+  {d:"2026-07-19",num:"#1030",items:["LumeWorks Prime"],                                        code:"JOB100 · FRSHPJOB", incl:0, test:true},
+  {d:"2026-07-19",num:"#1031",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-19",num:"#1032",items:["LumeWorks Atlas"],                                        code:"",              incl:239},
+  {d:"2026-07-21",num:"#1033",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-22",num:"#1034",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-22",num:"#1035",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-22",num:"#1036",items:["Pro stand","Projectiescherm 100 inch","LumeWorks Atlas"], code:"",              incl:377},
+  {d:"2026-07-23",num:"#1037",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-23",num:"#1038",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-23",num:"#1039",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-23",num:"#1040",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-24",num:"#1041",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-24",num:"#1042",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-24",num:"#1043",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-25",num:"#1044",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-25",num:"#1045",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-26",num:"#1046",items:["LumeWorks Prime"],                                        code:"Anniek10",      incl:134.10},
+  {d:"2026-07-26",num:"#1047",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-27",num:"#1048",items:["Projectiescherm 100 inch"],                               code:"",              incl:90},
+  {d:"2026-07-27",num:"#1049",items:["LumeWorks Prime","Projectiescherm 100 inch"],             code:"",              incl:222.55},
+  {d:"2026-07-27",num:"#1050",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-28",num:"#1051",items:["LumeWorks Atlas","Projectiescherm 100 inch"],             code:"",              incl:308.05},
+  {d:"2026-07-28",num:"#1052",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-28",num:"#1053",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-28",num:"#1054",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-29",num:"#1055",items:["LumeWorks Atlas"],                                        code:"",              incl:239},
+  {d:"2026-07-29",num:"#1056",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-29",num:"#1057",items:["LumeWorks Prime"],                                        code:"Anniek10",      incl:134.10},
+  {d:"2026-07-29",num:"#1058",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-29",num:"#1059",items:["LumeWorks Prime"],                                        code:"Anniek10",      incl:134.10},
+  {d:"2026-07-29",num:"#1060",items:["LumeWorks Prime"],                                        code:"EX12RP",        incl:144},
+  {d:"2026-07-30",num:"#1061",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-30",num:"#1062",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-31",num:"#1063",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-31",num:"#1064",items:["LumeWorks Titan"],                                        code:"",              incl:349},
+  {d:"2026-07-31",num:"#1065",items:["Projectiescherm 100 inch"],                               code:"",              incl:90},
+  {d:"2026-08-01",num:"#1066",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-08-01",num:"#1067",items:["Projectiescherm 100 inch"],                               code:"",              incl:90},
+  {d:"2026-08-02",num:"#1068",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-08-02",num:"#1069",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-08-02",num:"#1070",items:["Projectiescherm 100 inch"],                               code:"",              incl:90},
+  {d:"2026-08-02",num:"#1071",items:["LumeWorks Prime","Projectiescherm 100 inch"],             code:"",              incl:222.55},
+  {d:"2026-08-03",num:"#1072",items:["Projectiescherm 100 inch"],                               code:"",              incl:90},
+  {d:"2026-08-05",num:"#1073",items:["LumeWorks Atlas"],                                        code:"",              incl:289.19},
+  {d:"2026-08-05",num:"#1074",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-08-05",num:"#1075",items:["LumeWorks Atlas"],                                        code:"",              incl:239},
+  {d:"2026-08-05",num:"#1076",items:["LumeWorks Titan"],                                        code:"Anniek10",      incl:314.10},
+  {d:"2026-08-05",num:"#1077",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-08-06",num:"#1078",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-08-06",num:"#1079",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-08-06",num:"#1080",items:["Projectiescherm 100 inch"],                               code:"Anniek10",      incl:81},
+  {d:"2026-08-06",num:"#1081",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-08-06",num:"#1082",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-08-06",num:"#1083",items:["LumeWorks Prime"],                                        code:"Anniek10",      incl:134.10},
+  {d:"2026-08-07",num:"#1084",items:["LumeWorks Prime"],                                        code:"Anniek10",      incl:134.10},
+  {d:"2026-08-07",num:"#1085",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-08-07",num:"#1086",items:["LumeWorks Atlas"],                                        code:"",              incl:239},
 ];
 
-/* Dagsamenvattingen voor ontbrekende dagen (FiveX Shopify-only query) */
-const SH_SUMS = [
-  // pre-campagne onbekend
-  {d:"2026-07-10",oc:2, rev:303.95, rex:252.06},
-  {d:"2026-07-13",oc:4, rev:744.65, rex:615.41},
-  {d:"2026-07-14",oc:5, rev:1030.35,rex:851.53},
-  {d:"2026-07-15",oc:2, rev:207.30, rex:171.32},
-  // campagne onbekend
-  {d:"2026-07-28",oc:4, rev:755.05, rex:624.01},
-  {d:"2026-07-29",oc:6, rev:949.20, rex:784.46},
-  {d:"2026-07-31",oc:3, rev:588.00, rex:485.95},
-  {d:"2026-08-02",oc:4, rev:610.55, rex:504.59},
-  {d:"2026-08-05",oc:5, rev:1090.10,rex:900.91},
-  {d:"2026-08-06",oc:6, rev:811.10, rex:670.33},
-];
+function prodLabel(t){
+  return t.replace("LumeWorks ","").replace("Projectiescherm 100 inch","Scherm").replace("De complete Titan setup","Titan setup");
+}
 
-function matchProd(incl){
-  if(incl<10)                   return{name:"Accessoire",        excl:incl/BTW,winst:0};
-  if(Math.abs(incl-90)<0.5)    return{name:"Scherm",            excl:74.38, winst:34.40};
-  if(Math.abs(incl-134.10)<0.5)return{name:"Prime · 10% ↓",    excl:110.83,winst:59.12};
-  if(Math.abs(incl-149)<0.5)   return{name:"Prime",             excl:123.14,winst:71.43};
-  if(Math.abs(incl-222.55)<1)  return{name:"Prime + Scherm",    excl:184.30,winst:96.42};
-  if(Math.abs(incl-239)<0.5)   return{name:"Prime + Standaard", excl:197.52,winst:105.83};
-  if(Math.abs(incl-270.55)<1)  return{name:"Prime complete",    excl:222.31,winst:112.78};
-  if(Math.abs(incl-269)<1)     return{name:"Prime complete",    excl:222.31,winst:112.78};
-  const excl=incl/BTW, be=kpBeroas(incl,1);
-  return{name:`€${incl}`,excl,winst:excl/be};
+function calcOrder(o){
+  const excl = o.incl / BTW;
+  let cost = 0, hasUnknown = false;
+  for(const it of o.items){
+    const c = ITEM_COST[it];
+    if(c == null) hasUnknown = true;
+    else cost += c;
+  }
+  const winst = hasUnknown ? null : (excl - cost);
+  return {name:o.items.map(prodLabel).join(" · "), excl, winst, cost:hasUnknown?null:cost};
 }
 
 /* ═══ HELPERS ════════════════════════════════════════════════════ */
@@ -483,28 +517,26 @@ function renderGauge(be,schaal,comfy,roas){
 
 /* ═══ TABLES ═════════════════════════════════════════════════════ */
 function renderOrders(){
-  // Bouw volledige lijst: bekende individuele orders + schattingen voor onbekende dagen
-  const all=[];
-  SH_ORDERS.forEach(o=>all.push({...o, est:false}));
-  SH_SUMS.forEach(s=>{
-    const avgIncl=s.rev/s.oc;
-    for(let i=0;i<s.oc;i++) all.push({d:s.d,num:"—",incl:avgIncl,est:true});
-  });
-  all.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
-
-  let html="", totEx=0, totWi=0;
-  for(const o of all){
-    const p=matchProd(o.incl);
-    totEx+=p.excl; totWi+=p.winst;
+  const sorted = [...ORDERS].sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
+  let html="", totEx=0, totCost=0, totWi=0, totExKnown=0;
+  for(const o of sorted){
+    const p = calcOrder(o);
+    if(!o.test) totEx += p.excl;
+    if(!o.test && p.winst!==null){totExKnown+=p.excl; totCost+=p.cost; totWi+=p.winst;}
+    const marg = p.winst!==null ? (p.winst/p.excl*100).toFixed(1)+"%" : "—";
+    const be   = p.winst!==null && p.winst>0 ? x2(p.excl/p.winst) : "—";
+    const note = o.test ? ' <span style="font-size:10px;color:#475569">test</span>' : '';
     html+=`<tr>
       <td>${o.num}</td><td>${fmtS(o.d)}</td>
-      <td>${p.name}${o.est?' <span style="font-size:10px;color:#475569">~</span>':''}</td>
-      <td>—</td>
-      <td class="r">${eur(p.excl)}</td><td class="r">${eur(p.excl-p.winst)}</td>
-      <td class="r">${(p.winst/p.excl*100).toFixed(1)}%</td>
-      <td class="r">${x2(p.excl/p.winst)}</td></tr>`;
+      <td>${p.name}${note}</td>
+      <td>${o.code||"—"}</td>
+      <td class="r">${eur(p.excl)}</td><td class="r">${p.cost!=null?eur(p.cost):"—"}</td>
+      <td class="r">${marg}</td>
+      <td class="r">${be}</td></tr>`;
   }
-
+  const hasUnk = ORDERS.some(o=>!o.test&&o.items.some(it=>ITEM_COST[it]==null));
+  const totMarg = totExKnown>0 ? (totWi/totExKnown*100).toFixed(1)+"%" : "—";
+  const totBe   = totWi>0 ? x2(totExKnown/totWi) : "—";
   document.getElementById("ordTable").innerHTML=`
 <thead><tr>
   <th>Order</th><th>Datum</th><th>Producten</th><th>Kortingscode</th>
@@ -513,10 +545,10 @@ function renderOrders(){
 </tr></thead>
 <tbody>${html}
 <tr class="tot">
-  <td colspan="4">Totaal · ${all.length} orders</td>
-  <td class="r">${eur(totEx)}</td><td class="r">${eur(totEx-totWi)}</td>
-  <td class="r">${(totWi/totEx*100).toFixed(1)}%</td>
-  <td class="r">${x2(totEx/totWi)}</td>
+  <td colspan="4">Totaal · ${sorted.length} orders${hasUnk?' · Atlas/Titan KP ontbreekt':''}</td>
+  <td class="r">${eur(totEx)}</td><td class="r">${totCost>0?eur(totCost):"—"}</td>
+  <td class="r">${totMarg}</td>
+  <td class="r">${totBe}</td>
 </tr></tbody>`;
 }
 
