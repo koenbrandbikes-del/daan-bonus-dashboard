@@ -574,11 +574,14 @@ function render(){
     document.getElementById("mScale").textContent=x2(schaal);
     document.getElementById("mScaleSub").textContent=`${(SCALE_T*100).toFixed(0)}% nettomarge op omzet`;
     document.getElementById("mBeSub").textContent="incl. BTW";
+    const r7sub=x2(CT.rev7/CT.spend);
+    const r1vSub=CT.rev1v>0?` · 1v +${x2(CT.rev1v/CT.spend)}`:"";
+    const attrSub=`7k: ${r7sub}${r1vSub}`;
     if(prevRoas!==null){
       const rd=(CT.roas-prevRoas)/prevRoas*100;
-      document.getElementById("mRoasSub").textContent="incl. BTW · "+(rd>=0?"+":"")+rd.toFixed(1)+"% t.o.v. juli";
+      document.getElementById("mRoasSub").textContent=attrSub+" · "+(rd>=0?"+":"")+rd.toFixed(1)+"% t.o.v. jul";
     } else {
-      document.getElementById("mRoasSub").textContent="incl. BTW · Meta attributed";
+      document.getElementById("mRoasSub").textContent=attrSub;
     }
   } else {
     document.getElementById("mRoas").textContent=eur(CX.rex);
@@ -744,17 +747,19 @@ ${sorted.map(g=>`<tr>
 
 function renderKern(fx,tb){
   const cells=tb?[
-    ["Orders",fx.oc],
+    ["Orders (Shopify)",fx.oc],
     ["Revenue excl. BTW",eur(fx.rex)],
     ["Marge (CM)",eur(fx.pro)],
     ["Marge%",(fx.rex>0?fx.pro/fx.rex*100:0).toFixed(1)+"%"],
     ["Meta spend",eur(tb.spend)],
-    ["TB revenue excl.",eur(tb.re)],
-    ["Aankopen (Meta)",tb.purch],
+    ["Aankopen (TB)",tb.purch],
+    ["Omzet 7-dag klik",eur(tb.rev7)],
+    ["Omzet 1-dag view",tb.rev1v>0?eur(tb.rev1v):"—"],
+    ["ROAS 7-dag klik",x2(tb.rev7/tb.spend)],
+    ["ROAS totaal (7k+1v)",x2(tb.roas)],
     ["CTR",tb.ctr.toFixed(2)+"%"],
     ["CPC",eur(tb.spend/Math.max(1,tb.cl))],
     ["CPO",eur(tb.spend/Math.max(1,tb.purch))],
-    ["ROAS incl. BTW",x2(tb.roas)],
     ["BEROAS",x2(fx.be)],
   ]:[
     ["Orders",fx.oc],
