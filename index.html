@@ -388,6 +388,16 @@ function fxCalc(rws){
   return{rex,pro,rev,oc,k,be:0};
 }
 
+function shopifyBeroas(from,to){
+  let incl=0,winst=0;
+  for(const o of ORDERS){
+    if(o.test||(from&&o.d<from)||(to&&o.d>to)) continue;
+    const p=calcOrder(o);
+    if(p.winst!==null){incl+=o.incl;winst+=p.winst;}
+  }
+  return winst>0?incl/winst:KP[0].incl/KP[0].winst;
+}
+
 function kpBeroas(revInclTotal, purch){
   if(!purch) return KP[0].incl/KP[0].winst;
   const avg = revInclTotal / purch;
@@ -446,11 +456,11 @@ function render(){
 
   if(hasTB){
     CT=tbCalc(tbs);
-    CX.be=kpBeroas(CT.ri,CT.purch);
+    CX.be=shopifyBeroas(fxFrom,fxTo);
     CB=bonCalc(CX,CT);
   } else {
     CT=null; CB=null;
-    CX.be=kpBeroas(CX.rev,CX.oc);
+    CX.be=shopifyBeroas(fxFrom,fxTo);
   }
   const schaal=CX.be*(1+SCALE_T), comfy=CX.be*(1+SCALE_H);
 
@@ -459,7 +469,7 @@ function render(){
   if(P==="aug"){
     const px=fxCalc(rows("2026-07-16","2026-07-31"));
     const pt=tbCalc([TB_JUL]);
-    px.be=kpBeroas(pt.ri,pt.purch);
+    px.be=shopifyBeroas("2026-07-16","2026-07-31");
     prevBon=bonCalc(px,pt).raw;
     prevRoas=pt.roas;
   }
