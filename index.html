@@ -166,10 +166,8 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
       <option value="gisteren">Gisteren (6 aug)</option>
       <option value="week">Deze week (3–7 aug)</option>
     </optgroup>
-    <optgroup label="Maandperiodes">
-      <option value="aug" selected>Augustus (nu)</option>
-      <option value="prevweek">Vorige week (28 jul – 3 aug)</option>
-      <option value="jul">Juli (16–31 jul)</option>
+    <optgroup label="Bonusperiode">
+      <option value="aug" selected>Augustus (5–7 aug)</option>
       <option value="contract">Volledige periode</option>
     </optgroup>
   </select>
@@ -697,7 +695,7 @@ function render(){
     const mn=maandNr(SNAP);
     const tbFrom=tbs[0].from, tbTo=tbs[tbs.length-1].to;
     const capiWarn=pd.capiNote
-      ? ` <span class="capi-badge" data-tip="CAPI Gateway dubbeltelling gerepareerd per 5 aug · Meta ROAS op basis van ${fmtS(tbFrom)} t/m ${fmtS(tbTo)}">CAPI optimalisatie</span>`
+      ? ` <span class="capi-badge" data-tip="Vóór 5 aug telde Meta conversies dubbel (CAPI Gateway bug) · Tracking telt daarom pas vanaf 5 aug · ROAS-data: ${fmtS(tbFrom)} t/m ${fmtS(tbTo)}">Tracking v.a. 5 aug ⓘ</span>`
       : "";
     document.getElementById("cardMeta").innerHTML=
       `Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · Maand ${mn}${capiWarn} <span class="info-i" data-tip="Maand ${mn} van het contract · start 16 jul 2026 · BEROAS op basis van werkelijke Shopify orders">i</span>`;
@@ -788,8 +786,10 @@ function render(){
   renderOrders(fxFrom,fxTo);
   renderBeroas(CT,CX.be,CX,fxFrom,fxTo);
   renderKern(CX,CT);
-  renderAds(pd.ads||null, CX.be);
-  renderAnalysis(pd.ads||null, CX.be, CT);
+  const adsData = pd.ads || ADS_AUG;
+  const adsFallback = !pd.ads;
+  renderAds(adsData, CX.be, adsFallback);
+  renderAnalysis(adsData, CX.be, CT);
 
   /* simulator */
   if(hasTB){
@@ -982,7 +982,7 @@ function updateSim(){
 }
 
 /* ═══ ADS BREAKDOWN ══════════════════════════════════════════════ */
-function renderAds(adsRaw, beroas){
+function renderAds(adsRaw, beroas, fallback){
   const acc=document.getElementById("acc-ads");
   if(!adsRaw){acc.style.display="none";return;}
   acc.style.display="";
@@ -999,7 +999,7 @@ function renderAds(adsRaw, beroas){
   const rows=Object.values(map).sort((a,b)=>b.spend-a.spend);
   const totSpend=rows.reduce((s,r)=>s+r.spend,0);
 
-  document.getElementById("adsHdr").textContent=`Meta advertentiegroepen · ${rows.length} groepen`;
+  document.getElementById("adsHdr").textContent=`Meta advertentiegroepen · ${rows.length} groepen`+(fallback?" · aug 5–7":"");
 
   let html=`<thead><tr>
     <th>Advertentiegroep</th>
