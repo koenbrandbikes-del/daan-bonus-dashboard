@@ -551,7 +551,7 @@ const PERIODS = {
   gisteren: {label:"Gisteren",          from:"2026-08-06",to:"2026-08-06",tb:[TB_GISTEREN], ads:null},
   week:     {label:"Deze week",         from:"2026-08-03",to:"2026-08-07",tb:[TB_WEEK],     ads:null},
   prevweek: {label:"Vorige week",       from:"2026-07-28",to:"2026-08-03",tb:[TB_PREVWEEK], ads:null,capiNote:true},
-  aug:      {label:"Augustus",          from:"2026-08-04",to:"2026-08-07",tb:[TB_AUG_CLEAN],capiNote:true,ads:ADS_AUG},
+  aug:      {label:"Augustus",          from:"2026-08-05",to:"2026-08-07",tb:[TB_AUG_CLEAN],capiNote:true,ads:ADS_AUG},
   jul:      {label:"Juli",              from:"2026-07-16",to:"2026-07-31",tb:[TB_JUL],ads:ADS_JUL},
   contract: {label:"Volledige periode", from:"2026-07-16",to:"2026-08-07",tb:[TB_JUL,TB_AUG_CLEAN],ads:[...ADS_JUL,...ADS_AUG]},
 };
@@ -697,7 +697,7 @@ function render(){
     const mn=maandNr(SNAP);
     const tbFrom=tbs[0].from, tbTo=tbs[tbs.length-1].to;
     const capiWarn=pd.capiNote
-      ? ` <span class="capi-badge" data-tip="CAPI Gateway dubbeltelling gerepareerd per 4 aug · Meta ROAS op basis van ${fmtS(tbFrom)} t/m ${fmtS(tbTo)}">CAPI optimalisatie</span>`
+      ? ` <span class="capi-badge" data-tip="CAPI Gateway dubbeltelling gerepareerd per 5 aug · Meta ROAS op basis van ${fmtS(tbFrom)} t/m ${fmtS(tbTo)}">CAPI optimalisatie</span>`
       : "";
     document.getElementById("cardMeta").innerHTML=
       `Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · Maand ${mn}${capiWarn} <span class="info-i" data-tip="Maand ${mn} van het contract · start 16 jul 2026 · BEROAS op basis van werkelijke Shopify orders">i</span>`;
