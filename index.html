@@ -120,25 +120,33 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     <p>Hoeveel bonus Daan nu verdient met Meta advertenties</p>
   </div>
   <select class="period-sel" id="periodSel" onchange="setPeriod(this.value)">
-    <option value="aug">Augustus (nu)</option>
-    <option value="jul">Juli</option>
-    <option value="contract">Volledige periode</option>
+    <optgroup label="Actueel">
+      <option value="vandaag">Vandaag (7 aug)</option>
+      <option value="gisteren">Gisteren (6 aug)</option>
+      <option value="week">Deze week (3–7 aug)</option>
+    </optgroup>
+    <optgroup label="Maandperiodes">
+      <option value="aug" selected>Augustus (nu)</option>
+      <option value="prevweek">Vorige week (28 jul – 3 aug)</option>
+      <option value="jul">Juli (16–31 jul)</option>
+      <option value="contract">Volledige periode</option>
+    </optgroup>
   </select>
 </div>
 
 <!-- Main card -->
 <div class="card">
   <div class="card-meta" id="cardMeta"></div>
-  <div class="bonus-lbl">BONUS TOT NU TOE</div>
+  <div class="bonus-lbl" id="bonusLbl">BONUS TOT NU TOE</div>
   <div class="bonus-amt" id="bonusAmt"></div>
   <div id="bonusBadge"></div>
   <div class="status" id="statusLine"></div>
   <div class="meta-info" id="metaInfo"></div>
 
   <div class="mrow">
-    <div class="mc"><div class="mc-lbl">META ROAS</div><div class="mc-val" id="mRoas"></div><div class="mc-sub" id="mRoasSub"></div></div>
-    <div class="mc"><div class="mc-lbl">BREAK-EVEN</div><div class="mc-val" id="mBe"></div><div class="mc-sub">incl. BTW</div></div>
-    <div class="mc"><div class="mc-lbl">SCHAALDREMPEL</div><div class="mc-val" id="mScale"></div><div class="mc-sub" id="mScaleSub"></div></div>
+    <div class="mc"><div class="mc-lbl" id="mRoasLbl">META ROAS</div><div class="mc-val" id="mRoas"></div><div class="mc-sub" id="mRoasSub"></div></div>
+    <div class="mc"><div class="mc-lbl">BREAK-EVEN</div><div class="mc-val" id="mBe"></div><div class="mc-sub" id="mBeSub">incl. BTW</div></div>
+    <div class="mc"><div class="mc-lbl" id="mScaleLbl">SCHAALDREMPEL</div><div class="mc-val" id="mScale"></div><div class="mc-sub" id="mScaleSub"></div></div>
   </div>
 
   <div class="gauge-outer" id="gaugeOuter"></div>
@@ -187,7 +195,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
   </div>
 
   <div class="acc-item" id="acc-ord">
-    <div class="acc-hd" onclick="tog('acc-ord')"><span>Orderdetail (alle orders)</span><span class="acc-chv">›</span></div>
+    <div class="acc-hd" onclick="tog('acc-ord')"><span id="ordHdr">Orderdetail (alle orders)</span><span class="acc-chv">›</span></div>
     <div class="acc-body"><div class="tscroll"><table id="ordTable"></table></div></div>
   </div>
 
@@ -411,6 +419,17 @@ function maandNr(snap){
   return Math.floor(days/30)+1;
 }
 
+/* ═══ PERIODS ════════════════════════════════════════════════════ */
+const PERIODS = {
+  vandaag:  {label:"Vandaag",           from:"2026-08-07",to:"2026-08-07",tb:null},
+  gisteren: {label:"Gisteren",          from:"2026-08-06",to:"2026-08-06",tb:null},
+  week:     {label:"Deze week",         from:"2026-08-03",to:"2026-08-07",tb:null},
+  prevweek: {label:"Vorige week",       from:"2026-07-28",to:"2026-08-03",tb:null},
+  aug:      {label:"Augustus",          from:"2026-08-01",to:"2026-08-07",tb:[TB_AUG]},
+  jul:      {label:"Juli",              from:"2026-07-16",to:"2026-07-31",tb:[TB_JUL]},
+  contract: {label:"Volledige periode", from:"2026-07-16",to:"2026-08-07",tb:[TB_JUL,TB_AUG]},
+};
+
 /* ═══ STATE ══════════════════════════════════════════════════════ */
 let P="aug", CX, CT, CB;
 
@@ -418,22 +437,27 @@ function setPeriod(v){P=v;render()}
 
 /* ═══ RENDER ═════════════════════════════════════════════════════ */
 function render(){
-  const aug = P==="aug";
-  const jul = P==="jul";
-  const fxFrom = aug?"2026-08-01":TB_ONBOARD;
-  const fxTo   = jul?"2026-07-31":SNAP;
-  const tbs    = aug?[TB_AUG]:jul?[TB_JUL]:[TB_JUL,TB_AUG];
+  const pd=PERIODS[P]||PERIODS.aug;
+  const {from:fxFrom,to:fxTo,tb:tbs}=pd;
+  const hasTB=tbs!==null;
 
-  const fxRws = rows(fxFrom,fxTo);
-  CX=fxCalc(fxRws); CT=tbCalc(tbs);
-  CX.be=kpBeroas(CT.ri,CT.purch);
-  CB=bonCalc(CX,CT);
+  const fxRws=rows(fxFrom,fxTo);
+  CX=fxCalc(fxRws);
+
+  if(hasTB){
+    CT=tbCalc(tbs);
+    CX.be=kpBeroas(CT.ri,CT.purch);
+    CB=bonCalc(CX,CT);
+  } else {
+    CT=null; CB=null;
+    CX.be=kpBeroas(CX.rev,CX.oc);
+  }
   const schaal=CX.be*(1+SCALE_T), comfy=CX.be*(1+SCALE_H);
 
-  // Vergelijking met vorige periode
+  // Vergelijking aug → jul
   let prevBon=null,prevRoas=null;
-  if(aug){
-    const px=fxCalc(rows(TB_ONBOARD,"2026-07-31"));
+  if(P==="aug"){
+    const px=fxCalc(rows("2026-07-16","2026-07-31"));
     const pt=tbCalc([TB_JUL]);
     px.be=kpBeroas(pt.ri,pt.purch);
     prevBon=bonCalc(px,pt).raw;
@@ -441,19 +465,28 @@ function render(){
   }
 
   /* card meta */
-  const mn=maandNr(SNAP);
-  document.getElementById("cardMeta").innerHTML=
-    `Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · Maand ${mn} <span class="info-i" title="Maand ${mn} van het contract (start 16 jul 2026)">i</span>`;
+  if(hasTB){
+    const mn=maandNr(SNAP);
+    document.getElementById("cardMeta").innerHTML=
+      `Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · Maand ${mn} <span class="info-i" title="Maand ${mn} van het contract (start 16 jul 2026)">i</span>`;
+  } else {
+    document.getElementById("cardMeta").innerHTML=
+      `Shopify · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · ${fxRws.length} dag${fxRws.length!==1?"en":""}`;
+  }
 
-  /* bonus */
-  document.getElementById("bonusAmt").textContent=eur(CB.raw);
+  /* bonus / omzet */
+  document.getElementById("bonusLbl").textContent=hasTB?"BONUS TOT NU TOE":"OMZET INCL. BTW";
+  document.getElementById("bonusAmt").textContent=hasTB?eur(CB.raw):eur(CX.rev);
 
   /* badge */
   let badgeHtml;
-  if(prevBon!==null){
+  if(!hasTB){
+    const dagLabel={vandaag:"Vandaag",gisteren:"Gisteren",week:"Deze week",prevweek:"Vorige week"}[P]||pd.label;
+    badgeHtml=`<span class="badge ne">${dagLabel} · ${CX.oc} orders</span>`;
+  } else if(prevBon!==null){
     const d=CB.raw-prevBon, up=d>=0;
     badgeHtml=`<span class="badge ${up?"up":"dn"}">${up?"▲":"▼"} ${eur(Math.abs(d))} t.o.v. juli</span>`;
-  } else if(jul){
+  } else if(P==="jul"){
     badgeHtml=`<span class="badge ne">Juli · campagnestart</span>`;
   } else {
     badgeHtml=`<span class="badge ne">Gehele contractperiode</span>`;
@@ -461,49 +494,78 @@ function render(){
   document.getElementById("bonusBadge").innerHTML=badgeHtml;
 
   /* status */
-  const [dotC,txt]=CT.roas>=comfy?["g","Comfortabel boven de schaaldrempel"]
-    :CT.roas>=schaal?["g","Boven de schaaldrempel"]
-    :CT.roas>=CX.be?["a","Boven break-even, nog niet op schaaldrempel"]
-    :["r","Onder break-even"];
-  document.getElementById("statusLine").innerHTML=`<span class="dot ${dotC}"></span>${txt}`;
-
-  /* meta info */
-  const tbDays=tbs.reduce((a,t)=>{
-    const f=new Date(t.from),to=new Date(t.to);
-    return a+Math.floor((to-f)/86400000)+1;
-  },0);
-  const dek=tbDays>=fxRws.length?"volledig":`${tbDays} van ${fxRws.length} dagen`;
-  document.getElementById("metaInfo").textContent=`Adspend ${eur(CT.spend)} · Datadekking TrackBee: ${dek}`;
-
-  /* metrics */
-  document.getElementById("mRoas").textContent=x2(CT.roas);
-  document.getElementById("mBe").textContent=x2(CX.be);
-  document.getElementById("mScale").textContent=x2(schaal);
-  document.getElementById("mScaleSub").textContent=`+${(SCALE_T*100).toFixed(0)}% boven break-even`;
-  if(prevRoas!==null){
-    const rd=(CT.roas-prevRoas)/prevRoas*100;
-    document.getElementById("mRoasSub").textContent="incl. BTW · "+(rd>=0?"+":"")+rd.toFixed(1)+"% t.o.v. juli";
+  if(hasTB){
+    const [dotC,txt]=CT.roas>=comfy?["g","Comfortabel boven de schaaldrempel"]
+      :CT.roas>=schaal?["g","Boven de schaaldrempel"]
+      :CT.roas>=CX.be?["a","Boven break-even, nog niet op schaaldrempel"]
+      :["r","Onder break-even"];
+    document.getElementById("statusLine").innerHTML=`<span class="dot ${dotC}"></span>${txt}`;
   } else {
-    document.getElementById("mRoasSub").textContent="incl. BTW · Meta attributed";
+    const mgPct=(CX.rex>0?CX.pro/CX.rex*100:0).toFixed(1);
+    document.getElementById("statusLine").innerHTML=
+      `<span class="dot a"></span>Marge ${mgPct}% · winst voor ads ${eur(CX.pro)}`;
   }
 
-  /* gauge */
-  renderGauge(CX.be,schaal,comfy,CT.roas);
+  /* meta info */
+  if(hasTB){
+    const tbDays=tbs.reduce((a,t)=>{
+      const f=new Date(t.from),to=new Date(t.to);
+      return a+Math.floor((to-f)/86400000)+1;
+    },0);
+    const dek=tbDays>=fxRws.length?"volledig":`${tbDays} van ${fxRws.length} dagen`;
+    document.getElementById("metaInfo").textContent=`Adspend ${eur(CT.spend)} · Datadekking TrackBee: ${dek}`;
+  } else {
+    document.getElementById("metaInfo").textContent=`Revenue excl. BTW ${eur(CX.rex)} · TrackBee adspend: niet beschikbaar`;
+  }
+
+  /* metrics */
+  document.getElementById("mRoasLbl").textContent=hasTB?"META ROAS":"OMZET EXCL. BTW";
+  document.getElementById("mScaleLbl").textContent=hasTB?"SCHAALDREMPEL":"WINST VOOR ADS";
+  if(hasTB){
+    document.getElementById("mRoas").textContent=x2(CT.roas);
+    document.getElementById("mScale").textContent=x2(schaal);
+    document.getElementById("mScaleSub").textContent=`+${(SCALE_T*100).toFixed(0)}% boven break-even`;
+    document.getElementById("mBeSub").textContent="incl. BTW";
+    if(prevRoas!==null){
+      const rd=(CT.roas-prevRoas)/prevRoas*100;
+      document.getElementById("mRoasSub").textContent="incl. BTW · "+(rd>=0?"+":"")+rd.toFixed(1)+"% t.o.v. juli";
+    } else {
+      document.getElementById("mRoasSub").textContent="incl. BTW · Meta attributed";
+    }
+  } else {
+    document.getElementById("mRoas").textContent=eur(CX.rex);
+    document.getElementById("mRoasSub").textContent=`${CX.oc} orders`;
+    document.getElementById("mScale").textContent=eur(CX.pro);
+    document.getElementById("mScaleSub").textContent=`${(CX.rex>0?CX.pro/CX.rex*100:0).toFixed(1)}% marge`;
+    document.getElementById("mBeSub").textContent="incl. BTW · geschat";
+  }
+  document.getElementById("mBe").textContent=x2(CX.be);
+
+  /* gauge: alleen bij TB-periodes */
+  const go=document.getElementById("gaugeOuter");
+  if(hasTB){
+    go.style.display="";
+    renderGauge(CX.be,schaal,comfy,CT.roas);
+  } else {
+    go.style.display="none";
+  }
 
   /* tables */
-  renderOrders();
-  renderBeroas(CT,CX.be);
+  renderOrders(fxFrom,fxTo);
+  renderBeroas(CT,CX.be,CX);
   renderKern(CX,CT);
 
-  /* sim */
-  const sl=document.getElementById("simSlider");
-  sl.min=Math.max(0.5,CX.be*0.5).toFixed(2);
-  sl.max=(Math.max(CT.roas,comfy)*2).toFixed(2);
-  sl.value=CT.roas.toFixed(2);
-  const spEl=document.getElementById("simSpend");
-  if(!simSpendLocked) spEl.value=Math.round(CT.spend);
-  document.getElementById("simSpendNote").textContent=simSpendLocked?"aangepast":"actueel";
-  updateSim();
+  /* sim — alleen updaten bij TB periodes */
+  if(hasTB){
+    const sl=document.getElementById("simSlider");
+    sl.min=Math.max(0.5,CX.be*0.5).toFixed(2);
+    sl.max=(Math.max(CT.roas,comfy)*2).toFixed(2);
+    sl.value=CT.roas.toFixed(2);
+    const spEl=document.getElementById("simSpend");
+    if(!simSpendLocked) spEl.value=Math.round(CT.spend);
+    document.getElementById("simSpendNote").textContent=simSpendLocked?"aangepast":"actueel";
+    updateSim();
+  }
 
   document.getElementById("footerDate").textContent=fmtL(SNAP);
 }
@@ -540,8 +602,10 @@ function renderGauge(be,schaal,comfy,roas){
 }
 
 /* ═══ TABLES ═════════════════════════════════════════════════════ */
-function renderOrders(){
-  const sorted = [...ORDERS].sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
+function renderOrders(from,to){
+  const sorted=[...ORDERS]
+    .filter(o=>(!from||o.d>=from)&&(!to||o.d<=to))
+    .sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
   let html="", totEx=0, totCost=0, totWi=0, totExKnown=0, totInclKnown=0;
   for(const o of sorted){
     const p = calcOrder(o);
@@ -560,6 +624,9 @@ function renderOrders(){
   }
   const totMarg = totExKnown>0 ? (totWi/totExKnown*100).toFixed(1)+"%" : "—";
   const totBe   = totWi>0 ? x2(totInclKnown/totWi) : "—";
+  const nOrd=sorted.filter(o=>!o.test).length;
+  const pd=PERIODS[P]||PERIODS.aug;
+  document.getElementById("ordHdr").textContent=`Orderdetail · ${pd.label} · ${nOrd} orders`;
   document.getElementById("ordTable").innerHTML=`
 <thead><tr>
   <th>Order</th><th>Datum</th><th>Producten</th><th>Kortingscode</th>
@@ -568,15 +635,15 @@ function renderOrders(){
 </tr></thead>
 <tbody>${html}
 <tr class="tot">
-  <td colspan="4">Totaal · ${sorted.filter(o=>!o.test).length} orders</td>
+  <td colspan="4">Totaal · ${nOrd} orders</td>
   <td class="r">${eur(totEx)}</td><td class="r">${totCost>0?eur(totCost):"—"}</td>
   <td class="r">${totMarg}</td>
   <td class="r">${totBe}</td>
 </tr></tbody>`;
 }
 
-function renderBeroas(ct, be){
-  const avgIncl = ct.purch>0 ? ct.ri/ct.purch : 0;
+function renderBeroas(ct, be, fx){
+  const avgIncl = ct&&ct.purch>0 ? ct.ri/ct.purch : (fx&&fx.oc>0?fx.rev/fx.oc:KP[0].incl);
   // Bepaal gewogen productmix
   let rows=[], wExcl=0, wWinst=0;
   for(let i=0;i<KP.length;i++){
@@ -595,8 +662,9 @@ function renderBeroas(ct, be){
   }
 
   const avgExcl = avgIncl / BTW;
+  const srcLabel=ct?"TB":"Shopify";
   document.getElementById("beSummary").innerHTML=`
-<div class="be-stat"><div class="be-lbl">Gem. orderwaarde (TB)</div><div class="be-val">${eur(avgIncl)} incl.</div><div style="font-size:11px;color:#64748b;margin-top:2px">${eur(avgExcl)} excl. BTW</div></div>
+<div class="be-stat"><div class="be-lbl">Gem. orderwaarde (${srcLabel})</div><div class="be-val">${eur(avgIncl)} incl.</div><div style="font-size:11px;color:#64748b;margin-top:2px">${eur(avgExcl)} excl. BTW</div></div>
 <div class="be-stat"><div class="be-lbl">Gewogen marge</div><div class="be-val">${(wWinst/wExcl*100).toFixed(1)}%</div></div>
 <div class="be-stat"><div class="be-lbl">BEROAS (incl. BTW)</div><div class="be-val">${x2(be)}</div></div>`;
 
@@ -605,12 +673,12 @@ function renderBeroas(ct, be){
 <tbody>
 ${rows.map(({p,w})=>`
 <tr><td>${p.name}</td><td class="r">${eur(p.incl)}</td><td class="r">${eur(p.winst)}</td><td class="r">${(p.winst/p.excl*100).toFixed(1)}%</td><td class="r">${x2(p.incl/p.winst)}</td><td class="r">${w}%</td></tr>`).join("")}
-<tr class="tot"><td>Gewogen gemiddelde</td><td class="r">${eur(ct.ri/ct.purch)}</td><td class="r">${eur(wWinst)}</td><td class="r">${(wWinst/wExcl*100).toFixed(1)}%</td><td class="r">${x2(be)}</td><td class="r">100%</td></tr>
+<tr class="tot"><td>Gewogen gemiddelde</td><td class="r">${eur(avgIncl)}</td><td class="r">${eur(wWinst)}</td><td class="r">${(wWinst/wExcl*100).toFixed(1)}%</td><td class="r">${x2(be)}</td><td class="r">100%</td></tr>
 </tbody>`;
 }
 
 function renderKern(fx,tb){
-  const cells=[
+  const cells=tb?[
     ["Orders",fx.oc],
     ["Revenue excl. BTW",eur(fx.rex)],
     ["Marge (CM)",eur(fx.pro)],
@@ -623,6 +691,15 @@ function renderKern(fx,tb){
     ["CPO",eur(tb.spend/Math.max(1,tb.purch))],
     ["ROAS incl. BTW",x2(tb.roas)],
     ["BEROAS",x2(fx.be)],
+  ]:[
+    ["Orders",fx.oc],
+    ["Revenue incl. BTW",eur(fx.rev)],
+    ["Revenue excl. BTW",eur(fx.rex)],
+    ["Marge (CM)",eur(fx.pro)],
+    ["Marge%",(fx.rex>0?fx.pro/fx.rex*100:0).toFixed(1)+"%"],
+    ["BEROAS",x2(fx.be)],
+    ["Meta spend","niet beschikbaar"],
+    ["ROAS","niet beschikbaar"],
   ];
   document.getElementById("kernGrid").innerHTML=cells.map(([l,v])=>
     `<div class="kern-cell"><div class="kern-lbl">${l}</div><div class="kern-val">${v}</div></div>`).join("");
