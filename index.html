@@ -232,8 +232,29 @@ const KP = [
   {name:"Prime complete",    incl:269, excl:222.31, winst:112.78},
 ];
 
-/* Shopify individuele orders (bekende data uit FiveX exports + vorige sessie) */
+/* Shopify individuele orders — bekende data (FiveX exports + vorige sessie) */
 const SH_ORDERS = [
+  // pre-campagne (bekende individuen)
+  {d:"2026-06-24",num:"—",    incl:4.95},
+  {d:"2026-07-11",num:"—",    incl:149},
+  {d:"2026-07-16",num:"#1020",incl:90},
+  {d:"2026-07-16",num:"#1019",incl:222.55},
+  {d:"2026-07-16",num:"#1018",incl:149},
+  {d:"2026-07-16",num:"#1017",incl:134.10},
+  {d:"2026-07-16",num:"#1016",incl:149},
+  {d:"2026-07-17",num:"—",    incl:149},
+  {d:"2026-07-17",num:"—",    incl:149},
+  {d:"2026-07-17",num:"—",    incl:149},
+  {d:"2026-07-18",num:"#1027",incl:270.55},
+  {d:"2026-07-18",num:"#1026",incl:149},
+  {d:"2026-07-18",num:"#1025",incl:149},
+  {d:"2026-07-18",num:"#1024",incl:149},
+  {d:"2026-07-19",num:"#1032",incl:239},
+  {d:"2026-07-19",num:"#1031",incl:149},
+  {d:"2026-07-19",num:"#1030",incl:4.95},
+  {d:"2026-07-19",num:"#1029",incl:4.95},
+  {d:"2026-07-19",num:"#1028",incl:4.95},
+  // campagne (bekende individuen)
   {d:"2026-07-21",num:"—",    incl:149},
   {d:"2026-07-22",num:"#1036",incl:377},
   {d:"2026-07-22",num:"#1035",incl:149},
@@ -264,6 +285,12 @@ const SH_ORDERS = [
 
 /* Dagsamenvattingen voor ontbrekende dagen (FiveX Shopify-only query) */
 const SH_SUMS = [
+  // pre-campagne onbekend
+  {d:"2026-07-10",oc:2, rev:303.95, rex:252.06},
+  {d:"2026-07-13",oc:4, rev:744.65, rex:615.41},
+  {d:"2026-07-14",oc:5, rev:1030.35,rex:851.53},
+  {d:"2026-07-15",oc:2, rev:207.30, rex:171.32},
+  // campagne onbekend
   {d:"2026-07-28",oc:4, rev:755.05, rex:624.01},
   {d:"2026-07-29",oc:6, rev:949.20, rex:784.46},
   {d:"2026-07-31",oc:3, rev:588.00, rex:485.95},
@@ -273,12 +300,14 @@ const SH_SUMS = [
 ];
 
 function matchProd(incl){
-  if(Math.abs(incl-90)<0.5)    return{name:"Scherm",           excl:74.38, winst:34.40};
-  if(Math.abs(incl-134.10)<0.5)return{name:"Prime · 10% ↓",   excl:110.83,winst:59.12};
-  if(Math.abs(incl-149)<0.5)   return{name:"Prime",            excl:123.14,winst:71.43};
-  if(Math.abs(incl-222.55)<1)  return{name:"Prime + Scherm",   excl:184.30,winst:96.42};
-  if(Math.abs(incl-239)<0.5)   return{name:"Prime + Standaard",excl:197.52,winst:105.83};
-  if(Math.abs(incl-269)<1)     return{name:"Prime complete",   excl:222.31,winst:112.78};
+  if(incl<10)                   return{name:"Accessoire",        excl:incl/BTW,winst:0};
+  if(Math.abs(incl-90)<0.5)    return{name:"Scherm",            excl:74.38, winst:34.40};
+  if(Math.abs(incl-134.10)<0.5)return{name:"Prime · 10% ↓",    excl:110.83,winst:59.12};
+  if(Math.abs(incl-149)<0.5)   return{name:"Prime",             excl:123.14,winst:71.43};
+  if(Math.abs(incl-222.55)<1)  return{name:"Prime + Scherm",    excl:184.30,winst:96.42};
+  if(Math.abs(incl-239)<0.5)   return{name:"Prime + Standaard", excl:197.52,winst:105.83};
+  if(Math.abs(incl-270.55)<1)  return{name:"Prime complete",    excl:222.31,winst:112.78};
+  if(Math.abs(incl-269)<1)     return{name:"Prime complete",    excl:222.31,winst:112.78};
   const excl=incl/BTW, be=kpBeroas(incl,1);
   return{name:`€${incl}`,excl,winst:excl/be};
 }
@@ -454,36 +483,28 @@ function renderGauge(be,schaal,comfy,roas){
 
 /* ═══ TABLES ═════════════════════════════════════════════════════ */
 function renderOrders(){
-  const allD=new Set([...SH_ORDERS.map(o=>o.d),...SH_SUMS.map(s=>s.d)]);
-  const dates=[...allD].sort();
-  let html="", totEx=0, totWi=0;
+  // Bouw volledige lijst: bekende individuele orders + schattingen voor onbekende dagen
+  const all=[];
+  SH_ORDERS.forEach(o=>all.push({...o, est:false}));
+  SH_SUMS.forEach(s=>{
+    const avgIncl=s.rev/s.oc;
+    for(let i=0;i<s.oc;i++) all.push({d:s.d,num:"—",incl:avgIncl,est:true});
+  });
+  all.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
 
-  for(const d of dates){
-    const ords=SH_ORDERS.filter(o=>o.d===d);
-    const sum=SH_SUMS.find(s=>s.d===d);
-    if(ords.length){
-      for(const o of ords){
-        const p=matchProd(o.incl);
-        totEx+=p.excl; totWi+=p.winst;
-        html+=`<tr>
-          <td>${o.num}</td><td>${fmtS(d)}</td><td>${p.name}</td><td>—</td>
-          <td class="r">${eur(p.excl)}</td><td class="r">${eur(p.excl-p.winst)}</td>
-          <td class="r">${(p.winst/p.excl*100).toFixed(1)}%</td>
-          <td class="r">${x2(p.excl/p.winst)}</td></tr>`;
-      }
-    } else if(sum){
-      const be=kpBeroas(sum.rev,sum.oc);
-      const wi=sum.rex/be, ko=sum.rex-wi;
-      totEx+=sum.rex; totWi+=wi;
-      html+=`<tr class="day-sum">
-        <td colspan="4">${fmtS(d)} · ${sum.oc} orders · dagsamenvatting</td>
-        <td class="r">${eur(sum.rex)}</td><td class="r">${eur(ko)}</td>
-        <td class="r">${(wi/sum.rex*100).toFixed(1)}%</td>
-        <td class="r">${x2(be)}</td></tr>`;
-    }
+  let html="", totEx=0, totWi=0;
+  for(const o of all){
+    const p=matchProd(o.incl);
+    totEx+=p.excl; totWi+=p.winst;
+    html+=`<tr>
+      <td>${o.num}</td><td>${fmtS(o.d)}</td>
+      <td>${p.name}${o.est?' <span style="font-size:10px;color:#475569">~</span>':''}</td>
+      <td>—</td>
+      <td class="r">${eur(p.excl)}</td><td class="r">${eur(p.excl-p.winst)}</td>
+      <td class="r">${(p.winst/p.excl*100).toFixed(1)}%</td>
+      <td class="r">${x2(p.excl/p.winst)}</td></tr>`;
   }
 
-  const nOrd=SH_ORDERS.length+SH_SUMS.reduce((a,s)=>a+s.oc,0);
   document.getElementById("ordTable").innerHTML=`
 <thead><tr>
   <th>Order</th><th>Datum</th><th>Producten</th><th>Kortingscode</th>
@@ -492,7 +513,7 @@ function renderOrders(){
 </tr></thead>
 <tbody>${html}
 <tr class="tot">
-  <td colspan="4">Totaal · ${nOrd} orders</td>
+  <td colspan="4">Totaal · ${all.length} orders</td>
   <td class="r">${eur(totEx)}</td><td class="r">${eur(totEx-totWi)}</td>
   <td class="r">${(totWi/totEx*100).toFixed(1)}%</td>
   <td class="r">${x2(totEx/totWi)}</td>
