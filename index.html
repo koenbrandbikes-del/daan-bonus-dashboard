@@ -553,7 +553,7 @@ function renderOrders(){
 </tr></thead>
 <tbody>${html}
 <tr class="tot">
-  <td colspan="4">Totaal · ${sorted.length} orders</td>
+  <td colspan="4">Totaal · ${sorted.filter(o=>!o.test).length} orders</td>
   <td class="r">${eur(totEx)}</td><td class="r">${totCost>0?eur(totCost):"—"}</td>
   <td class="r">${totMarg}</td>
   <td class="r">${totBe}</td>
