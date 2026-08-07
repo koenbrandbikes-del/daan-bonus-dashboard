@@ -14,7 +14,7 @@ WK_S=$(date -v-$((DOW-1))d +%Y-%m-%d)    # Maandag van deze week
 PWK_E=$(date -v-${DOW}d +%Y-%m-%d)        # Zondag van vorige week
 PWK_S=$(date -v-$((DOW+6))d +%Y-%m-%d)   # Maandag van vorige week
 AUG_S="2026-08-01"                         # Start augustus (contractmaand)
-CLEAN_S="2026-08-05"                       # CAPI-fix datum
+CLEAN_S="2026-08-04"                       # CAPI-fix datum (dubbeltelling voor 4 aug verwijderd)
 
 echo "=== Dashboard update: $TODAY $(date +%H:%M) ==="
 
