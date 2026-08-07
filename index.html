@@ -225,20 +225,25 @@ const ROWS = [
 const TB_JUL = {from:"2026-07-20",to:"2026-07-31",spend:2017.29,rev7:4510.10,rev1v:746.20,purch:32,impr:202988,cl:2847};
 const TB_AUG = {from:"2026-08-01",to:"2026-08-07",spend:1315.61,rev7:2622.30,rev1v:298.00,purch:17,impr:186506,cl:2598};
 
-/* Kostprijscalculatie — Shopify marges (Prime campagne) */
+/* Kostprijscalculatie — marges per product (bron: KP-sheet v2, winst op werkelijke webshopprijs) */
 const KP = [
-  {name:"Prime",             incl:149, excl:123.14, winst:71.43},
-  {name:"Prime + Scherm",    incl:223, excl:184.30, winst:96.42},
-  {name:"Prime complete",    incl:269, excl:222.31, winst:112.78},
+  {name:"Prime",  incl:149, excl:123.14, winst:71.43},
+  {name:"Atlas",  incl:239, excl:197.52, winst:117.10},
+  {name:"Titan",  incl:349, excl:288.43, winst:159.06},
 ];
 
-/* Kosten per product excl. BTW (inkoopprijs + fulfillment) */
-const ITEM_COST = {
-  "LumeWorks Prime":          51.71,
-  "Projectiescherm 100 inch": 39.98,
-  "Pro stand":                21.65,
-  // LumeWorks Atlas + Titan: kostprijs nog niet ingevoerd
+/* Vaste kosten per product (inkoop + shipping naar NL + fulfilment) excl. BTW
+   Bron: LumeWorks_kostprijscalculatie_v2.xlsx rij 19 "Totale directe kostprijs"
+   Variabele kosten (Shopify 2% + overhead 4%) worden per order berekend in calcOrder */
+const ITEM_FIXED = {
+  "LumeWorks Prime":          43.80,
+  "LumeWorks Atlas":          67.74,
+  "LumeWorks Titan":          110.85,
+  "Projectiescherm 100 inch": 37.81,
+  "Pro stand":                20.66,
 };
+const SHOPIFY_FEE = 0.02;
+const OVERHEAD_FEE = 0.04;
 
 /* Alle 86 Shopify orders — live via Shopify GraphQL API */
 const ORDERS = [
@@ -336,14 +341,18 @@ function prodLabel(t){
 
 function calcOrder(o){
   const excl = o.incl / BTW;
-  let cost = 0, hasUnknown = false;
+  // Vaste kosten: inkoop + shipping + fulfilment (uit KP-sheet rij 19)
+  let fixed = 0, hasUnknown = false;
   for(const it of o.items){
-    const c = ITEM_COST[it];
+    const c = ITEM_FIXED[it];
     if(c == null) hasUnknown = true;
-    else cost += c;
+    else fixed += c;
   }
-  const winst = hasUnknown ? null : (excl - cost);
-  return {name:o.items.map(prodLabel).join(" · "), excl, winst, cost:hasUnknown?null:cost};
+  // Variabele kosten op werkelijke betaalprijs: Shopify 2% incl. + overhead 4% excl.
+  const variable = o.incl * SHOPIFY_FEE + excl * OVERHEAD_FEE;
+  const cost = hasUnknown ? null : fixed + variable;
+  const winst = cost == null ? null : excl - cost;
+  return {name:o.items.map(prodLabel).join(" · "), excl, winst, cost};
 }
 
 /* ═══ HELPERS ════════════════════════════════════════════════════ */
@@ -534,7 +543,6 @@ function renderOrders(){
       <td class="r">${marg}</td>
       <td class="r">${be}</td></tr>`;
   }
-  const hasUnk = ORDERS.some(o=>!o.test&&o.items.some(it=>ITEM_COST[it]==null));
   const totMarg = totExKnown>0 ? (totWi/totExKnown*100).toFixed(1)+"%" : "—";
   const totBe   = totWi>0 ? x2(totExKnown/totWi) : "—";
   document.getElementById("ordTable").innerHTML=`
@@ -545,7 +553,7 @@ function renderOrders(){
 </tr></thead>
 <tbody>${html}
 <tr class="tot">
-  <td colspan="4">Totaal · ${sorted.length} orders${hasUnk?' · Atlas/Titan KP ontbreekt':''}</td>
+  <td colspan="4">Totaal · ${sorted.length} orders</td>
   <td class="r">${eur(totEx)}</td><td class="r">${totCost>0?eur(totCost):"—"}</td>
   <td class="r">${totMarg}</td>
   <td class="r">${totBe}</td>
