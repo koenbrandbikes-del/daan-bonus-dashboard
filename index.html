@@ -738,7 +738,8 @@ function render(){
   const shortLabel={vandaag:"Vandaag",gisteren:"Gisteren",week:"Deze week",prevweek:"Vorige week"};
   let bHtml;
   if(shortLabel[P]){
-    bHtml=`<span style="color:#64748b">${CX.oc} orders</span>`;
+    const metaPurch = hasTB && CT.purch>0 ? ` · <span style="color:#94a3b8">${CT.purch} via Meta</span>` : "";
+    bHtml=`<span style="color:#64748b">${CX.oc} orders${metaPurch}</span>`;
   } else if(prevBon!==null){
     const d=CB.raw-prevBon, up=d>=0;
     bHtml=`<span style="color:${up?"#4ade80":"#f87171"}">${up?"▲":"▼"} ${eur(Math.abs(d))} vs. juli</span>`;
