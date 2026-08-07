@@ -71,7 +71,10 @@ def tb(name, frm, to, x):
             f'spend:{x["spend"]},rev7:{x["rev7"]},rev1v:{x["rev1v"]},'
             f'purch:{x["purch"]},impr:{x["impr"]},cl:{x["cl"]}}};')
 
+from datetime import datetime
+snap_time = datetime.now().strftime("%H:%M")
 html = re.sub(r'const SNAP\s*=\s*"[^"]+"', f'const SNAP = "{snap}"', html)
+html = re.sub(r'const SNAP_TIME\s*=\s*"[^"]+"', f'const SNAP_TIME = "{snap_time}"', html)
 
 replacements = [
     (r'const TB_VANDAAG\s*=\s*\{[^;]+\};',   tb("TB_VANDAAG",  snap,                   snap,                   v)),
