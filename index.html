@@ -236,7 +236,7 @@ function rows(from,to){return ROWS.filter(r=>r.d>=from&&r.d<=to)}
 function fxCalc(rws){
   let rex=0,pro=0,rev=0,oc=0;
   rws.forEach(r=>{rex+=r.rex;pro+=r.pro;rev+=r.rev;oc+=r.oc});
-  const k=rex-pro, be=k>0?rex/k:0;
+  const k=rex-pro, be=pro>0?rex/pro:0;
   return{rex,pro,rev,oc,k,be};
 }
 
