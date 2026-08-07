@@ -224,6 +224,13 @@ const ROWS = [
 const TB_JUL = {from:"2026-07-20",to:"2026-07-31",spend:2017.29,rev7:4510.10,rev1v:746.20,purch:32,impr:202988,cl:2847};
 const TB_AUG = {from:"2026-08-01",to:"2026-08-07",spend:1315.61,rev7:2622.30,rev1v:298.00,purch:17,impr:186506,cl:2598};
 
+/* Kostprijscalculatie — Shopify marges (Prime campagne) */
+const KP = [
+  {name:"Prime",             incl:149, excl:123.14, winst:71.43},
+  {name:"Prime + Scherm",    incl:223, excl:184.30, winst:96.42},
+  {name:"Prime complete",    incl:269, excl:222.31, winst:112.78},
+];
+
 /* ═══ HELPERS ════════════════════════════════════════════════════ */
 const eur  = v=>"€"+v.toLocaleString("nl-NL",{minimumFractionDigits:2,maximumFractionDigits:2});
 const x2   = v=>v.toFixed(2)+"×";
@@ -236,8 +243,23 @@ function rows(from,to){return ROWS.filter(r=>r.d>=from&&r.d<=to)}
 function fxCalc(rws){
   let rex=0,pro=0,rev=0,oc=0;
   rws.forEach(r=>{rex+=r.rex;pro+=r.pro;rev+=r.rev;oc+=r.oc});
-  const k=rex-pro, be=pro>0?rex/pro:0;
-  return{rex,pro,rev,oc,k,be};
+  const k=rex-pro;
+  return{rex,pro,rev,oc,k,be:0};
+}
+
+function kpBeroas(revInclTotal, purch){
+  if(!purch) return KP[0].excl/KP[0].winst;
+  const avg = revInclTotal / purch;
+  // Interpoleer tussen producten op basis van gem. orderwaarde
+  for(let i=0;i<KP.length-1;i++){
+    const lo=KP[i], hi=KP[i+1];
+    if(avg<=hi.incl){
+      const x = Math.max(0,Math.min(1,(hi.incl-avg)/(hi.incl-lo.incl)));
+      return (x*lo.excl+(1-x)*hi.excl)/(x*lo.winst+(1-x)*hi.winst);
+    }
+  }
+  const top=KP[KP.length-1];
+  return top.excl/top.winst;
 }
 
 function tbCalc(tbs){
@@ -269,7 +291,9 @@ function render(){
   const tbs    = aug?[TB_AUG]:[TB_JUL,TB_AUG];
 
   const fxRws = rows(fxFrom,SNAP);
-  CX=fxCalc(fxRws); CT=tbCalc(tbs); CB=bonCalc(CX,CT);
+  CX=fxCalc(fxRws); CT=tbCalc(tbs);
+  CX.be=kpBeroas(CT.ri,CT.purch);
+  CB=bonCalc(CX,CT);
   const schaal=CX.be*(1+SCALE_T), comfy=CX.be*(1+SCALE_H);
 
   // Previous period (july) for comparison when in aug view
@@ -277,6 +301,7 @@ function render(){
   if(aug){
     const px=fxCalc(rows(TB_ONBOARD,"2026-07-31"));
     const pt=tbCalc([TB_JUL]);
+    px.be=kpBeroas(pt.ri,pt.purch);
     prevBon=bonCalc(px,pt).raw;
     prevRoas=pt.roas;
   }
@@ -331,7 +356,7 @@ function render(){
 
   /* tables */
   renderOrders(fxRws,CX);
-  renderBeroas(fxRws,CX);
+  renderBeroas(CT,CX.be);
   renderKern(CX,CT);
 
   /* sim */
@@ -387,19 +412,36 @@ ${rev.map(r=>{const mp=r.rex>0?r.pro/r.rex*100:0;return`
 </tbody>`;
 }
 
-function renderBeroas(rws,fx){
-  document.getElementById("beSummary").innerHTML=`
-<div class="be-stat"><div class="be-lbl">Omzet excl. BTW</div><div class="be-val">${eur(fx.rex)}</div></div>
-<div class="be-stat"><div class="be-lbl">Vaste kosten</div><div class="be-val">${eur(fx.k)}</div></div>
-<div class="be-stat"><div class="be-lbl">BEROAS = omzet / kosten</div><div class="be-val">${x2(fx.be)}</div></div>`;
+function renderBeroas(ct, be){
+  const avgIncl = ct.purch>0 ? ct.ri/ct.purch : 0;
+  // Bepaal gewogen productmix
+  let rows=[], wExcl=0, wWinst=0;
+  for(let i=0;i<KP.length;i++){
+    const lo=KP[i], hi=KP[Math.min(i+1,KP.length-1)];
+    if(avgIncl<=hi.incl || i===KP.length-2){
+      const x = i===KP.length-1 ? 1 :
+                Math.max(0,Math.min(1,(hi.incl-avgIncl)/(hi.incl-lo.incl)));
+      wExcl  = x*lo.excl  + (1-x)*hi.excl;
+      wWinst = x*lo.winst + (1-x)*hi.winst;
+      rows=[
+        {p:lo, w:Math.round(x*100)},
+        {p:hi, w:Math.round((1-x)*100)},
+      ].filter(r=>r.w>0);
+      break;
+    }
+  }
 
-  const rev=[...rws].reverse();
+  document.getElementById("beSummary").innerHTML=`
+<div class="be-stat"><div class="be-lbl">Gem. orderwaarde (TB)</div><div class="be-val">${eur(avgIncl)} incl.</div></div>
+<div class="be-stat"><div class="be-lbl">Gewogen marge</div><div class="be-val">${(wWinst/wExcl*100).toFixed(1)}%</div></div>
+<div class="be-stat"><div class="be-lbl">BEROAS</div><div class="be-val">${x2(be)}</div></div>`;
+
   document.getElementById("beTable").innerHTML=`
-<thead><tr><th>Dag</th><th class="r">Omzet excl.</th><th class="r">Marge (CM)</th><th class="r">Kosten</th><th class="r">BEROAS dag</th></tr></thead>
+<thead><tr><th>Product</th><th class="r">Prijs excl.</th><th class="r">Winst vóór ads</th><th class="r">Marge</th><th class="r">BEROAS</th><th class="r">Gewicht</th></tr></thead>
 <tbody>
-${rev.map(r=>{const k=r.rex-r.pro,b=k>0?r.rex/k:0;return`
-<tr><td>${fmtS(r.d)}</td><td class="r">${eur(r.rex)}</td><td class="r">${eur(r.pro)}</td><td class="r">${eur(k)}</td><td class="r">${x2(b)}</td></tr>`}).join("")}
-<tr class="tot"><td>Totaal</td><td class="r">${eur(fx.rex)}</td><td class="r">${eur(fx.pro)}</td><td class="r">${eur(fx.k)}</td><td class="r">${x2(fx.be)}</td></tr>
+${rows.map(({p,w})=>`
+<tr><td>${p.name}</td><td class="r">${eur(p.excl)}</td><td class="r">${eur(p.winst)}</td><td class="r">${(p.winst/p.excl*100).toFixed(1)}%</td><td class="r">${x2(p.excl/p.winst)}</td><td class="r">${w}%</td></tr>`).join("")}
+<tr class="tot"><td>Gewogen gemiddelde</td><td class="r">${eur(wExcl)}</td><td class="r">${eur(wWinst)}</td><td class="r">${(wWinst/wExcl*100).toFixed(1)}%</td><td class="r">${x2(be)}</td><td class="r">100%</td></tr>
 </tbody>`;
 }
 
