@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daan · Meta Bonusdashboard</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:      #0d1117;
+  --surface: #161b22;
+  --border:  #30363d;
+  --text:    #e6edf3;
+  --muted:   #8b949e;
+  --blue:    #2f81f7;
+  --green:   #3fb950;
+  --yellow:  #d29922;
+  --red:     #f85149;
+}
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; line-height: 1.5; padding: 20px; }
+a { color: var(--blue); }
+
+.header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 8px; }
+.header h1 { font-size: 20px; font-weight: 600; }
+.header .meta { font-size: 12px; color: var(--muted); text-align: right; }
+
+.tabs { display: flex; gap: 2px; margin-bottom: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 4px; width: fit-content; }
+.tab { padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--muted); border: none; background: transparent; transition: all .15s; }
+.tab.active { background: var(--border); color: var(--text); }
+.tab:hover:not(.active) { color: var(--text); }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+.card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.card .value { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.card.bonus .value { color: var(--green); }
+.card.warn .value { color: var(--yellow); }
+.card.neg .value { color: var(--red); }
+
+.section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+.section-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { padding: 8px 12px; text-align: left; font-weight: 500; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); }
+th.r, td.r { text-align: right; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,.03); }
+.total-row td { font-weight: 600; background: rgba(47,129,247,.06); border-top: 1px solid var(--border); }
+
+.formula-box { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; margin: 12px 16px 16px; font-size: 12px; color: var(--muted); }
+.formula-box strong { color: var(--text); }
+
+.note { font-size: 12px; color: var(--muted); padding: 8px 16px 12px; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge.green { background: rgba(63,185,80,.15); color: var(--green); }
+.badge.yellow { background: rgba(210,153,34,.15); color: var(--yellow); }
+.badge.blue { background: rgba(47,129,247,.15); color: var(--blue); }
+
+@media (max-width: 600px) {
+  .cards { grid-template-columns: 1fr 1fr; }
+  .card .value { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">LumeWorks · Meta Ads</div>
+    <h1>Daan · Bonusdashboard</h1>
+  </div>
+  <div class="meta" id="snapMeta"></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="setPeriod('aug')">Augustus 2026</button>
+  <button class="tab" onclick="setPeriod('contract')">Contract (20 jul – nu)</button>
+</div>
+
+<div class="cards" id="cards"></div>
+
+<div class="section">
+  <div class="section-header">
+    <span>Bonusberekening</span>
+    <span id="periodLabel" style="font-weight:400;font-size:12px;color:var(--muted)"></span>
+  </div>
+  <div class="formula-box" id="formulaBox"></div>
+</div>
+
+<div class="section">
+  <div class="section-header">Campagnes (Meta)</div>
+  <div style="overflow-x:auto">
+    <table id="campaignTable"></table>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header">
+    <span>Dagelijkse omzet (FiveX)</span>
+    <span id="fiveXNote" style="font-weight:400;font-size:12px;color:var(--muted)"></span>
+  </div>
+  <div style="overflow-x:auto;max-height:400px;overflow-y:auto">
+    <table id="dailyTable"></table>
+  </div>
+</div>
+
+<script>
+/* ─── DATA ───────────────────────────────────────────────── */
+const SNAP_DATE      = "2026-08-07";
+const CONTRACT_START = "2026-07-16";
+const TB_START       = "2026-07-20"; // TrackBee onboarding
+const BONUS_PCT      = 0.10;
+const BTW            = 1.21;
+
+const ROWS_ALL = [
+  {day:"2026-07-16",order_count:16,revenue:1604.10,revenue_ex_vat:1325.70,profit:492.41},
+  {day:"2026-07-17",order_count:23,revenue:2387.05,revenue_ex_vat:1972.77,profit:641.33},
+  {day:"2026-07-18",order_count:16,revenue:1726.00,revenue_ex_vat:1426.45,profit:535.39},
+  {day:"2026-07-19",order_count:16,revenue:1481.25,revenue_ex_vat:1226.75,profit:270.82},
+  {day:"2026-07-20",order_count:25,revenue:2754.90,revenue_ex_vat:2276.78,profit:600.06},
+  {day:"2026-07-21",order_count:25,revenue:2345.80,revenue_ex_vat:1938.68,profit:466.56},
+  {day:"2026-07-22",order_count:21,revenue:2628.20,revenue_ex_vat:2172.07,profit:613.14},
+  {day:"2026-07-23",order_count:27,revenue:2822.05,revenue_ex_vat:2332.27,profit:699.67},
+  {day:"2026-07-24",order_count:16,revenue:1596.35,revenue_ex_vat:1319.30,profit:389.96},
+  {day:"2026-07-25",order_count:16,revenue:1625.35,revenue_ex_vat:1343.26,profit:329.81},
+  {day:"2026-07-26",order_count:23,revenue:2385.05,revenue_ex_vat:1971.12,profit:525.30},
+  {day:"2026-07-27",order_count:33,revenue:3306.20,revenue_ex_vat:2732.40,profit:825.01},
+  {day:"2026-07-28",order_count:17,revenue:2078.45,revenue_ex_vat:1717.73,profit:523.65},
+  {day:"2026-07-29",order_count:21,revenue:2267.55,revenue_ex_vat:1874.01,profit:627.33},
+  {day:"2026-07-30",order_count:19,revenue:1985.25,revenue_ex_vat:1640.70,profit:400.69},
+  {day:"2026-07-31",order_count:10,revenue:1411.60,revenue_ex_vat:1166.61,profit:419.52},
+  {day:"2026-08-01",order_count:12,revenue:1188.60,revenue_ex_vat:982.31,profit:209.23},
+  {day:"2026-08-02",order_count:24,revenue:2729.90,revenue_ex_vat:2256.12,profit:452.20},
+  {day:"2026-08-03",order_count:16,revenue:1492.35,revenue_ex_vat:1233.35,profit:256.14},
+  {day:"2026-08-04",order_count:20,revenue:2222.45,revenue_ex_vat:1836.74,profit:210.83},
+  {day:"2026-08-05",order_count:24,revenue:3302.20,revenue_ex_vat:2729.09,profit:1048.37},
+  {day:"2026-08-06",order_count:28,revenue:3002.05,revenue_ex_vat:2481.03,profit:805.17},
+  {day:"2026-08-07",order_count:4,revenue:446.00,revenue_ex_vat:368.60,profit:124.79},
+];
+
+// TrackBee: augustus 1-7
+const TB_AUG = {
+  period_from: "2026-08-01",
+  period_to:   "2026-08-07",
+  spend:       1315.61,
+  revenue_7d_click: 2622.30,
+  revenue_1d_view:  298.00,
+  campaigns: [{
+    name:       "NL/BE | TESTING ABO - PRIME",
+    spend:      1315.61,
+    impressions:186506,
+    clicks:     2598,
+    ctr:        1.393,
+    purchases:  17,
+    revenue_7d_click: 2622.30,
+    revenue_1d_view:  298.00,
+  }]
+};
+
+// TrackBee: 20-31 juli
+const TB_JUL = {
+  period_from: "2026-07-20",
+  period_to:   "2026-07-31",
+  spend:       2017.29,
+  revenue_7d_click: 4510.10,
+  revenue_1d_view:  746.20,
+  campaigns: [{
+    name:       "NL/BE | TESTING ABO - PRIME",
+    spend:      2017.29,
+    impressions:202988,
+    clicks:     2847,
+    ctr:        1.403,
+    purchases:  32,
+    revenue_7d_click: 4510.10,
+    revenue_1d_view:  746.20,
+  }]
+};
+
+/* ─── HELPERS ─────────────────────────────────────────────── */
+const eur  = v => "€" + v.toLocaleString("nl-NL", {minimumFractionDigits:2, maximumFractionDigits:2});
+const pct  = v => v.toFixed(1) + "%";
+const x    = v => v.toFixed(2) + "×";
+const fmtD = s => { const [y,m,d] = s.split("-"); return `${+d} ${["","jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"][+m]}`; };
+
+function filterRows(from, to) {
+  return ROWS_ALL.filter(r => r.day >= from && r.day <= to);
+}
+
+function calcFX(rows) {
+  let rev = 0, prof = 0, orders = 0;
+  rows.forEach(r => { rev += r.revenue_ex_vat; prof += r.profit; orders += r.order_count; });
+  const kosten = rev - prof;
+  const beroas = kosten > 0 ? rev / kosten : 0;
+  return { rev, prof, kosten, beroas, orders };
+}
+
+function calcTB(tbs) {
+  // Merge multiple TB periods
+  let spend = 0, rev7 = 0, rev1v = 0, campaigns = [], impr = 0, clicks = 0, purch = 0;
+  tbs.forEach(tb => {
+    spend  += tb.spend;
+    rev7   += tb.revenue_7d_click;
+    rev1v  += tb.revenue_1d_view;
+    impr   += tb.campaigns.reduce((a,c) => a + c.impressions, 0);
+    clicks += tb.campaigns.reduce((a,c) => a + c.clicks, 0);
+    purch  += tb.campaigns.reduce((a,c) => a + c.purchases, 0);
+    campaigns.push(...tb.campaigns);
+  });
+  const revIncl = rev7 + rev1v;
+  const revEx   = revIncl / BTW;
+  const roas    = spend > 0 ? revEx / spend : 0;
+  const ctr     = impr > 0 ? (clicks / impr) * 100 : 0;
+  return { spend, rev7, rev1v, revIncl, revEx, roas, impr, clicks, purch, ctr, campaigns };
+}
+
+function calcBonus(fxData, tbData) {
+  const diff = tbData.roas - fxData.beroas;
+  const raw  = Math.max(0, tbData.spend * diff) * BONUS_PCT;
+  return { diff, raw };
+}
+
+/* ─── RENDER ──────────────────────────────────────────────── */
+let currentPeriod = "aug";
+
+function setPeriod(p) {
+  currentPeriod = p;
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.textContent.startsWith(p === "aug" ? "Aug" : "Con")));
+  render();
+}
+
+function render() {
+  const p = currentPeriod;
+
+  let fxRows, tbList, periodLabel, fxFrom;
+  if (p === "aug") {
+    fxFrom    = "2026-08-01";
+    fxRows    = filterRows("2026-08-01", SNAP_DATE);
+    tbList    = [TB_AUG];
+    periodLabel = "1 aug – " + fmtD(SNAP_DATE);
+  } else {
+    fxFrom    = TB_START; // Match TrackBee start
+    fxRows    = filterRows(TB_START, SNAP_DATE);
+    tbList    = [TB_JUL, TB_AUG];
+    periodLabel = "20 jul – " + fmtD(SNAP_DATE);
+  }
+
+  const fx  = calcFX(fxRows);
+  const tb  = calcTB(tbList);
+  const bon = calcBonus(fx, tb);
+
+  // Update period label
+  document.getElementById("periodLabel").textContent = periodLabel;
+  document.getElementById("snapMeta").innerHTML =
+    `Bijgewerkt: ${fmtD(SNAP_DATE)} 2026<br>Snapdatum FiveX & TrackBee`;
+  document.getElementById("fiveXNote").textContent =
+    p === "aug" ? "augustus 2026" : "20 jul – " + fmtD(SNAP_DATE) + " (TB-dekking)";
+
+  // Cards
+  const bonClass = bon.raw > 0 ? "bonus" : "";
+  const roasClass = tb.roas > fx.beroas ? "" : "warn";
+  document.getElementById("cards").innerHTML = `
+    <div class="card ${bonClass}">
+      <div class="label">Bonus verdiend</div>
+      <div class="value">${eur(bon.raw)}</div>
+      <div class="sub">bij ROAS ${x(tb.roas)} vs BE ${x(fx.beroas)}</div>
+    </div>
+    <div class="card ${roasClass}">
+      <div class="label">ROAS excl. BTW</div>
+      <div class="value">${x(tb.roas)}</div>
+      <div class="sub">Meta attributed (7d klik + 1d view)</div>
+    </div>
+    <div class="card">
+      <div class="label">BEROAS excl. BTW</div>
+      <div class="value">${x(fx.beroas)}</div>
+      <div class="sub">Break-even drempel</div>
+    </div>
+    <div class="card">
+      <div class="label">Meta spend</div>
+      <div class="value">${eur(tb.spend)}</div>
+      <div class="sub">${tb.purch} aankopen · CTR ${pct(tb.ctr)}</div>
+    </div>
+    <div class="card">
+      <div class="label">TB revenue excl.</div>
+      <div class="value">${eur(tb.revEx)}</div>
+      <div class="sub">incl. ${eur(tb.revIncl)}</div>
+    </div>
+    <div class="card">
+      <div class="label">Omzet excl. BTW</div>
+      <div class="value">${eur(fx.rev)}</div>
+      <div class="sub">${fxRows.reduce((a,r)=>a+r.order_count,0)} orders</div>
+    </div>
+  `;
+
+  // Formula box
+  const diff = (tb.roas - fx.beroas).toFixed(3);
+  document.getElementById("formulaBox").innerHTML = `
+    <strong>Bonus</strong> = max(0, spend × (ROAS<sub>excl</sub> − BEROAS<sub>excl</sub>)) × 10%<br><br>
+    = max(0, ${eur(tb.spend)} × (${x(tb.roas)} − ${x(fx.beroas)})) × 10%<br>
+    = max(0, ${eur(tb.spend)} × ${parseFloat(diff) >= 0 ? "+" : ""}${diff}) × 10%<br>
+    = <strong style="color:var(--green)">${eur(bon.raw)}</strong>
+    ${bon.diff < 0 ? ' <span style="color:var(--muted);font-size:11px">(ROAS onder break-even → €0)</span>' : ''}
+    <br><br>
+    <span style="font-size:11px">BEROAS = rev_ex_vat / (rev_ex_vat − profit) = ${eur(fx.rev)} / ${eur(fx.kosten)} = ${x(fx.beroas)}</span>
+  `;
+
+  // Campaign table
+  // Merge campaigns by name
+  const byName = {};
+  tbList.forEach(tb => {
+    tb.campaigns.forEach(c => {
+      if (!byName[c.name]) byName[c.name] = {name:c.name, spend:0, impressions:0, clicks:0, purchases:0, rev7:0, rev1v:0};
+      byName[c.name].spend += c.spend;
+      byName[c.name].impressions += c.impressions;
+      byName[c.name].clicks += c.clicks;
+      byName[c.name].purchases += c.purchases;
+      byName[c.name].rev7 += c.revenue_7d_click;
+      byName[c.name].rev1v += c.revenue_1d_view;
+    });
+  });
+  const campaigns = Object.values(byName);
+  document.getElementById("campaignTable").innerHTML = `
+    <thead><tr>
+      <th>Campagne</th>
+      <th class="r">Spend</th>
+      <th class="r">Impr.</th>
+      <th class="r">Clicks</th>
+      <th class="r">CTR</th>
+      <th class="r">Aankopen</th>
+      <th class="r">Rev 7d klik</th>
+      <th class="r">Rev 1d view</th>
+      <th class="r">Rev totaal excl.</th>
+      <th class="r">ROAS excl.</th>
+    </tr></thead>
+    <tbody>
+      ${campaigns.map(c => {
+        const revTot = (c.rev7 + c.rev1v) / BTW;
+        const roas   = c.spend > 0 ? revTot / c.spend : 0;
+        const ctr    = c.impressions > 0 ? (c.clicks / c.impressions) * 100 : 0;
+        return `<tr>
+          <td>${c.name}</td>
+          <td class="r">${eur(c.spend)}</td>
+          <td class="r">${c.impressions.toLocaleString("nl-NL")}</td>
+          <td class="r">${c.clicks.toLocaleString("nl-NL")}</td>
+          <td class="r">${pct(ctr)}</td>
+          <td class="r">${c.purchases}</td>
+          <td class="r">${eur(c.rev7)}</td>
+          <td class="r">${eur(c.rev1v)}</td>
+          <td class="r">${eur(revTot)}</td>
+          <td class="r">${x(roas)}</td>
+        </tr>`;
+      }).join("")}
+    </tbody>
+  `;
+
+  // Daily table
+  const showRows = [...fxRows].reverse();
+  const totRev = fxRows.reduce((a,r)=>a+r.revenue_ex_vat,0);
+  const totProf = fxRows.reduce((a,r)=>a+r.profit,0);
+  const totOrd  = fxRows.reduce((a,r)=>a+r.order_count,0);
+  document.getElementById("dailyTable").innerHTML = `
+    <thead><tr>
+      <th>Datum</th>
+      <th class="r">Orders</th>
+      <th class="r">Revenue incl.</th>
+      <th class="r">Revenue excl.</th>
+      <th class="r">Marge</th>
+      <th class="r">BEROAS dag</th>
+    </tr></thead>
+    <tbody>
+      ${showRows.map(r => {
+        const k = r.revenue_ex_vat - r.profit;
+        const br = k > 0 ? r.revenue_ex_vat / k : 0;
+        return `<tr>
+          <td>${fmtD(r.day)}</td>
+          <td class="r">${r.order_count}</td>
+          <td class="r">${eur(r.revenue)}</td>
+          <td class="r">${eur(r.revenue_ex_vat)}</td>
+          <td class="r">${eur(r.profit)}</td>
+          <td class="r">${x(br)}</td>
+        </tr>`;
+      }).join("")}
+      <tr class="total-row">
+        <td>Totaal</td>
+        <td class="r">${totOrd}</td>
+        <td class="r">—</td>
+        <td class="r">${eur(totRev)}</td>
+        <td class="r">${eur(totProf)}</td>
+        <td class="r">${x(fx.beroas)}</td>
+      </tr>
+    </tbody>
+  `;
+}
+
+render();
+</script>
+
+</body>
+</html>
