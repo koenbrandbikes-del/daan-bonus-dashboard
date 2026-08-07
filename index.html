@@ -265,6 +265,11 @@ const ROWS = [
   {d:"2026-08-07",oc:4, rev:446.00, rex:368.60, pro:124.79},
 ];
 
+// Dagelijkse & wekelijkse TB data — opgehaald via TrackBee Campaign Insights API
+const TB_VANDAAG  = {from:"2026-08-07",to:"2026-08-07",spend:301.83, rev7:581.10, rev1v:0,     purch:4,  impr:47471,  cl:667};
+const TB_GISTEREN = {from:"2026-08-06",to:"2026-08-06",spend:342.79, rev7:596.00, rev1v:149.00,purch:5,  impr:50898,  cl:758};
+const TB_WEEK     = {from:"2026-08-03",to:"2026-08-07",spend:1222.94,rev7:1879.20,rev1v:298.00,purch:13, impr:184329, cl:2592};
+const TB_PREVWEEK = {from:"2026-07-28",to:"2026-08-03",spend:923.44, rev7:3009.20,rev1v:314.10,purch:21, impr:101559, cl:1349};
 // TB_JUL: Platform Summary cijfers (volledige juli, betrouwbaarder dan skill API)
 const TB_JUL = {from:"2026-07-01",to:"2026-07-31",spend:4030.15,rev7:8787.00,rev1v:0,purch:32,impr:202988,cl:2847};
 const TB_AUG = {from:"2026-08-01",to:"2026-08-07",spend:1315.61,rev7:2622.30,rev1v:298.00,purch:17,impr:186506,cl:2598};
@@ -493,10 +498,10 @@ const ADS_AUG = [ // aug 5–7, clean CAPI data
 
 /* ═══ PERIODS ════════════════════════════════════════════════════ */
 const PERIODS = {
-  vandaag:  {label:"Vandaag",           from:"2026-08-07",to:"2026-08-07",tb:null,   ads:null},
-  gisteren: {label:"Gisteren",          from:"2026-08-06",to:"2026-08-06",tb:null,   ads:null},
-  week:     {label:"Deze week",         from:"2026-08-03",to:"2026-08-07",tb:null,   ads:null},
-  prevweek: {label:"Vorige week",       from:"2026-07-28",to:"2026-08-03",tb:null,   ads:null},
+  vandaag:  {label:"Vandaag",           from:"2026-08-07",to:"2026-08-07",tb:[TB_VANDAAG],  ads:null},
+  gisteren: {label:"Gisteren",          from:"2026-08-06",to:"2026-08-06",tb:[TB_GISTEREN], ads:null},
+  week:     {label:"Deze week",         from:"2026-08-03",to:"2026-08-07",tb:[TB_WEEK],     ads:null},
+  prevweek: {label:"Vorige week",       from:"2026-07-28",to:"2026-08-03",tb:[TB_PREVWEEK], ads:null,capiNote:true},
   aug:      {label:"Augustus",          from:"2026-08-01",to:"2026-08-07",tb:[TB_AUG_CLEAN],capiNote:true,ads:ADS_AUG},
   jul:      {label:"Juli",              from:"2026-07-16",to:"2026-07-31",tb:[TB_JUL],ads:ADS_JUL},
   contract: {label:"Volledige periode", from:"2026-07-16",to:"2026-08-07",tb:[TB_JUL,TB_AUG_CLEAN],ads:[...ADS_JUL,...ADS_AUG]},
@@ -562,14 +567,15 @@ function render(){
   }
 
   /* bonus / omzet */
-  document.getElementById("bonusLbl").textContent=hasTB?"BONUS TOT NU TOE":"OMZET INCL. BTW";
-  document.getElementById("bonusAmt").textContent=hasTB?eur(CB.raw):eur(CX.rev);
+  const bonusLabels={vandaag:"BONUS VANDAAG",gisteren:"BONUS GISTEREN",week:"BONUS DEZE WEEK",prevweek:"BONUS VORIGE WEEK",aug:"BONUS TOT NU TOE",jul:"BONUS JULI",contract:"BONUS TOTAAL"};
+  document.getElementById("bonusLbl").textContent=bonusLabels[P]||"BONUS";
+  document.getElementById("bonusAmt").textContent=eur(CB.raw);
 
   /* badge */
+  const shortLabel={vandaag:"Vandaag",gisteren:"Gisteren",week:"Deze week",prevweek:"Vorige week"};
   let badgeHtml;
-  if(!hasTB){
-    const dagLabel={vandaag:"Vandaag",gisteren:"Gisteren",week:"Deze week",prevweek:"Vorige week"}[P]||pd.label;
-    badgeHtml=`<span class="badge ne">${dagLabel} · ${CX.oc} orders</span>`;
+  if(shortLabel[P]){
+    badgeHtml=`<span class="badge ne">${shortLabel[P]} · ${CX.oc} orders</span>`;
   } else if(prevBon!==null){
     const d=CB.raw-prevBon, up=d>=0;
     badgeHtml=`<span class="badge ${up?"up":"dn"}">${up?"▲":"▼"} ${eur(Math.abs(d))} t.o.v. juli</span>`;
