@@ -120,7 +120,8 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     <p>Hoeveel bonus Daan nu verdient met Meta advertenties</p>
   </div>
   <select class="period-sel" id="periodSel" onchange="setPeriod(this.value)">
-    <option value="aug">Deze maand</option>
+    <option value="aug">Augustus (nu)</option>
+    <option value="jul">Juli</option>
     <option value="contract">Volledige periode</option>
   </select>
 </div>
@@ -150,10 +151,18 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     <div class="acc-hd" onclick="tog('acc-sim')"><span>Bonussimulator</span><span class="acc-chv">›</span></div>
     <div class="acc-body">
       <div class="sim-wrap">
-        <label>Stel een hypothetische ROAS excl. BTW in</label>
+        <label>Hypothetische ROAS incl. BTW</label>
         <div class="sim-row">
-          <input type="range" id="simSlider" min="0.5" max="5" step="0.01" value="1.83" oninput="updateSim(+this.value)">
-          <div class="sim-rval" id="simRval">1.83×</div>
+          <input type="range" id="simSlider" min="0.5" max="5" step="0.01" value="2.22" oninput="updateSim()">
+          <div class="sim-rval" id="simRval">2.22×</div>
+        </div>
+        <label style="margin-top:4px">Hypothetisch adspend</label>
+        <div class="sim-row" style="gap:8px">
+          <span style="color:#64748b;font-size:14px;flex-shrink:0">€</span>
+          <input type="number" id="simSpend" min="0" step="50"
+            style="flex:1;background:#1a2133;border:1px solid #1f3050;color:#f1f5f9;font-size:14px;font-weight:600;padding:6px 10px;border-radius:6px;outline:none;font-variant-numeric:tabular-nums"
+            oninput="simSpendEdit()">
+          <div style="font-size:12px;color:#475569;flex-shrink:0" id="simSpendNote"></div>
         </div>
         <div class="sim-cards">
           <div class="sim-card"><div class="sl">Bonus</div><div class="sv" id="simBonus">—</div></div>
@@ -410,16 +419,18 @@ function setPeriod(v){P=v;render()}
 /* ═══ RENDER ═════════════════════════════════════════════════════ */
 function render(){
   const aug = P==="aug";
+  const jul = P==="jul";
   const fxFrom = aug?"2026-08-01":TB_ONBOARD;
-  const tbs    = aug?[TB_AUG]:[TB_JUL,TB_AUG];
+  const fxTo   = jul?"2026-07-31":SNAP;
+  const tbs    = aug?[TB_AUG]:jul?[TB_JUL]:[TB_JUL,TB_AUG];
 
-  const fxRws = rows(fxFrom,SNAP);
+  const fxRws = rows(fxFrom,fxTo);
   CX=fxCalc(fxRws); CT=tbCalc(tbs);
   CX.be=kpBeroas(CT.ri,CT.purch);
   CB=bonCalc(CX,CT);
   const schaal=CX.be*(1+SCALE_T), comfy=CX.be*(1+SCALE_H);
 
-  // Previous period (july) for comparison when in aug view
+  // Vergelijking met vorige periode
   let prevBon=null,prevRoas=null;
   if(aug){
     const px=fxCalc(rows(TB_ONBOARD,"2026-07-31"));
@@ -432,7 +443,7 @@ function render(){
   /* card meta */
   const mn=maandNr(SNAP);
   document.getElementById("cardMeta").innerHTML=
-    `Meta · ${fmtS(fxFrom)} t/m ${fmtS(SNAP)} · Maand ${mn} <span class="info-i" title="Maand ${mn} van het contract (start 16 jul 2026)">i</span>`;
+    `Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · Maand ${mn} <span class="info-i" title="Maand ${mn} van het contract (start 16 jul 2026)">i</span>`;
 
   /* bonus */
   document.getElementById("bonusAmt").textContent=eur(CB.raw);
@@ -442,6 +453,8 @@ function render(){
   if(prevBon!==null){
     const d=CB.raw-prevBon, up=d>=0;
     badgeHtml=`<span class="badge ${up?"up":"dn"}">${up?"▲":"▼"} ${eur(Math.abs(d))} t.o.v. juli</span>`;
+  } else if(jul){
+    badgeHtml=`<span class="badge ne">Juli · campagnestart</span>`;
   } else {
     badgeHtml=`<span class="badge ne">Gehele contractperiode</span>`;
   }
@@ -487,7 +500,10 @@ function render(){
   sl.min=Math.max(0.5,CX.be*0.5).toFixed(2);
   sl.max=(Math.max(CT.roas,comfy)*2).toFixed(2);
   sl.value=CT.roas.toFixed(2);
-  updateSim(CT.roas);
+  const spEl=document.getElementById("simSpend");
+  if(!simSpendLocked) spEl.value=Math.round(CT.spend);
+  document.getElementById("simSpendNote").textContent=simSpendLocked?"aangepast":"actueel";
+  updateSim();
 
   document.getElementById("footerDate").textContent=fmtL(SNAP);
 }
@@ -613,12 +629,17 @@ function renderKern(fx,tb){
 }
 
 /* ═══ SIMULATOR ══════════════════════════════════════════════════ */
-function updateSim(v){
-  v=parseFloat(v);
+let simSpendLocked=false;
+function simSpendEdit(){simSpendLocked=true;updateSim();}
+function updateSim(){
+  const v=parseFloat(document.getElementById("simSlider").value)||2;
+  const spEl=document.getElementById("simSpend");
+  const spVal=parseFloat(spEl.value);
+  const spend=isNaN(spVal)||spVal<=0?(CT?CT.spend:0):spVal;
   document.getElementById("simRval").textContent=x2(v);
   const diff=v-(CX?CX.be:1.35);
-  const raw=Math.max(0,(CT?CT.spend:1315.61)*diff)*BONUS_PCT;
-  const pctS=CT&&CT.spend>0?raw/CT.spend*100:0;
+  const raw=Math.max(0,spend*diff)*BONUS_PCT;
+  const pctS=spend>0?raw/spend*100:0;
   document.getElementById("simBonus").textContent=eur(raw);
   document.getElementById("simDiff").textContent=(diff>=0?"+":"")+diff.toFixed(3)+"×";
   document.getElementById("simPct").textContent=pctS.toFixed(2)+"%";
