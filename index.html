@@ -346,9 +346,9 @@ function render(){
   document.getElementById("mScaleSub").textContent=`+${(SCALE_T*100).toFixed(0)}% boven break-even`;
   if(prevRoas!==null){
     const rd=(CT.roas-prevRoas)/prevRoas*100;
-    document.getElementById("mRoasSub").textContent=(rd>=0?"+":"")+rd.toFixed(1)+"% t.o.v. juli";
+    document.getElementById("mRoasSub").textContent="excl. BTW · "+(rd>=0?"+":"")+rd.toFixed(1)+"% t.o.v. juli";
   } else {
-    document.getElementById("mRoasSub").textContent="Meta attributed (7d klik + 1d view)";
+    document.getElementById("mRoasSub").textContent="excl. BTW · Meta attributed";
   }
 
   /* gauge */
@@ -431,10 +431,11 @@ function renderBeroas(ct, be){
     }
   }
 
+  const avgExcl = avgIncl / BTW;
   document.getElementById("beSummary").innerHTML=`
-<div class="be-stat"><div class="be-lbl">Gem. orderwaarde (TB)</div><div class="be-val">${eur(avgIncl)} incl.</div></div>
+<div class="be-stat"><div class="be-lbl">Gem. orderwaarde (TB)</div><div class="be-val">${eur(avgExcl)} excl.</div><div style="font-size:11px;color:#64748b;margin-top:2px">${eur(avgIncl)} incl. ÷ 1,21</div></div>
 <div class="be-stat"><div class="be-lbl">Gewogen marge</div><div class="be-val">${(wWinst/wExcl*100).toFixed(1)}%</div></div>
-<div class="be-stat"><div class="be-lbl">BEROAS</div><div class="be-val">${x2(be)}</div></div>`;
+<div class="be-stat"><div class="be-lbl">BEROAS (excl. BTW)</div><div class="be-val">${x2(be)}</div></div>`;
 
   document.getElementById("beTable").innerHTML=`
 <thead><tr><th>Product</th><th class="r">Prijs excl.</th><th class="r">Winst vóór ads</th><th class="r">Marge</th><th class="r">BEROAS</th><th class="r">Gewicht</th></tr></thead>
