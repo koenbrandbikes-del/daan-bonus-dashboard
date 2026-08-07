@@ -20,8 +20,9 @@ body{background:#090d1a;color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFo
 /* ── Main card ── */
 .card{background:#111827;border:1px solid #1f2d45;border-radius:16px;padding:24px;margin-bottom:12px}
 .card-meta{font-size:11px;color:#64748b;margin-bottom:14px;display:flex;align-items:center;gap:5px}
-.info-i{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;border:1px solid #64748b;font-size:8px;color:#64748b;cursor:default;flex-shrink:0}
-.capi-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;background:#78350f;border:1px solid #92400e;color:#fde68a;font-size:10px;font-weight:600;letter-spacing:.04em;cursor:default;flex-shrink:0}
+.info-i{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;border:1px solid #64748b;font-size:8px;color:#64748b;cursor:help;flex-shrink:0;position:relative}
+.capi-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;background:#78350f;border:1px solid #92400e;color:#fde68a;font-size:10px;font-weight:600;letter-spacing:.04em;cursor:help;flex-shrink:0;position:relative}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0c1829;border:1px solid #2d4a70;color:#cbd5e1;font-size:11px;font-weight:400;line-height:1.5;padding:7px 11px;border-radius:7px;white-space:normal;width:210px;z-index:999;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.5)}
 .bonus-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;color:#64748b;text-transform:uppercase;margin-bottom:5px}
 .bonus-amt{font-size:52px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;margin-bottom:12px}
 .badge{display:inline-flex;align-items:center;gap:3px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:10px}
@@ -257,7 +258,8 @@ const ROWS = [
   {d:"2026-08-07",oc:4, rev:446.00, rex:368.60, pro:124.79},
 ];
 
-const TB_JUL = {from:"2026-07-20",to:"2026-07-31",spend:2017.29,rev7:4510.10,rev1v:746.20,purch:32,impr:202988,cl:2847};
+// TB_JUL: Platform Summary cijfers (volledige juli, betrouwbaarder dan skill API)
+const TB_JUL = {from:"2026-07-01",to:"2026-07-31",spend:4030.15,rev7:8787.00,rev1v:0,purch:32,impr:202988,cl:2847};
 const TB_AUG = {from:"2026-08-01",to:"2026-08-07",spend:1315.61,rev7:2622.30,rev1v:298.00,purch:17,impr:186506,cl:2598};
 // Betrouwbare data: CAPI Gateway extra uit per 5 aug → geen dubbele aankopen meer
 const TB_AUG_CLEAN = {from:"2026-08-05",to:"2026-08-07",spend:878.97,rev7:1581.20,rev1v:298.00,purch:11,impr:134448,cl:1940};
@@ -492,7 +494,8 @@ function render(){
     CT=null; CB=null;
     CX.be=shopifyBeroas(fxFrom,fxTo);
   }
-  const schaal=CX.be*(1+SCALE_T), comfy=CX.be*(1+SCALE_H);
+  // Schaaldrempel = ROAS waarbij nettomarge op omzet = SCALE_T (1/BEROAS - margin = 1/ROAS)
+  const schaal=1/(1/CX.be-SCALE_T), comfy=1/(1/CX.be-SCALE_H);
 
   // Vergelijking aug → jul
   let prevBon=null,prevRoas=null;
@@ -509,10 +512,10 @@ function render(){
     const mn=maandNr(SNAP);
     const tbFrom=tbs[0].from, tbTo=tbs[tbs.length-1].to;
     const capiWarn=pd.capiNote
-      ? ` <span class="capi-badge" title="CAPI Gateway dubbeltelling gerepareerd per 5 aug · Meta ROAS op basis van ${fmtS(tbFrom)} t/m ${fmtS(tbTo)}">CAPI fix</span>`
+      ? ` <span class="capi-badge" data-tip="CAPI Gateway dubbeltelling gerepareerd per 5 aug · Meta ROAS op basis van ${fmtS(tbFrom)} t/m ${fmtS(tbTo)}">CAPI fix</span>`
       : "";
     document.getElementById("cardMeta").innerHTML=
-      `Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · Maand ${mn}${capiWarn} <span class="info-i" title="Maand ${mn} van het contract (start 16 jul 2026)">i</span>`;
+      `Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · Maand ${mn}${capiWarn} <span class="info-i" data-tip="Maand ${mn} van het contract · start 16 jul 2026 · BEROAS op basis van werkelijke Shopify orders">i</span>`;
   } else {
     document.getElementById("cardMeta").innerHTML=
       `Shopify · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · ${fxRws.length} dag${fxRws.length!==1?"en":""}`;
@@ -569,7 +572,7 @@ function render(){
   if(hasTB){
     document.getElementById("mRoas").textContent=x2(CT.roas);
     document.getElementById("mScale").textContent=x2(schaal);
-    document.getElementById("mScaleSub").textContent=`+${(SCALE_T*100).toFixed(0)}% boven break-even`;
+    document.getElementById("mScaleSub").textContent=`${(SCALE_T*100).toFixed(0)}% nettomarge op omzet`;
     document.getElementById("mBeSub").textContent="incl. BTW";
     if(prevRoas!==null){
       const rd=(CT.roas-prevRoas)/prevRoas*100;
