@@ -21,6 +21,7 @@ body{background:#090d1a;color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFo
 .card{background:#111827;border:1px solid #1f2d45;border-radius:16px;padding:24px;margin-bottom:12px}
 .card-meta{font-size:11px;color:#64748b;margin-bottom:14px;display:flex;align-items:center;gap:5px}
 .info-i{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;border:1px solid #64748b;font-size:8px;color:#64748b;cursor:default;flex-shrink:0}
+.capi-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;background:#78350f;border:1px solid #92400e;color:#fde68a;font-size:10px;font-weight:600;letter-spacing:.04em;cursor:default;flex-shrink:0}
 .bonus-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;color:#64748b;text-transform:uppercase;margin-bottom:5px}
 .bonus-amt{font-size:52px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;margin-bottom:12px}
 .badge{display:inline-flex;align-items:center;gap:3px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:10px}
@@ -508,7 +509,7 @@ function render(){
     const mn=maandNr(SNAP);
     const tbFrom=tbs[0].from, tbTo=tbs[tbs.length-1].to;
     const capiWarn=pd.capiNote
-      ? ` <span class="info-i" style="background:#78350f;border-color:#92400e;color:#fde68a" title="CAPI Gateway dubbeltelling gerepareerd per 5 aug · Meta ROAS op basis van ${fmtS(tbFrom)} t/m ${fmtS(tbTo)}">CAPI fix</span>`
+      ? ` <span class="capi-badge" title="CAPI Gateway dubbeltelling gerepareerd per 5 aug · Meta ROAS op basis van ${fmtS(tbFrom)} t/m ${fmtS(tbTo)}">CAPI fix</span>`
       : "";
     document.getElementById("cardMeta").innerHTML=
       `Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · Maand ${mn}${capiWarn} <span class="info-i" title="Maand ${mn} van het contract (start 16 jul 2026)">i</span>`;
