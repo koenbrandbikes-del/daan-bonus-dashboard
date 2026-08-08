@@ -43,7 +43,7 @@ body{background:#090d1a;color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFo
 .mc-sub{font-size:11px;color:#64748b;margin-top:2px}
 
 /* ── Gauge ── */
-.gauge-outer{position:relative;padding:40px 0 44px}
+.gauge-outer{position:relative;padding:36px 0 36px}
 .gauge-bar{position:absolute;top:36px;left:0;right:0;height:8px;border-radius:4px;overflow:visible}
 .g-marker{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translateX(-50%);top:-32px}
 .g-marker-lbl{font-size:11px;font-weight:700;white-space:nowrap;padding:1px 5px;border-radius:3px;border-width:1px;border-style:solid}
@@ -182,8 +182,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     <div class="roas-delta" id="roasDelta"></div>
   </div>
 
-  <div id="aiStatusBox"></div>
-
   <div class="gauge-outer" id="gaugeOuter"></div>
 
   <div id="trendRow"></div>
@@ -195,8 +193,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
   </div>
 
   <div class="meta-info" id="metaInfo" style="margin-top:10px"></div>
-  <div id="statusLine" style="display:none"></div>
-  <div id="aiAnalysis"></div>
 </div>
 
 <!-- Accordion -->
@@ -725,8 +721,6 @@ function render(){
   }
 
   /* AI status box */
-  if(hasTB) renderAiStatus(CT, CX.be, schaal, comfy);
-  else document.getElementById("aiStatusBox").innerHTML="";
 
   /* bonus (nu mc-val) */
   const bonusLabels={vandaag:"BONUS VANDAAG",gisteren:"BONUS GISTEREN",week:"BONUS DEZE WEEK",prevweek:"BONUS VORIGE WEEK",aug:"BONUS TOT NU TOE",jul:"BONUS JULI",contract:"BONUS TOTAAL"};
@@ -789,7 +783,6 @@ function render(){
   const adsData = pd.ads || ADS_AUG;
   const adsFallback = !pd.ads;
   renderAds(adsData, CX.be, adsFallback);
-  renderAnalysis(adsData, CX.be, CT);
 
   /* simulator */
   if(hasTB){
