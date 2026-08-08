@@ -931,8 +931,8 @@ function renderKern(fx,tb){
   const imprFmt=v=>v>=1000?(v/1000).toFixed(1)+"k":v;
   const cells=tb?[
     ["Orders (Shopify)",fx.oc],
-    ["Omzet incl. BTW",eur(fx.rev)],
-    ["Marge",eur(fx.pro)],
+    ["Omzet Shopify",eur(fx.rev)],
+    ["Omzet Meta (TB)",eur(tb.ri)],
     ["Marge%",(fx.rex>0?fx.pro/fx.rex*100:0).toFixed(1)+"%"],
     ["Meta spend",eur(tb.spend)],
     ["ROAS",x2(tb.roas)],
@@ -941,7 +941,7 @@ function renderKern(fx,tb){
     ["Aankopen (TB)",tb.purch],
     ["CTR",tb.ctr.toFixed(2)+"%"],
     ["CPC",eur(tb.spend/Math.max(1,tb.cl))],
-    ["Impressies",imprFmt(tb.impr)],
+    ["Marge",eur(fx.pro)],
   ]:[
     ["Orders",fx.oc],
     ["Revenue incl. BTW",eur(fx.rev)],
