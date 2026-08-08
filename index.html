@@ -931,7 +931,7 @@ function renderKern(fx,tb){
   const imprFmt=v=>v>=1000?(v/1000).toFixed(1)+"k":v;
   const cells=tb?[
     ["Orders (Shopify)",fx.oc],
-    ["Revenue excl. BTW",eur(fx.rex)],
+    ["Omzet incl. BTW",eur(fx.rev)],
     ["Marge",eur(fx.pro)],
     ["Marge%",(fx.rex>0?fx.pro/fx.rex*100:0).toFixed(1)+"%"],
     ["Meta spend",eur(tb.spend)],

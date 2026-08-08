@@ -20,9 +20,9 @@ CLEAN_S="2026-08-05"                       # CAPI-fix datum (dubbeltelling voor 
 
 echo "=== Dashboard update: $TODAY $(date +%H:%M) ==="
 
-PROMPT="Haal TrackBee Meta campaign insights op voor store 53920, campaign 120245206367440662.
+PROMPT="Haal TrackBee Meta platform insights op voor store 53920 (alle campagnes gecombineerd, niet één campagne).
 
-Haal data op voor precies deze 5 periodes via get_meta_campaign_insights:
+Haal data op voor precies deze 5 periodes via get_meta_campaign_insights (zonder campaign_id filter, zodat alle campagnes worden opgeteld):
 1. Vandaag:      from=$TODAY    to=$TODAY
 2. Gisteren:     from=$YEST     to=$YEST
 3. Deze week:    from=$WK_S_CLEAN to=$TODAY
