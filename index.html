@@ -131,6 +131,25 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .ga4-bar-fill{height:100%;border-radius:3px;transition:width .4s}
 .ga4-insight{background:#0f1f35;border:1px solid #1f3050;border-radius:8px;padding:12px 14px;font-size:12px;color:#94a3b8;line-height:1.5}
 .ga4-insight strong{color:#e2e8f0}
+.ga4-journey-hd{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748b;margin:18px 0 10px;padding-top:14px;border-top:1px solid #1f2d45}
+.ga4-touch-pills{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.ga4-touch-pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;text-align:center}
+.ga4-paths{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.ga4-path{display:flex;align-items:center;gap:6px;background:#141e33;border-radius:7px;padding:9px 12px}
+.ga4-path-pct{font-size:13px;font-weight:700;min-width:36px;font-variant-numeric:tabular-nums;color:#e2e8f0}
+.ga4-path-nodes{display:flex;align-items:center;gap:4px;flex:1;flex-wrap:wrap}
+.ga4-node{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.ga4-node.meta{background:rgba(59,130,246,.18);color:#93c5fd}
+.ga4-node.google{background:rgba(34,197,94,.15);color:#86efac}
+.ga4-node.organic{background:rgba(148,163,184,.1);color:#94a3b8}
+.ga4-node.order{background:rgba(74,222,128,.15);color:#4ade80}
+.ga4-node-arr{color:#374151;font-size:11px}
+.ga4-roles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.ga4-role{background:#141e33;border-radius:8px;padding:11px 13px}
+.ga4-role-name{font-size:11px;font-weight:700;margin-bottom:6px}
+.ga4-role-bar{height:4px;border-radius:2px;background:#1f2d45;margin-bottom:4px;overflow:hidden}
+.ga4-role-fill{height:100%;border-radius:2px}
+.ga4-role-sub{font-size:10px;color:#64748b}
 
 /* ── Footer ── */
 .footer{text-align:center;font-size:11px;color:#374151;padding:16px 0 4px}
@@ -303,6 +322,20 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 <script>
 /* ═══ GA4 DATA ════════════════════════════════════════════════════ */
 const GA4_SNAP = "2026-08-08";
+// TrackBee klanttrajecten · 5–8 aug (schone CAPI periode)
+const TB_JOURNEYS = {
+  single_touch: 0.389, multi_touch: 0.50, organic: 0.111,
+  meta: {share:0.611, solo:0.273, early:0.727, late:0.455},
+  google: {share:0.50, solo:0.444, early:0.111, late:0.556},
+  overlap_meta_google: 0.222,
+  paths: [
+    {nodes:["meta","order"], pct:16.7},
+    {nodes:["meta","meta","order"], pct:11.1},
+    {nodes:["meta","google","order"], pct:11.1},
+    {nodes:["meta","meta","meta","meta","order"], pct:5.6},
+    {nodes:["meta","meta","google","order"], pct:5.6}
+  ]
+};
 const GA4 = {
   yesterday: {label:"Gisteren",ses:441,orders:4,dur:21,bounce:97.3,spv:1.17,
     funnel:[400,593,6,3,4],mob:{ses:357,orders:3},desk:{ses:68,orders:1},
@@ -1148,6 +1181,17 @@ function renderGA4(){
   const s2v = fl[0]>0 ? Math.round(fl[1]/fl[0]*100) : 0;
   const v2a = fl[1]>0 ? (fl[2]/fl[1]*100).toFixed(1) : 0;
 
+  // Journey paths HTML
+  const nodeHtml = (n) => {
+    const cls = n==="order"?"order":n==="meta"?"meta":n==="google"?"google":"organic";
+    const lbl = n==="order"?"✓ Aankoop":n==="meta"?"Meta":n==="google"?"Google":"Organisch";
+    return `<span class="ga4-node ${cls}">${lbl}</span>`;
+  };
+  const pathsHtml = TB_JOURNEYS.paths.map(p=>{
+    const nodes = p.nodes.map((n,i)=>(i>0?'<span class="ga4-node-arr">›</span>':'')+nodeHtml(n)).join("");
+    return `<div class="ga4-path"><div class="ga4-path-pct">${p.pct}%</div><div class="ga4-path-nodes">${nodes}</div></div>`;
+  }).join("");
+
   document.getElementById("ga4Body").innerHTML=`
 <div class="ga4-stats">
   <div class="ga4-stat"><div class="ga4-stat-lbl">Sessies</div><div class="ga4-stat-val">${d.ses.toLocaleString("nl")}</div><div class="ga4-stat-sub">${d.orders} orders</div></div>
@@ -1188,7 +1232,29 @@ function renderGA4(){
   <strong>Terugkerende bezoekers</strong> converteren ${factor}× beter dan nieuwe (${rtCr.toFixed(1)}% vs ${nwCr.toFixed(2)}% CR) ·
   Van elke 100 productpagina-bezoekers voegt <strong>${v2a}% iets toe aan winkelwagen</strong> ·
   ${s2v>100?`Bezoekers bekijken gemiddeld meerdere producten per sessie (${s2v}% van sessies→views)`:`${s2v}% van sessies start met productview`}
-</div>`;
+</div>
+<div class="ga4-journey-hd">Klanttrajecten · TrackBee (5–8 aug)</div>
+<div class="ga4-touch-pills">
+  <div class="ga4-touch-pill" style="background:rgba(96,165,250,.12);color:#60a5fa">1 touchpoint &nbsp;<strong>${Math.round(TB_JOURNEYS.single_touch*100)}%</strong></div>
+  <div class="ga4-touch-pill" style="background:rgba(251,191,36,.1);color:#fbbf24">Meerdere touchpoints &nbsp;<strong>${Math.round(TB_JOURNEYS.multi_touch*100)}%</strong></div>
+  <div class="ga4-touch-pill" style="background:rgba(148,163,184,.08);color:#94a3b8">Organisch &nbsp;<strong>${Math.round(TB_JOURNEYS.organic*100)}%</strong></div>
+</div>
+<div class="ga4-roles">
+  <div class="ga4-role">
+    <div class="ga4-role-name" style="color:#93c5fd">Meta · in ${Math.round(TB_JOURNEYS.meta.share*100)}% van orders</div>
+    <div style="font-size:10px;color:#64748b;margin-bottom:6px">Rol: <strong style="color:#e2e8f0">Introductie</strong> · ${Math.round(TB_JOURNEYS.meta.early*100)}% vroeg in pad · solo ${Math.round(TB_JOURNEYS.meta.solo*100)}%</div>
+    <div class="ga4-role-bar"><div class="ga4-role-fill" style="width:${Math.round(TB_JOURNEYS.meta.early*100)}%;background:#3b82f6"></div></div>
+    <div class="ga4-role-sub">Vroeg ${Math.round(TB_JOURNEYS.meta.early*100)}% · Laat ${Math.round(TB_JOURNEYS.meta.late*100)}%</div>
+  </div>
+  <div class="ga4-role">
+    <div class="ga4-role-name" style="color:#86efac">Google · in ${Math.round(TB_JOURNEYS.google.share*100)}% van orders</div>
+    <div style="font-size:10px;color:#64748b;margin-bottom:6px">Rol: <strong style="color:#e2e8f0">Afsluiter</strong> · ${Math.round(TB_JOURNEYS.google.late*100)}% laat in pad · solo ${Math.round(TB_JOURNEYS.google.solo*100)}%</div>
+    <div class="ga4-role-bar"><div class="ga4-role-fill" style="width:${Math.round(TB_JOURNEYS.google.late*100)}%;background:#22c55e"></div></div>
+    <div class="ga4-role-sub">Vroeg ${Math.round(TB_JOURNEYS.google.early*100)}% · Laat ${Math.round(TB_JOURNEYS.google.late*100)}%</div>
+  </div>
+</div>
+<div class="ga4-paths">${pathsHtml}</div>
+<div class="ga4-insight" style="margin-top:0"><strong>${Math.round(TB_JOURNEYS.overlap_meta_google*100)}% van alle orders</strong> ziet zowel Meta als Google · Meta introduceert, Google sluit af · meest voorkomend pad: Meta ad gezien → zoeken op Google → aankoop via Google</div>`;
 }
 
 /* ═══ ACCORDION ══════════════════════════════════════════════════ */
