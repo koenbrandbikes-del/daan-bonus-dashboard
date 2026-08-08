@@ -105,6 +105,33 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kern-lbl{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
 .kern-val{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
 
+/* ── GA4 Analytics ── */
+.ga4-tabs{display:flex;gap:4px;padding:14px 16px 0;flex-wrap:wrap}
+.ga4-tab{background:transparent;border:1px solid #1f3050;color:#64748b;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;cursor:pointer;transition:all .15s}
+.ga4-tab.active{background:#1d3a5f;border-color:#60a5fa;color:#e2e8f0}
+.ga4-body{padding:16px}
+.ga4-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#1f2d45;border-radius:8px;overflow:hidden;margin-bottom:16px}
+.ga4-stat{padding:12px 14px;background:#111827}
+.ga4-stat-lbl{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.ga4-stat-val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.ga4-stat-sub{font-size:10px;color:#64748b;margin-top:2px}
+.ga4-funnel{display:flex;align-items:center;gap:0;margin-bottom:16px;overflow-x:auto}
+.ga4-step{flex:1;min-width:0;background:#141e33;border-radius:6px;padding:10px 10px 8px;text-align:center;position:relative}
+.ga4-step-lbl{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ga4-step-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.ga4-step-pct{font-size:10px;color:#f59e0b;margin-top:2px;font-weight:600}
+.ga4-arrow{color:#374151;font-size:16px;flex-shrink:0;padding:0 4px;line-height:1}
+.ga4-splits{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.ga4-split{background:#141e33;border-radius:8px;padding:12px 14px}
+.ga4-split-title{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;font-weight:600}
+.ga4-bar-row{display:flex;flex-direction:column;gap:5px}
+.ga4-bar-item{display:flex;flex-direction:column;gap:2px}
+.ga4-bar-label{display:flex;justify-content:space-between;font-size:11px}
+.ga4-bar-track{height:5px;background:#1f2d45;border-radius:3px;overflow:hidden}
+.ga4-bar-fill{height:100%;border-radius:3px;transition:width .4s}
+.ga4-insight{background:#0f1f35;border:1px solid #1f3050;border-radius:8px;padding:12px 14px;font-size:12px;color:#94a3b8;line-height:1.5}
+.ga4-insight strong{color:#e2e8f0}
+
 /* ── Footer ── */
 .footer{text-align:center;font-size:11px;color:#374151;padding:16px 0 4px}
 .day-sum td{color:#f1f5f9}
@@ -244,6 +271,14 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     </div>
   </div>
 
+  <div class="acc-item" id="acc-ga4">
+    <div class="acc-hd" onclick="tog('acc-ga4')"><span>Website Analytics · lumeworks.nl</span><span class="acc-chv">›</span></div>
+    <div class="acc-body">
+      <div class="ga4-tabs" id="ga4Tabs"></div>
+      <div class="ga4-body" id="ga4Body"></div>
+    </div>
+  </div>
+
   <div class="acc-item" id="acc-ord">
     <div class="acc-hd" onclick="tog('acc-ord')"><span id="ordHdr">Orderdetail (alle orders)</span><span class="acc-chv">›</span></div>
     <div class="acc-body">
@@ -266,6 +301,23 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 </div>
 
 <script>
+/* ═══ GA4 DATA ════════════════════════════════════════════════════ */
+const GA4_SNAP = "2026-08-08";
+const GA4 = {
+  yesterday: {label:"Gisteren",ses:441,orders:4,dur:21,bounce:97.3,spv:1.17,
+    funnel:[400,593,6,3,4],mob:{ses:357,orders:3},desk:{ses:68,orders:1},
+    nl:{ses:270,orders:4},be:{ses:147,orders:0},nw:{ses:327,orders:1},rt:{ses:61,orders:0}},
+  "7d": {label:"7 Dagen",ses:2044,orders:16,dur:24,bounce:55.3,spv:1.23,
+    funnel:[1961,2811,28,37,16],mob:{ses:1701,orders:12},desk:{ses:276,orders:4},
+    nl:{ses:1303,orders:11},be:{ses:635,orders:4},nw:{ses:1566,orders:6},rt:{ses:365,orders:7}},
+  this_week: {label:"Deze week",ses:1812,orders:13,dur:22,bounce:57.3,spv:1.24,
+    funnel:[1732,2488,24,31,13],mob:{ses:1502,orders:9},desk:{ses:253,orders:4},
+    nl:{ses:1144,orders:9},be:{ses:570,orders:3},nw:{ses:1377,orders:4},rt:{ses:327,orders:6}},
+  "30d": {label:"30 Dagen",ses:7290,orders:42,dur:20,bounce:50.7,spv:1.36,
+    funnel:[7025,9291,229,130,42],mob:{ses:6033,orders:33},desk:{ses:990,orders:9},
+    nl:{ses:4840,orders:32},be:{ses:1969,orders:7},nw:{ses:5505,orders:24},rt:{ses:1242,orders:15}}
+};
+
 /* ═══ DATA ═══════════════════════════════════════════════════════ */
 const SNAP = "2026-08-08";
 const SNAP_TIME = "10:10";
@@ -1043,8 +1095,109 @@ function renderAds(adsRaw, beroas, fallback){
   document.getElementById("adsTable").innerHTML=html;
 }
 
+/* ═══ GA4 ANALYTICS ════════════════════════════════════════════════ */
+let ga4Period = "7d";
+const GA4_FUNNEL_LABELS = ["Sessie","Product","Winkelwagen","Checkout","Aankoop"];
+
+function initGA4(){
+  const tabs = document.getElementById("ga4Tabs");
+  Object.entries(GA4).forEach(([key,d])=>{
+    const btn = document.createElement("button");
+    btn.className = "ga4-tab" + (key===ga4Period?" active":"");
+    btn.textContent = d.label;
+    btn.onclick = ()=>{ ga4Period=key; renderGA4(); document.querySelectorAll(".ga4-tab").forEach(b=>b.classList.remove("active")); btn.classList.add("active"); };
+    tabs.appendChild(btn);
+  });
+  renderGA4();
+}
+
+function renderGA4(){
+  const d = GA4[ga4Period];
+  if(!d) return;
+
+  // Funnel
+  const fl = d.funnel;
+  const funnelHtml = GA4_FUNNEL_LABELS.map((lbl,i)=>{
+    const val = fl[i]||0;
+    const prev = i===0 ? val : (fl[i-1]||1);
+    const pct = i===0 ? "" : `<div class="ga4-step-pct">${Math.round(val/prev*100)}%</div>`;
+    const arr = i===0 ? "" : `<span class="ga4-arrow">›</span>`;
+    return `${arr}<div class="ga4-step"><div class="ga4-step-lbl">${lbl}</div><div class="ga4-step-val">${val.toLocaleString("nl")}</div>${pct}</div>`;
+  }).join("");
+
+  // Device bars
+  const totSes = (d.mob.ses||0)+(d.desk.ses||0)+(d.tab||{ses:0}).ses;
+  const mobPct = Math.round((d.mob.ses||0)/Math.max(totSes,1)*100);
+  const deskPct = Math.round((d.desk.ses||0)/Math.max(totSes,1)*100);
+  const mobCr = d.mob.ses>0 ? (d.mob.orders/d.mob.ses*100).toFixed(1) : 0;
+  const deskCr = d.desk.ses>0 ? (d.desk.orders/d.desk.ses*100).toFixed(1) : 0;
+
+  // Country bars
+  const totCs = (d.nl.ses||0)+(d.be.ses||0);
+  const nlPct = Math.round((d.nl.ses||0)/Math.max(totCs,1)*100);
+  const bePct = Math.round((d.be.ses||0)/Math.max(totCs,1)*100);
+  const nlCr = d.nl.ses>0 ? (d.nl.orders/d.nl.ses*100).toFixed(1) : 0;
+  const beCr = d.be.ses>0 ? (d.be.orders/d.be.ses*100).toFixed(1) : 0;
+
+  // Returning insight
+  const rtCr = d.rt.ses>0 ? d.rt.orders/d.rt.ses*100 : 0;
+  const nwCr = d.nw.ses>0 ? d.nw.orders/d.nw.ses*100 : 0;
+  const factor = nwCr>0 ? (rtCr/nwCr).toFixed(1) : "—";
+
+  // Session-to-view rate
+  const s2v = fl[0]>0 ? Math.round(fl[1]/fl[0]*100) : 0;
+  const v2a = fl[1]>0 ? (fl[2]/fl[1]*100).toFixed(1) : 0;
+
+  document.getElementById("ga4Body").innerHTML=`
+<div class="ga4-stats">
+  <div class="ga4-stat"><div class="ga4-stat-lbl">Sessies</div><div class="ga4-stat-val">${d.ses.toLocaleString("nl")}</div><div class="ga4-stat-sub">${d.orders} orders</div></div>
+  <div class="ga4-stat"><div class="ga4-stat-lbl">Bounce rate</div><div class="ga4-stat-val">${d.bounce}%</div><div class="ga4-stat-sub">verlaat na 1 pagina</div></div>
+  <div class="ga4-stat"><div class="ga4-stat-lbl">Gem. sessieduur</div><div class="ga4-stat-val">${d.dur}s</div><div class="ga4-stat-sub">actieve tijd op site</div></div>
+  <div class="ga4-stat"><div class="ga4-stat-lbl">Sessies / bezoeker</div><div class="ga4-stat-val">${d.spv}</div><div class="ga4-stat-sub">gemiddeld ${d.spv>1.5?"meerdere":"≈1"} bezoek</div></div>
+</div>
+<div class="ga4-funnel">${funnelHtml}</div>
+<div class="ga4-splits">
+  <div class="ga4-split">
+    <div class="ga4-split-title">Apparaat</div>
+    <div class="ga4-bar-row">
+      <div class="ga4-bar-item">
+        <div class="ga4-bar-label"><span>📱 Mobiel</span><span style="color:#94a3b8">${d.mob.ses.toLocaleString("nl")} sess · ${d.mob.orders} orders · ${mobCr}% CR</span></div>
+        <div class="ga4-bar-track"><div class="ga4-bar-fill" style="width:${mobPct}%;background:#60a5fa"></div></div>
+      </div>
+      <div class="ga4-bar-item">
+        <div class="ga4-bar-label"><span>🖥 Desktop</span><span style="color:#94a3b8">${d.desk.ses.toLocaleString("nl")} sess · ${d.desk.orders} orders · ${deskCr}% CR</span></div>
+        <div class="ga4-bar-track"><div class="ga4-bar-fill" style="width:${deskPct}%;background:#818cf8"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="ga4-split">
+    <div class="ga4-split-title">Land</div>
+    <div class="ga4-bar-row">
+      <div class="ga4-bar-item">
+        <div class="ga4-bar-label"><span>🇳🇱 Nederland</span><span style="color:#94a3b8">${d.nl.ses.toLocaleString("nl")} sess · ${d.nl.orders} orders · ${nlCr}% CR</span></div>
+        <div class="ga4-bar-track"><div class="ga4-bar-fill" style="width:${nlPct}%;background:#f97316"></div></div>
+      </div>
+      <div class="ga4-bar-item">
+        <div class="ga4-bar-label"><span>🇧🇪 België</span><span style="color:#94a3b8">${d.be.ses.toLocaleString("nl")} sess · ${d.be.orders} orders · ${beCr}% CR</span></div>
+        <div class="ga4-bar-track"><div class="ga4-bar-fill" style="width:${bePct}%;background:#fbbf24"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="ga4-insight">
+  <strong>Terugkerende bezoekers</strong> converteren ${factor}× beter dan nieuwe (${rtCr.toFixed(1)}% vs ${nwCr.toFixed(2)}% CR) ·
+  Van elke 100 productpagina-bezoekers voegt <strong>${v2a}% iets toe aan winkelwagen</strong> ·
+  ${s2v>100?`Bezoekers bekijken gemiddeld meerdere producten per sessie (${s2v}% van sessies→views)`:`${s2v}% van sessies start met productview`}
+</div>`;
+}
+
 /* ═══ ACCORDION ══════════════════════════════════════════════════ */
-function tog(id){document.getElementById(id).classList.toggle("open")}
+function tog(id){
+  document.getElementById(id).classList.toggle("open");
+  if(id==="acc-ga4" && document.getElementById("acc-ga4").classList.contains("open")){
+    if(!document.getElementById("ga4Tabs").hasChildNodes()) initGA4();
+  }
+}
 
 /* ═══ INIT ═══════════════════════════════════════════════════════ */
 render();
