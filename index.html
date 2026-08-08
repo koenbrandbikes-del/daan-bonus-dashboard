@@ -322,6 +322,16 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 <script>
 /* ═══ GA4 DATA ════════════════════════════════════════════════════ */
 const GA4_SNAP = "2026-08-08";
+// Dagen tot aankoop · GA4 16 jul–8 aug (38 orders)
+const GA4_DAYS_TO_CONV = {
+  avg: 1.5,
+  buckets: [
+    {lbl:"0 dagen",n:29,pct:76},
+    {lbl:"1 dag",n:3,pct:8},
+    {lbl:"2–7 dagen",n:2,pct:5},
+    {lbl:"8–15 dagen",n:4,pct:11}
+  ]
+};
 // TrackBee klanttrajecten · 5–8 aug (schone CAPI periode)
 const TB_JOURNEYS = {
   single_touch: 0.389, multi_touch: 0.50, organic: 0.111,
@@ -1254,7 +1264,15 @@ function renderGA4(){
   </div>
 </div>
 <div class="ga4-paths">${pathsHtml}</div>
-<div class="ga4-insight" style="margin-top:0"><strong>${Math.round(TB_JOURNEYS.overlap_meta_google*100)}% van alle orders</strong> ziet zowel Meta als Google · Meta introduceert, Google sluit af · meest voorkomend pad: Meta ad gezien → zoeken op Google → aankoop via Google</div>`;
+<div class="ga4-insight" style="margin-top:0"><strong>${Math.round(TB_JOURNEYS.overlap_meta_google*100)}% van alle orders</strong> ziet zowel Meta als Google · Meta introduceert, Google sluit af · meest voorkomend pad: Meta ad gezien → zoeken op Google → aankoop via Google</div>
+<div class="ga4-journey-hd">Dagen tot aankoop · GA4 (38 orders, 16 jul–8 aug)</div>
+<div style="margin-bottom:6px;font-size:11px;color:#64748b">Gem. <strong style="color:#e2e8f0">${GA4_DAYS_TO_CONV.avg} dagen</strong> · mediaan 0 dagen · meting: eerste sitebezoek → aankoopdatum</div>
+${GA4_DAYS_TO_CONV.buckets.map(b=>`
+<div class="ga4-bar-item" style="margin-bottom:8px">
+  <div class="ga4-bar-label"><span>${b.lbl}</span><span style="color:#94a3b8">${b.n} orders · <strong style="color:#e2e8f0">${b.pct}%</strong></span></div>
+  <div class="ga4-bar-track"><div class="ga4-bar-fill" style="width:${b.pct}%;background:${b.pct>=50?'#60a5fa':b.pct>=15?'#818cf8':'#475569'}"></div></div>
+</div>`).join("")}
+<div class="ga4-insight" style="margin-top:8px">76% koopt dezelfde dag · de 11% die 8–15 dagen wacht heeft typisch meerdere touchpoints gezien (4× Meta of Meta+Google) · retargeting-window van <strong>2 weken</strong> dekt bijna alle late converters</div>`;
 }
 
 /* ═══ ACCORDION ══════════════════════════════════════════════════ */
