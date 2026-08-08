@@ -195,7 +195,62 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
   .sim-cards{grid-template-columns:1fr 1fr}
   .be-sum{grid-template-columns:1fr 1fr}
   .trend-row-inner{grid-template-columns:1fr 1fr!important}
+  .kpi-strip{grid-template-columns:repeat(4,1fr)}
+  .seg-grid{grid-template-columns:1fr 1fr}
+  .ch-grid{grid-template-columns:1fr}
+  .fc-steps{flex-wrap:nowrap;overflow-x:auto}
 }
+
+/* ── KPI strip ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#1a2844;border:1px solid #1e3050;border-radius:12px;overflow:hidden;margin-bottom:12px}
+.kpi-item{padding:11px 12px;background:#0d1829}
+.kpi-lbl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#475569;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi-val{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi-sub{font-size:10px;color:#475569;margin-top:1px}
+.kpi-item.good .kpi-val{color:#4ade80}
+.kpi-item.bad .kpi-val{color:#f87171}
+.kpi-item.warn .kpi-val{color:#fbbf24}
+.kpi-item.accent{background:#0e1f30}
+
+/* ── Funnel card (always visible) ── */
+.fc{background:#111827;border:1px solid #1f2d45;border-radius:12px;padding:16px;margin-bottom:12px}
+.fc-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.fc-title{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#475569}
+.fc-tabs{display:flex;gap:3px;flex-wrap:wrap}
+.fc-tab{background:transparent;border:1px solid #1f3050;color:#475569;font-size:10px;font-weight:600;padding:3px 10px;border-radius:12px;cursor:pointer;transition:all .15s}
+.fc-tab.active{background:#1d3a5f;border-color:#60a5fa;color:#e2e8f0}
+.fc-steps{display:flex;align-items:stretch}
+.fc-step{flex:1;min-width:60px}
+.fc-step-in{background:#0d1829;border-radius:6px;padding:10px 6px;text-align:center;height:100%}
+.fc-lbl{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.fc-drop{font-size:10px;font-weight:600;margin-top:3px;min-height:14px}
+.fc-arr{display:flex;align-items:center;padding:0 2px;color:#374151;font-size:11px;flex-shrink:0;align-self:center}
+.fc-note{font-size:10px;color:#475569;margin-top:10px;padding-top:8px;border-top:1px solid #1a2844;line-height:1.5}
+
+/* ── Channel roles ── */
+.ch-wrap{padding:14px 16px}
+.ch-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.ch-card{background:#0d1829;border-radius:8px;padding:12px 14px}
+.ch-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.ch-tag{display:inline-flex;font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 8px;border-radius:10px;margin-bottom:8px}
+.ch-tag.intro{background:rgba(59,130,246,.15);color:#93c5fd}
+.ch-tag.closer{background:rgba(34,197,94,.12);color:#86efac}
+.ch-mets{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.ch-met{background:#111827;border-radius:5px;padding:6px 4px;text-align:center}
+.ch-mv{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.ch-ml{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
+.ch-bar-track{height:4px;background:#1f2d45;border-radius:2px;overflow:hidden;margin-top:8px}
+.ch-bar-fill{height:100%;border-radius:2px}
+.ch-overlap{background:#0d1829;border-radius:8px;padding:10px 14px;font-size:12px;color:#94a3b8;text-align:center}
+
+/* ── Segmentatie ── */
+.seg-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.seg-block{background:#0d1829;border-radius:8px;padding:12px 14px}
+.seg-title{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#475569;margin-bottom:8px}
+.seg-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:2px}
+.seg-track{height:3px;background:#1f2d45;border-radius:2px;overflow:hidden;margin-top:2px;margin-bottom:6px}
+.seg-fill{height:100%;border-radius:2px}
 </style>
 </head>
 <body>
@@ -217,6 +272,9 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     </optgroup>
   </select>
 </div>
+
+<!-- KPI strip -->
+<div id="kpiStrip" class="kpi-strip"></div>
 
 <!-- Main card -->
 <div class="card">
@@ -241,8 +299,45 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
   <div class="meta-info" id="metaInfo" style="margin-top:10px"></div>
 </div>
 
+<!-- Funnel (always visible) -->
+<div class="fc" id="funnelCard">
+  <div class="fc-hd">
+    <div class="fc-title">Aankoopfunnel · GA4</div>
+    <div class="fc-tabs" id="fcTabs"></div>
+  </div>
+  <div id="fcBody"></div>
+</div>
+
 <!-- Accordion -->
 <div class="acc">
+
+  <div class="acc-item" id="acc-channels">
+    <div class="acc-hd" onclick="tog('acc-channels')"><span>Kanaalrollen · TrackBee (5–8 aug)</span><span class="acc-chv">›</span></div>
+    <div class="acc-body"><div id="chBody" class="ch-wrap"></div></div>
+  </div>
+
+  <div class="acc-item" id="acc-ads">
+    <div class="acc-hd" onclick="tog('acc-ads')"><span id="adsHdr">Meta advertentiegroepen</span><span class="acc-chv">›</span></div>
+    <div class="acc-body"><div class="tscroll"><table id="adsTable"></table></div></div>
+  </div>
+
+  <div class="acc-item" id="acc-seg">
+    <div class="acc-hd" onclick="tog('acc-seg')"><span>Segmentatie · GA4</span><span class="acc-chv">›</span></div>
+    <div class="acc-body">
+      <div class="ga4-tabs" id="segTabs" style="padding:14px 16px 0"></div>
+      <div class="ga4-body" id="segBody"></div>
+    </div>
+  </div>
+
+  <div class="acc-item" id="acc-journey">
+    <div class="acc-hd" onclick="tog('acc-journey')"><span>Klanttrajecten · paden &amp; conversietijd</span><span class="acc-chv">›</span></div>
+    <div class="acc-body"><div id="jrnBody" class="ch-wrap"></div></div>
+  </div>
+
+  <div class="acc-item" id="acc-kern">
+    <div class="acc-hd" onclick="tog('acc-kern')"><span>Kerncijfers</span><span class="acc-chv">›</span></div>
+    <div class="acc-body"><div class="kern-grid" id="kernGrid"></div></div>
+  </div>
 
   <div class="acc-item" id="acc-sim">
     <div class="acc-hd" onclick="tog('acc-sim')"><span>Bonussimulator</span><span class="acc-chv">›</span></div>
@@ -275,26 +370,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     <div class="acc-body">
       <div class="be-sum" id="beSummary"></div>
       <div class="tscroll"><table id="beTable"></table></div>
-    </div>
-  </div>
-
-  <div class="acc-item" id="acc-kern">
-    <div class="acc-hd" onclick="tog('acc-kern')"><span>Kerncijfers</span><span class="acc-chv">›</span></div>
-    <div class="acc-body"><div class="kern-grid" id="kernGrid"></div></div>
-  </div>
-
-  <div class="acc-item" id="acc-ads">
-    <div class="acc-hd" onclick="tog('acc-ads')"><span id="adsHdr">Meta advertentiegroepen</span><span class="acc-chv">›</span></div>
-    <div class="acc-body">
-      <div class="tscroll"><table id="adsTable"></table></div>
-    </div>
-  </div>
-
-  <div class="acc-item" id="acc-ga4">
-    <div class="acc-hd" onclick="tog('acc-ga4')"><span>Website Analytics · lumeworks.nl</span><span class="acc-chv">›</span></div>
-    <div class="acc-body">
-      <div class="ga4-tabs" id="ga4Tabs"></div>
-      <div class="ga4-body" id="ga4Body"></div>
     </div>
   </div>
 
@@ -892,6 +967,7 @@ function render(){
   }
 
   document.getElementById("footerDate").textContent=fmtL(SNAP)+(SNAP_TIME&&SNAP_TIME!=="00:00"?" · "+SNAP_TIME:"");
+  renderKpiBar(CX, CT);
 }
 
 /* ═══ GAUGE ══════════════════════════════════════════════════════ */
@@ -1138,23 +1214,202 @@ function renderAds(adsRaw, beroas, fallback){
   document.getElementById("adsTable").innerHTML=html;
 }
 
-/* ═══ GA4 ANALYTICS ════════════════════════════════════════════════ */
-let ga4Period = "7d";
-const GA4_FUNNEL_LABELS = ["Sessie","Product","Winkelwagen","Checkout","Aankoop"];
+/* ═══ GA4 PERIOD MAP ════════════════════════════════════════════════ */
+const GA4_PERIOD_MAP = {
+  vandaag:"yesterday", gisteren:"yesterday",
+  week:"this_week", aug:"7d", jul:"30d", contract:"30d"
+};
 
-function initGA4(){
-  const tabs = document.getElementById("ga4Tabs");
-  Object.entries(GA4).forEach(([key,d])=>{
-    const btn = document.createElement("button");
-    btn.className = "ga4-tab" + (key===ga4Period?" active":"");
-    btn.textContent = d.label;
-    btn.onclick = ()=>{ ga4Period=key; renderGA4(); document.querySelectorAll(".ga4-tab").forEach(b=>b.classList.remove("active")); btn.classList.add("active"); };
-    tabs.appendChild(btn);
-  });
-  renderGA4();
+/* ═══ KPI STRIP ══════════════════════════════════════════════════════ */
+function renderKpiBar(cx, ct){
+  const g4k = GA4_PERIOD_MAP[P];
+  const g4 = g4k ? GA4[g4k] : null;
+  const cr = g4 && g4.ses > 0 ? (g4.orders / g4.ses * 100) : null;
+  const net = ct ? cx.pro - ct.spend : null;
+  const mer = ct && ct.spend > 0 ? cx.rev / ct.spend : null;
+  const merCls = mer == null ? "" : mer >= cx.be ? " good" : mer >= 1 ? " warn" : " bad";
+  const netCls = net == null ? "" : net > 0 ? " good" : " bad";
+  const brutoCls = cx.pro > 0 ? " good" : " warn";
+  const items = [
+    {l:"Shopify omzet",  v:eur(cx.rev),                      s:`incl. BTW`,                              c:""},
+    {l:"Orders",         v:cx.oc,                             s:`${cx.oc===1?"order":"orders"}`,          c:""},
+    {l:"Conv. ratio",    v:cr!=null?cr.toFixed(2)+"%":"—",    s:g4k?"GA4 · "+g4k:"geen GA4 data",        c:""},
+    {l:"Meta spend",     v:ct?eur(ct.spend):"—",              s:ct?`${ct.purch} aankopen TB`:"geen data", c:""},
+    {l:"MER",            v:mer!=null?x2(mer):"—",             s:`BE ${x2(cx.be)}`,                       c:merCls},
+    {l:"Brutomarge",     v:eur(cx.pro),                       s:`${(cx.rex>0?cx.pro/cx.rex*100:0).toFixed(1)}% op excl.`, c:brutoCls},
+    {l:"Nettomarge",     v:net!=null?eur(net):"—",            s:net!=null?(net>0?"na Meta ads":"verlies na ads"):"geen spend", c:netCls+" accent"},
+  ];
+  document.getElementById("kpiStrip").innerHTML =
+    items.map(it=>`<div class="kpi-item${it.c}"><div class="kpi-lbl">${it.l}</div><div class="kpi-val">${it.v}</div><div class="kpi-sub">${it.s}</div></div>`).join("");
 }
 
-function renderGA4(){
+/* ═══ FUNNEL CARD ════════════════════════════════════════════════════ */
+let fcPeriod = "7d";
+const FC_COLORS = ["#60a5fa","#818cf8","#f59e0b","#fb923c","#4ade80"];
+const FC_LABELS = ["Sessies","Productpagina's","Winkelwagen","Checkout","Aankoop"];
+
+function initFunnelCard(){
+  const tabs = document.getElementById("fcTabs");
+  Object.entries(GA4).forEach(([key,d])=>{
+    const btn = document.createElement("button");
+    btn.className = "fc-tab" + (key===fcPeriod?" active":"");
+    btn.textContent = d.label;
+    btn.onclick = ()=>{ fcPeriod=key; renderFunnelCard(); document.querySelectorAll(".fc-tab").forEach(b=>b.classList.remove("active")); btn.classList.add("active"); };
+    tabs.appendChild(btn);
+  });
+  renderFunnelCard();
+}
+
+function renderFunnelCard(){
+  const d = GA4[fcPeriod];
+  if(!d) return;
+  const fl = d.funnel;
+  const hasCartAnomaly = fl[2] < fl[3];
+  const steps = FC_LABELS.map((lbl,i)=>{
+    const val = fl[i]||0;
+    let drop = "";
+    if(i>0){
+      if(i===3 && hasCartAnomaly){
+        drop = `<div class="fc-drop" style="color:#f59e0b" title="Checkout hoger dan winkelwagen door 'Direct kopen'">*</div>`;
+      } else {
+        const prev = fl[i-1]||1;
+        const pct = Math.round(val/prev*100);
+        const col = pct>=50?"#4ade80":pct>=20?"#f59e0b":"#f87171";
+        drop = `<div class="fc-drop" style="color:${col}">${pct}%</div>`;
+      }
+    }
+    const arr = i===0?"":"<span class='fc-arr'>›</span>";
+    return `${arr}<div class="fc-step"><div class="fc-step-in"><div class="fc-lbl" style="color:${FC_COLORS[i]}">${lbl}</div><div class="fc-val">${val.toLocaleString("nl")}</div>${drop}</div></div>`;
+  }).join("");
+  const cr = fl[0]>0?(fl[4]/fl[0]*100).toFixed(2):0;
+  const note = hasCartAnomaly
+    ? `* Checkout (${fl[3]}) > Winkelwagen (${fl[2]}): Shopify 'Direct kopen' slaat winkelwagen over — dit is normaal. Sessie→Aankoop: <strong style="color:#e2e8f0">${cr}%</strong> CR`
+    : `Sessie→Aankoop: <strong style="color:#e2e8f0">${cr}%</strong> CR · GA4 event counts (${d.label})`;
+  document.getElementById("fcBody").innerHTML = `<div class="fc-steps">${steps}</div><div class="fc-note">${note}</div>`;
+}
+
+/* ═══ KANAALROLLEN ═══════════════════════════════════════════════════ */
+function renderChannelRoles(){
+  const m = TB_JOURNEYS.meta, g = TB_JOURNEYS.google;
+  document.getElementById("chBody").innerHTML = `
+<div class="ch-grid">
+  <div class="ch-card">
+    <div class="ch-name" style="color:#93c5fd">Meta</div>
+    <div class="ch-tag intro">Introductie</div>
+    <div class="ch-mets">
+      <div class="ch-met"><div class="ch-mv">${Math.round(m.share*100)}%</div><div class="ch-ml">In orders</div></div>
+      <div class="ch-met"><div class="ch-mv">${Math.round(m.early*100)}%</div><div class="ch-ml">Vroeg in pad</div></div>
+      <div class="ch-met"><div class="ch-mv">${Math.round(m.solo*100)}%</div><div class="ch-ml">Solo</div></div>
+    </div>
+    <div class="ch-bar-track"><div class="ch-bar-fill" style="width:${Math.round(m.early*100)}%;background:#3b82f6"></div></div>
+  </div>
+  <div class="ch-card">
+    <div class="ch-name" style="color:#86efac">Google</div>
+    <div class="ch-tag closer">Afsluiter</div>
+    <div class="ch-mets">
+      <div class="ch-met"><div class="ch-mv">${Math.round(g.share*100)}%</div><div class="ch-ml">In orders</div></div>
+      <div class="ch-met"><div class="ch-mv">${Math.round(g.late*100)}%</div><div class="ch-ml">Laat in pad</div></div>
+      <div class="ch-met"><div class="ch-mv">${Math.round(g.solo*100)}%</div><div class="ch-ml">Solo</div></div>
+    </div>
+    <div class="ch-bar-track"><div class="ch-bar-fill" style="width:${Math.round(g.late*100)}%;background:#22c55e"></div></div>
+  </div>
+</div>
+<div class="ch-overlap">${Math.round(TB_JOURNEYS.overlap_meta_google*100)}% van orders zag zowel Meta als Google · Meta introduceert, Google sluit af · bron: TrackBee 5–8 aug</div>`;
+}
+
+/* ═══ SEGMENTATIE ════════════════════════════════════════════════════ */
+let segPeriod = "7d";
+
+function initSeg(){
+  const tabs = document.getElementById("segTabs");
+  tabs.innerHTML="";
+  Object.entries(GA4).forEach(([key,d])=>{
+    const btn = document.createElement("button");
+    btn.className = "ga4-tab" + (key===segPeriod?" active":"");
+    btn.textContent = d.label;
+    btn.onclick = ()=>{ segPeriod=key; renderSeg(); document.querySelectorAll("#segTabs .ga4-tab").forEach(b=>b.classList.remove("active")); btn.classList.add("active"); };
+    tabs.appendChild(btn);
+  });
+  renderSeg();
+}
+
+function renderSeg(){
+  const d = GA4[segPeriod];
+  if(!d) return;
+  const totDev = (d.mob.ses||0)+(d.desk.ses||0);
+  const mobPct = Math.round((d.mob.ses||0)/Math.max(totDev,1)*100);
+  const deskPct = 100-mobPct;
+  const mobCr = d.mob.ses>0?(d.mob.orders/d.mob.ses*100).toFixed(1):0;
+  const deskCr = d.desk.ses>0?(d.desk.orders/d.desk.ses*100).toFixed(1):0;
+  const totCs = (d.nl.ses||0)+(d.be.ses||0);
+  const nlPct = Math.round((d.nl.ses||0)/Math.max(totCs,1)*100);
+  const nlCr = d.nl.ses>0?(d.nl.orders/d.nl.ses*100).toFixed(1):0;
+  const beCr = d.be.ses>0?(d.be.orders/d.be.ses*100).toFixed(1):0;
+  const nwTot = (d.nw.ses||0)+(d.rt.ses||0);
+  const nwPct = Math.round((d.nw.ses||0)/Math.max(nwTot,1)*100);
+  const nwCr = d.nw.ses>0?(d.nw.orders/d.nw.ses*100).toFixed(1):0;
+  const rtCr = d.rt.ses>0?(d.rt.orders/d.rt.ses*100).toFixed(1):0;
+  const bar=(pct,col)=>`<div class="seg-track"><div class="seg-fill" style="width:${pct}%;background:${col}"></div></div>`;
+  document.getElementById("segBody").innerHTML = `
+<div class="seg-grid" style="margin:12px 16px 14px">
+  <div class="seg-block">
+    <div class="seg-title">Apparaat</div>
+    <div class="seg-row"><span>📱 Mobiel</span><span style="color:#94a3b8">${d.mob.ses.toLocaleString("nl")} · ${mobCr}% CR</span></div>
+    ${bar(mobPct,"#60a5fa")}
+    <div class="seg-row"><span>🖥 Desktop</span><span style="color:#94a3b8">${d.desk.ses.toLocaleString("nl")} · ${deskCr}% CR</span></div>
+    ${bar(deskPct,"#818cf8")}
+  </div>
+  <div class="seg-block">
+    <div class="seg-title">Land</div>
+    <div class="seg-row"><span>🇳🇱 Nederland</span><span style="color:#94a3b8">${d.nl.ses.toLocaleString("nl")} · ${nlCr}% CR</span></div>
+    ${bar(nlPct,"#f97316")}
+    <div class="seg-row"><span>🇧🇪 België</span><span style="color:#94a3b8">${d.be.ses.toLocaleString("nl")} · ${beCr}% CR</span></div>
+    ${bar(100-nlPct,"#fbbf24")}
+  </div>
+  <div class="seg-block">
+    <div class="seg-title">Bezoeker</div>
+    <div class="seg-row"><span>Nieuw</span><span style="color:#94a3b8">${d.nw.ses.toLocaleString("nl")} · ${nwCr}% CR</span></div>
+    ${bar(nwPct,"#94a3b8")}
+    <div class="seg-row"><span>Terugkerend</span><span style="color:#94a3b8">${d.rt.ses.toLocaleString("nl")} · ${rtCr}% CR</span></div>
+    ${bar(100-nwPct,"#4ade80")}
+  </div>
+</div>
+<div class="ga4-insight" style="margin:0 16px 14px">Bounce ${d.bounce}% · Gem. sessieduur ${d.dur}s · ${d.spv} sessies/bezoeker</div>`;
+}
+
+/* ═══ KLANTTRAJECTEN ═════════════════════════════════════════════════ */
+function renderJourney(){
+  const m = TB_JOURNEYS;
+  const nodeHtml = n=>{
+    const cls=n==="order"?"order":n==="meta"?"meta":n==="google"?"google":"organic";
+    const lbl=n==="order"?"✓ Aankoop":n==="meta"?"Meta":n==="google"?"Google":"Organisch";
+    return `<span class="ga4-node ${cls}">${lbl}</span>`;
+  };
+  const pathsHtml = m.paths.map(p=>{
+    const nodes=p.nodes.map((n,i)=>(i>0?'<span class="ga4-node-arr">›</span>':"")+nodeHtml(n)).join("");
+    return `<div class="ga4-path"><div class="ga4-path-pct">${p.pct}%</div><div class="ga4-path-nodes">${nodes}</div></div>`;
+  }).join("");
+  document.getElementById("jrnBody").innerHTML = `
+<div class="ga4-journey-hd" style="margin-top:0">Touchpoints per order · TrackBee (5–8 aug)</div>
+<div class="ga4-touch-pills">
+  <div class="ga4-touch-pill" style="background:rgba(96,165,250,.12);color:#60a5fa">1 touchpoint &nbsp;<strong>${Math.round(m.single_touch*100)}%</strong></div>
+  <div class="ga4-touch-pill" style="background:rgba(251,191,36,.1);color:#fbbf24">Meerdere touchpoints &nbsp;<strong>${Math.round(m.multi_touch*100)}%</strong></div>
+  <div class="ga4-touch-pill" style="background:rgba(148,163,184,.08);color:#94a3b8">Organisch &nbsp;<strong>${Math.round(m.organic*100)}%</strong></div>
+</div>
+<div class="ga4-journey-hd">Meest voorkomende paden</div>
+<div class="ga4-paths">${pathsHtml}</div>
+<div class="ga4-journey-hd">Dagen tot aankoop · GA4 (38 orders, 16 jul–8 aug)</div>
+<div style="margin-bottom:8px;font-size:11px;color:#64748b">Gem. <strong style="color:#e2e8f0">${GA4_DAYS_TO_CONV.avg} dagen</strong> · mediaan 0 dagen</div>
+${GA4_DAYS_TO_CONV.buckets.map(b=>`
+<div class="ga4-bar-item" style="margin-bottom:8px">
+  <div class="ga4-bar-label"><span>${b.lbl}</span><span style="color:#94a3b8">${b.n} orders · <strong style="color:#e2e8f0">${b.pct}%</strong></span></div>
+  <div class="ga4-bar-track"><div class="ga4-bar-fill" style="width:${b.pct}%;background:${b.pct>=50?"#60a5fa":b.pct>=15?"#818cf8":"#475569"}"></div></div>
+</div>`).join("")}
+<div class="ga4-insight" style="margin-top:8px">76% koopt dezelfde dag · 11% wacht 8–15 dagen en heeft typisch meerdere Meta-touchpoints gezien · retargeting-window van 2 weken dekt bijna alle late converters</div>`;
+}
+
+/* ── LEGACY (was GA4 analytics — nu verplaatst naar aparte secties) ── */
+function renderGA4_UNUSED(){
   const d = GA4[ga4Period];
   if(!d) return;
 
@@ -1277,14 +1532,18 @@ ${GA4_DAYS_TO_CONV.buckets.map(b=>`
 
 /* ═══ ACCORDION ══════════════════════════════════════════════════ */
 function tog(id){
-  document.getElementById(id).classList.toggle("open");
-  if(id==="acc-ga4" && document.getElementById("acc-ga4").classList.contains("open")){
-    if(!document.getElementById("ga4Tabs").hasChildNodes()) initGA4();
+  const el = document.getElementById(id);
+  el.classList.toggle("open");
+  if(el.classList.contains("open")){
+    if(id==="acc-seg" && !document.getElementById("segTabs").hasChildNodes()) initSeg();
+    if(id==="acc-channels" && !document.getElementById("chBody").innerHTML) renderChannelRoles();
+    if(id==="acc-journey" && !document.getElementById("jrnBody").innerHTML) renderJourney();
   }
 }
 
 /* ═══ INIT ═══════════════════════════════════════════════════════ */
 render();
+initFunnelCard();
 </script>
 </body>
 </html>
