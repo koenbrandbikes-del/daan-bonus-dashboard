@@ -263,9 +263,9 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
   </div>
   <select class="period-sel" id="periodSel" onchange="setPeriod(this.value)">
     <optgroup label="Actueel">
-      <option value="vandaag">Vandaag (7 aug)</option>
-      <option value="gisteren">Gisteren (6 aug)</option>
-      <option value="week">Deze week (3–7 aug)</option>
+      <option value="vandaag">Vandaag (9 aug)</option>
+      <option value="gisteren">Gisteren (8 aug)</option>
+      <option value="week">Deze week (5–9 aug)</option>
     </optgroup>
     <optgroup label="Bonusperiode">
       <option value="aug" selected>Augustus (v.a. 5 aug)</option>
@@ -437,8 +437,8 @@ const GA4 = {
 };
 
 /* ═══ DATA ═══════════════════════════════════════════════════════ */
-const SNAP = "2026-08-08";
-const SNAP_TIME = "16:09";
+const SNAP = "2026-08-09";
+const SNAP_TIME = "11:00";
 const TB_ONBOARD  = "2026-07-20";
 const BONUS_PCT   = 0.10;
 const BTW         = 1.21;
@@ -472,14 +472,14 @@ const ROWS = [
 ];
 
 // Dagelijkse & wekelijkse TB data — opgehaald via TrackBee Campaign Insights API
-const TB_VANDAAG = {from:"2026-08-08",to:"2026-08-08",spend:324.45,rev7:298,rev1v:0,purch:2,impr:43291,cl:929};
-const TB_GISTEREN = {from:"2026-08-07",to:"2026-08-07",spend:359.16,rev7:879.1,rev1v:0,purch:6,impr:56963,cl:826};
-const TB_WEEK = {from:"2026-08-03",to:"2026-08-08",spend:1604.75,rev7:2475.2,rev1v:298,purch:17,impr:237118,cl:3680};
-const TB_PREVWEEK = {from:"2026-07-27",to:"2026-08-02",spend:970.53,rev7:3307.2,rev1v:314.1,purch:23,impr:104946,cl:1419};
+const TB_VANDAAG = {from:"2026-08-09",to:"2026-08-09",spend:174.14,rev7:278,rev1v:0,purch:2,impr:21815,cl:538};
+const TB_GISTEREN = {from:"2026-08-08",to:"2026-08-08",spend:510.68,rev7:298,rev1v:0,purch:2,impr:72927,cl:1685};
+const TB_WEEK = {from:"2026-08-05",to:"2026-08-09",spend:1700.43,rev7:2753.2,rev1v:298,purch:19,impr:251773,cl:4514};
+const TB_PREVWEEK = {from:"2026-07-28",to:"2026-08-03",spend:923.44,rev7:3009.2,rev1v:314.1,purch:21,impr:101559,cl:1349};
 // TB_JUL: Platform Summary cijfers (volledige juli, betrouwbaarder dan skill API)
 const TB_JUL = {from:"2026-07-01",to:"2026-07-31",spend:4030.15,rev7:8787.00,rev1v:0,purch:32,impr:202988,cl:2847};
 // Betrouwbare data: CAPI Gateway extra uit per 5 aug → geen dubbele aankopen meer
-const TB_AUG_CLEAN = {from:"2026-08-05",to:"2026-08-08",spend:1339.98,rev7:2475.2,rev1v:298,purch:17,impr:200305,cl:3220};
+const TB_AUG_CLEAN = {from:"2026-08-05",to:"2026-08-09",spend:1700.43,rev7:2753.2,rev1v:298,purch:19,impr:251773,cl:4514};
 
 /* Kostprijscalculatie — marges per product (bron: KP-sheet v2, winst op werkelijke webshopprijs) */
 const KP = [
@@ -710,13 +710,13 @@ const ADS_AUG = [ // aug 5–7, clean CAPI data
 
 /* ═══ PERIODS ════════════════════════════════════════════════════ */
 const PERIODS = {
-  vandaag:  {label:"Vandaag",           from:"2026-08-07",to:"2026-08-07",tb:[TB_VANDAAG],  ads:null},
-  gisteren: {label:"Gisteren",          from:"2026-08-06",to:"2026-08-06",tb:[TB_GISTEREN], ads:null},
+  vandaag:  {label:"Vandaag",           from:"2026-08-0926-08-09",tb:[TB_VANDAAG],  ads:null},
+  gisteren: {label:"Gisteren",          from:"2026-08-0826-08-08",tb:[TB_GISTEREN], ads:null},
   week:     {label:"Deze week",         from:TB_WEEK.from, to:TB_WEEK.to,  tb:[TB_WEEK],     ads:null, capiNote: TB_WEEK.from<"2026-08-05"},
   prevweek: {label:"Vorige week",       from:"2026-07-28",to:"2026-08-03",tb:[TB_PREVWEEK], ads:null,capiNote:true},
-  aug:      {label:"Augustus",          from:"2026-08-05",to:"2026-08-07",tb:[TB_AUG_CLEAN],capiNote:true,ads:ADS_AUG},
+  aug:      {label:"Augustus",          from:"2026-08-05",to:"2026-08-09",tb:[TB_AUG_CLEAN],capiNote:true,ads:ADS_AUG},
   jul:      {label:"Juli",              from:"2026-07-16",to:"2026-07-31",tb:[TB_JUL],ads:ADS_JUL},
-  contract: {label:"Volledige periode", from:"2026-07-16",to:"2026-08-07",tb:[TB_JUL,TB_AUG_CLEAN],ads:[...ADS_JUL,...ADS_AUG]},
+  contract: {label:"Volledige periode", from:"2026-07-16",to:"2026-08-09",tb:[TB_JUL,TB_AUG_CLEAN],ads:[...ADS_JUL,...ADS_AUG]},
 };
 
 /* ═══ STATE ══════════════════════════════════════════════════════ */
