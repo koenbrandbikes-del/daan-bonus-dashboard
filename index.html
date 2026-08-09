@@ -211,6 +211,15 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-item.bad .kpi-val{color:#f87171}
 .kpi-item.warn .kpi-val{color:#fbbf24}
 .kpi-item.accent{background:#0e1f30}
+/* ── Google campaign table ── */
+.ch-google-block{border-top:1px solid #1e3050}
+.ch-g-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#86efac;padding:14px 16px 8px}
+.ch-gtable{width:calc(100% - 32px);border-collapse:collapse;font-size:12px;margin:0 16px 14px}
+.ch-gtable th{color:#475569;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:6px 8px;text-align:left}
+.ch-gtable th.r,.ch-gtable td.r{text-align:right;font-variant-numeric:tabular-nums}
+.ch-gtable td{padding:5px 8px;border-bottom:1px solid #0f1e34;color:#94a3b8}
+.ch-gtable td:first-child{color:#e2e8f0}
+.ch-gtotal td{color:#e2e8f0!important;font-weight:700;border-top:1px solid #1e3050;border-bottom:none}
 
 /* ── Funnel card (always visible) ── */
 .fc{background:#111827;border:1px solid #1f2d45;border-radius:12px;padding:16px;margin-bottom:12px}
@@ -481,6 +490,21 @@ const TB_JUL = {from:"2026-07-01",to:"2026-07-31",spend:4030.15,rev7:8787.00,rev
 // Betrouwbare data: CAPI Gateway extra uit per 5 aug → geen dubbele aankopen meer
 const TB_AUG_CLEAN = {from:"2026-08-05",to:"2026-08-09",spend:1700.43,rev7:2753.2,rev1v:298,purch:19,impr:251773,cl:4514};
 
+// Google Ads data — TrackBee Google Campaign Insights (account 7645288282)
+const TG_VANDAAG   = {from:"2026-08-09",to:"2026-08-09",spend:15.23,conv:0,rev:0,impr:1583,cl:23};
+const TG_GISTEREN  = {from:"2026-08-08",to:"2026-08-08",spend:71.25,conv:0,rev:0,impr:7941,cl:101};
+const TG_WEEK      = {from:"2026-08-05",to:"2026-08-09",spend:283.98,conv:14.0,rev:2220.60,impr:28947,cl:377};
+const TG_PREVWEEK  = {from:"2026-07-28",to:"2026-08-03",spend:265.81,conv:20.8,rev:3225.25,impr:30782,cl:459};
+const TG_AUG_CLEAN = {from:"2026-08-05",to:"2026-08-09",spend:283.98,conv:14.0,rev:2220.60,impr:28947,cl:377};
+const TG_CAMPAIGNS_AUG = [
+  {id:"23981332205",name:"C · Corporate",    type:"SEARCH",  spend:14.67, conv:8,    rev:1356.40,cl:59,  branded:true},
+  {id:"23989624267",name:"S · Branded",      type:"SHOPPING",spend:17.73, conv:5.93, rev:853.79, cl:53,  branded:true},
+  {id:"23985056312",name:"P · Generiek",     type:"PMAX",    spend:173.98,conv:0.07, rev:10.41,  cl:133},
+  {id:"23981395562",name:"T · Generiek B2C", type:"SEARCH",  spend:37.80, conv:0,    rev:0,      cl:78},
+  {id:"23981395565",name:"T · Concurrentie", type:"SEARCH",  spend:23.25, conv:0,    rev:0,      cl:32},
+  {id:"23980131321",name:"T · Generiek B2B", type:"SEARCH",  spend:16.55, conv:0,    rev:0,      cl:22},
+];
+
 /* Kostprijscalculatie — marges per product (bron: KP-sheet v2, winst op werkelijke webshopprijs) */
 const KP = [
   {name:"Prime",  incl:149, excl:123.14, winst:71.43},
@@ -710,11 +734,11 @@ const ADS_AUG = [ // aug 5–7, clean CAPI data
 
 /* ═══ PERIODS ════════════════════════════════════════════════════ */
 const PERIODS = {
-  vandaag:  {label:"Vandaag",           from:"2026-08-0926-08-09",tb:[TB_VANDAAG],  ads:null},
-  gisteren: {label:"Gisteren",          from:"2026-08-0826-08-08",tb:[TB_GISTEREN], ads:null},
-  week:     {label:"Deze week",         from:TB_WEEK.from, to:TB_WEEK.to,  tb:[TB_WEEK],     ads:null, capiNote: TB_WEEK.from<"2026-08-05"},
-  prevweek: {label:"Vorige week",       from:"2026-07-28",to:"2026-08-03",tb:[TB_PREVWEEK], ads:null,capiNote:true},
-  aug:      {label:"Augustus",          from:"2026-08-05",to:"2026-08-09",tb:[TB_AUG_CLEAN],capiNote:true,ads:ADS_AUG},
+  vandaag:  {label:"Vandaag",           from:"2026-08-0926-08-09",tb:[TB_VANDAAG],tg:TG_VANDAAG,ads:null},
+  gisteren: {label:"Gisteren",          from:"2026-08-0826-08-08",tb:[TB_GISTEREN],tg:TG_GISTEREN,ads:null},
+  week:     {label:"Deze week",         from:TB_WEEK.from, to:TB_WEEK.to,  tb:[TB_WEEK],     ads:null, capiNote: TB_WEEK.from<"2026-08-05",tg:TG_WEEK},
+  prevweek: {label:"Vorige week",       from:"2026-07-28",to:"2026-08-03",tb:[TB_PREVWEEK],tg:TG_PREVWEEK,ads:null,capiNote:true},
+  aug:      {label:"Augustus",          from:"2026-08-05",to:"2026-08-09",tb:[TB_AUG_CLEAN],tg:TG_AUG_CLEAN,capiNote:true,ads:ADS_AUG},
   jul:      {label:"Juli",              from:"2026-07-16",to:"2026-07-31",tb:[TB_JUL],ads:ADS_JUL},
   contract: {label:"Volledige periode", from:"2026-07-16",to:"2026-08-09",tb:[TB_JUL,TB_AUG_CLEAN],ads:[...ADS_JUL,...ADS_AUG]},
 };
@@ -828,6 +852,7 @@ function renderAnalysis(adsRaw, beroas, ct){
 function render(){
   const pd=PERIODS[P]||PERIODS.aug;
   const {from:fxFrom,to:fxTo,tb:tbs}=pd;
+  const TG = pd.tg || null;
   const hasTB=tbs!==null;
 
   CX=ordCalc(fxFrom,fxTo);
@@ -932,7 +957,8 @@ function render(){
     const periodDays=Math.floor((new Date(fxTo)-new Date(fxFrom))/86400000)+1;
     const dek=tbDays>=periodDays?"volledig":`${tbDays} van ${periodDays} dagen`;
     const roasRange=pd.capiNote?` · ROAS ${fmtS(tbs[0].from)}–${fmtS(tbs[0].to)}`:"";
-    document.getElementById("metaInfo").textContent=`Adspend ${eur(CT.spend)} · Datadekking TrackBee: ${dek}${roasRange}`;
+    const googleInfo = TG ? ` · Google €${TG.spend.toFixed(0)}` : "";
+    document.getElementById("metaInfo").textContent=`Meta ${eur(CT.spend)}${googleInfo} · Blended €${(CT.spend+(TG?TG.spend:0)).toFixed(0)} · TrackBee: ${dek}${roasRange}`;
   } else {
     document.getElementById("metaInfo").textContent=`Revenue excl. BTW ${eur(CX.rex)} · TrackBee adspend: niet beschikbaar`;
   }
@@ -967,7 +993,7 @@ function render(){
   }
 
   document.getElementById("footerDate").textContent=fmtL(SNAP)+(SNAP_TIME&&SNAP_TIME!=="00:00"?" · "+SNAP_TIME:"");
-  renderKpiBar(CX, CT);
+  renderKpiBar(CX, CT, TG);
 }
 
 /* ═══ GAUGE ══════════════════════════════════════════════════════ */
@@ -1221,23 +1247,29 @@ const GA4_PERIOD_MAP = {
 };
 
 /* ═══ KPI STRIP ══════════════════════════════════════════════════════ */
-function renderKpiBar(cx, ct){
+function renderKpiBar(cx, ct, tg){
   const g4k = GA4_PERIOD_MAP[P];
   const g4 = g4k ? GA4[g4k] : null;
   const cr = g4 && g4.ses > 0 ? (g4.orders / g4.ses * 100) : null;
-  const net = ct ? cx.pro - ct.spend : null;
-  const mer = ct && ct.spend > 0 ? cx.rev / ct.spend : null;
+  const metaSpend   = ct ? ct.spend : 0;
+  const googleSpend = tg ? tg.spend : 0;
+  const totalSpend  = metaSpend + googleSpend;
+  const net = totalSpend > 0 ? cx.pro - totalSpend : null;
+  const mer = totalSpend > 0 ? cx.rev / totalSpend : null;
   const merCls = mer == null ? "" : mer >= cx.be ? " good" : mer >= 1 ? " warn" : " bad";
   const netCls = net == null ? "" : net > 0 ? " good" : " bad";
   const brutoCls = cx.pro > 0 ? " good" : " warn";
+  const spendSub = tg
+    ? `Meta €${metaSpend.toFixed(0)} · Google €${googleSpend.toFixed(0)}`
+    : ct ? `${ct.purch} aankopen TB` : "geen data";
   const items = [
     {l:"Shopify omzet",  v:eur(cx.rev),                      s:`incl. BTW`,                              c:""},
     {l:"Orders",         v:cx.oc,                             s:`${cx.oc===1?"order":"orders"}`,          c:""},
-    {l:"Conv. ratio",    v:cr!=null?cr.toFixed(2)+"%":"—",    s:g4k?"GA4 · "+g4k:"geen GA4 data",        c:""},
-    {l:"Meta spend",     v:ct?eur(ct.spend):"—",              s:ct?`${ct.purch} aankopen TB`:"geen data", c:""},
-    {l:"MER",            v:mer!=null?x2(mer):"—",             s:`BE ${x2(cx.be)}`,                       c:merCls},
+    {l:"Conv. ratio",    v:cr!=null?cr.toFixed(2)+"%":"—",    s:g4k?"GA4 · "+g4k:"geen GA4 data",  c:""},
+    {l:"Totale spend",   v:totalSpend>0?eur(totalSpend):"—",  s:spendSub,                                c:""},
+    {l:"Blended MER",    v:mer!=null?x2(mer):"—",             s:`BE ${x2(cx.be)}`,                      c:merCls},
     {l:"Brutomarge",     v:eur(cx.pro),                       s:`${(cx.rex>0?cx.pro/cx.rex*100:0).toFixed(1)}% op excl.`, c:brutoCls},
-    {l:"Nettomarge",     v:net!=null?eur(net):"—",            s:net!=null?(net>0?"na Meta ads":"verlies na ads"):"geen spend", c:netCls+" accent"},
+    {l:"Nettomarge",     v:net!=null?eur(net):"—",            s:net!=null?(net>0?"na Meta+Google":"verlies na ads"):"geen spend", c:netCls+" accent"},
   ];
   document.getElementById("kpiStrip").innerHTML =
     items.map(it=>`<div class="kpi-item${it.c}"><div class="kpi-lbl">${it.l}</div><div class="kpi-val">${it.v}</div><div class="kpi-sub">${it.s}</div></div>`).join("");
@@ -1314,7 +1346,32 @@ function renderChannelRoles(){
     <div class="ch-bar-track"><div class="ch-bar-fill" style="width:${Math.round(g.late*100)}%;background:#22c55e"></div></div>
   </div>
 </div>
-<div class="ch-overlap">${Math.round(TB_JOURNEYS.overlap_meta_google*100)}% van orders zag zowel Meta als Google · Meta introduceert, Google sluit af · bron: TrackBee 5–8 aug</div>`;
+<div class="ch-overlap">${Math.round(TB_JOURNEYS.overlap_meta_google*100)}% van orders zag zowel Meta als Google · Meta introduceert, Google sluit af · bron: TrackBee 5–8 aug</div>
+<div class="ch-google-block">
+  <div class="ch-g-title">Google Ads · campagnes (5–9 aug)</div>
+  <table class="ch-gtable">
+    <thead><tr><th>Campagne</th><th class="r">Spend</th><th class="r">Conv.</th><th class="r">Omzet TB</th><th class="r">ROAS</th></tr></thead>
+    <tbody>${TG_CAMPAIGNS_AUG.map(c=>{
+      const roas = c.spend>0&&c.rev>0 ? (c.rev/c.spend).toFixed(1)+'×' : '—';
+      const tag  = c.branded ? '<span class="ch-tag closer" style="font-size:9px;padding:1px 5px;margin-left:4px;vertical-align:middle">branded</span>' : '';
+      return '<tr>'
+        +'<td>'+c.name+tag+'</td>'
+        +'<td class="r">€'+c.spend.toFixed(0)+'</td>'
+        +'<td class="r">'+(c.conv>0?c.conv.toFixed(c.conv<1?2:0):'—')+'</td>'
+        +'<td class="r">'+(c.rev>0?'€'+Math.round(c.rev):'—')+'</td>'
+        +'<td class="r">'+roas+'</td>'
+        +'</tr>';
+    }).join('')}
+    <tr class="ch-gtotal">
+      <td>Totaal Google</td>
+      <td class="r">€${TG_CAMPAIGNS_AUG.reduce((s,c)=>s+c.spend,0).toFixed(0)}</td>
+      <td class="r">${TG_CAMPAIGNS_AUG.reduce((s,c)=>s+c.conv,0).toFixed(1)}</td>
+      <td class="r">€${Math.round(TG_CAMPAIGNS_AUG.reduce((s,c)=>s+c.rev,0))}</td>
+      <td class="r">${(TG_CAMPAIGNS_AUG.reduce((s,c)=>s+c.rev,0)/TG_CAMPAIGNS_AUG.reduce((s,c)=>s+c.spend,0)).toFixed(1)}×</td>
+    </tr>
+    </tbody>
+  </table>
+</div>`;
 }
 
 /* ═══ SEGMENTATIE ════════════════════════════════════════════════════ */
