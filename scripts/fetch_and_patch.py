@@ -150,6 +150,16 @@ aug = meta_insights(CLEAN_S, TODAY)
 print(f"  vandaag  spend={v['spend']}  rev7={v['rev7']}  purch={v['purch']}")
 print(f"  augustus spend={aug['spend']} rev7={aug['rev7']} purch={aug['purch']}")
 
+# Dagelijkse data ophalen voor DAILY_META (CLEAN_S t/m TODAY)
+print("Dagelijkse Meta data ophalen voor DAILY_META...")
+daily_meta = {}
+d = CLEAN_S
+while d <= TODAY:
+    day_data = meta_insights(d, d)
+    daily_meta[str(d)] = day_data
+    print(f"  {d}: spend={day_data['spend']} rev7={day_data['rev7']} purch={day_data['purch']}")
+    d += datetime.timedelta(days=1)
+
 print("Shopify orders ophalen...")
 orders = shopify_orders(AUG_S)
 print(f"  {len(orders)} orders")
@@ -207,6 +217,20 @@ html = re.sub(r'<option value="gisteren">Gisteren \([^)]+\)</option>',
               f'<option value="gisteren">Gisteren ({fmts(YEST)})</option>', html)
 html = re.sub(r'<option value="week">Deze week \([^)]+\)</option>',
               f'<option value="week">Deze week ({wk_lbl})</option>', html)
+
+# DAILY_META array
+if daily_meta:
+    lines = []
+    for ds in sorted(daily_meta.keys()):
+        x = daily_meta[ds]
+        lines.append(f'  {{d:"{ds}",spend:{x["spend"]},rev7:{x["rev7"]},rev1v:{x["rev1v"]},purch:{x["purch"]},impr:{x["impr"]},cl:{x["cl"]}}}')
+    block = "const DAILY_META = [\n" + ",\n".join(lines) + "\n];"
+    new = re.sub(r'const DAILY_META\s*=\s*\[[^\]]*\];', block, html, flags=re.DOTALL)
+    if new != html:
+        print(f"✓ DAILY_META bijgewerkt ({len(daily_meta)} dagen)")
+        html = new
+    else:
+        print("⚠️  DAILY_META patroon niet gevonden")
 
 # Shopify orders
 if orders:
