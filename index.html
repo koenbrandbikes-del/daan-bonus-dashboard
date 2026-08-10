@@ -1424,8 +1424,8 @@ function renderKpiBar(cx, ct, tg){
   const netCls    = netMeta == null ? "" : netMeta > 0 ? " good" : " bad";
   const items = [
     {l:"Meta spend",    v:ct?eur(metaSpend):"—",              s:ct?`${metaPurch} aankopen`:"geen data",   c:""},
-    {l:"Meta aankopen", v:ct?metaPurch:"—",                   s:"7d click",                               c:""},
-    {l:"Meta omzet",    v:ct?eur(metaRev):"—",                s:"7d click",                               c:""},
+    {l:"Meta aankopen", v:ct?metaPurch:"—",                   s:"7d click + 1d view",                     c:""},
+    {l:"Meta omzet",    v:ct?eur(metaRev):"—",                s:"7d click + 1d view",                     c:""},
     {l:"Meta ROAS",     v:metaRoas!=null?x2(metaRoas):"—",    s:`BE ${x2(cx.be)}`,                       c:roasCls},
     {l:"CAC",           v:cac!=null?eur(cac):"—",             s:"per aankoop",                            c:""},
     {l:"Brutomarge",    v:metaBruto!=null?eur(metaBruto):"—", s:metaBruto!=null?`${(margePct*100).toFixed(1)}% op Meta omzet`:"geen data", c:brutoCls},
