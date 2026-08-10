@@ -1380,17 +1380,19 @@ function renderKpiBar(cx, ct, tg){
   const metaRoas  = metaSpend > 0 && metaRev > 0 ? metaRev / metaSpend : null;
   const roasCls   = metaRoas == null ? "" : metaRoas >= cx.be ? " good" : metaRoas >= 1 ? " warn" : " bad";
   const cac       = metaSpend > 0 && metaPurch > 0 ? metaSpend / metaPurch : null;
-  const netMeta   = metaSpend > 0 ? cx.pro - metaSpend : null;
+  const margePct  = cx.rev > 0 ? cx.pro / cx.rev : 0;
+  const metaBruto = ct ? margePct * metaRev : null;
+  const netMeta   = metaBruto != null && metaSpend > 0 ? metaBruto - metaSpend : null;
+  const brutoCls  = metaBruto == null ? "" : metaBruto > 0 ? " good" : " warn";
   const netCls    = netMeta == null ? "" : netMeta > 0 ? " good" : " bad";
-  const brutoCls  = cx.pro > 0 ? " good" : " warn";
   const items = [
-    {l:"Meta spend",    v:ct?eur(metaSpend):"—",             s:ct?`${metaPurch} aankopen`:"geen data",  c:""},
-    {l:"Meta aankopen", v:ct?metaPurch:"—",                  s:"7d click",                              c:""},
-    {l:"Meta omzet",    v:ct?eur(metaRev):"—",               s:"7d click",                              c:""},
-    {l:"Meta ROAS",     v:metaRoas!=null?x2(metaRoas):"—",   s:`BE ${x2(cx.be)}`,                      c:roasCls},
-    {l:"CAC",           v:cac!=null?eur(cac):"—",            s:"per aankoop",                           c:""},
-    {l:"Brutomarge",    v:eur(cx.pro),                       s:`${(cx.rex>0?cx.pro/cx.rex*100:0).toFixed(1)}% op excl.`, c:brutoCls},
-    {l:"Nettomarge",    v:netMeta!=null?eur(netMeta):"—",    s:netMeta!=null?(netMeta>0?"na Meta spend":"verlies na Meta"):"geen spend", c:netCls+" accent"},
+    {l:"Meta spend",    v:ct?eur(metaSpend):"—",              s:ct?`${metaPurch} aankopen`:"geen data",   c:""},
+    {l:"Meta aankopen", v:ct?metaPurch:"—",                   s:"7d click",                               c:""},
+    {l:"Meta omzet",    v:ct?eur(metaRev):"—",                s:"7d click",                               c:""},
+    {l:"Meta ROAS",     v:metaRoas!=null?x2(metaRoas):"—",    s:`BE ${x2(cx.be)}`,                       c:roasCls},
+    {l:"CAC",           v:cac!=null?eur(cac):"—",             s:"per aankoop",                            c:""},
+    {l:"Brutomarge",    v:metaBruto!=null?eur(metaBruto):"—", s:metaBruto!=null?`${(margePct*100).toFixed(1)}% op Meta omzet`:"geen data", c:brutoCls},
+    {l:"Nettomarge",    v:netMeta!=null?eur(netMeta):"—",     s:netMeta!=null?(netMeta>0?"na Meta spend":"verlies na Meta"):"geen spend",  c:netCls+" accent"},
   ];
   document.getElementById("kpiStrip").innerHTML =
     items.map(it=>`<div class="kpi-item${it.c}"><div class="kpi-lbl">${it.l}</div><div class="kpi-val">${it.v}</div><div class="kpi-sub">${it.s}</div></div>`).join("");
