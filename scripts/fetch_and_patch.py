@@ -93,7 +93,7 @@ def meta_insights(start: datetime.date, end: datetime.date) -> dict:
         "spend": round(float(row.get("spend", 0)), 2),
         "rev7":  round(r7,  2),
         "rev1v": round(r1v, 2),
-        "purch": int(p7),
+        "purch": int(p7 + p1v),
         "impr":  int(row.get("impressions", 0)),
         "cl":    int(row.get("clicks", 0)),
     }
