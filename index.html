@@ -743,8 +743,8 @@ const ADS_AUG = [ // aug 5–7, clean CAPI data
 
 /* ═══ PERIODS ════════════════════════════════════════════════════ */
 const PERIODS = {
-  vandaag:  {label:"Vandaag",           from:"2026-08-1026-08-10",tb:[TB_VANDAAG],tg:TG_VANDAAG,ads:null},
-  gisteren: {label:"Gisteren",          from:"2026-08-0926-08-09",tb:[TB_GISTEREN],tg:TG_GISTEREN,ads:null},
+  vandaag:  {label:"Vandaag",           from:"2026-08-10",to:"2026-08-10",tb:[TB_VANDAAG],tg:TG_VANDAAG,ads:null},
+  gisteren: {label:"Gisteren",          from:"2026-08-09",to:"2026-08-09",tb:[TB_GISTEREN],tg:TG_GISTEREN,ads:null},
   week:     {label:"Deze week",         from:TB_WEEK.from, to:TB_WEEK.to,  tb:[TB_WEEK],     ads:null, capiNote: TB_WEEK.from<"2026-08-05", tg:TG_WEEK},
   prevweek: {label:"Vorige week",       from:"2026-07-28",to:"2026-08-03",tb:[TB_PREVWEEK],tg:TG_PREVWEEK,ads:null,capiNote:true},
   aug:      {label:"Augustus",          from:"2026-08-05",to:"2026-08-10",tb:[TB_AUG_CLEAN],tg:TG_AUG_CLEAN,capiNote:true,ads:ADS_AUG},
