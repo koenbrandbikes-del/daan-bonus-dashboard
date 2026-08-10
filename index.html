@@ -211,6 +211,34 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-item.bad .kpi-val{color:#f87171}
 .kpi-item.warn .kpi-val{color:#fbbf24}
 .kpi-item.accent{background:#0e1f30}
+/* ── Period dropdown ── */
+.period-wrap{position:relative}
+.period-btn{display:flex;align-items:center;gap:8px;background:#141e33;border:1px solid #1f3050;color:#f1f5f9;font-size:13px;font-weight:500;padding:8px 12px;border-radius:8px;cursor:pointer;outline:none;white-space:nowrap}
+.period-menu{display:none;position:absolute;right:0;top:calc(100% + 4px);background:#0d1829;border:1px solid #1f3050;border-radius:10px;min-width:230px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.6);padding:6px 0}
+.period-menu.open{display:block}
+.pm-grp{font-size:10px;font-weight:700;letter-spacing:.08em;color:#475569;text-transform:uppercase;padding:8px 14px 3px}
+.pm-opt{padding:7px 14px;cursor:pointer;font-size:13px;color:#94a3b8}
+.pm-opt:hover{background:#1a2844;color:#f1f5f9}
+.pm-opt.active{color:#f1f5f9;font-weight:600}
+.pm-opt.active::before{content:"✓  ";color:#60a5fa}
+.pm-div{border-top:1px solid #1f2d45;margin:5px 0}
+/* ── Calendar ── */
+.cal-pad{padding:6px 12px 12px}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.cal-nb{background:none;border:none;color:#64748b;cursor:pointer;font-size:18px;padding:0 6px;line-height:1}
+.cal-nb:hover{color:#f1f5f9}
+.cal-mlbl{font-size:12px;font-weight:600;color:#cbd5e1}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;text-align:center}
+.cal-dow{color:#475569;font-weight:700;font-size:9px;letter-spacing:.04em;padding:3px 0}
+.cal-day{padding:5px 2px;cursor:pointer;border-radius:3px;color:#94a3b8;font-size:11px}
+.cal-day:hover:not(.cd-off){background:#1a2844;color:#f1f5f9}
+.cd-off{color:#1f2d45!important;cursor:default}
+.cd-s,.cd-e{background:#2563eb!important;color:#fff!important;font-weight:700;border-radius:4px}
+.cd-r{background:#1e3050;color:#cbd5e1}
+.cd-today{color:#60a5fa}
+.cal-hint{font-size:10px;color:#475569;text-align:center;margin:5px 0}
+.cal-apply{width:100%;padding:6px;background:#2563eb;border:none;color:#fff;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;margin-top:2px}
+.cal-apply:disabled{background:#1a2844;color:#374151;cursor:default}
 /* ── Google campaign table ── */
 .ch-google-block{border-top:1px solid #1e3050}
 .ch-g-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#86efac;padding:14px 16px 8px}
@@ -270,16 +298,33 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     <h1>Meta bonusdashboard</h1>
     <p>Hoeveel bonus Daan nu verdient met Meta advertenties</p>
   </div>
-  <select class="period-sel" id="periodSel" onchange="setPeriod(this.value)">
-    <optgroup label="Actueel">
-      <option value="vandaag">Vandaag (10 aug)</option>
-      <option value="gisteren">Gisteren (9 aug)</option>
-      <option value="week">Deze week (10–10 aug)</option>
-    </optgroup>
-    <optgroup label="Bonusperiode">
-      <option value="aug" selected>Augustus (v.a. 5 aug)</option>
-    </optgroup>
-  </select>
+  <div class="period-wrap">
+    <button class="period-btn" onclick="event.stopPropagation();togglePM()">
+      <span id="periodBtnTxt">Augustus (v.a. 5 aug)</span>
+      <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#64748b" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+    <div class="period-menu" id="periodMenu" onclick="event.stopPropagation()">
+      <div class="pm-grp">Actueel</div>
+      <div class="pm-opt" data-p="vandaag" onclick="selectP('vandaag')">Vandaag (<span id="lbl-vandaag"></span>)</div>
+      <div class="pm-opt" data-p="gisteren" onclick="selectP('gisteren')">Gisteren (<span id="lbl-gisteren"></span>)</div>
+      <div class="pm-opt" data-p="week" onclick="selectP('week')">Deze week (<span id="lbl-week"></span>)</div>
+      <div class="pm-div"></div>
+      <div class="pm-grp">Bonusperiode</div>
+      <div class="pm-opt active" data-p="aug" onclick="selectP('aug')">Augustus (v.a. 5 aug)</div>
+      <div class="pm-div"></div>
+      <div class="pm-grp">Aangepaste periode</div>
+      <div class="cal-pad">
+        <div class="cal-nav">
+          <button class="cal-nb" onclick="calPrev()">‹</button>
+          <span class="cal-mlbl" id="calMlbl"></span>
+          <button class="cal-nb" onclick="calNext()">›</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-hint" id="calHint">Klik een startdatum</div>
+        <button class="cal-apply" id="calApply" onclick="applyCustom()" disabled>Toepassen</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- KPI strip -->
@@ -758,6 +803,66 @@ let ordFilter="alle";
 
 function setPeriod(v){P=v;render()}
 
+/* ── Period dropdown & kalender ── */
+let _cY=2026,_cM=7,_cS=null,_cE=null;
+const CAL_MIN="2026-08-05";
+
+function togglePM(){
+  const m=document.getElementById("periodMenu");
+  const opening=!m.classList.contains("open");
+  m.classList.toggle("open");
+  if(opening)calRender();
+}
+document.addEventListener("click",()=>document.getElementById("periodMenu")?.classList.remove("open"));
+
+function selectP(v){
+  if(!PERIODS[v])return;
+  P=v;
+  document.querySelectorAll(".pm-opt").forEach(el=>el.classList.toggle("active",el.dataset.p===v));
+  document.getElementById("periodMenu").classList.remove("open");
+  render();
+}
+
+function calRender(){
+  const MN=["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
+  document.getElementById("calMlbl").textContent=`${MN[_cM]} ${_cY}`;
+  const fd=new Date(_cY,_cM,1).getDay();
+  const off=(fd+6)%7;
+  const dim=new Date(_cY,_cM+1,0).getDate();
+  const tod=new Date().toISOString().slice(0,10);
+  let h='<div class="cal-dow">M</div><div class="cal-dow">D</div><div class="cal-dow">W</div><div class="cal-dow">D</div><div class="cal-dow">V</div><div class="cal-dow">Z</div><div class="cal-dow">Z</div>';
+  for(let i=0;i<off;i++)h+='<div></div>';
+  for(let d=1;d<=dim;d++){
+    const ds=`${_cY}-${String(_cM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isOff=ds<CAL_MIN||ds>tod;
+    const iS=ds===_cS,iE=ds===_cE;
+    const iR=_cS&&_cE&&ds>_cS&&ds<_cE;
+    const iT=ds===tod&&!iS&&!iE;
+    const cls="cal-day"+(isOff?" cd-off":"")+(iS?" cd-s":"")+(iE?" cd-e":"")+(iR?" cd-r":"")+(iT?" cd-today":"");
+    h+=`<div class="${cls}"${!isOff?` onclick="calClick('${ds}')"`:""}>${d}</div>`;
+  }
+  document.getElementById("calGrid").innerHTML=h;
+  const hint=document.getElementById("calHint"),apply=document.getElementById("calApply");
+  if(!_cS){hint.textContent="Klik een startdatum";apply.disabled=true;}
+  else if(!_cE){hint.textContent=`Van ${fmtS(_cS)} · klik einddatum`;apply.disabled=true;}
+  else{hint.textContent=`${fmtS(_cS)} t/m ${fmtS(_cE)}`;apply.disabled=false;}
+}
+
+function calClick(ds){
+  if(!_cS||(_cS&&_cE)){_cS=ds;_cE=null;}
+  else if(ds===_cS){_cS=null;}
+  else if(ds<_cS){_cE=_cS;_cS=ds;}
+  else{_cE=ds;}
+  calRender();
+}
+function calPrev(){if(_cY===2026&&_cM===7)return;_cM--;if(_cM<0){_cM=11;_cY--;}calRender();}
+function calNext(){const n=new Date();if(_cY>n.getFullYear()||(_cY===n.getFullYear()&&_cM>=n.getMonth()))return;_cM++;if(_cM>11){_cM=0;_cY++;}calRender();}
+function applyCustom(){
+  if(!_cS||!_cE)return;
+  PERIODS.custom={label:`${fmtS(_cS)}–${fmtS(_cE)}`,from:_cS,to:_cE,tb:null,tg:null,ads:null};
+  selectP("custom");
+}
+
 function setOrdFilter(v){
   ordFilter=v;
   document.querySelectorAll(".ord-f").forEach(b=>{
@@ -861,6 +966,16 @@ function renderAnalysis(adsRaw, beroas, ct){
 function render(){
   const pd=PERIODS[P]||PERIODS.aug;
   const {from:fxFrom,to:fxTo,tb:tbs}=pd;
+  /* update dropdown labels */
+  {
+    const bt=document.getElementById("periodBtnTxt");
+    if(bt){const m={vandaag:`Vandaag (${fmtS(pd.from)})`,gisteren:`Gisteren (${fmtS(pd.from)})`,week:`Deze week (${fmtS(PERIODS.week?.from)}–${fmtS(PERIODS.week?.to)})`,aug:"Augustus (v.a. 5 aug)",jul:"Juli",contract:"Volledige periode",custom:pd.label};bt.textContent=m[P]||pd.label;}
+    const lv=document.getElementById("lbl-vandaag"),lg=document.getElementById("lbl-gisteren"),lw=document.getElementById("lbl-week");
+    if(lv)lv.textContent=fmtS(PERIODS.vandaag.from);
+    if(lg)lg.textContent=fmtS(PERIODS.gisteren.from);
+    if(lw&&PERIODS.week)lw.textContent=`${fmtS(PERIODS.week.from)}–${fmtS(PERIODS.week.to)}`;
+    document.querySelectorAll(".pm-opt").forEach(el=>el.classList.toggle("active",el.dataset.p===P));
+  }
   const TG = pd.tg || null;
   const hasTB=tbs!==null;
 
@@ -969,8 +1084,7 @@ function render(){
     const periodDays=Math.floor((new Date(fxTo)-new Date(fxFrom))/86400000)+1;
     const dek=tbDays>=periodDays?"volledig":`${tbDays} van ${periodDays} dagen`;
     const roasRange=pd.capiNote?` · ROAS ${fmtS(tbs[0].from)}–${fmtS(tbs[0].to)}`:"";
-    const googleInfo = TG ? ` · Google €${TG.spend.toFixed(0)}` : "";
-    document.getElementById("metaInfo").textContent=`Meta ${eur(CT.spend)}${googleInfo} · Blended €${(CT.spend+(TG?TG.spend:0)).toFixed(0)} · TrackBee: ${dek}${roasRange}`;
+    document.getElementById("metaInfo").textContent=`Meta ${eur(CT.spend)} · TrackBee: ${dek}${roasRange}`;
   } else {
     document.getElementById("metaInfo").textContent=`Revenue excl. BTW ${eur(CX.rex)} · TrackBee adspend: niet beschikbaar`;
   }
@@ -1261,7 +1375,7 @@ const GA4_PERIOD_MAP = {
 /* ═══ KPI STRIP ══════════════════════════════════════════════════════ */
 function renderKpiBar(cx, ct, tg){
   const metaSpend = ct ? ct.spend : 0;
-  const metaRev   = ct ? ct.rev7  : 0;
+  const metaRev   = ct ? ct.rev7 + ct.rev1v : 0;
   const metaPurch = ct ? ct.purch : 0;
   const metaRoas  = metaSpend > 0 && metaRev > 0 ? metaRev / metaSpend : null;
   const roasCls   = metaRoas == null ? "" : metaRoas >= cx.be ? " good" : metaRoas >= 1 ? " warn" : " bad";
