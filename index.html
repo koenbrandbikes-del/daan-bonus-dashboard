@@ -1271,11 +1271,13 @@ function renderKpiBar(cx, ct, tg){
   const spendSub = tg
     ? `Meta €${metaSpend.toFixed(0)} · Google €${googleSpend.toFixed(0)}`
     : ct ? `${ct.purch} aankopen TB` : "geen data";
+  const cac = totalSpend > 0 && cx.oc > 0 ? totalSpend / cx.oc : null;
   const items = [
     {l:"Shopify omzet",  v:eur(cx.rev),                      s:`incl. BTW`,                              c:""},
     {l:"Orders",         v:cx.oc,                             s:`${cx.oc===1?"order":"orders"}`,          c:""},
     {l:"Conv. ratio",    v:cr!=null?cr.toFixed(2)+"%":"—",    s:g4k?"GA4 · "+g4k:"geen GA4 data",  c:""},
     {l:"Totale spend",   v:totalSpend>0?eur(totalSpend):"—",  s:spendSub,                                c:""},
+    {l:"CAC",            v:cac!=null?eur(cac):"—",            s:cac!=null?"per order":"geen spend",      c:""},
     {l:"Blended MER",    v:mer!=null?x2(mer):"—",             s:`BE ${x2(cx.be)}`,                      c:merCls},
     {l:"Brutomarge",     v:eur(cx.pro),                       s:`${(cx.rex>0?cx.pro/cx.rex*100:0).toFixed(1)}% op excl.`, c:brutoCls},
     {l:"Nettomarge",     v:net!=null?eur(net):"—",            s:net!=null?(net>0?"na Meta+Google":"verlies na ads"):"geen spend", c:netCls+" accent"},
