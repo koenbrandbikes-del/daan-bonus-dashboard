@@ -142,24 +142,54 @@ def shopify_orders(since: datetime.date) -> list:
     return orders
 
 # ── Data ophalen ──────────────────────────────────────────────────────────────
-print(f"Meta data ophalen (account {META_ACCOUNT})...")
-v   = meta_insights(TODAY, TODAY)
-g   = meta_insights(YEST, YEST)
-w   = meta_insights(WK_S_C, TODAY)
-pw  = meta_insights(PWK_S, PWK_E)
-aug = meta_insights(CLEAN_S, TODAY)
-print(f"  vandaag  spend={v['spend']}  rev7={v['rev7']}  purch={v['purch']}")
-print(f"  augustus spend={aug['spend']} rev7={aug['rev7']} purch={aug['purch']}")
+
+def sum_daily(daily, from_date, to_date):
+    """Som van dagelijkse Meta data voor een datumrange. Altijd consistent met DAILY_META."""
+    total = {"spend": 0.0, "rev7": 0.0, "rev1v": 0.0, "purch": 0, "impr": 0, "cl": 0}
+    for ds, x in daily.items():
+        if str(from_date) <= ds <= str(to_date):
+            total["spend"] += x["spend"]
+            total["rev7"]  += x["rev7"]
+            total["rev1v"] += x["rev1v"]
+            total["purch"] += x["purch"]
+            total["impr"]  += x["impr"]
+            total["cl"]    += x["cl"]
+    total["spend"] = round(total["spend"], 2)
+    total["rev7"]  = round(total["rev7"],  2)
+    total["rev1v"] = round(total["rev1v"], 2)
+    return total
 
 # Dagelijkse data ophalen voor DAILY_META (CLEAN_S t/m TODAY)
-print("Dagelijkse Meta data ophalen voor DAILY_META...")
+# TB_VANDAAG, TB_GISTEREN, TB_WEEK en TB_AUG_CLEAN worden hieruit afgeleid
+# zodat ze altijd exact overeenkomen met de dagelijkse rijen.
+print(f"Meta dagelijkse data ophalen (account {META_ACCOUNT})...")
 daily_meta = {}
 d = CLEAN_S
 while d <= TODAY:
     day_data = meta_insights(d, d)
     daily_meta[str(d)] = day_data
-    print(f"  {d}: spend={day_data['spend']} rev7={day_data['rev7']} purch={day_data['purch']}")
+    print(f"  {d}: spend={day_data['spend']:7.2f}  rev7={day_data['rev7']:7.2f}  rev1v={day_data['rev1v']:6.2f}  purch={day_data['purch']}")
     d += datetime.timedelta(days=1)
+
+# Aggregaten berekend uit dagelijkse data — nooit losse API-calls, altijd consistent
+v   = daily_meta.get(str(TODAY), {"spend":0,"rev7":0,"rev1v":0,"purch":0,"impr":0,"cl":0})
+g   = daily_meta.get(str(YEST),  {"spend":0,"rev7":0,"rev1v":0,"purch":0,"impr":0,"cl":0})
+w   = sum_daily(daily_meta, WK_S_C, TODAY)
+aug = sum_daily(daily_meta, CLEAN_S, TODAY)
+
+# Vorige week: buiten DAILY_META range, nog apart ophalen
+pw = meta_insights(PWK_S, PWK_E)
+
+# ── Zelfcheck ─────────────────────────────────────────────────────────────────
+print("\n── Zelfcheck ────────────────────────────────────────────────────────────")
+print(f"  {'Dag':<12} {'spend':>8} {'rev7':>8} {'rev1v':>7} {'purch':>6}")
+for ds in sorted(daily_meta.keys()):
+    x = daily_meta[ds]
+    print(f"  {ds}  {x['spend']:>8.2f} {x['rev7']:>8.2f} {x['rev1v']:>7.2f} {x['purch']:>6}")
+print(f"  {'─'*50}")
+print(f"  Week ({WK_S_C}–{TODAY}):  spend={w['spend']:.2f}  purch={w['purch']}")
+print(f"  Aug  ({CLEAN_S}–{TODAY}): spend={aug['spend']:.2f}  purch={aug['purch']}")
+print("── ✓ Aggregaten = som dagelijkse data ───────────────────────────────────")
 
 print("Shopify orders ophalen...")
 orders = shopify_orders(AUG_S)

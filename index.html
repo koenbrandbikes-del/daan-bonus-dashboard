@@ -446,6 +446,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 </div>
 
 <div class="footer">Bijgewerkt: <span id="footerDate"></span> · Data: Shopify & TrackBee</div>
+<div id="dataCheck" style="display:none;text-align:center;font-size:11px;color:#ef4444;padding:4px 0 8px;font-weight:600"></div>
 </div>
 
 <script>
@@ -766,9 +767,17 @@ function tbCalcRange(from,to){
 function selfCheck(label, CT, from, to){
   const dm=tbCalcRange(from,to);
   if(!dm||!CT)return;
-  const diff=Math.abs(CT.spend-dm.spend);
-  if(diff>2){
-    console.warn(`[Check ${label}] spend: opgeslagen ${CT.spend.toFixed(2)} vs DAILY_META ${dm.spend.toFixed(2)} (verschil €${diff.toFixed(2)})`);
+  const diffs=[
+    {k:"spend", a:CT.spend, b:dm.spend},
+    {k:"rev7",  a:CT.rev7,  b:dm.rev7},
+    {k:"rev1v", a:CT.rev1v, b:dm.rev1v},
+  ];
+  const mismatches=diffs.filter(x=>Math.abs(x.a-x.b)>0.5);
+  if(mismatches.length){
+    const msg=mismatches.map(x=>`${x.k}: ${x.a.toFixed(2)} vs ${x.b.toFixed(2)}`).join(", ");
+    console.warn(`[Zelfcheck ${label}] MISMATCH: ${msg}`);
+    const el=document.getElementById("dataCheck");
+    if(el){el.textContent=`⚠ datamismatch ${label}: ${msg}`;el.style.display="block";}
   }
 }
 
