@@ -884,7 +884,9 @@ function calPrev(){if(_cY===2026&&_cM===7)return;_cM--;if(_cM<0){_cM=11;_cY--;}c
 function calNext(){const n=new Date();if(_cY>n.getFullYear()||(_cY===n.getFullYear()&&_cM>=n.getMonth()))return;_cM++;if(_cM>11){_cM=0;_cY++;}calRender();}
 function applyCustom(){
   if(!_cS||!_cE)return;
-  PERIODS.custom={label:`${fmtS(_cS)}–${fmtS(_cE)}`,from:_cS,to:_cE,tb:null,tg:null,ads:null};
+  const days=DAILY_META.filter(d=>d.d>=_cS&&d.d<=_cE);
+  PERIODS.custom={label:`${fmtS(_cS)}–${fmtS(_cE)}`,from:_cS,to:_cE,
+    tb:days.length?days:null,tg:null,ads:null};
   selectP("custom");
 }
 
