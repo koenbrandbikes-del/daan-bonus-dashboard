@@ -202,7 +202,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 }
 
 /* ── KPI strip ── */
-.kpi-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#1a2844;border:1px solid #1e3050;border-radius:12px;overflow:hidden;margin-bottom:12px}
+.kpi-strip{display:grid;grid-template-columns:repeat(8,1fr);gap:1px;background:#1a2844;border:1px solid #1e3050;border-radius:12px;overflow:hidden;margin-bottom:12px}
 .kpi-item{padding:11px 12px;background:#0d1829}
 .kpi-lbl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#475569;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpi-val{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
@@ -935,8 +935,11 @@ function render(){
   const shortLabel={vandaag:"Vandaag",gisteren:"Gisteren",week:"Deze week",prevweek:"Vorige week"};
   let bHtml;
   if(shortLabel[P]){
-    const metaPurch = hasTB && CT.purch>0 ? ` · <span style="color:#94a3b8">${CT.purch} via Meta</span>` : "";
-    bHtml=`<span style="color:#64748b">${CX.oc} orders${metaPurch}</span>`;
+    if(hasTB && CT.purch>0){
+      bHtml=`<span style="color:#94a3b8">${CT.purch} via Meta</span>`;
+    } else {
+      bHtml=`<span style="color:#64748b">${CX.oc} ${CX.oc===1?"order":"orders"}</span>`;
+    }
   } else if(prevBon!==null){
     const d=CB.raw-prevBon, up=d>=0;
     bHtml=`<span style="color:${up?"#4ade80":"#f87171"}">${up?"▲":"▼"} ${eur(Math.abs(d))} vs. juli</span>`;
