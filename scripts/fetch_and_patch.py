@@ -55,8 +55,9 @@ PURCHASE_TYPES = ["purchase", "offsite_conversion.fb_pixel_purchase"]
 def _av(lst, atype, window=None):
     for a in (lst or []):
         if a.get("action_type") == atype:
-            val = a.get(window) if window else None
-            return float(val or a.get("value") or 0)
+            if window:
+                return float(a.get(window) or 0)   # 0 als window niet aanwezig (nooit fallback op value)
+            return float(a.get("value") or 0)
     return 0.0
 
 def meta_insights(start: datetime.date, end: datetime.date) -> dict:
