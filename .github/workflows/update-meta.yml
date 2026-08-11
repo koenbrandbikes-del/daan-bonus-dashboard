@@ -30,12 +30,31 @@ jobs:
           META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
         run: python3 scripts/fetch_and_patch.py index.html
 
+      - name: Claude CLI installeren
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Shopify orders via Claude MCP
+        env:
+          CLAUDE_CREDENTIALS: ${{ secrets.CLAUDE_CREDENTIALS }}
+        run: |
+          # Schrijf credentials naar plek waar claude CLI ze verwacht
+          mkdir -p ~/.claude
+          echo "$CLAUDE_CREDENTIALS" > /tmp/claude_creds.json
+          ACCESS_TOKEN=$(python3 -c "import json; d=json.load(open('/tmp/claude_creds.json')); print(d['claudeAiOauth']['accessToken'])")
+          rm /tmp/claude_creds.json
+
+          claude --print --dangerously-skip-permissions \
+            "Use the Shopify MCP graphql_query tool to fetch all orders from lumeworksnl.myshopify.com since 2026-08-01 with their name, createdAt, totalPriceSet shopMoney amount, discountCodes, and lineItems title and quantity. Then update the ORDERS_SHOPIFY JavaScript array in ${{ github.workspace }}/index.html. Format: {d:\"YYYY-MM-DD\",num:\"#XXXX\",items:[\"Product\"],code:\"kortingscode\",incl:PRICE}. Add ,test:true for orders with code pim100/koen100/job100 or price < 10. Only edit the file, do not commit or push." \
+          || echo "⚠️  Shopify MCP update mislukt — wordt overgeslagen"
+        env:
+          ANTHROPIC_API_KEY: ${{ fromJson(secrets.CLAUDE_CREDENTIALS).claudeAiOauth.accessToken }}
+
       - name: Commit en push als er wijzigingen zijn
         run: |
           git config user.name  "LumeWorks Bot"
           git config user.email "dashboard@lumeworks.nl"
           git add index.html
           git diff --staged --quiet && echo "Geen wijzigingen" && exit 0
-          git commit -m "Auto-update Meta $(date -u '+%Y-%m-%d %H:%M') UTC"
+          git commit -m "Auto-update Meta+Shopify $(date -u '+%Y-%m-%d %H:%M') UTC"
           git pull --rebase origin main
           git push origin main
