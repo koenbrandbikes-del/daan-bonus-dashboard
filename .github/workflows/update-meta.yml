@@ -1,0 +1,38 @@
+name: Update Meta data
+
+on:
+  schedule:
+    - cron: '10 * * * *'   # elk uur op :10
+  workflow_dispatch:         # ook handmatig te starten
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull latest (voorkomt push-conflict met andere jobs)
+        run: git pull --rebase origin main
+
+      - name: Python dependencies
+        run: pip install requests
+
+      - name: Fetch Meta data en patch HTML
+        env:
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
+        run: python3 scripts/fetch_and_patch.py index.html
+
+      - name: Commit en push als er wijzigingen zijn
+        run: |
+          git config user.name  "LumeWorks Bot"
+          git config user.email "dashboard@lumeworks.nl"
+          git add index.html
+          git diff --staged --quiet && echo "Geen wijzigingen" && exit 0
+          git commit -m "Auto-update Meta $(date -u '+%Y-%m-%d %H:%M') UTC"
+          git pull --rebase origin main
+          git push origin main
