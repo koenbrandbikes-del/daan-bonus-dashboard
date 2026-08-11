@@ -37,17 +37,12 @@ jobs:
         env:
           CLAUDE_CREDENTIALS: ${{ secrets.CLAUDE_CREDENTIALS }}
         run: |
-          # Schrijf credentials naar plek waar claude CLI ze verwacht
-          mkdir -p ~/.claude
-          echo "$CLAUDE_CREDENTIALS" > /tmp/claude_creds.json
-          ACCESS_TOKEN=$(python3 -c "import json; d=json.load(open('/tmp/claude_creds.json')); print(d['claudeAiOauth']['accessToken'])")
-          rm /tmp/claude_creds.json
+          # Extraheer OAuth access token uit credentials JSON
+          ACCESS_TOKEN=$(echo "$CLAUDE_CREDENTIALS" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['claudeAiOauth']['accessToken'])")
 
-          claude --print --dangerously-skip-permissions \
+          ANTHROPIC_API_KEY="$ACCESS_TOKEN" claude --print --dangerously-skip-permissions \
             "Use the Shopify MCP graphql_query tool to fetch all orders from lumeworksnl.myshopify.com since 2026-08-01 with their name, createdAt, totalPriceSet shopMoney amount, discountCodes, and lineItems title and quantity. Then update the ORDERS_SHOPIFY JavaScript array in ${{ github.workspace }}/index.html. Format: {d:\"YYYY-MM-DD\",num:\"#XXXX\",items:[\"Product\"],code:\"kortingscode\",incl:PRICE}. Add ,test:true for orders with code pim100/koen100/job100 or price < 10. Only edit the file, do not commit or push." \
           || echo "⚠️  Shopify MCP update mislukt — wordt overgeslagen"
-        env:
-          ANTHROPIC_API_KEY: ${{ fromJson(secrets.CLAUDE_CREDENTIALS).claudeAiOauth.accessToken }}
 
       - name: Commit en push als er wijzigingen zijn
         run: |
