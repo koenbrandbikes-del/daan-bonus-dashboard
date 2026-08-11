@@ -10,9 +10,11 @@ CLAUDE="/Users/koengrosman/.npm-global/bin/claude"
 
 echo "=== Dashboard update: $(date '+%Y-%m-%d %H:%M') ==="
 
-# 0. Eerst synchroniseren — working dir is schoon hier, dus pull werkt altijd
+# 0. Synchroniseer — stash tijdelijk zodat pull --rebase altijd werkt
 cd "$REPO_DIR"
+git stash -u --quiet 2>/dev/null || true
 git pull --rebase origin main --quiet 2>/dev/null || true
+git stash pop --quiet 2>/dev/null || true
 
 # 1. Meta data ophalen en HTML patchen
 python3 "$SCRIPT_DIR/fetch_and_patch.py" "$REPO_DIR/index.html"
@@ -28,7 +30,9 @@ if ! git diff --quiet index.html; then
     git commit -m "Auto-update $(date -u '+%Y-%m-%d %H:%M') UTC"
     if ! git push origin main 2>/dev/null; then
         echo "Push gefaald (remote ahead) — rebase en retry..."
+        git stash -u --quiet 2>/dev/null || true
         git pull --rebase origin main --quiet
+        git stash pop --quiet 2>/dev/null || true
         git push origin main
     fi
     echo "✓ Gepushed naar GitHub Pages"
