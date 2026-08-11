@@ -423,7 +423,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 
 </div>
 
-<div class="footer">Bijgewerkt: <span id="footerDate"></span> · Data: Shopify & TrackBee</div>
+<div class="footer">Bijgewerkt: <span id="footerDate"></span> · Data: Meta · Shopify · TrackBee</div>
 <div id="dataCheck" style="display:none;text-align:center;font-size:11px;color:#ef4444;padding:4px 0 8px;font-weight:600"></div>
 </div>
 
@@ -1121,7 +1121,6 @@ function render(){
   /* tables */
   renderOrders(fxFrom,fxTo);
   renderBeroas(CT,CX.be,CX,fxFrom,fxTo);
-  renderKern(CX,CT);
   const adsData = pd.ads || ADS_AUG;
   const adsFallback = !pd.ads;
   renderAds(adsData, CX.be, adsFallback);
