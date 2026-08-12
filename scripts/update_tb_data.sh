@@ -40,4 +40,15 @@ else
     echo "Geen gewijzigde data — skip push"
 fi
 
+# 4. Volgende wake-timer inplannen — zorgt dat de Mac ook uit ruststand
+#    ontwaakt voor de :10-run. Vereist /etc/sudoers.d/pmset-dashboard-wake
+#    met: "koengrosman ALL=(root) NOPASSWD: /usr/bin/pmset schedule wake *,
+#    /usr/bin/pmset schedule cancel *" (eenmalig handmatig ingesteld).
+NEXT_WAKE="$(date -v+1H -v8M -v0S '+%m/%d/%y %H:%M:%S')"
+if sudo -n /usr/bin/pmset schedule wake "$NEXT_WAKE" >/dev/null 2>&1; then
+    echo "✓ Volgende wake ingepland: $NEXT_WAKE"
+else
+    echo "⚠️  Kon wake niet inplannen (sudoers-regel voor pmset ontbreekt?)"
+fi
+
 echo "=== Klaar ==="
