@@ -98,6 +98,50 @@ def meta_insights(start: datetime.date, end: datetime.date) -> dict:
         "cl":    int(row.get("clicks", 0)),
     }
 
+ATC_TYPES = ["add_to_cart", "offsite_conversion.fb_pixel_add_to_cart"]
+
+def meta_insights_by_adset(start: datetime.date, end: datetime.date) -> list:
+    """Per-advertentiegroep breakdown voor één dag. Zelfde attributie-logica
+    als meta_insights(), maar level=adset i.p.v. account."""
+    url = f"https://graph.facebook.com/v21.0/act_{META_ACCOUNT}/insights"
+    params = {
+        "fields": "adset_name,spend,impressions,clicks,ctr,cpc,actions,action_values",
+        "action_attribution_windows": '["7d_click","1d_view"]',
+        "time_range": json.dumps({"since": str(start), "until": str(end)}),
+        "level": "adset",
+        "limit": 200,
+        "access_token": META_TOKEN,
+    }
+    try:
+        r = requests.get(url, params=params, timeout=20)
+        r.raise_for_status()
+    except requests.RequestException as e:
+        print(f"⚠️  Meta adset API fout ({start}–{end}): {e} — overgeslagen")
+        return []
+
+    out = []
+    for row in r.json().get("data", []):
+        acts = row.get("actions", [])
+        avls = row.get("action_values", [])
+        p7  = max(_av(acts, t, "7d_click") for t in PURCHASE_TYPES)
+        p1v = max(_av(acts, t, "1d_view")  for t in PURCHASE_TYPES)
+        r7  = max(_av(avls, t, "7d_click") for t in PURCHASE_TYPES)
+        r1v = max(_av(avls, t, "1d_view")  for t in PURCHASE_TYPES)
+        a7  = max(_av(acts, t, "7d_click") for t in ATC_TYPES)
+        a1v = max(_av(acts, t, "1d_view")  for t in ATC_TYPES)
+        out.append({
+            "n":     row.get("adset_name", "?"),
+            "spend": round(float(row.get("spend", 0)), 2),
+            "rev7":  round(r7, 2),
+            "rev1v": round(r1v, 2),
+            "purch": int(p7 + p1v),
+            "ctr":   round(float(row.get("ctr", 0)), 2),
+            "cpc":   round(float(row.get("cpc", 0)), 2),
+            "atc":   int(a7 + a1v),
+        })
+    out.sort(key=lambda a: -a["spend"])
+    return out
+
 # ── Shopify Admin GraphQL ─────────────────────────────────────────────────────
 TEST_CODES = {"pim100", "koen100", "job100"}
 
@@ -164,11 +208,14 @@ def sum_daily(daily, from_date, to_date):
 # zodat ze altijd exact overeenkomen met de dagelijkse rijen.
 print(f"Meta dagelijkse data ophalen (account {META_ACCOUNT})...")
 daily_meta = {}
+daily_ads = {}
 d = CLEAN_S
 while d <= TODAY:
     day_data = meta_insights(d, d)
     daily_meta[str(d)] = day_data
-    print(f"  {d}: spend={day_data['spend']:7.2f}  rev7={day_data['rev7']:7.2f}  rev1v={day_data['rev1v']:6.2f}  purch={day_data['purch']}")
+    ads_data = meta_insights_by_adset(d, d)
+    daily_ads[str(d)] = ads_data
+    print(f"  {d}: spend={day_data['spend']:7.2f}  rev7={day_data['rev7']:7.2f}  rev1v={day_data['rev1v']:6.2f}  purch={day_data['purch']}  adsets={len(ads_data)}")
     d += datetime.timedelta(days=1)
 
 # Aggregaten berekend uit dagelijkse data — nooit losse API-calls, altijd consistent
@@ -262,6 +309,27 @@ if daily_meta:
         html = new
     else:
         print("⚠️  DAILY_META patroon niet gevonden")
+
+# DAILY_ADS array (per-advertentiegroep dagcijfers)
+if daily_ads:
+    day_blocks = []
+    for ds in sorted(daily_ads.keys()):
+        ads_lines = []
+        for a in daily_ads[ds]:
+            name_js = json.dumps(a["n"])
+            ads_lines.append(
+                f'{{n:{name_js},spend:{a["spend"]},rev7:{a["rev7"]},rev1v:{a["rev1v"]},'
+                f'purch:{a["purch"]},ctr:{a["ctr"]},cpc:{a["cpc"]},atc:{a["atc"]}}}'
+            )
+        day_blocks.append(f'  {{d:"{ds}",ads:[' + ",".join(ads_lines) + ']}')
+    block = "const DAILY_ADS = [\n" + ",\n".join(day_blocks) + "\n];"
+    new = re.sub(r'const DAILY_ADS\s*=\s*\[.*?\];', block, html, flags=re.DOTALL)
+    if new != html:
+        total_adsets = sum(len(v) for v in daily_ads.values())
+        print(f"✓ DAILY_ADS bijgewerkt ({len(daily_ads)} dagen, {total_adsets} rijen)")
+        html = new
+    else:
+        print("⚠️  DAILY_ADS patroon niet gevonden")
 
 # Shopify orders
 if orders:
