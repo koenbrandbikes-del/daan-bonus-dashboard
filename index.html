@@ -1109,7 +1109,6 @@ function render(){
   document.getElementById("mBe").textContent=x2(CX.be);
 
   /* meta info */
-  simPeriodDays=Math.max(1,Math.floor((new Date(fxTo)-new Date(fxFrom))/86400000)+1);
   if(hasTB){
     const tbDays=tbs.reduce((a,t)=>a+(t.from&&t.to?Math.floor((new Date(t.to)-new Date(t.from))/86400000)+1:1),0);
     const periodDays=Math.floor((new Date(fxTo)-new Date(fxFrom))/86400000)+1;
@@ -1310,15 +1309,26 @@ function renderKern(fx,tb){
 }
 
 /* ═══ SIMULATOR ══════════════════════════════════════════════════ */
+// Bonus wordt per contractmaand uitgekeerd (30-dagen blok vanaf 16 jul 2026),
+// dus de simulator rekent altijd over de huidige maand — ongeacht welke
+// periode er bovenin het dashboard geselecteerd is.
 let simSpendLocked=false;
-let simPeriodDays=1;
+const SIM_MONTH_DAYS=30;
+function simMonthRange(){
+  const mn=maandNr(SNAP);
+  const start=new Date("2026-07-16T00:00:00");
+  start.setDate(start.getDate()+(mn-1)*SIM_MONTH_DAYS);
+  const end=new Date(start);
+  end.setDate(end.getDate()+SIM_MONTH_DAYS-1);
+  return {mn,from:start.toISOString().slice(0,10),to:end.toISOString().slice(0,10)};
+}
 function simSpendEdit(){simSpendLocked=true;updateSim();}
 function updateSim(){
   const v=parseFloat(document.getElementById("simSlider").value)||2;
   const spEl=document.getElementById("simSpend");
   const spVal=parseFloat(spEl.value);
   const daily=isNaN(spVal)||spVal<=0?200:spVal;
-  const spend=daily*simPeriodDays;
+  const spend=daily*SIM_MONTH_DAYS;
   document.getElementById("simRval").textContent=x2(v);
   const diff=v-(CX?CX.be:1.35);
   const raw=Math.max(0,spend*diff)*BONUS_PCT;
@@ -1326,8 +1336,9 @@ function updateSim(){
   document.getElementById("simBonus").textContent=eur(raw);
   document.getElementById("simDiff").textContent=(diff>=0?"+":"")+diff.toFixed(3)+"×";
   document.getElementById("simPct").textContent=pctS.toFixed(2)+"%";
+  const mr=simMonthRange();
   document.getElementById("simSpendTotal").textContent=
-    `→ ${eur(spend)} totaal over ${simPeriodDays} dag${simPeriodDays!==1?"en":""} (geselecteerde periode)`;
+    `→ ${eur(spend)} totaal over ${SIM_MONTH_DAYS} dagen · Maand ${mr.mn} (${fmtS(mr.from)}–${fmtS(mr.to)})`;
 }
 
 /* ═══ ADS BREAKDOWN ══════════════════════════════════════════════ */
