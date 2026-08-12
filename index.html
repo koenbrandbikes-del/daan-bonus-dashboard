@@ -1354,10 +1354,34 @@ function adsForRange(from,to){
   return out;
 }
 
+// Sorteerbare kolommen: klik een kolomkop om te sorteren, nogmaals klikken
+// keert de richting om. Bewaart de laatst getoonde ruwe data zodat een
+// her-sortering geen volledige page-render hoeft te triggeren.
+let adsSortCol="spend", adsSortDir=-1; // -1 = aflopend, 1 = oplopend
+let _adsLastRaw=null, _adsLastBeroas=1.35;
+const ADS_COLS=[
+  {key:"n",    label:"Advertentiegroep", cls:""},
+  {key:"spend",label:"Spend",            cls:"r"},
+  {key:"pct",  label:"% spend",          cls:"r"},
+  {key:"purch",label:"Aankopen",         cls:"r"},
+  {key:"ri",   label:"Revenue",          cls:"r"},
+  {key:"roas", label:"ROAS",             cls:"r"},
+  {key:"ctr",  label:"CTR",              cls:"r"},
+  {key:"cpc",  label:"CPC",              cls:"r"},
+  {key:"atc",  label:"ATC",              cls:"r"},
+];
+
+function sortAds(col){
+  if(adsSortCol===col) adsSortDir=-adsSortDir;
+  else{ adsSortCol=col; adsSortDir=col==="n"?1:-1; }
+  renderAds(_adsLastRaw,_adsLastBeroas);
+}
+
 function renderAds(adsRaw, beroas){
   const acc=document.getElementById("acc-ads");
   if(!adsRaw||!adsRaw.length){acc.style.display="none";return;}
   acc.style.display="";
+  _adsLastRaw=adsRaw; _adsLastBeroas=beroas;
 
   // Merge duplicate adset names (meerdere dagen / jul+aug combineren)
   const map={};
@@ -1368,44 +1392,49 @@ function renderAds(adsRaw, beroas){
     m.purch+=a.purch; m.atc+=a.atc;
     m._ctr+=a.ctr; m._cpc+=a.cpc; m._cnt++;
   }
-  const rows=Object.values(map).sort((a,b)=>b.spend-a.spend);
-  const totSpend=rows.reduce((s,r)=>s+r.spend,0);
+  const totSpend=Object.values(map).reduce((s,r)=>s+r.spend,0);
+
+  // Afgeleide velden (nodig voor zowel weergave als sortering)
+  let rows=Object.values(map).map(r=>{
+    const ri=r.rev7+r.rev1v;
+    return{
+      ...r, ri,
+      roas: r.spend>0?ri/r.spend:0,
+      pct:  totSpend>0?r.spend/totSpend*100:0,
+      ctr:  r._cnt>0?r._ctr/r._cnt:0,
+      cpc:  r._cnt>0?r._cpc/r._cnt:0,
+    };
+  });
+
+  rows.sort((a,b)=>{
+    const av=a[adsSortCol], bv=b[adsSortCol];
+    const diff=typeof av==="string"?av.localeCompare(bv):av-bv;
+    return adsSortDir*diff;
+  });
 
   document.getElementById("adsHdr").textContent=`Meta advertentiegroepen · ${rows.length} groepen`;
 
-  let html=`<thead><tr>
-    <th>Advertentiegroep</th>
-    <th class="r">Spend</th>
-    <th class="r">% spend</th>
-    <th class="r">Aankopen</th>
-    <th class="r">Revenue</th>
-    <th class="r">ROAS</th>
-    <th class="r">CTR</th>
-    <th class="r">CPC</th>
-    <th class="r">ATC</th>
-  </tr></thead><tbody>`;
+  const arrow=dir=>dir===1?"▲":"▼";
+  let html=`<thead><tr>`+ADS_COLS.map(c=>
+    `<th class="${c.cls}" style="cursor:pointer;user-select:none" onclick="sortAds('${c.key}')">${c.label}${adsSortCol===c.key?` ${arrow(adsSortDir)}`:""}</th>`
+  ).join("")+`</tr></thead><tbody>`;
 
   for(const r of rows){
-    const ri=r.rev7+r.rev1v;
-    const roas=r.spend>0?ri/r.spend:0;
-    const pct=(r.spend/totSpend*100).toFixed(1);
-    const avgCtr=(r._cnt>0?r._ctr/r._cnt:0).toFixed(2);
-    const avgCpc=(r._cnt>0?r._cpc/r._cnt:0).toFixed(2);
-    const roasColor=roas===0?"#ef4444":roas>=beroas?"#4ade80":"#f59e0b";
+    const roasColor=r.roas===0?"#ef4444":r.roas>=beroas?"#4ade80":"#f59e0b";
     html+=`<tr>
       <td>${r.n}</td>
       <td class="r">${eur(r.spend)}</td>
-      <td class="r" style="color:#64748b">${pct}%</td>
+      <td class="r" style="color:#64748b">${r.pct.toFixed(1)}%</td>
       <td class="r">${r.purch||"—"}</td>
-      <td class="r">${ri>0?eur(ri):"—"}</td>
-      <td class="r" style="color:${roasColor};font-weight:700">${roas>0?x2(roas):"—"}</td>
-      <td class="r">${avgCtr}%</td>
-      <td class="r">€${avgCpc}</td>
+      <td class="r">${r.ri>0?eur(r.ri):"—"}</td>
+      <td class="r" style="color:${roasColor};font-weight:700">${r.roas>0?x2(r.roas):"—"}</td>
+      <td class="r">${r.ctr.toFixed(2)}%</td>
+      <td class="r">€${r.cpc.toFixed(2)}</td>
       <td class="r">${r.atc||"—"}</td>
     </tr>`;
   }
   // Totaalrij
-  const totRi=rows.reduce((s,r)=>s+r.rev7+r.rev1v,0);
+  const totRi=rows.reduce((s,r)=>s+r.ri,0);
   const totRoas=totSpend>0?totRi/totSpend:0;
   const totPurch=rows.reduce((s,r)=>s+r.purch,0);
   const totAtc=rows.reduce((s,r)=>s+r.atc,0);
