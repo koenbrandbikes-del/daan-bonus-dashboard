@@ -380,7 +380,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
           <input type="range" id="simSlider" min="0.5" max="5" step="0.01" value="2.22" oninput="updateSim()">
           <div class="sim-rval" id="simRval">2.22×</div>
         </div>
-        <label style="margin-top:4px">Hypothetisch adspend</label>
+        <label style="margin-top:4px">Hypothetisch adspend per dag</label>
         <div class="sim-row" style="gap:8px">
           <span style="color:#64748b;font-size:14px;flex-shrink:0">€</span>
           <input type="number" id="simSpend" min="0" step="50"
@@ -388,6 +388,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
             oninput="simSpendEdit()">
           <div style="font-size:12px;color:#475569;flex-shrink:0" id="simSpendNote"></div>
         </div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px" id="simSpendTotal"></div>
         <div class="sim-cards">
           <div class="sim-card"><div class="sl">Bonus</div><div class="sv" id="simBonus">—</div></div>
           <div class="sim-card"><div class="sl">ROAS – BEROAS</div><div class="sv" id="simDiff">—</div></div>
@@ -1108,6 +1109,7 @@ function render(){
   document.getElementById("mBe").textContent=x2(CX.be);
 
   /* meta info */
+  simPeriodDays=Math.max(1,Math.floor((new Date(fxTo)-new Date(fxFrom))/86400000)+1);
   if(hasTB){
     const tbDays=tbs.reduce((a,t)=>a+(t.from&&t.to?Math.floor((new Date(t.to)-new Date(t.from))/86400000)+1:1),0);
     const periodDays=Math.floor((new Date(fxTo)-new Date(fxFrom))/86400000)+1;
@@ -1141,8 +1143,8 @@ function render(){
     sl.max=(Math.max(CT.roas,comfy)*2).toFixed(2);
     sl.value=CT.roas.toFixed(2);
     const spEl=document.getElementById("simSpend");
-    if(!simSpendLocked) spEl.value=Math.round(CT.spend);
-    document.getElementById("simSpendNote").textContent=simSpendLocked?"aangepast":"actueel";
+    if(!simSpendLocked) spEl.value=200;
+    document.getElementById("simSpendNote").textContent=simSpendLocked?"aangepast":"standaard";
     updateSim();
   }
 
@@ -1309,12 +1311,14 @@ function renderKern(fx,tb){
 
 /* ═══ SIMULATOR ══════════════════════════════════════════════════ */
 let simSpendLocked=false;
+let simPeriodDays=1;
 function simSpendEdit(){simSpendLocked=true;updateSim();}
 function updateSim(){
   const v=parseFloat(document.getElementById("simSlider").value)||2;
   const spEl=document.getElementById("simSpend");
   const spVal=parseFloat(spEl.value);
-  const spend=isNaN(spVal)||spVal<=0?(CT?CT.spend:0):spVal;
+  const daily=isNaN(spVal)||spVal<=0?200:spVal;
+  const spend=daily*simPeriodDays;
   document.getElementById("simRval").textContent=x2(v);
   const diff=v-(CX?CX.be:1.35);
   const raw=Math.max(0,spend*diff)*BONUS_PCT;
@@ -1322,6 +1326,8 @@ function updateSim(){
   document.getElementById("simBonus").textContent=eur(raw);
   document.getElementById("simDiff").textContent=(diff>=0?"+":"")+diff.toFixed(3)+"×";
   document.getElementById("simPct").textContent=pctS.toFixed(2)+"%";
+  document.getElementById("simSpendTotal").textContent=
+    `→ ${eur(spend)} totaal over ${simPeriodDays} dag${simPeriodDays!==1?"en":""} (geselecteerde periode)`;
 }
 
 /* ═══ ADS BREAKDOWN ══════════════════════════════════════════════ */
