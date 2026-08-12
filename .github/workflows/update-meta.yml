@@ -1,9 +1,11 @@
 name: Update Meta data
 
 on:
-  schedule:
-    - cron: '10 * * * *'   # elk uur op :10 UTC (12:10 CEST)
-  workflow_dispatch:         # ook handmatig te starten
+  # Cron-trigger uitgezet: dit liep dubbel met de lokale Mac-job
+  # (scripts/update_tb_data.sh via launchd) en miste bovendien regelmatig
+  # een uur (GitHub schedule-triggers zijn niet gegarandeerd op tijd).
+  # De lokale job is de betrouwbare bron; deze blijft staan voor handmatige runs.
+  workflow_dispatch:
 
 permissions:
   contents: write
