@@ -12,10 +12,17 @@ Credentials in ~/.secrets/dashboard.env:
 import json, os, re, sys, requests
 import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 INDEX_PATH = sys.argv[1] if len(sys.argv) > 1 else str(
     Path(__file__).parent.parent / "index.html"
 )
+
+# Altijd Europe/Amsterdam, ongeacht of dit lokaal (CEST) of op een runner in
+# UTC (GitHub Actions / cloud routine) draait — anders verschilt "vandaag"
+# tot 2 uur per dag tussen de bronnen, en oogt de "Bijgewerkt"-tijd fout.
+NL_TZ = ZoneInfo("Europe/Amsterdam")
+NOW_NL = datetime.datetime.now(NL_TZ)
 
 # ── Credentials ──────────────────────────────────────────────────────────────
 creds_path = Path.home() / ".secrets" / "dashboard.env"
@@ -38,7 +45,7 @@ if not META_TOKEN:
     sys.exit(1)
 
 # ── Datums ───────────────────────────────────────────────────────────────────
-TODAY   = datetime.date.today()
+TODAY   = NOW_NL.date()
 YEST    = TODAY - datetime.timedelta(days=1)
 DOW     = TODAY.weekday()                       # 0=ma … 6=zo
 WK_S    = TODAY - datetime.timedelta(days=DOW)  # maandag (nodig voor prevweek)
@@ -243,7 +250,7 @@ orders = shopify_orders(AUG_S)
 print(f"  {len(orders)} orders")
 
 # ── HTML patchen ──────────────────────────────────────────────────────────────
-snap_time = datetime.datetime.now().strftime("%H:%M")
+snap_time = NOW_NL.strftime("%H:%M")
 
 def tb_const(name, frm, to, x):
     return (f'const {name} = {{from:"{frm}",to:"{to}",'
