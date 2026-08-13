@@ -24,7 +24,7 @@ body{background:
 
 /* ── Header ── */
 .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:32px 0 20px}
-.hd h1{font-family:'Newsreader',Georgia,serif;font-size:clamp(16px,4vw,23px);font-weight:600;letter-spacing:-.01em;margin-bottom:3px;white-space:nowrap}
+.hd h1{font-size:clamp(15px,4vw,22px);font-weight:700;margin-bottom:3px;white-space:nowrap}
 .hd p{font-size:13px;color:#93A2B8}
 .avatar-wrap{position:relative;width:38px;height:38px;flex-shrink:0}
 .avatar-ring{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,#2A31A0,#14a6f1,#2A31A0);animation:ring-spin 8s linear infinite;transition:filter .2s ease;opacity:.7}
@@ -58,7 +58,7 @@ body{background:
 .mc:hover{background:rgba(255,255,255,.05)}
 .mc:last-child{border-right:none}
 .mc-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#93A2B8;margin-bottom:4px}
-.mc-val{font-family:'Newsreader',Georgia,serif;font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1;letter-spacing:-.01em}
+.mc-val{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
 .mc-sub{font-size:11px;color:#93A2B8;margin-top:2px}
 
 /* ── Gauge ── */
@@ -111,24 +111,24 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .sim-wrap label{font-size:12px;color:#93A2B8;display:block;margin-bottom:8px}
 .sim-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .sim-row input[type=range]{flex:1;accent-color:#60a5fa;height:4px}
-.sim-rval{font-family:'Newsreader',Georgia,serif;font-size:17px;font-weight:600;min-width:44px;text-align:right;font-variant-numeric:tabular-nums}
+.sim-rval{font-size:16px;font-weight:700;min-width:44px;text-align:right;font-variant-numeric:tabular-nums}
 .sim-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .sim-card{background:rgba(255,255,255,.05);border-radius:8px;padding:12px 14px}
 .sim-card .sl{font-size:10px;color:#93A2B8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
-.sim-card .sv{font-family:'Newsreader',Georgia,serif;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+.sim-card .sv{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
 
 /* ── BEROAS summary ── */
 .be-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid #1f2d45}
 .be-stat{padding:14px 16px;border-right:1px solid #1f2d45}
 .be-stat:last-child{border-right:none}
 .be-lbl{font-size:10px;color:#93A2B8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
-.be-val{font-family:'Newsreader',Georgia,serif;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+.be-val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
 
 /* ── Kerncijfers grid ── */
 .kern-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden}
 .kern-cell{padding:13px 16px;background:rgba(255,255,255,.05)}
 .kern-lbl{font-size:10px;color:#93A2B8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
-.kern-val{font-family:'Newsreader',Georgia,serif;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.kern-val{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
 
 /* ── GA4 Analytics ── */
 .ga4-tabs{display:flex;gap:4px;padding:14px 16px 0;flex-wrap:wrap}
@@ -138,7 +138,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .ga4-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden;margin-bottom:16px}
 .ga4-stat{padding:12px 14px;background:rgba(255,255,255,.05)}
 .ga4-stat-lbl{font-size:9px;color:#93A2B8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
-.ga4-stat-val{font-family:'Newsreader',Georgia,serif;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.ga4-stat-val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
 .ga4-stat-sub{font-size:10px;color:#93A2B8;margin-top:2px}
 .ga4-funnel{display:flex;align-items:center;gap:0;margin-bottom:16px;overflow-x:auto}
 .ga4-step{flex:1;min-width:0;background:rgba(255,255,255,.05);border-radius:8px;padding:10px 10px 8px;text-align:center;position:relative}
@@ -218,7 +218,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-item:last-child{border-right:none}
 .kpi-item:hover{box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);background:rgba(255,255,255,.06);z-index:2}
 .kpi-lbl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#93A2B8;margin-bottom:5px;white-space:normal;line-height:1.3;min-height:2.6em}
-.kpi-val{font-family:'Newsreader',Georgia,serif;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi-val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
 .kpi-sub{font-size:10px;color:#A6B3C4;margin-top:3px}
 .kpi-item.good .kpi-val{color:#8FC49B}
 .kpi-item.bad .kpi-val{color:#DD9280}
@@ -273,7 +273,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .fc-step{flex:1;min-width:60px}
 .fc-step-in{background:rgba(255,255,255,.05);border-radius:8px;padding:10px 6px;text-align:center;height:100%}
 .fc-lbl{font-size:9px;color:#93A2B8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fc-val{font-family:'Newsreader',Georgia,serif;font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.fc-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
 .fc-drop{font-size:10px;font-weight:600;margin-top:3px;min-height:14px}
 .fc-arr{display:flex;align-items:center;padding:0 2px;color:#374151;font-size:11px;flex-shrink:0;align-self:center}
 .fc-note{font-size:10px;color:#7C8CA6;margin-top:10px;padding-top:8px;border-top:1px solid #1a2844;line-height:1.5}
@@ -288,7 +288,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .ch-tag.closer{background:rgba(34,197,94,.12);color:#86efac}
 .ch-mets{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
 .ch-met{background:rgba(255,255,255,.045);border-radius:6px;padding:6px 4px;text-align:center}
-.ch-mv{font-family:'Newsreader',Georgia,serif;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.ch-mv{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
 .ch-ml{font-size:9px;color:#93A2B8;text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
 .ch-bar-track{height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-top:8px}
 .ch-bar-fill{height:100%;border-radius:2px}
