@@ -968,26 +968,29 @@ function renderAiStatus(ct, be, schaal, comfy){
 /* ═══ TRENDS ═════════════════════════════════════════════════════ */
 function renderTrends(ct, prevCt, prevLabel, ctDays, prevDays){
   const el=document.getElementById("trendRow");
-  if(!prevCt){el.innerHTML="";return;}
-  const ratio=prevDays>0&&ctDays>0?Math.max(prevDays,ctDays)/Math.min(prevDays,ctDays):1;
-  const showAll=ratio<=3;
-  const norm=showAll&&Math.abs(prevDays-ctDays)>1;
+  // ROAS/Spend/Aankopen zijn altijd zichtbaar, hard onafhankelijk van
+  // periode: zonder vorige periode om mee te vergelijken (bv. "Gisteren"
+  // of een custom range) tonen we de kale cijfers zonder trendpijltje;
+  // verschillen de periodes sterk in lengte (bv. Augustus vs. juli) dan
+  // normaliseren we naar "/ dag" i.p.v. de kolom te verbergen.
+  const hasPrev=!!prevCt;
+  const norm=hasPrev&&Math.abs(prevDays-ctDays)>1;
   const dayNote=norm?" / dag":"";
-  const td=(cur,prev)=>{if(!prev)return null;const d=(cur-prev)/prev*100;return{pct:Math.abs(d).toFixed(1),up:d>=0};};
-  const tRoas=td(ct.roas,prevCt.roas);
-  const curS=norm?ct.spend/ctDays:ct.spend, prevS=norm?prevCt.spend/prevDays:prevCt.spend;
-  const tSpend=showAll?td(curS,prevS):null;
-  const curP=norm?ct.purch/ctDays:ct.purch, prevP=norm?prevCt.purch/prevDays:prevCt.purch;
-  const tPurch=showAll?td(curP,prevP):null;
+  const td=(cur,prev)=>{if(!hasPrev||!prev)return null;const d=(cur-prev)/prev*100;return{pct:Math.abs(d).toFixed(1),up:d>=0};};
+  const tRoas=td(ct.roas,hasPrev?prevCt.roas:null);
+  const curS=norm?ct.spend/ctDays:ct.spend, prevS=hasPrev?(norm?prevCt.spend/prevDays:prevCt.spend):null;
+  const tSpend=td(curS,prevS);
+  const curP=norm?ct.purch/ctDays:ct.purch, prevP=hasPrev?(norm?prevCt.purch/prevDays:prevCt.purch):null;
+  const tPurch=td(curP,prevP);
   const cell=(lbl,val,t)=>{
     const col=t?t.up?"#4ade80":"#f87171":"#64748b";
     return `<div class="trend-item"><div class="trend-lbl">${lbl}</div><div class="trend-val">${val}</div>${t?`<div class="trend-chg" style="color:${col}">${t.up?"▲":"▼"} ${t.pct}% vs. ${prevLabel}</div>`:""}</div>`;
   };
-  const cols=[cell("ROAS",x2(ct.roas),tRoas)];
-  if(showAll){
-    cols.push(cell(`Spend${dayNote}`,eur(norm?curS:ct.spend),tSpend));
-    cols.push(cell(`Aankopen${dayNote}`,norm?curP.toFixed(1):ct.purch,tPurch));
-  }
+  const cols=[
+    cell("ROAS",x2(ct.roas),tRoas),
+    cell(`Spend${dayNote}`,eur(norm?curS:ct.spend),tSpend),
+    cell(`Aankopen${dayNote}`,norm?curP.toFixed(1):ct.purch,tPurch),
+  ];
   el.innerHTML=`<div class="trend-row-inner" style="grid-template-columns:repeat(${cols.length},1fr)">${cols.join("")}</div>`;
 }
 
@@ -1153,7 +1156,7 @@ function render(){
   else go.style.display="none";
 
   /* trends */
-  if(hasTB&&prevCT) renderTrends(CT,prevCT,prevLabel,ctDays,prevDays);
+  if(hasTB) renderTrends(CT,prevCT,prevLabel,ctDays,prevDays);
   else document.getElementById("trendRow").innerHTML="";
 
   /* tables */
