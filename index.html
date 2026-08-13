@@ -472,7 +472,7 @@ const GA4 = {
 
 /* ═══ DATA ═══════════════════════════════════════════════════════ */
 const SNAP = "2026-08-13";
-const SNAP_TIME = "06:12";
+const SNAP_TIME = "09:10";
 const TB_ONBOARD  = "2026-07-20";
 const BONUS_PCT   = 0.10;
 const BTW         = 1.21;
@@ -506,14 +506,14 @@ const ROWS = [
 ];
 
 // Dagelijkse & wekelijkse TB data — opgehaald via TrackBee Campaign Insights API
-const TB_VANDAAG = {from:"2026-08-13",to:"2026-08-13",spend:8.65,rev7:0.0,rev1v:0.0,purch:0,impr:1033,cl:18};
-const TB_GISTEREN = {from:"2026-08-12",to:"2026-08-12",spend:185.58,rev7:696.0,rev1v:0.0,purch:5,impr:20227,cl:349};
-const TB_WEEK = {from:"2026-08-07",to:"2026-08-13",spend:2132.83,rev7:3194.1,rev1v:0.0,purch:22,impr:282492,cl:5920};
+const TB_VANDAAG = {from:"2026-08-13",to:"2026-08-13",spend:31.88,rev7:0.0,rev1v:0.0,purch:0,impr:3697,cl:66};
+const TB_GISTEREN = {from:"2026-08-12",to:"2026-08-12",spend:185.86,rev7:696.0,rev1v:0.0,purch:5,impr:20251,cl:350};
+const TB_WEEK = {from:"2026-08-07",to:"2026-08-13",spend:2156.34,rev7:3194.1,rev1v:0.0,purch:22,impr:285180,cl:5969};
 const TB_PREVWEEK = {from:"2026-08-03",to:"2026-08-09",spend:2411.44,rev7:3051.2,rev1v:298.0,purch:21,impr:347513,cl:6348};
 // TB_JUL: Platform Summary cijfers (volledige juli, betrouwbaarder dan skill API)
 const TB_JUL = {from:"2026-07-01",to:"2026-07-31",spend:4030.15,rev7:8787.00,rev1v:0,purch:32,impr:202988,cl:2847};
 // Betrouwbare data: CAPI Gateway extra uit per 5 aug → geen dubbele aankopen meer
-const TB_AUG_CLEAN = {from:"2026-08-05",to:"2026-08-13",spend:2789.2,rev7:4492.2,rev1v:298.0,purch:31,impr:382545,cl:7385};
+const TB_AUG_CLEAN = {from:"2026-08-05",to:"2026-08-13",spend:2812.71,rev7:4492.2,rev1v:298.0,purch:31,impr:385233,cl:7434};
 
 // Dagelijkse Meta data — auto-updated door cloud agent. Gebruikt voor custom datumranges.
 const DAILY_META = [
@@ -524,8 +524,8 @@ const DAILY_META = [
   {d:"2026-08-09",spend:620.33,rev7:576.0,rev1v:0.0,purch:4,impr:80683,cl:1912},
   {d:"2026-08-10",spend:268.27,rev7:596.0,rev1v:0.0,purch:4,impr:29788,cl:644},
   {d:"2026-08-11",spend:180.03,rev7:149.0,rev1v:0.0,purch:1,impr:20797,cl:486},
-  {d:"2026-08-12",spend:185.58,rev7:696.0,rev1v:0.0,purch:5,impr:20227,cl:349},
-  {d:"2026-08-13",spend:8.65,rev7:0.0,rev1v:0.0,purch:0,impr:1033,cl:18}
+  {d:"2026-08-12",spend:185.86,rev7:696.0,rev1v:0.0,purch:5,impr:20251,cl:350},
+  {d:"2026-08-13",spend:31.88,rev7:0.0,rev1v:0.0,purch:0,impr:3697,cl:66}
 ];
 
 // Dagelijkse Meta data per advertentiegroep — auto-updated door cloud agent.
@@ -539,8 +539,8 @@ const DAILY_ADS = [
   {d:"2026-08-09",ads:[{n:"001_002",spend:89.64,rev7:0.0,rev1v:0.0,purch:0,ctr:1.92,cpc:0.54,atc:1},{n:"002_004",spend:76.22,rev7:0.0,rev1v:0.0,purch:0,ctr:3.84,cpc:0.25,atc:0},{n:"006_002 - New Size",spend:60.9,rev7:149.0,rev1v:0.0,purch:1,ctr:1.37,cpc:0.54,atc:0},{n:"003_004 - annemarie",spend:60.76,rev7:0.0,rev1v:0.0,purch:0,ctr:3.54,cpc:0.22,atc:0},{n:"006_002",spend:49.12,rev7:149.0,rev1v:0.0,purch:1,ctr:1.17,cpc:0.69,atc:1},{n:"005_004 - static 2",spend:26.31,rev7:0.0,rev1v:0.0,purch:0,ctr:1.97,cpc:0.37,atc:0},{n:"004_004",spend:25.67,rev7:0.0,rev1v:0.0,purch:0,ctr:2.41,cpc:0.37,atc:0},{n:"006_004 - static",spend:25.63,rev7:0.0,rev1v:0.0,purch:0,ctr:1.82,cpc:0.43,atc:0},{n:"001_003",spend:25.6,rev7:0.0,rev1v:0.0,purch:0,ctr:4.47,cpc:0.08,atc:0},{n:"004_003",spend:25.06,rev7:0.0,rev1v:0.0,purch:0,ctr:1.93,cpc:0.16,atc:1},{n:"007_003",spend:23.79,rev7:0.0,rev1v:0.0,purch:0,ctr:2.22,cpc:0.44,atc:0},{n:"003_003 - Stephanie",spend:17.26,rev7:0.0,rev1v:0.0,purch:0,ctr:1.43,cpc:0.78,atc:0},{n:"010-003",spend:16.58,rev7:0.0,rev1v:0.0,purch:0,ctr:1.37,cpc:0.75,atc:0},{n:"002-003",spend:16.46,rev7:278.0,rev1v:0.0,purch:2,ctr:1.52,cpc:0.87,atc:1},{n:"005-003 - Copy",spend:16.33,rev7:0.0,rev1v:0.0,purch:0,ctr:1.44,cpc:0.49,atc:0},{n:"012_003",spend:16.32,rev7:0.0,rev1v:0.0,purch:0,ctr:0.91,cpc:1.36,atc:0},{n:"006_003",spend:16.3,rev7:0.0,rev1v:0.0,purch:0,ctr:2.62,cpc:0.26,atc:0},{n:"008_003",spend:16.27,rev7:0.0,rev1v:0.0,purch:0,ctr:2.22,cpc:0.38,atc:0},{n:"007_002",spend:16.11,rev7:0.0,rev1v:0.0,purch:0,ctr:0.93,cpc:1.07,atc:1}]},
   {d:"2026-08-10",ads:[{n:"002_004",spend:60.98,rev7:0.0,rev1v:0.0,purch:0,ctr:3.38,cpc:0.26,atc:2},{n:"006_002",spend:48.02,rev7:0.0,rev1v:0.0,purch:0,ctr:1.26,cpc:0.68,atc:1},{n:"001_002",spend:41.81,rev7:447.0,rev1v:0.0,purch:3,ctr:1.96,cpc:0.6,atc:6},{n:"006_002 - New Size",spend:30.67,rev7:149.0,rev1v:0.0,purch:1,ctr:1.79,cpc:0.49,atc:2},{n:"002-003",spend:22.97,rev7:0.0,rev1v:0.0,purch:0,ctr:1.38,cpc:0.85,atc:1},{n:"003_004 - annemarie",spend:9.55,rev7:0.0,rev1v:0.0,purch:0,ctr:3.09,cpc:0.27,atc:0},{n:"004_004",spend:8.88,rev7:0.0,rev1v:0.0,purch:0,ctr:3.18,cpc:0.32,atc:0},{n:"003_001",spend:5.83,rev7:0.0,rev1v:0.0,purch:0,ctr:1.02,cpc:1.94,atc:0},{n:"005_004 - static 2",spend:5.66,rev7:0.0,rev1v:0.0,purch:0,ctr:1.81,cpc:0.35,atc:0},{n:"007_003",spend:5.49,rev7:0.0,rev1v:0.0,purch:0,ctr:2.35,cpc:0.39,atc:0},{n:"006_004 - static",spend:5.31,rev7:0.0,rev1v:0.0,purch:0,ctr:1.17,cpc:0.48,atc:0},{n:"012_003",spend:5.11,rev7:0.0,rev1v:0.0,purch:0,ctr:0.4,cpc:2.56,atc:0},{n:"007_002",spend:4.89,rev7:0.0,rev1v:0.0,purch:0,ctr:0.84,cpc:0.98,atc:0},{n:"004_003",spend:2.78,rev7:0.0,rev1v:0.0,purch:0,ctr:2.01,cpc:0.15,atc:0},{n:"001_003",spend:2.21,rev7:0.0,rev1v:0.0,purch:0,ctr:4.23,cpc:0.07,atc:0},{n:"006_003",spend:1.87,rev7:0.0,rev1v:0.0,purch:0,ctr:3.05,cpc:0.37,atc:0},{n:"008_003",spend:1.75,rev7:0.0,rev1v:0.0,purch:0,ctr:2.09,cpc:0.35,atc:0},{n:"010-003",spend:1.71,rev7:0.0,rev1v:0.0,purch:0,ctr:1.79,cpc:0.85,atc:0},{n:"003_003 - Stephanie",spend:1.41,rev7:0.0,rev1v:0.0,purch:0,ctr:1.59,cpc:0.47,atc:0},{n:"005-003 - Copy",spend:1.37,rev7:0.0,rev1v:0.0,purch:0,ctr:2.92,cpc:0.34,atc:0}]},
   {d:"2026-08-11",ads:[{n:"002_004",spend:53.84,rev7:0.0,rev1v:0.0,purch:0,ctr:3.84,cpc:0.18,atc:1},{n:"006_002",spend:41.09,rev7:149.0,rev1v:0.0,purch:1,ctr:1.32,cpc:0.58,atc:1},{n:"001_002",spend:34.6,rev7:0.0,rev1v:0.0,purch:0,ctr:2.59,cpc:0.47,atc:1},{n:"002-003",spend:29.43,rev7:0.0,rev1v:0.0,purch:0,ctr:0.83,cpc:1.47,atc:2},{n:"006_002 - New Size",spend:21.07,rev7:0.0,rev1v:0.0,purch:0,ctr:0.97,cpc:0.92,atc:0},{n:"007_003",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0},{n:"006_003",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0},{n:"003_004 - annemarie",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0}]},
-  {d:"2026-08-12",ads:[{n:"001_002",spend:50.67,rev7:298.0,rev1v:0.0,purch:2,ctr:1.88,cpc:0.65,atc:2},{n:"006_002",spend:42.72,rev7:0.0,rev1v:0.0,purch:0,ctr:1.05,cpc:0.74,atc:2},{n:"002_004",spend:39.97,rev7:159.0,rev1v:0.0,purch:1,ctr:3.29,cpc:0.25,atc:2},{n:"006_002 - New Size",spend:27.91,rev7:239.0,rev1v:0.0,purch:2,ctr:1.24,cpc:0.72,atc:1},{n:"002-003",spend:24.31,rev7:0.0,rev1v:0.0,purch:0,ctr:0.61,cpc:1.52,atc:0},{n:"007_003",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0},{n:"003_004 - annemarie",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0}]},
-  {d:"2026-08-13",ads:[{n:"001_002",spend:3.01,rev7:0.0,rev1v:0.0,purch:0,ctr:1.68,cpc:0.6,atc:0},{n:"002_004",spend:1.76,rev7:0.0,rev1v:0.0,purch:0,ctr:3.59,cpc:0.22,atc:0},{n:"006_002",spend:1.48,rev7:0.0,rev1v:0.0,purch:0,ctr:1.22,cpc:0.49,atc:0},{n:"006_002 - New Size",spend:1.38,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0},{n:"002-003",spend:1.02,rev7:0.0,rev1v:0.0,purch:0,ctr:2.02,cpc:0.51,atc:0}]}
+  {d:"2026-08-12",ads:[{n:"001_002",spend:50.68,rev7:298.0,rev1v:0.0,purch:2,ctr:1.88,cpc:0.65,atc:2},{n:"006_002",spend:42.89,rev7:0.0,rev1v:0.0,purch:0,ctr:1.05,cpc:0.74,atc:2},{n:"002_004",spend:40.04,rev7:159.0,rev1v:0.0,purch:1,ctr:3.31,cpc:0.25,atc:2},{n:"006_002 - New Size",spend:27.92,rev7:239.0,rev1v:0.0,purch:2,ctr:1.24,cpc:0.72,atc:1},{n:"002-003",spend:24.33,rev7:0.0,rev1v:0.0,purch:0,ctr:0.61,cpc:1.52,atc:0},{n:"007_003",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0},{n:"003_004 - annemarie",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0}]},
+  {d:"2026-08-13",ads:[{n:"001_002",spend:10.99,rev7:0.0,rev1v:0.0,purch:0,ctr:1.38,cpc:0.79,atc:0},{n:"002_004",spend:6.41,rev7:0.0,rev1v:0.0,purch:0,ctr:3.65,cpc:0.23,atc:0},{n:"006_002",spend:5.63,rev7:0.0,rev1v:0.0,purch:0,ctr:1.5,cpc:0.43,atc:0},{n:"006_002 - New Size",spend:4.83,rev7:0.0,rev1v:0.0,purch:0,ctr:1.16,cpc:0.69,atc:0},{n:"002-003",spend:4.02,rev7:0.0,rev1v:0.0,purch:0,ctr:0.9,cpc:1.0,atc:0}]}
 ];
 
 // Google Ads data — TrackBee Google Campaign Insights (account 7645288282)
