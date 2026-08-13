@@ -14,7 +14,7 @@
 html,body{min-height:100vh;overflow-x:hidden}
 body{background:
     radial-gradient(55% 40% at 12% 8%,rgba(20,166,241,.19) 0%,transparent 60%),
-    radial-gradient(70% 45% at 92% 0%,rgba(42,49,160,.38) 0%,transparent 62%),
+    radial-gradient(70% 45% at 92% 0%,rgba(42,49,160,.24) 0%,transparent 62%),
     radial-gradient(60% 45% at 88% 100%,rgba(42,49,160,.28) 0%,transparent 60%),
     linear-gradient(160deg,#0A0D26 0%,#0D1433 55%,#111640 100%);
   background-repeat:no-repeat;background-attachment:scroll;background-size:100% 100%;
@@ -24,7 +24,7 @@ body{background:
 
 /* ── Header ── */
 .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:32px 0 20px}
-.hd h1{font-size:clamp(15px,4vw,22px);font-weight:700;margin-bottom:3px;white-space:nowrap}
+.hd h1{font-family:'Newsreader',Georgia,serif;font-size:clamp(16px,4vw,23px);font-weight:600;letter-spacing:-.01em;margin-bottom:3px;white-space:nowrap}
 .hd p{font-size:13px;color:#93A2B8}
 .avatar-wrap{position:relative;width:38px;height:38px;flex-shrink:0}
 .avatar-ring{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,#2A31A0,#14a6f1,#2A31A0);animation:ring-spin 8s linear infinite;transition:filter .2s ease;opacity:.7}
@@ -36,7 +36,7 @@ body{background:
 .period-sel{background:#141e33;border:1px solid #1f3050;color:#f1f5f9;font-size:13px;font-weight:500;padding:8px 32px 8px 12px;border-radius:8px;cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
 
 /* ── Main card ── */
-.card{background:linear-gradient(160deg,rgba(34,42,96,.58) 0%,rgba(20,26,64,.54) 100%);backdrop-filter:blur(28px) saturate(170%);-webkit-backdrop-filter:blur(28px) saturate(170%);border:1px solid rgba(255,255,255,.16);border-top-color:rgba(255,255,255,.32);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 20px 50px -14px rgba(4,6,20,.55),0 2px 16px rgba(30,40,120,.22),inset 0 1px 0 rgba(255,255,255,.16)}
+.card{background:linear-gradient(160deg,rgba(34,42,96,.58) 0%,rgba(20,26,64,.54) 100%);backdrop-filter:blur(28px) saturate(170%);-webkit-backdrop-filter:blur(28px) saturate(170%);border:1px solid rgba(255,255,255,.16);border-top-color:rgba(255,255,255,.32);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 20px 50px -14px rgba(4,6,20,.55),0 2px 16px rgba(30,40,120,.22),inset 0 1px 0 rgba(255,255,255,.16)}
 .card-meta{font-size:11px;color:#93A2B8;margin-bottom:12px;display:flex;align-items:center;gap:5px}
 .info-i{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;border:1px solid #93A2B8;font-size:8px;color:#93A2B8;cursor:help;flex-shrink:0;position:relative}
 .capi-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;background:#78350f;border:1px solid #92400e;color:#fde68a;font-size:10px;font-weight:600;letter-spacing:.04em;cursor:help;flex-shrink:0;position:relative}
@@ -62,8 +62,10 @@ body{background:
 .mc-sub{font-size:11px;color:#93A2B8;margin-top:2px}
 
 /* ── Gauge ── */
-.gauge-outer{position:relative;padding:28px 0 28px}
-.gauge-bar{position:absolute;top:28px;left:0;right:0;height:8px;border-radius:4px;overflow:visible;box-shadow:0 3px 18px rgba(0,0,0,.4),0 0 30px rgba(255,255,255,.05)}
+.gauge-outer{position:relative;padding:30px 0 24px}
+.gauge-bar{position:absolute;top:30px;left:0;right:0;height:10px;border-radius:999px;overflow:visible;box-shadow:0 4px 20px rgba(0,0,0,.4),0 0 24px rgba(143,196,155,.18),0 0 24px rgba(221,146,128,.12);isolation:isolate}
+.gauge-bar::before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.4) 0%,rgba(255,255,255,.08) 45%,rgba(255,255,255,0) 60%);pointer-events:none;z-index:1}
+.gauge-bar::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 1px 1px rgba(255,255,255,.25),inset 0 -2px 4px rgba(0,0,0,.2);pointer-events:none;z-index:1}
 .g-marker{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translateX(-50%);top:-32px}
 .g-marker-lbl{font-size:11px;font-weight:700;white-space:nowrap;padding:1px 5px;border-radius:3px;border-width:1px;border-style:solid;backdrop-filter:blur(4px)}
 .g-marker-line{width:2px;height:34px;border-radius:1px;margin-top:2px;animation:marker-glow 2.4s ease-in-out infinite}
@@ -1215,7 +1217,7 @@ function render(){
 
   /* gauge */
   const go=document.getElementById("gaugeOuter");
-  if(hasTB){ go.style.display=""; renderGauge(CX.be,schaal,comfy,CT.roas); }
+  if(hasTB){ go.style.display=""; renderGauge(CX.be,schaal,comfy,CT.roas,CT.purch); }
   else go.style.display="none";
 
   /* trends */
@@ -1250,7 +1252,7 @@ function render(){
 }
 
 /* ═══ GAUGE ══════════════════════════════════════════════════════ */
-function renderGauge(be,schaal,comfy,roas){
+function renderGauge(be,schaal,comfy,roas,purch){
   const gMin=Math.max(0,be*0.5);
   const gMax=Math.max(roas*1.4,comfy*1.25);
   const pct=v=>Math.max(1,Math.min(99,(v-gMin)/(gMax-gMin)*100));
@@ -1258,8 +1260,12 @@ function renderGauge(be,schaal,comfy,roas){
   const pBe=pct(be), pSc=pct(schaal), pCo=pct(comfy), pRo=Math.min(97,pct(roas));
   const mc=roas>=comfy?"#8FC49B":roas>=schaal?"#8FC49B":roas>=be?"#E5B863":"#DD9280";
   const needForSchaal=schaal-roas;
+  const lowSample=purch!=null&&purch<10;
+  const aboveLabel=lowSample
+    ?`boven doel ROAS · gebaseerd op ${purch} aankoop${purch===1?"":"en"}`
+    :(roas>=comfy?"comfortabel boven doel ROAS ✓":"op of boven doel ROAS ✓");
   const gapNote=roas>=schaal
-    ?`${x2(roas)} · ${roas>=comfy?"comfortabel boven doel ROAS ✓":"op of boven doel ROAS ✓"}`
+    ?`${x2(roas)} · ${aboveLabel}`
     :`Nog <strong>${needForSchaal.toFixed(2)}×</strong> ROAS nodig voor doel ROAS (${(SCALE_T*100).toFixed(0)}% nettomarge op omzet)`;
 
   document.getElementById("gaugeOuter").innerHTML=`
