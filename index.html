@@ -1577,7 +1577,7 @@ function renderKpiBar(cx, ct, tg){
     {l:"Meta spend",    v:ct?eur(metaSpend):"—",              s:ct?`${metaPurch} aankopen`:"geen data",   c:""},
     {l:"Meta aankopen", v:ct?metaPurch:"—",                   s:"7d click + 1d view",                     c:""},
     {l:"Meta omzet",    v:ct?eur(metaRev):"—",                s:"7d click + 1d view",                     c:""},
-    {l:"Meta ROAS",     v:metaRoas!=null?x2(metaRoas):"—",    s:`BE ${x2(cx.be)}`,                       c:roasCls},
+    {l:"Meta ROAS",     v:metaRoas!=null?x2(metaRoas):"—",    s:`break-even ${x2(cx.be)}`,               c:roasCls},
     {l:"CAC",           v:cac!=null?eur(cac):"—",             s:"per aankoop",                            c:""},
     {l:"Brutomarge",    v:metaBruto!=null?eur(metaBruto):"—", s:metaBruto!=null?`${(margePct*100).toFixed(1)}% op Meta omzet`:"geen data", c:brutoCls},
     {l:"Nettomarge",    v:netMeta!=null?eur(netMeta):"—",     s:netMeta!=null?(netMeta>0?"na Meta spend":"verlies na Meta"):"geen spend",  c:netCls},
