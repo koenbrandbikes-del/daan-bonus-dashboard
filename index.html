@@ -63,9 +63,7 @@ body{background:
 
 /* ── Gauge ── */
 .gauge-outer{position:relative;padding:30px 0 24px}
-.gauge-bar{position:absolute;top:30px;left:0;right:0;height:10px;border-radius:999px;overflow:visible;box-shadow:0 4px 20px rgba(0,0,0,.4),0 0 24px rgba(143,196,155,.18),0 0 24px rgba(221,146,128,.12);isolation:isolate}
-.gauge-bar::before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.4) 0%,rgba(255,255,255,.08) 45%,rgba(255,255,255,0) 60%);pointer-events:none;z-index:1}
-.gauge-bar::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 1px 1px rgba(255,255,255,.25),inset 0 -2px 4px rgba(0,0,0,.2);pointer-events:none;z-index:1}
+.gauge-bar{position:absolute;top:30px;left:0;right:0;height:7px;border-radius:999px;overflow:visible;box-shadow:0 6px 20px -6px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -1px 2px rgba(0,0,0,.3)}
 .g-marker{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translateX(-50%);top:-32px}
 .g-marker-lbl{font-size:11px;font-weight:700;white-space:nowrap;padding:1px 5px;border-radius:3px;border-width:1px;border-style:solid;backdrop-filter:blur(4px)}
 .g-marker-line{width:2px;height:34px;border-radius:1px;margin-top:2px;animation:marker-glow 2.4s ease-in-out infinite}
@@ -73,9 +71,14 @@ body{background:
   0%,100%{filter:drop-shadow(0 0 2px currentColor)}
   50%{filter:drop-shadow(0 0 8px currentColor)}
 }
-.g-tick{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translateX(-50%);top:12px}
-.g-tick-line{width:1px;height:6px;background:rgba(255,255,255,.25);margin-bottom:3px}
-.g-tick-val{font-size:10px;color:#93A2B8;white-space:nowrap}
+.g-tick{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translateX(-50%);top:12px;cursor:default;padding:4px 6px;margin:-4px -6px;border-radius:8px;transition:background .25s ease}
+.g-tick:hover{background:rgba(255,255,255,.06)}
+.g-tick-line{width:1px;height:6px;background:rgba(255,255,255,.28);margin-bottom:3px;transition:background .25s ease,box-shadow .25s ease,height .25s ease}
+.g-tick:hover .g-tick-line{background:#fff;height:8px;box-shadow:0 0 8px rgba(255,255,255,.7),0 0 16px rgba(255,255,255,.35)}
+.g-tick-val{font-size:10px;color:#93A2B8;white-space:nowrap;transition:color .25s ease}
+.g-tick:hover .g-tick-val{color:#fff}
+.g-tick-cap{font-size:9px;color:#93A2B8;transition:color .25s ease}
+.g-tick:hover .g-tick-cap{color:rgba(255,255,255,.85)}
 .g-legend{display:flex;flex-wrap:wrap;gap:12px 20px;font-size:11px;color:#93A2B8;position:absolute;bottom:0;left:0}
 .g-legend-item{display:flex;align-items:center;gap:5px}
 .g-legend-swatch{width:14px;height:3px;border-radius:2px;flex-shrink:0}
@@ -1268,23 +1271,25 @@ function renderGauge(be,schaal,comfy,roas,purch){
     ?`${x2(roas)} · ${aboveLabel}`
     :`Nog <strong>${needForSchaal.toFixed(2)}×</strong> ROAS nodig voor doel ROAS (${(SCALE_T*100).toFixed(0)}% nettomarge op omzet)`;
 
+  const blend=Math.max(1,Math.min(4,(pSc-pBe)/3,pBe/2,(100-pSc)/2));
+  const s1=Math.max(0,pBe-blend), s2=Math.min(100,pBe+blend), s3=Math.max(s2,pSc-blend), s4=Math.min(100,pSc+blend);
   document.getElementById("gaugeOuter").innerHTML=`
-<div class="gauge-bar" style="background:linear-gradient(to right,#DD9280 0%,#DD9280 ${pBe}%,#E5B863 ${pBe}%,#E5B863 ${pSc}%,#8FC49B ${pSc}%,#8FC49B 100%)">
+<div class="gauge-bar" style="background:linear-gradient(to right,#DD9280 0%,#DD9280 ${s1}%,#E5B863 ${s2}%,#E5B863 ${s3}%,#8FC49B ${s4}%,#8FC49B 100%)">
   <div class="g-marker" style="left:${pRo}%">
     <div class="g-marker-lbl" style="color:${mc};border-color:${mc}33;background:rgba(17,24,39,.85)">${x2(roas)}</div>
     <div class="g-marker-line" style="background:${mc};color:${mc}"></div>
   </div>
   <div class="g-tick" style="left:${pBe}%">
     <div class="g-tick-line"></div>
-    <div class="g-tick-val">${x2(be)}<br><span style="font-size:9px;color:#94a3b8">break-even</span></div>
+    <div class="g-tick-val">${x2(be)}<br><span class="g-tick-cap">break-even</span></div>
   </div>
   <div class="g-tick" style="left:${pSc}%">
     <div class="g-tick-line"></div>
-    <div class="g-tick-val">${x2(schaal)}<br><span style="font-size:9px;color:#94a3b8">12% doel</span></div>
+    <div class="g-tick-val">${x2(schaal)}<br><span class="g-tick-cap">12% doel</span></div>
   </div>
   <div class="g-tick" style="left:${pCo}%">
     <div class="g-tick-line"></div>
-    <div class="g-tick-val">${x2(comfy)}<br><span style="font-size:9px;color:#94a3b8">15% doel</span></div>
+    <div class="g-tick-val">${x2(comfy)}<br><span class="g-tick-cap">15% doel</span></div>
   </div>
 </div>
 <div style="position:relative;top:0;margin-top:58px;font-size:12px;color:#93A2B8;text-align:center">${gapNote}</div>`;
