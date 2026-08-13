@@ -47,7 +47,7 @@ body{background:
 .meta-info{font-size:12px;color:#64748b;margin-bottom:24px}
 
 /* ── Metrics row ── */
-.mrow{display:grid;grid-template-columns:1fr 1fr 1fr;background:rgba(255,255,255,.05);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden;margin-bottom:22px;box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.mrow{display:grid;grid-template-columns:1fr 1fr 1fr;background:linear-gradient(160deg,rgba(255,255,255,.09) 0%,rgba(255,255,255,.03) 100%);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);border:1px solid rgba(255,255,255,.14);border-radius:10px;overflow:hidden;margin-bottom:22px;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
 .mc{padding:14px 16px;border-right:1px solid rgba(255,255,255,.1);transition:background .15s ease}
 .mc:hover{background:rgba(255,255,255,.06)}
 .mc:last-child{border-right:none}
@@ -74,7 +74,7 @@ body{background:
 
 /* ── Accordion ── */
 .acc{display:flex;flex-direction:column;gap:4px}
-.acc-item{background:#111827;border:1px solid #1f2d45;border-radius:10px;overflow:hidden}
+.acc-item{background:linear-gradient(160deg,rgba(255,255,255,.09) 0%,rgba(255,255,255,.03) 100%);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);border:1px solid rgba(255,255,255,.14);border-radius:10px;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
 .acc-hd{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;cursor:pointer;user-select:none;font-size:14px;font-weight:500}
 .acc-hd:hover{background:rgba(255,255,255,.025)}
 .acc-chv{color:#64748b;font-size:18px;transition:transform .2s;line-height:1}
@@ -205,16 +205,15 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .analysis-row:last-child{margin-bottom:0}
 
 /* ── KPI strip ── */
-.kpi-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);border-radius:12px;overflow:hidden;margin-bottom:12px;backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%)}
-.kpi-item{padding:11px 12px;background:rgba(10,14,30,.35);min-width:0;transition:transform .15s ease,box-shadow .15s ease,background .15s ease;position:relative;z-index:1}
-.kpi-item:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.35);background:rgba(255,255,255,.08);z-index:2}
+.kpi-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:linear-gradient(160deg,rgba(255,255,255,.09) 0%,rgba(255,255,255,.03) 100%);border:1px solid rgba(255,255,255,.14);border-radius:12px;overflow:hidden;margin-bottom:12px;backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.kpi-item{padding:11px 12px;background:transparent;min-width:0;transition:transform .15s ease,box-shadow .15s ease,background .15s ease;position:relative;z-index:1}
+.kpi-item:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.35);background:rgba(255,255,255,.07);z-index:2}
 .kpi-lbl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#475569;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpi-val{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
 .kpi-sub{font-size:10px;color:#94a3b8;margin-top:1px}
 .kpi-item.good .kpi-val{color:#4ade80}
 .kpi-item.bad .kpi-val{color:#f87171}
 .kpi-item.warn .kpi-val{color:#fbbf24}
-.kpi-item.accent{background:#0e1f30}
 /* ── Period dropdown ── */
 .period-wrap{position:relative}
 .period-btn{display:flex;align-items:center;gap:8px;background:#141e33;border:1px solid #1f3050;color:#f1f5f9;font-size:13px;font-weight:500;padding:8px 12px;border-radius:8px;cursor:pointer;outline:none;white-space:nowrap}
@@ -1564,7 +1563,7 @@ function renderKpiBar(cx, ct, tg){
     {l:"Meta ROAS",     v:metaRoas!=null?x2(metaRoas):"—",    s:`BE ${x2(cx.be)}`,                       c:roasCls},
     {l:"CAC",           v:cac!=null?eur(cac):"—",             s:"per aankoop",                            c:""},
     {l:"Brutomarge",    v:metaBruto!=null?eur(metaBruto):"—", s:metaBruto!=null?`${(margePct*100).toFixed(1)}% op Meta omzet`:"geen data", c:brutoCls},
-    {l:"Nettomarge",    v:netMeta!=null?eur(netMeta):"—",     s:netMeta!=null?(netMeta>0?"na Meta spend":"verlies na Meta"):"geen spend",  c:netCls+" accent"},
+    {l:"Nettomarge",    v:netMeta!=null?eur(netMeta):"—",     s:netMeta!=null?(netMeta>0?"na Meta spend":"verlies na Meta"):"geen spend",  c:netCls},
   ];
   document.getElementById("kpiStrip").innerHTML =
     items.map(it=>`<div class="kpi-item${it.c}"><div class="kpi-lbl">${it.l}</div><div class="kpi-val">${it.v}</div><div class="kpi-sub">${it.s}</div></div>`).join("");
