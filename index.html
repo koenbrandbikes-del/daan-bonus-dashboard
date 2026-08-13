@@ -567,14 +567,20 @@ const KP = [
 ];
 
 /* Vaste kosten per product (inkoop + shipping naar NL + fulfilment) excl. BTW
-   Bron: LumeWorks_kostprijscalculatie_v2.xlsx rij 19 "Totale directe kostprijs"
+   Bron: Google Sheet "001 HoriVue - LumeWorks" · tab "Kostprijscalculatie" ·
+   rij "Totale directe kostprijs" (bijgehouden door Pim; dit is de live/volledige
+   sheet — de losse LumeWorks_kostprijscalculatie(_v2).xlsx-exports in Downloads
+   zijn een oudere, onvolledige snapshot met alleen Prime/Atlas/Titan).
+   Ontbreekt een SKU hier, dan toont de orderdetail-tabel geen kosten/marge voor
+   die order — check dan eerst deze sheet voor de ontbrekende kostprijs.
    Variabele kosten (Shopify 2% + overhead 4%) worden per order berekend in calcOrder */
 const ITEM_FIXED = {
-  "LumeWorks Prime":          43.80,
-  "LumeWorks Atlas":          67.74,
-  "LumeWorks Titan":          110.85,
-  "Projectiescherm 100 inch": 37.81,
-  "Pro stand":                20.66,
+  "LumeWorks Prime":                 43.80,
+  "LumeWorks Atlas":                 67.74,
+  "LumeWorks Titan":                 110.85,
+  "Projectiescherm 100 inch":        37.81,
+  "Pro stand":                       20.66,
+  "LumeWorks USB-C naar HDMI-kabel": 6.09,
 };
 const SHOPIFY_FEE = 0.02;
 const OVERHEAD_FEE = 0.04;
