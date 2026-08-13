@@ -574,6 +574,13 @@ const KP = [
    Ontbreekt een SKU hier, dan toont de orderdetail-tabel geen kosten/marge voor
    die order — check dan eerst deze sheet voor de ontbrekende kostprijs.
    Variabele kosten (Shopify 2% + overhead 4%) worden per order berekend in calcOrder */
+// Titels 1-op-1 overgenomen uit Shopify (search_products), niet de korte
+// kolomnamen uit de sheet — die verschillen soms net genoeg om de lookup
+// te missen (bv. "Prime travelcase" i.p.v. "Travelcase", "Schoonmaak kit"
+// met spatie i.p.v. "Schoonmaakkit").
+// De "+ Projectiescherm"-upsell-rijen in de sheet ("Upsell geen EAN") staan
+// er niet apart in: Shopify stuurt die als twee losse regelitems, die dan
+// allebei al hun eigen kostprijs hieronder hebben.
 const ITEM_FIXED = {
   "LumeWorks Prime":                 43.80,
   "LumeWorks Atlas":                 67.74,
@@ -581,6 +588,14 @@ const ITEM_FIXED = {
   "Projectiescherm 100 inch":        37.81,
   "Pro stand":                       20.66,
   "LumeWorks USB-C naar HDMI-kabel": 6.09,
+  "Mini stand":                      12.68,
+  "Prime travelcase":                10.80,
+  "Schoonmaak kit":                  4.95,
+  "Atlas afstandsbediening":         4.95,
+  "Titan afstandsbediening":         4.95,
+  "De complete Prime setup":         95.26,
+  "De complete Atlas setup":         114.80,
+  "De complete Titan setup":         159.82,
 };
 const SHOPIFY_FEE = 0.02;
 const OVERHEAD_FEE = 0.04;
