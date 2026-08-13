@@ -747,6 +747,10 @@ const x2   = v=>v.toFixed(2)+"×";
 const mo   = ["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
 const fmtS = s=>{const[,m,d]=s.split("-");return`${+d} ${mo[+m-1]}`};
 const fmtL = s=>{const[y,m,d]=s.split("-");return`${+d} ${mo[+m-1]} ${y}`};
+// Lokale datum -> "YYYY-MM-DD". Nooit toISOString() gebruiken na lokale
+// Date-arithmetiek (setDate e.d.): dat rondt via UTC af en schuift de datum
+// in Amsterdamse tijd (UTC+1/+2) een dag terug.
+const ymd  = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 
 function ordCalc(from,to){
   let oc=0,rev=0,rex=0,pro=0;
@@ -884,7 +888,7 @@ function calRender(){
   const fd=new Date(_cY,_cM,1).getDay();
   const off=(fd+6)%7;
   const dim=new Date(_cY,_cM+1,0).getDate();
-  const tod=new Date().toISOString().slice(0,10);
+  const tod=ymd(new Date());
   let h='<div class="cal-dow">M</div><div class="cal-dow">D</div><div class="cal-dow">W</div><div class="cal-dow">D</div><div class="cal-dow">V</div><div class="cal-dow">Z</div><div class="cal-dow">Z</div>';
   for(let i=0;i<off;i++)h+='<div></div>';
   for(let d=1;d<=dim;d++){
@@ -1063,6 +1067,20 @@ function render(){
     const px=ordCalc("2026-07-16","2026-07-31");
     px.be=shopifyBeroas("2026-07-16","2026-07-31");
     prevBon=bonCalc(px,prevCT).raw;
+  } else {
+    // Generieke vergelijking voor alle overige periodes (Gisteren, Vorige
+    // week, Juli, Volledige periode, custom range): dezelfde periodelengte
+    // direct ervóór, opgebouwd uit DAILY_META — dus alleen beschikbaar
+    // zolang die periode binnen het DAILY_META-bereik (v.a. 5 aug) valt.
+    ctDays=Math.floor((new Date(fxTo)-new Date(fxFrom))/86400000)+1;
+    const pTo=new Date(fxFrom+"T00:00:00"); pTo.setDate(pTo.getDate()-1);
+    const pFrom=new Date(pTo); pFrom.setDate(pFrom.getDate()-(ctDays-1));
+    const pFromS=ymd(pFrom), pToS=ymd(pTo);
+    const pc=tbCalcRange(pFromS,pToS);
+    if(pc){
+      prevCT=pc; prevDays=ctDays;
+      prevLabel=pFromS===pToS?fmtS(pFromS):`${fmtS(pFromS)}–${fmtS(pToS)}`;
+    }
   }
 
   /* card meta */
@@ -1350,7 +1368,7 @@ function simMonthRange(){
   start.setDate(start.getDate()+(mn-1)*SIM_MONTH_DAYS);
   const end=new Date(start);
   end.setDate(end.getDate()+SIM_MONTH_DAYS-1);
-  return {mn,from:start.toISOString().slice(0,10),to:end.toISOString().slice(0,10)};
+  return {mn,from:ymd(start),to:ymd(end)};
 }
 function simSpendEdit(){simSpendLocked=true;updateSim();}
 function updateSim(){
