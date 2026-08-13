@@ -9,7 +9,7 @@ Credentials in ~/.secrets/dashboard.env:
   SHOPIFY_STORE=lumeworksnl.myshopify.com
   SHOPIFY_ACCESS_TOKEN=...
 """
-import json, os, re, sys, requests
+import json, os, re, sys, time, requests
 import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -76,11 +76,20 @@ def meta_insights(start: datetime.date, end: datetime.date) -> dict:
         "level": "account",
         "access_token": META_TOKEN,
     }
-    try:
-        r = requests.get(url, params=params, timeout=20)
-        r.raise_for_status()
-    except requests.RequestException as e:
-        print(f"❌ Meta API fout ({start}–{end}): {e}")
+    last_err = None
+    for attempt, timeout in enumerate((20, 30, 45), start=1):
+        try:
+            r = requests.get(url, params=params, timeout=timeout)
+            r.raise_for_status()
+            last_err = None
+            break
+        except requests.RequestException as e:
+            last_err = e
+            print(f"⚠️  Meta API poging {attempt}/3 mislukt ({start}–{end}): {e}")
+            if attempt < 3:
+                time.sleep(3 * attempt)
+    if last_err is not None:
+        print(f"❌ Meta API fout ({start}–{end}) na 3 pogingen: {last_err}")
         sys.exit(1)
 
     rows = r.json().get("data", [])
