@@ -236,6 +236,36 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-sub{font-size:10px;color:#A6B3C4;margin-top:3px}
 .kpi-delta{font-weight:700}
 .kpi-compare-cap{font-size:10px;color:#7C8CA6;text-align:right;margin:-8px 2px 16px;min-height:14px}
+.kpi-item{cursor:pointer;transition:background .15s ease,box-shadow .2s ease}
+.kpi-item.chart-active{box-shadow:inset 0 0 0 1.5px rgba(20,166,241,.6);background:rgba(20,166,241,.06)}
+
+/* ── KPI tijdlijn-grafiek ── */
+.kpi-chart-wrap{display:none;background:linear-gradient(160deg,rgba(32,40,92,.58) 0%,rgba(18,24,60,.54) 100%);backdrop-filter:blur(28px) saturate(170%);-webkit-backdrop-filter:blur(28px) saturate(170%);border:1px solid rgba(255,255,255,.16);border-top-color:rgba(255,255,255,.3);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 20px 50px -14px rgba(4,6,20,.55),inset 0 1px 0 rgba(255,255,255,.14)}
+.kpi-chart-wrap.open{display:block}
+.kpi-chart-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.kpi-chart-title{font-size:13px;font-weight:700;color:#f1f5f9}
+.kpi-chart-sub{display:block;font-size:10px;font-weight:500;color:#93A2B8;margin-top:2px}
+.kpi-chart-gran{display:flex;gap:4px}
+.kpi-chart-gran-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#93A2B8;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;cursor:pointer;transition:all .15s}
+.kpi-chart-gran-btn:hover:not(:disabled){color:#f1f5f9;border-color:rgba(255,255,255,.2)}
+.kpi-chart-gran-btn.active{background:rgba(20,166,241,.16);border-color:rgba(20,166,241,.5);color:#f1f5f9}
+.kpi-chart-gran-btn:disabled{opacity:.35;cursor:default}
+.kpi-chart-legend{display:flex;gap:14px;margin-bottom:8px}
+.kpi-chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#cbd5e1}
+.kpi-chart-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.kpi-chart-svgwrap{position:relative}
+.kpi-chart-svg{width:100%;height:auto;display:block;overflow:visible}
+.kpi-chart-line{stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.kpi-chart-dot{transition:r .15s ease}
+.kpi-chart-grid{stroke:rgba(255,255,255,.08);stroke-width:1}
+.kpi-chart-zero{stroke:rgba(255,255,255,.22);stroke-width:1;stroke-dasharray:3 3}
+.kpi-chart-xlbl{fill:#7C8CA6;font-size:9px}
+.kpi-chart-ylbl{fill:#7C8CA6;font-size:9px}
+.kpi-chart-cross{stroke:rgba(255,255,255,.3);stroke-width:1;transition:opacity .15s ease;pointer-events:none}
+.kpi-chart-tooltip{position:absolute;top:8px;background:rgba(10,14,32,.95);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:8px 11px;font-size:11px;color:#cbd5e1;pointer-events:none;transition:opacity .15s ease;box-shadow:0 8px 24px rgba(0,0,0,.5);white-space:nowrap;z-index:5}
+.kpi-chart-tip-date{font-size:10px;color:#7C8CA6;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.kpi-chart-tip-row{display:flex;align-items:center;gap:6px;color:#f1f5f9}
+.kpi-chart-tip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .kpi-item.good .kpi-val{color:#8FC49B}
 .kpi-item.bad .kpi-val{color:#DD9280}
 .kpi-item.warn .kpi-val{color:#E5B863}
@@ -394,6 +424,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 <!-- KPI strip -->
 <div id="kpiStrip" class="kpi-strip"></div>
 <div id="kpiCompareCap" class="kpi-compare-cap"></div>
+<div id="kpiChartWrap" class="kpi-chart-wrap"></div>
 
 <!-- Main card -->
 <div class="card">
@@ -1667,18 +1698,210 @@ function renderKpiBar(cx, ct, tg, prevCt, prevCx, prevLabel){
   };
 
   const items = [
-    {l:"Meta spend",    v:ct?eur(metaSpend):"—",              s:ct?`${metaPurch} aankopen`:"geen data",   c:"",        d:delta(metaSpend,pSpend,true)},
-    {l:"Meta aankopen", v:ct?metaPurch:"—",                   s:"7d click + 1d view",                     c:"",        d:delta(metaPurch,pPurch,false)},
-    {l:"Meta omzet",    v:ct?eur(metaRev):"—",                s:"7d click + 1d view",                     c:"",        d:delta(metaRev,pRev,false)},
-    {l:"Meta ROAS",     v:metaRoas!=null?x2(metaRoas):"—",    s:`break-even ${x2(cx.be)}`,               c:roasCls,   d:delta(metaRoas,pRoas,false)},
-    {l:"CAC",           v:cac!=null?eur(cac):"—",             s:"per aankoop",                            c:"",        d:delta(cac,pCac,true)},
-    {l:"Brutomarge",    v:metaBruto!=null?eur(metaBruto):"—", s:metaBruto!=null?`${(margePct*100).toFixed(1)}% op Meta omzet`:"geen data", c:brutoCls, d:delta(metaBruto,pBruto,false)},
-    {l:"Nettomarge",    v:netMeta!=null?eur(netMeta):"—",     s:netMeta!=null?(netMeta>0?"na Meta spend":"verlies na Meta"):"geen spend",  c:netCls,   d:delta(netMeta,pNet,false)},
+    {k:"spend", l:"Meta spend",    v:ct?eur(metaSpend):"—",              s:ct?`${metaPurch} aankopen`:"geen data",   c:"",        d:delta(metaSpend,pSpend,true)},
+    {k:"purch", l:"Meta aankopen", v:ct?metaPurch:"—",                   s:"7d click + 1d view",                     c:"",        d:delta(metaPurch,pPurch,false)},
+    {k:"rev",   l:"Meta omzet",    v:ct?eur(metaRev):"—",                s:"7d click + 1d view",                     c:"",        d:delta(metaRev,pRev,false)},
+    {k:"roas",  l:"Meta ROAS",     v:metaRoas!=null?x2(metaRoas):"—",    s:`break-even ${x2(cx.be)}`,               c:roasCls,   d:delta(metaRoas,pRoas,false)},
+    {k:"cac",   l:"CAC",           v:cac!=null?eur(cac):"—",             s:"per aankoop",                            c:"",        d:delta(cac,pCac,true)},
+    {k:"bruto", l:"Brutomarge",    v:metaBruto!=null?eur(metaBruto):"—", s:metaBruto!=null?`${(margePct*100).toFixed(1)}% op Meta omzet`:"geen data", c:brutoCls, d:delta(metaBruto,pBruto,false)},
+    {k:"net",   l:"Nettomarge",    v:netMeta!=null?eur(netMeta):"—",     s:netMeta!=null?(netMeta>0?"na Meta spend":"verlies na Meta"):"geen spend",  c:netCls,   d:delta(netMeta,pNet,false)},
   ];
   document.getElementById("kpiStrip").innerHTML =
-    items.map(it=>`<div class="kpi-item${it.c}"><div class="kpi-lbl">${it.l}</div><div class="kpi-val">${it.v}</div><div class="kpi-sub">${it.s}${it.d}</div></div>`).join("");
+    items.map(it=>`<div class="kpi-item${it.c}${kpiChartSel.includes(it.k)?" chart-active":""}" data-kpi="${it.k}" onclick="toggleKpiChart('${it.k}')"><div class="kpi-lbl">${it.l}</div><div class="kpi-val">${it.v}</div><div class="kpi-sub">${it.s}${it.d}</div></div>`).join("");
   const cap=document.getElementById("kpiCompareCap");
   if(cap)cap.textContent=prevCt?`t.o.v. ${prevLabel}`:"";
+  renderKpiChart();
+}
+
+/* ═══ KPI TIJDLIJN-GRAFIEK ═══════════════════════════════════════════
+   Klik op een KPI-tegel → lijndiagram met de ontwikkeling sinds 5 aug
+   (start clean tracking). Tweede tegel erbij klikken toont een tweede
+   lijn, geïndexeerd op % verandering t.o.v. het startpunt — zo delen
+   twee metrics op compleet verschillende schalen (bv. ROAS × en CAC €)
+   toch één as, zonder een misleidende dubbele-as-grafiek. */
+const KPI_META = {
+  spend: {label:"Meta spend",    fmt:eur},
+  purch: {label:"Meta aankopen", fmt:v=>String(Math.round(v))},
+  rev:   {label:"Meta omzet",    fmt:eur},
+  roas:  {label:"Meta ROAS",     fmt:x2},
+  cac:   {label:"CAC",           fmt:eur},
+  bruto: {label:"Brutomarge",    fmt:eur},
+  net:   {label:"Nettomarge",    fmt:eur},
+};
+const KPI_CHART_COLORS = ["#14a6f1","#A78BFA"];
+let kpiChartSel = [];
+let kpiChartGran = "day";
+let _kpiDailyCache = null;
+
+function kpiDailySeries(){
+  if(_kpiDailyCache) return _kpiDailyCache;
+  _kpiDailyCache = DAILY_META.map(d=>{
+    const ox = ordCalc(d.d, d.d);
+    return {d:d.d, spend:d.spend, purch:d.purch, rev:d.rev7+d.rev1v, pro:ox.pro, shopRev:ox.rev};
+  });
+  return _kpiDailyCache;
+}
+
+function kpiDeriveMetrics(b){
+  const roas = b.spend>0 && b.rev>0 ? b.rev/b.spend : null;
+  const cac  = b.spend>0 && b.purch>0 ? b.spend/b.purch : null;
+  const margePct = b.shopRev>0 ? b.pro/b.shopRev : null;
+  const bruto = margePct!=null ? margePct*b.rev : null;
+  const net = bruto!=null ? bruto-b.spend : null;
+  return {roas,cac,bruto,net};
+}
+
+function kpiAggregate(gran){
+  const daily = kpiDailySeries();
+  if(gran==="day"){
+    return daily.map(x=>({key:x.d,label:fmtS(x.d),spend:x.spend,purch:x.purch,rev:x.rev,...kpiDeriveMetrics(x)}));
+  }
+  const buckets=new Map(), order=[];
+  for(const x of daily){
+    let key;
+    if(gran==="week"){
+      const dt=new Date(x.d+"T00:00:00");
+      dt.setDate(dt.getDate()-((dt.getDay()+6)%7));
+      key=ymd(dt);
+    } else {
+      key=x.d.slice(0,7);
+    }
+    if(!buckets.has(key)){buckets.set(key,{spend:0,purch:0,rev:0,pro:0,shopRev:0});order.push(key);}
+    const b=buckets.get(key);
+    b.spend+=x.spend;b.purch+=x.purch;b.rev+=x.rev;b.pro+=x.pro;b.shopRev+=x.shopRev;
+  }
+  return order.map(key=>{
+    const b=buckets.get(key);
+    const label = gran==="week" ? `wk ${fmtS(key)}` : `${mo[+key.slice(5,7)-1]} ${key.slice(0,4)}`;
+    return {key,label,spend:b.spend,purch:b.purch,rev:b.rev,...kpiDeriveMetrics(b)};
+  });
+}
+
+function toggleKpiChart(key){
+  const idx=kpiChartSel.indexOf(key);
+  if(idx>=0) kpiChartSel.splice(idx,1);
+  else{
+    if(kpiChartSel.length>=2) kpiChartSel.shift();
+    kpiChartSel.push(key);
+  }
+  document.querySelectorAll(".kpi-item").forEach(el=>el.classList.toggle("chart-active",kpiChartSel.includes(el.dataset.kpi)));
+  renderKpiChart();
+}
+
+function renderKpiChart(){
+  const wrap=document.getElementById("kpiChartWrap");
+  if(!wrap)return;
+  if(kpiChartSel.length===0){wrap.classList.remove("open");wrap.innerHTML="";return;}
+  wrap.classList.add("open");
+
+  const dual=kpiChartSel.length===2;
+  const data=kpiAggregate(kpiChartGran);
+  const n=data.length;
+  const dayN=kpiAggregate("day").length, weekN=kpiAggregate("week").length, monthN=kpiAggregate("month").length;
+
+  const series=kpiChartSel.map((key,i)=>({key,meta:KPI_META[key],color:KPI_CHART_COLORS[i],raw:data.map(d=>d[key])}));
+
+  // In dual-modus: indexeren op % verandering t.o.v. het eerste bekende
+  // punt, zodat twee metrics op totaal verschillende schalen (× en €)
+  // toch één gedeelde as kunnen delen — geen dubbele y-as.
+  const plot=series.map(s=>{
+    if(!dual) return {...s, vals:s.raw};
+    const base=s.raw.find(v=>v!=null && v!==0);
+    const vals=s.raw.map(v=>v==null||base==null?null:(v/base-1)*100);
+    return {...s, vals};
+  });
+
+  const W=680,H=220,padL=48,padR=14,padT=16,padB=30;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const xAt=i=>n<=1?padL+plotW/2:padL+(i/(n-1))*plotW;
+
+  const allVals=plot.flatMap(s=>s.vals.filter(v=>v!=null));
+  let yMin=Math.min(...allVals), yMax=Math.max(...allVals);
+  if(dual){ yMin=Math.min(yMin,0); yMax=Math.max(yMax,0); }
+  if(!isFinite(yMin)||!isFinite(yMax)){yMin=0;yMax=1;}
+  if(yMin===yMax){yMin-=1;yMax+=1;}
+  const pad=(yMax-yMin)*0.12;
+  yMin-=pad; yMax+=pad;
+  const yAt=v=>padT+plotH-((v-yMin)/(yMax-yMin))*plotH;
+
+  const fmtY = dual ? (v=>(v>=0?"+":"")+v.toFixed(0)+"%") : (series[0].meta.fmt);
+
+  const pathFor=vals=>{
+    let d="", open=false;
+    vals.forEach((v,i)=>{
+      if(v==null){open=false;return;}
+      const x=xAt(i),y=yAt(v);
+      d+=(open?"L":"M")+x.toFixed(1)+","+y.toFixed(1)+" ";
+      open=true;
+    });
+    return d.trim();
+  };
+  const dotsFor=(vals,color)=>vals.map((v,i)=>v==null?"":
+    `<circle class="kpi-chart-dot" cx="${xAt(i).toFixed(1)}" cy="${yAt(v).toFixed(1)}" r="2.6" fill="${color}" data-i="${i}"></circle>`).join("");
+
+  // x-as labels: max ~6, uitgedund bij veel punten
+  const step=Math.max(1,Math.ceil(n/6));
+  const xLabels=data.map((d,i)=>i%step===0||i===n-1?`<text class="kpi-chart-xlbl" x="${xAt(i).toFixed(1)}" y="${H-8}" text-anchor="middle">${d.label}</text>`:"").join("");
+
+  const yTicks=[yMin+pad,(yMin+yMax)/2,yMax-pad];
+  const yGrid=yTicks.map(v=>`<line class="kpi-chart-grid" x1="${padL}" x2="${W-padR}" y1="${yAt(v).toFixed(1)}" y2="${yAt(v).toFixed(1)}"></line><text class="kpi-chart-ylbl" x="${padL-8}" y="${(yAt(v)+3).toFixed(1)}" text-anchor="end">${fmtY(v)}</text>`).join("");
+  const zeroLine = dual ? `<line class="kpi-chart-zero" x1="${padL}" x2="${W-padR}" y1="${yAt(0).toFixed(1)}" y2="${yAt(0).toFixed(1)}"></line>` : "";
+
+  const lines=plot.map(s=>`<path class="kpi-chart-line" d="${pathFor(s.vals)}" stroke="${s.color}" fill="none"></path>${dotsFor(s.vals,s.color)}`).join("");
+
+  const legend = dual ? `<div class="kpi-chart-legend">${plot.map(s=>`<span class="kpi-chart-legend-item"><span class="kpi-chart-legend-dot" style="background:${s.color}"></span>${s.meta.label}</span>`).join("")}</div>` : "";
+
+  const granBtn=(g,l)=>{
+    const cnt=g==="day"?dayN:g==="week"?weekN:monthN;
+    const dis=cnt<2;
+    return `<button class="kpi-chart-gran-btn${kpiChartGran===g?" active":""}" ${dis?"disabled":""} onclick="kpiChartGran='${g}';renderKpiChart()">${l}</button>`;
+  };
+
+  wrap.innerHTML=`
+    <div class="kpi-chart-hd">
+      <div class="kpi-chart-title">${plot.map(s=>s.meta.label).join(" · ")}<span class="kpi-chart-sub">${dual?"geïndexeerd op % verandering":"sinds 5 aug"}</span></div>
+      <div class="kpi-chart-gran">${granBtn("day","Dag")}${granBtn("week","Week")}${granBtn("month","Maand")}</div>
+    </div>
+    ${legend}
+    <div class="kpi-chart-svgwrap" id="kpiChartSvgWrap">
+      <svg viewBox="0 0 ${W} ${H}" class="kpi-chart-svg" id="kpiChartSvg">
+        ${yGrid}${zeroLine}${lines}${xLabels}
+        <line class="kpi-chart-cross" id="kpiChartCross" x1="0" x2="0" y1="${padT}" y2="${H-padB}" style="opacity:0"></line>
+      </svg>
+      <div class="kpi-chart-tooltip" id="kpiChartTooltip" style="opacity:0"></div>
+    </div>`;
+
+  attachKpiChartHover(plot,data,xAt,padL,padR,W,H,padT,padB);
+}
+
+function attachKpiChartHover(plot,data,xAt,padL,padR,W,H,padT,padB){
+  const svgWrap=document.getElementById("kpiChartSvgWrap");
+  const svg=document.getElementById("kpiChartSvg");
+  const cross=document.getElementById("kpiChartCross");
+  const tip=document.getElementById("kpiChartTooltip");
+  if(!svgWrap||!svg)return;
+  const n=data.length;
+  svgWrap.onmousemove=(e)=>{
+    const r=svg.getBoundingClientRect();
+    const xSvg=((e.clientX-r.left)/r.width)*W;
+    let best=0,bestD=Infinity;
+    for(let i=0;i<n;i++){const dx=Math.abs(xAt(i)-xSvg);if(dx<bestD){bestD=dx;best=i;}}
+    const px=xAt(best);
+    cross.setAttribute("x1",px);cross.setAttribute("x2",px);cross.style.opacity="1";
+    const rows=plot.map(s=>{
+      const raw=s.raw[best];
+      return raw==null?"":`<div class="kpi-chart-tip-row"><span class="kpi-chart-tip-dot" style="background:${s.color}"></span>${s.meta.label}: <strong>${s.meta.fmt(raw)}</strong></div>`;
+    }).join("");
+    tip.innerHTML=`<div class="kpi-chart-tip-date">${data[best].label}</div>${rows}`;
+    tip.style.opacity="1";
+    const wrapR=svgWrap.getBoundingClientRect();
+    const px_screen=(px/W)*wrapR.width;
+    let left=px_screen+10;
+    if(left+150>wrapR.width) left=px_screen-160;
+    tip.style.left=Math.max(0,left)+"px";
+    tip.style.top="8px";
+  };
+  svgWrap.onmouseleave=()=>{cross.style.opacity="0";tip.style.opacity="0";};
 }
 
 /* ═══ FUNNEL CARD ════════════════════════════════════════════════════ */
