@@ -50,7 +50,7 @@ YEST    = TODAY - datetime.timedelta(days=1)
 DOW     = TODAY.weekday()                       # 0=ma … 6=zo
 WK_S    = TODAY - datetime.timedelta(days=DOW)  # maandag (nodig voor prevweek)
 CLEAN_S = datetime.date(2026, 8, 5)             # CAPI-fix datum
-WK_S_C  = max(TODAY - datetime.timedelta(days=6), CLEAN_S)  # rolling 7 dagen
+WK_S_C  = max(WK_S, CLEAN_S)                    # deze week = vanaf maandag, niet rollend
 PWK_E   = WK_S - datetime.timedelta(days=1)
 PWK_S   = PWK_E - datetime.timedelta(days=6)
 AUG_S   = datetime.date(2026, 8, 1)
