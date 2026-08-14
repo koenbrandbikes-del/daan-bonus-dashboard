@@ -261,6 +261,8 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-chart-be-lbl{fill:#E5B863;font-size:9px;font-weight:700}
 .kpi-chart-doel{stroke:#8FC49B;stroke-width:1;stroke-dasharray:4 3;opacity:.7}
 .kpi-chart-doel-lbl{fill:#8FC49B;font-size:9px;font-weight:700}
+.kpi-chart-comfy{stroke:#6FCFE0;stroke-width:1;stroke-dasharray:4 3;opacity:.7}
+.kpi-chart-comfy-lbl{fill:#6FCFE0;font-size:9px;font-weight:700}
 .kpi-chart-xlbl{fill:#7C8CA6;font-size:9px}
 .kpi-chart-ylbl{fill:#7C8CA6;font-size:9px}
 .kpi-chart-cross{stroke:rgba(255,255,255,.3);stroke-width:1;transition:opacity .15s ease;pointer-events:none}
@@ -1838,12 +1840,13 @@ function renderKpiChart(){
   const showZeroRef = !dual && kpiChartSel[0]==="net";
   const showBeRef = !dual && kpiChartSel[0]==="roas" && CX && CX.be;
   const doelRoas = showBeRef ? 1/(1/CX.be-SCALE_T) : null;
+  const comfyRoas = showBeRef ? 1/(1/CX.be-SCALE_H) : null;
 
   const allVals=plot.flatMap(s=>s.vals.filter(v=>v!=null));
   let yMin=Math.min(...allVals), yMax=Math.max(...allVals);
   if(dual){ yMin=Math.min(yMin,0); yMax=Math.max(yMax,0); }
   if(showZeroRef){ yMin=Math.min(yMin,0); yMax=Math.max(yMax,0); }
-  if(showBeRef){ yMin=Math.min(yMin,CX.be); yMax=Math.max(yMax,CX.be); yMin=Math.min(yMin,doelRoas); yMax=Math.max(yMax,doelRoas); }
+  if(showBeRef){ yMin=Math.min(yMin,CX.be,doelRoas,comfyRoas); yMax=Math.max(yMax,CX.be,doelRoas,comfyRoas); }
   if(!isFinite(yMin)||!isFinite(yMax)){yMin=0;yMax=1;}
   if(yMin===yMax){yMin-=1;yMax+=1;}
   const pad=(yMax-yMin)*0.12;
@@ -1894,8 +1897,19 @@ function renderKpiChart(){
       <path d="${areaD}" fill="#DD9280" fill-opacity=".32" clip-path="url(#kpiClipBelow)"></path>
       <line class="kpi-chart-zero" x1="${padL}" x2="${W-padR}" y1="${yZero.toFixed(1)}" y2="${yZero.toFixed(1)}"></line>`;
   }
-  const beRefLine = showBeRef ? `<line class="kpi-chart-be" x1="${padL}" x2="${W-padR}" y1="${yAt(CX.be).toFixed(1)}" y2="${yAt(CX.be).toFixed(1)}"></line><text class="kpi-chart-be-lbl" x="${W-padR}" y="${(yAt(CX.be)-4).toFixed(1)}" text-anchor="end">break-even ${x2(CX.be)}</text>` : "";
-  const doelRefLine = showBeRef ? `<line class="kpi-chart-doel" x1="${padL}" x2="${W-padR}" y1="${yAt(doelRoas).toFixed(1)}" y2="${yAt(doelRoas).toFixed(1)}"></line><text class="kpi-chart-doel-lbl" x="${W-padR}" y="${(yAt(doelRoas)-4).toFixed(1)}" text-anchor="end">doel ${x2(doelRoas)}</text>` : "";
+  // Labels iets uit elkaar duwen als de referentiewaarden dicht bij elkaar
+  // liggen, anders overlappen de teksten bij een smalle ROAS-marge.
+  const refPts=showBeRef?[
+    {v:CX.be,     cls:"be",    lbl:`break-even ${x2(CX.be)}`},
+    {v:doelRoas,  cls:"doel",  lbl:`doel ${x2(doelRoas)} · ${(SCALE_T*100).toFixed(0)}% nettomarge`},
+    {v:comfyRoas, cls:"comfy", lbl:`schaaldoel ${x2(comfyRoas)} · ${(SCALE_H*100).toFixed(0)}% nettomarge`},
+  ].sort((a,b)=>a.v-b.v):[];
+  refPts.forEach((p,i)=>{
+    const y=yAt(p.v);
+    p.labelY = i>0 && (refPts[i-1]._y-y)<12 ? refPts[i-1].labelY-12 : y-4;
+    p._y=y;
+  });
+  const refLines = refPts.map(p=>`<line class="kpi-chart-${p.cls}" x1="${padL}" x2="${W-padR}" y1="${p._y.toFixed(1)}" y2="${p._y.toFixed(1)}"></line><text class="kpi-chart-${p.cls}-lbl" x="${W-padR}" y="${p.labelY.toFixed(1)}" text-anchor="end">${p.lbl}</text>`).join("");
 
   const lines=plot.map(s=>`<path class="kpi-chart-line" d="${pathFor(s.vals)}" stroke="${s.color}" fill="none"></path>${dotsFor(s.vals,s.color)}`).join("");
 
@@ -1915,7 +1929,7 @@ function renderKpiChart(){
     ${legend}
     <div class="kpi-chart-svgwrap" id="kpiChartSvgWrap">
       <svg viewBox="0 0 ${W} ${H}" class="kpi-chart-svg" id="kpiChartSvg">
-        ${yGrid}${zeroLine}${zeroAreaFill}${beRefLine}${doelRefLine}${lines}${xLabels}
+        ${yGrid}${zeroLine}${zeroAreaFill}${refLines}${lines}${xLabels}
         <line class="kpi-chart-cross" id="kpiChartCross" x1="0" x2="0" y1="${padT}" y2="${H-padB}" style="opacity:0"></line>
       </svg>
       <div class="kpi-chart-tooltip" id="kpiChartTooltip" style="opacity:0"></div>
