@@ -1594,21 +1594,45 @@ let adsSortCol="spend", adsSortDir=-1; // -1 = aflopend, 1 = oplopend
 let _adsLastRaw=null, _adsLastBeroas=1.35;
 
 // Test/schaal-labels per advertentiegroep — handmatig ingesteld door de
-// gebruiker (klik op een rij), bewaard in localStorage zodat het na een
-// refresh blijft staan. Alleen spend/aankopen/omzet/ROAS/CAC zijn per label
-// te berekenen; brutomarge/nettomarge niet, want er is geen koppeling
-// tussen een Shopify-order en de advertentiegroep die 'm opleverde.
+// gebruiker (klik op een rij). Gedeeld tussen iedereen via een Google Sheet
+// (Apps Script als simpele REST-API); localStorage is alleen een snelle
+// lokale cache zodat het dashboard niet hoeft te wachten op het netwerk om
+// iets te tonen. Alleen spend/aankopen/omzet/ROAS/CAC zijn per label te
+// berekenen; brutomarge/nettomarge niet, want er is geen koppeling tussen
+// een Shopify-order en de advertentiegroep die 'm opleverde.
+const AD_TAGS_API="https://script.google.com/macros/s/AKfycbyBdPRaQldCK4AxaOODysbg76GjbeqAjXhHzI67ZYLTpD2uAYTbIUp9neBzhUJFeR-Rpg/exec";
 let AD_TAGS={};
 try{ AD_TAGS=JSON.parse(localStorage.getItem("daan_ad_tags")||"{}"); }catch(e){ AD_TAGS={}; }
-function saveAdTags(){ try{ localStorage.setItem("daan_ad_tags",JSON.stringify(AD_TAGS)); }catch(e){} }
+function saveAdTagsLocal(){ try{ localStorage.setItem("daan_ad_tags",JSON.stringify(AD_TAGS)); }catch(e){} }
+
+// Bij het laden: haal de gedeelde labels op uit het Sheet en herteken zodra
+// ze binnen zijn (de lokale cache heeft tot dan al iets zinnigs getoond).
+function loadAdTagsRemote(){
+  if(typeof fetch!=="function")return; // oude browser zonder fetch → lokale cache blijft leidend
+  try{
+    fetch(AD_TAGS_API).then(r=>r.json()).then(remote=>{
+      AD_TAGS=remote||{};
+      saveAdTagsLocal();
+      clearKpiSegCache();
+      if(_adsLastRaw) renderAds(_adsLastRaw,_adsLastBeroas);
+      renderKpiChart();
+    }).catch(()=>{}); // geen internet o.i.d. → gewoon de lokale cache laten staan
+  }catch(e){} // defensief: nooit de rest van de opstart blokkeren
+}
+
 function cycleAdTag(name){
   const cur=AD_TAGS[name];
   const next=cur==="test"?"schaal":cur==="schaal"?null:"test";
   if(next) AD_TAGS[name]=next; else delete AD_TAGS[name];
-  saveAdTags();
+  saveAdTagsLocal();
   clearKpiSegCache();
   renderAds(_adsLastRaw,_adsLastBeroas);
   renderKpiChart();
+  // Best-effort naar het gedeelde Sheet — text/plain voorkomt een CORS-
+  // preflight die Apps Script niet afhandelt; UI wacht er niet op.
+  if(typeof fetch==="function"){
+    try{ fetch(AD_TAGS_API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({name,tag:next})}).catch(()=>{}); }catch(e){}
+  }
 }
 const ADS_COLS=[
   {key:"n",    label:"Advertentiegroep", cls:""},
@@ -2398,6 +2422,7 @@ function tog(id){
 
 /* ═══ INIT ═══════════════════════════════════════════════════════ */
 render();
+loadAdTagsRemote();
 initFunnelCard();
 </script>
 </body>
