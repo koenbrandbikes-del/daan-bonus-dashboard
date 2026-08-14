@@ -238,7 +238,11 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-chart-wrap.open{display:block}
 .kpi-chart-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px;flex-wrap:wrap}
 .kpi-chart-title{font-size:13px;font-weight:700;color:#f1f5f9}
-.kpi-chart-sub{display:block;font-size:10px;font-weight:500;color:#93A2B8;margin-top:2px}
+.kpi-chart-sub{display:block;background:none;border:none;padding:0;font-size:10px;font-weight:500;color:#93A2B8;margin-top:2px;cursor:pointer;transition:color .15s ease;font-family:inherit}
+.kpi-chart-sub:hover{color:#4EA8DE}
+.kpi-chart-empty{font-size:12px;color:#93A2B8;padding:24px 4px;text-align:center;line-height:1.6}
+.kpi-chart-jump{background:rgba(78,168,222,.14);border:1px solid rgba(78,168,222,.4);color:#4EA8DE;font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;margin-top:6px}
+.kpi-chart-jump:hover{background:rgba(78,168,222,.22)}
 .kpi-chart-gran{display:flex;gap:4px}
 .kpi-chart-gran-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#93A2B8;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;cursor:pointer;transition:all .15s}
 .kpi-chart-gran-btn:hover:not(:disabled){color:#f1f5f9;border-color:rgba(255,255,255,.2)}
@@ -978,6 +982,19 @@ function togglePM(){
   if(opening)calRender();
 }
 document.addEventListener("click",()=>document.getElementById("periodMenu")?.classList.remove("open"));
+
+// Scrollt naar de periodekiezer bovenin en opent 'm — gebruikt door de
+// klikbare datumrange-tekst onder de KPI-grafiek, zodat je vanuit de
+// grafiek direct een andere periode kan kiezen i.p.v. te moeten scrollen.
+function jumpToPeriodSelector(){
+  const el=document.querySelector(".period-wrap");
+  if(!el)return;
+  el.scrollIntoView({behavior:"smooth",block:"center"});
+  setTimeout(()=>{
+    const m=document.getElementById("periodMenu");
+    if(m && !m.classList.contains("open")){m.classList.add("open");calRender();}
+  },350);
+}
 
 function selectP(v){
   if(!PERIODS[v])return;
@@ -1734,8 +1751,8 @@ function kpiDeriveMetrics(b){
   return {roas,cac,bruto,net};
 }
 
-function kpiAggregate(gran){
-  const daily = kpiDailySeries();
+function kpiAggregate(gran,from,to){
+  const daily = kpiDailySeries().filter(x=>(!from||x.d>=from)&&(!to||x.d<=to));
   if(gran==="day"){
     return daily.map(x=>({key:x.d,label:fmtS(x.d),spend:x.spend,purch:x.purch,rev:x.rev,...kpiDeriveMetrics(x)}));
   }
@@ -1777,10 +1794,27 @@ function renderKpiChart(){
   if(kpiChartSel.length===0){wrap.classList.remove("open");wrap.innerHTML="";return;}
   wrap.classList.add("open");
 
+  // Grafiek volgt de bovenin geselecteerde periode (net als de rest van
+  // het dashboard) i.p.v. altijd de volledige geschiedenis te tonen — zo
+  // blijft dit bruikbaar wanneer er straks maanden/jaren aan data staan.
+  const pd=PERIODS[P]||PERIODS.aug;
+  const rangeFrom=pd.from, rangeTo=pd.to;
+  const filteredDaily=kpiDailySeries().filter(x=>x.d>=rangeFrom && x.d<=rangeTo);
+
+  if(filteredDaily.length===0){
+    wrap.innerHTML=`
+      <div class="kpi-chart-hd">
+        <div class="kpi-chart-title">${kpiChartSel.map(k=>KPI_META[k].label).join(" · ")}</div>
+      </div>
+      <div class="kpi-chart-empty">Geen dagelijkse data beschikbaar voor de geselecteerde periode (${pd.label}). <button class="kpi-chart-jump" onclick="jumpToPeriodSelector()">Kies een andere periode ↑</button></div>`;
+    return;
+  }
+
   const dual=kpiChartSel.length===2;
-  const data=kpiAggregate(kpiChartGran);
+  const data=kpiAggregate(kpiChartGran,rangeFrom,rangeTo);
   const n=data.length;
-  const dayN=kpiAggregate("day").length, weekN=kpiAggregate("week").length, monthN=kpiAggregate("month").length;
+  const dayN=kpiAggregate("day",rangeFrom,rangeTo).length, weekN=kpiAggregate("week",rangeFrom,rangeTo).length, monthN=kpiAggregate("month",rangeFrom,rangeTo).length;
+  const actualFrom=filteredDaily[0].d, actualTo=filteredDaily[filteredDaily.length-1].d;
 
   const series=kpiChartSel.map((key,i)=>({key,meta:KPI_META[key],color:KPI_CHART_COLORS[i],raw:data.map(d=>d[key])}));
 
@@ -1875,7 +1909,7 @@ function renderKpiChart(){
 
   wrap.innerHTML=`
     <div class="kpi-chart-hd">
-      <div class="kpi-chart-title">${plot.map(s=>s.meta.label).join(" · ")}<span class="kpi-chart-sub">${dual?"geïndexeerd op % verandering":"sinds 5 aug"}</span></div>
+      <div class="kpi-chart-title">${plot.map(s=>s.meta.label).join(" · ")}<button class="kpi-chart-sub" onclick="jumpToPeriodSelector()" title="Kies een andere periode">${fmtS(actualFrom)} – ${fmtS(actualTo)}${dual?" · geïndexeerd op % verandering":""} ↑</button></div>
       <div class="kpi-chart-gran">${granBtn("day","Dag")}${granBtn("week","Week")}${granBtn("month","Maand")}</div>
     </div>
     ${legend}
