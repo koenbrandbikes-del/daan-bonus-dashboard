@@ -111,6 +111,22 @@ tr:last-child td{border-bottom:none}
 tbody tr:hover{background:rgba(255,255,255,.02)}
 .tot td{font-weight:700;background:rgba(96,165,250,.05);border-top:1px solid #1f2d45}
 
+/* ── Advertentiegroep test/schaal-labels ── */
+.ad-row{cursor:pointer;transition:background .15s ease}
+.ad-tag-badge{display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;letter-spacing:.04em;padding:2px 5px;border-radius:4px;margin-right:7px;vertical-align:middle;min-width:8px}
+.ad-tag-badge.test{background:rgba(167,139,250,.18);color:#C4B5FD}
+.ad-tag-badge.schaal{background:rgba(78,168,222,.18);color:#7CC3EE}
+.ad-tag-badge.empty{background:rgba(255,255,255,.06);color:#7C8CA6;width:14px;height:14px;padding:0;border-radius:50%}
+.ad-seg-summary{margin-bottom:12px}
+.ad-seg-hint{font-size:12px;color:#93A2B8;padding:10px 4px}
+.ad-seg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ad-seg-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px 14px}
+.ad-seg-card-hd{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.ad-seg-card-n{font-size:10px;color:#7C8CA6}
+.ad-seg-card-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.ad-seg-lbl{font-size:8px;color:#7C8CA6;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.ad-seg-val{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+
 /* ── Simulator ── */
 .sim-wrap{padding:18px 20px}
 .sim-wrap label{font-size:12px;color:#93A2B8;display:block;margin-bottom:8px}
@@ -248,6 +264,10 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-chart-gran-btn:hover:not(:disabled){color:#f1f5f9;border-color:rgba(255,255,255,.2)}
 .kpi-chart-gran-btn.active{background:rgba(20,166,241,.16);border-color:rgba(20,166,241,.5);color:#f1f5f9}
 .kpi-chart-gran-btn:disabled{opacity:.35;cursor:default}
+.kpi-chart-seg{display:flex;gap:4px;margin-bottom:10px}
+.kpi-chart-seg-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#93A2B8;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;cursor:pointer;transition:all .15s}
+.kpi-chart-seg-btn:hover{color:#f1f5f9;border-color:rgba(255,255,255,.2)}
+.kpi-chart-seg-btn.active{background:rgba(167,139,250,.16);border-color:rgba(167,139,250,.5);color:#f1f5f9}
 .kpi-chart-legend{display:flex;gap:14px;margin-bottom:8px}
 .kpi-chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#cbd5e1}
 .kpi-chart-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -377,6 +397,8 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
   .fc-steps{flex-wrap:nowrap;overflow-x:auto}
   .card-meta{flex-wrap:wrap;line-height:1.8}
   .gauge-bar .g-tick:last-child{display:none}
+  .ad-seg-grid{grid-template-columns:1fr}
+  .ad-seg-card-grid{grid-template-columns:repeat(3,1fr);row-gap:8px}
 }
 </style>
 </head>
@@ -461,7 +483,10 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 
   <div class="acc-item" id="acc-ads">
     <div class="acc-hd" onclick="tog('acc-ads')"><span id="adsHdr">Meta advertentiegroepen</span><span class="acc-chv">›</span></div>
-    <div class="acc-body"><div class="tscroll"><table id="adsTable"></table></div></div>
+    <div class="acc-body">
+      <div id="adSegSummary" class="ad-seg-summary"></div>
+      <div class="tscroll"><table id="adsTable"></table></div>
+    </div>
   </div>
 
 
@@ -1567,6 +1592,24 @@ function adsForRange(from,to){
 // her-sortering geen volledige page-render hoeft te triggeren.
 let adsSortCol="spend", adsSortDir=-1; // -1 = aflopend, 1 = oplopend
 let _adsLastRaw=null, _adsLastBeroas=1.35;
+
+// Test/schaal-labels per advertentiegroep — handmatig ingesteld door de
+// gebruiker (klik op een rij), bewaard in localStorage zodat het na een
+// refresh blijft staan. Alleen spend/aankopen/omzet/ROAS/CAC zijn per label
+// te berekenen; brutomarge/nettomarge niet, want er is geen koppeling
+// tussen een Shopify-order en de advertentiegroep die 'm opleverde.
+let AD_TAGS={};
+try{ AD_TAGS=JSON.parse(localStorage.getItem("daan_ad_tags")||"{}"); }catch(e){ AD_TAGS={}; }
+function saveAdTags(){ try{ localStorage.setItem("daan_ad_tags",JSON.stringify(AD_TAGS)); }catch(e){} }
+function cycleAdTag(name){
+  const cur=AD_TAGS[name];
+  const next=cur==="test"?"schaal":cur==="schaal"?null:"test";
+  if(next) AD_TAGS[name]=next; else delete AD_TAGS[name];
+  saveAdTags();
+  clearKpiSegCache();
+  renderAds(_adsLastRaw,_adsLastBeroas);
+  renderKpiChart();
+}
 const ADS_COLS=[
   {key:"n",    label:"Advertentiegroep", cls:""},
   {key:"spend",label:"Spend",            cls:"r"},
@@ -1627,10 +1670,13 @@ function renderAds(adsRaw, beroas){
     `<th class="${c.cls}" style="cursor:pointer;user-select:none" onclick="sortAds('${c.key}')">${c.label}${adsSortCol===c.key?` ${arrow(adsSortDir)}`:""}</th>`
   ).join("")+`</tr></thead><tbody>`;
 
+  const tagLbl={test:"TEST",schaal:"SCHAAL"};
   for(const r of rows){
     const roasColor=r.roas===0?"#DD9280":r.roas>=beroas?"#8FC49B":"#E5B863";
-    html+=`<tr>
-      <td>${r.n}</td>
+    const tag=AD_TAGS[r.n];
+    const badge=tag?`<span class="ad-tag-badge ${tag}">${tagLbl[tag]}</span>`:`<span class="ad-tag-badge empty">+</span>`;
+    html+=`<tr class="ad-row" onclick="cycleAdTag('${r.n.replace(/'/g,"\\'")}')" title="Klik om te labelen als test/schaal">
+      <td>${badge}${r.n}</td>
       <td class="r">${eur(r.spend)}</td>
       <td class="r" style="color:#93A2B8">${r.pct.toFixed(1)}%</td>
       <td class="r">${r.purch||"—"}</td>
@@ -1658,6 +1704,35 @@ function renderAds(adsRaw, beroas){
   </tr></tfoot>`;
 
   document.getElementById("adsTable").innerHTML=html;
+
+  // Samenvatting per label — alleen spend/aankopen/omzet/ROAS/CAC, want
+  // brutomarge/nettomarge is niet naar advertentiegroep te herleiden.
+  const segSum={test:{spend:0,purch:0,ri:0,n:0},schaal:{spend:0,purch:0,ri:0,n:0}};
+  for(const r of rows){
+    const tag=AD_TAGS[r.n];
+    if(!tag)continue;
+    const s=segSum[tag];
+    s.spend+=r.spend; s.purch+=r.purch; s.ri+=r.ri; s.n++;
+  }
+  const segEl=document.getElementById("adSegSummary");
+  if(!segSum.test.n && !segSum.schaal.n){
+    segEl.innerHTML=`<div class="ad-seg-hint">Nog geen groepen gelabeld — klik op een rij om te beginnen met test/schaal.</div>`;
+  } else {
+    const card=(label,cls,s)=>{
+      const roas=s.spend>0?s.ri/s.spend:0, cac=s.purch>0?s.spend/s.purch:0;
+      return `<div class="ad-seg-card ${cls}">
+        <div class="ad-seg-card-hd"><span class="ad-tag-badge ${cls}">${label}</span><span class="ad-seg-card-n">${s.n} groep${s.n===1?"":"en"}</span></div>
+        <div class="ad-seg-card-grid">
+          <div><div class="ad-seg-lbl">Spend</div><div class="ad-seg-val">${eur(s.spend)}</div></div>
+          <div><div class="ad-seg-lbl">Aankopen</div><div class="ad-seg-val">${s.purch||"—"}</div></div>
+          <div><div class="ad-seg-lbl">Omzet</div><div class="ad-seg-val">${s.ri>0?eur(s.ri):"—"}</div></div>
+          <div><div class="ad-seg-lbl">ROAS</div><div class="ad-seg-val">${roas>0?x2(roas):"—"}</div></div>
+          <div><div class="ad-seg-lbl">CAC</div><div class="ad-seg-val">${cac>0?eur(cac):"—"}</div></div>
+        </div>
+      </div>`;
+    };
+    segEl.innerHTML=`<div class="ad-seg-grid">${card("TEST","test",segSum.test)}${card("SCHAAL","schaal",segSum.schaal)}</div>`;
+  }
 }
 
 /* ═══ GA4 PERIOD MAP ════════════════════════════════════════════════ */
@@ -1733,6 +1808,7 @@ const KPI_META = {
 const KPI_CHART_COLORS = ["#4EA8DE","#4ECB71"];
 let kpiChartSel = [];
 let kpiChartGran = "day";
+let kpiChartSeg = "all"; // all | test | schaal — alleen relevant bij 1 metric, niet bruto/net
 let _kpiDailyCache = null;
 
 function kpiDailySeries(){
@@ -1744,6 +1820,24 @@ function kpiDailySeries(){
   return _kpiDailyCache;
 }
 
+// Dagreeks voor één label (test/schaal), opgebouwd uit DAILY_ADS i.p.v.
+// DAILY_META — telt alleen de advertentiegroepen met dat label op. Marge
+// blijft altijd null (pro/shopRev blijven 0): niet te herleiden per groep.
+const _kpiSegCache={};
+function kpiDailySeriesSegment(tag){
+  if(_kpiSegCache[tag]) return _kpiSegCache[tag];
+  _kpiSegCache[tag]=DAILY_ADS.map(day=>{
+    let spend=0,purch=0,rev=0;
+    for(const a of day.ads){
+      if(AD_TAGS[a.n]!==tag) continue;
+      spend+=a.spend; purch+=a.purch; rev+=a.rev7+a.rev1v;
+    }
+    return {d:day.d, spend, purch, rev, pro:0, shopRev:0};
+  });
+  return _kpiSegCache[tag];
+}
+function clearKpiSegCache(){ for(const k in _kpiSegCache) delete _kpiSegCache[k]; }
+
 function kpiDeriveMetrics(b){
   const roas = b.spend>0 && b.rev>0 ? b.rev/b.spend : null;
   const cac  = b.spend>0 && b.purch>0 ? b.spend/b.purch : null;
@@ -1753,8 +1847,9 @@ function kpiDeriveMetrics(b){
   return {roas,cac,bruto,net};
 }
 
-function kpiAggregate(gran,from,to){
-  const daily = kpiDailySeries().filter(x=>(!from||x.d>=from)&&(!to||x.d<=to));
+function kpiAggregate(gran,from,to,seg){
+  const source = (!seg||seg==="all") ? kpiDailySeries() : kpiDailySeriesSegment(seg);
+  const daily = source.filter(x=>(!from||x.d>=from)&&(!to||x.d<=to));
   if(gran==="day"){
     return daily.map(x=>({key:x.d,label:fmtS(x.d),spend:x.spend,purch:x.purch,rev:x.rev,...kpiDeriveMetrics(x)}));
   }
@@ -1801,21 +1896,28 @@ function renderKpiChart(){
   // blijft dit bruikbaar wanneer er straks maanden/jaren aan data staan.
   const pd=PERIODS[P]||PERIODS.aug;
   const rangeFrom=pd.from, rangeTo=pd.to;
-  const filteredDaily=kpiDailySeries().filter(x=>x.d>=rangeFrom && x.d<=rangeTo);
 
-  if(filteredDaily.length===0){
+  const dual=kpiChartSel.length===2;
+  const segAllowed=!dual && kpiChartSel[0]!=="bruto" && kpiChartSel[0]!=="net";
+  if(!segAllowed) kpiChartSeg="all";
+  const seg=segAllowed?kpiChartSeg:"all";
+
+  const dailySource = seg==="all" ? kpiDailySeries() : kpiDailySeriesSegment(seg);
+  const filteredDaily=dailySource.filter(x=>x.d>=rangeFrom && x.d<=rangeTo);
+
+  if(filteredDaily.length===0 || filteredDaily.every(x=>x.spend===0 && x.purch===0 && x.rev===0)){
+    const segNote = seg!=="all" ? ` (label "${seg==="test"?"Test":"Schaal"}")` : "";
     wrap.innerHTML=`
       <div class="kpi-chart-hd">
         <div class="kpi-chart-title">${kpiChartSel.map(k=>KPI_META[k].label).join(" · ")}</div>
       </div>
-      <div class="kpi-chart-empty">Geen dagelijkse data beschikbaar voor de geselecteerde periode (${pd.label}). <button class="kpi-chart-jump" onclick="jumpToPeriodSelector()">Kies een andere periode ↑</button></div>`;
+      <div class="kpi-chart-empty">Geen dagelijkse data beschikbaar voor de geselecteerde periode (${pd.label})${segNote}. <button class="kpi-chart-jump" onclick="jumpToPeriodSelector()">Kies een andere periode ↑</button></div>`;
     return;
   }
 
-  const dual=kpiChartSel.length===2;
-  const data=kpiAggregate(kpiChartGran,rangeFrom,rangeTo);
+  const data=kpiAggregate(kpiChartGran,rangeFrom,rangeTo,seg);
   const n=data.length;
-  const dayN=kpiAggregate("day",rangeFrom,rangeTo).length, weekN=kpiAggregate("week",rangeFrom,rangeTo).length, monthN=kpiAggregate("month",rangeFrom,rangeTo).length;
+  const dayN=kpiAggregate("day",rangeFrom,rangeTo,seg).length, weekN=kpiAggregate("week",rangeFrom,rangeTo,seg).length, monthN=kpiAggregate("month",rangeFrom,rangeTo,seg).length;
   const actualFrom=filteredDaily[0].d, actualTo=filteredDaily[filteredDaily.length-1].d;
 
   const series=kpiChartSel.map((key,i)=>({key,meta:KPI_META[key],color:KPI_CHART_COLORS[i],raw:data.map(d=>d[key])}));
@@ -1920,12 +2022,15 @@ function renderKpiChart(){
     const dis=cnt<2;
     return `<button class="kpi-chart-gran-btn${kpiChartGran===g?" active":""}" ${dis?"disabled":""} onclick="kpiChartGran='${g}';renderKpiChart()">${l}</button>`;
   };
+  const segBtn=(s,l)=>`<button class="kpi-chart-seg-btn${kpiChartSeg===s?" active":""}" onclick="kpiChartSeg='${s}';renderKpiChart()">${l}</button>`;
+  const segToggle = segAllowed ? `<div class="kpi-chart-seg">${segBtn("all","Alle")}${segBtn("test","Test")}${segBtn("schaal","Schaal")}</div>` : "";
 
   wrap.innerHTML=`
     <div class="kpi-chart-hd">
-      <div class="kpi-chart-title">${plot.map(s=>s.meta.label).join(" · ")}<button class="kpi-chart-sub" onclick="jumpToPeriodSelector()" title="Kies een andere periode">${fmtS(actualFrom)} – ${fmtS(actualTo)}${dual?" · geïndexeerd op % verandering":""} ↑</button></div>
+      <div class="kpi-chart-title">${plot.map(s=>s.meta.label).join(" · ")}<button class="kpi-chart-sub" onclick="jumpToPeriodSelector()" title="Kies een andere periode">${fmtS(actualFrom)} – ${fmtS(actualTo)}${dual?" · geïndexeerd op % verandering":""}${seg!=="all"?` · label: ${seg==="test"?"Test":"Schaal"}`:""} ↑</button></div>
       <div class="kpi-chart-gran">${granBtn("day","Dag")}${granBtn("week","Week")}${granBtn("month","Maand")}</div>
     </div>
+    ${segToggle}
     ${legend}
     <div class="kpi-chart-svgwrap" id="kpiChartSvgWrap">
       <svg viewBox="0 0 ${W} ${H}" class="kpi-chart-svg" id="kpiChartSvg">
