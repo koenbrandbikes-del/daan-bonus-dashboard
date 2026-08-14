@@ -652,7 +652,7 @@ const GA4 = {
 
 /* ═══ DATA ═══════════════════════════════════════════════════════ */
 const SNAP = "2026-08-14";
-const SNAP_TIME = "21:10";
+const SNAP_TIME = "22:10";
 const TB_ONBOARD  = "2026-07-20";
 const BONUS_PCT   = 0.10;
 const BTW         = 1.21;
@@ -686,14 +686,14 @@ const ROWS = [
 ];
 
 // Dagelijkse & wekelijkse TB data — opgehaald via TrackBee Campaign Insights API
-const TB_VANDAAG = {from:"2026-08-14",to:"2026-08-14",spend:167.35,rev7:0.0,rev1v:0.0,purch:0,impr:24263,cl:558};
-const TB_GISTEREN = {from:"2026-08-13",to:"2026-08-13",spend:196.66,rev7:596.0,rev1v:239.0,purch:5,impr:22529,cl:435};
-const TB_WEEK = {from:"2026-08-10",to:"2026-08-14",spend:998.36,rev7:2037.0,rev1v:239.0,purch:15,impr:117650,cl:2474};
+const TB_VANDAAG = {from:"2026-08-14",to:"2026-08-14",spend:177.19,rev7:0.0,rev1v:0.0,purch:0,impr:25971,cl:598};
+const TB_GISTEREN = {from:"2026-08-13",to:"2026-08-13",spend:196.68,rev7:596.0,rev1v:239.0,purch:5,impr:22530,cl:435};
+const TB_WEEK = {from:"2026-08-10",to:"2026-08-14",spend:1008.22,rev7:2037.0,rev1v:239.0,purch:15,impr:119359,cl:2514};
 const TB_PREVWEEK = {from:"2026-08-03",to:"2026-08-09",spend:2411.44,rev7:3051.2,rev1v:298.0,purch:21,impr:347513,cl:6348};
 // TB_JUL: Platform Summary cijfers (volledige juli, betrouwbaarder dan skill API)
 const TB_JUL = {from:"2026-07-01",to:"2026-07-31",spend:4030.15,rev7:8787.00,rev1v:0,purch:32,impr:202988,cl:2847};
 // Betrouwbare data: CAPI Gateway extra uit per 5 aug → geen dubbele aankopen meer
-const TB_AUG_CLEAN = {from:"2026-08-05",to:"2026-08-14",spend:3145.03,rev7:5088.2,rev1v:537.0,purch:36,impr:428350,cl:8362};
+const TB_AUG_CLEAN = {from:"2026-08-05",to:"2026-08-14",spend:3154.89,rev7:5088.2,rev1v:537.0,purch:36,impr:430059,cl:8402};
 
 // Dagelijkse Meta data — auto-updated door cloud agent. Gebruikt voor custom datumranges.
 const DAILY_META = [
@@ -705,8 +705,8 @@ const DAILY_META = [
   {d:"2026-08-10",spend:268.27,rev7:596.0,rev1v:0.0,purch:4,impr:29788,cl:644},
   {d:"2026-08-11",spend:180.04,rev7:149.0,rev1v:0.0,purch:1,impr:20798,cl:486},
   {d:"2026-08-12",spend:186.04,rev7:696.0,rev1v:0.0,purch:5,impr:20272,cl:351},
-  {d:"2026-08-13",spend:196.66,rev7:596.0,rev1v:239.0,purch:5,impr:22529,cl:435},
-  {d:"2026-08-14",spend:167.35,rev7:0.0,rev1v:0.0,purch:0,impr:24263,cl:558}
+  {d:"2026-08-13",spend:196.68,rev7:596.0,rev1v:239.0,purch:5,impr:22530,cl:435},
+  {d:"2026-08-14",spend:177.19,rev7:0.0,rev1v:0.0,purch:0,impr:25971,cl:598}
 ];
 
 // Dagelijkse Meta data per advertentiegroep — auto-updated door cloud agent.
@@ -721,8 +721,8 @@ const DAILY_ADS = [
   {d:"2026-08-10",ads:[{n:"002_004",spend:60.98,rev7:0.0,rev1v:0.0,purch:0,ctr:3.38,cpc:0.26,atc:2},{n:"006_002",spend:48.02,rev7:0.0,rev1v:0.0,purch:0,ctr:1.26,cpc:0.68,atc:1},{n:"001_002",spend:41.81,rev7:447.0,rev1v:0.0,purch:3,ctr:1.96,cpc:0.6,atc:6},{n:"006_002 - New Size",spend:30.67,rev7:149.0,rev1v:0.0,purch:1,ctr:1.79,cpc:0.49,atc:2},{n:"002-003",spend:22.97,rev7:0.0,rev1v:0.0,purch:0,ctr:1.38,cpc:0.85,atc:1},{n:"003_004 - annemarie",spend:9.55,rev7:0.0,rev1v:0.0,purch:0,ctr:3.09,cpc:0.27,atc:0},{n:"004_004",spend:8.88,rev7:0.0,rev1v:0.0,purch:0,ctr:3.18,cpc:0.32,atc:0},{n:"003_001",spend:5.83,rev7:0.0,rev1v:0.0,purch:0,ctr:1.02,cpc:1.94,atc:0},{n:"005_004 - static 2",spend:5.66,rev7:0.0,rev1v:0.0,purch:0,ctr:1.81,cpc:0.35,atc:0},{n:"007_003",spend:5.49,rev7:0.0,rev1v:0.0,purch:0,ctr:2.35,cpc:0.39,atc:0},{n:"006_004 - static",spend:5.31,rev7:0.0,rev1v:0.0,purch:0,ctr:1.17,cpc:0.48,atc:0},{n:"012_003",spend:5.11,rev7:0.0,rev1v:0.0,purch:0,ctr:0.4,cpc:2.56,atc:0},{n:"007_002",spend:4.89,rev7:0.0,rev1v:0.0,purch:0,ctr:0.84,cpc:0.98,atc:0},{n:"004_003",spend:2.78,rev7:0.0,rev1v:0.0,purch:0,ctr:2.01,cpc:0.15,atc:0},{n:"001_003",spend:2.21,rev7:0.0,rev1v:0.0,purch:0,ctr:4.23,cpc:0.07,atc:0},{n:"006_003",spend:1.87,rev7:0.0,rev1v:0.0,purch:0,ctr:3.05,cpc:0.37,atc:0},{n:"008_003",spend:1.75,rev7:0.0,rev1v:0.0,purch:0,ctr:2.09,cpc:0.35,atc:0},{n:"010-003",spend:1.71,rev7:0.0,rev1v:0.0,purch:0,ctr:1.79,cpc:0.85,atc:0},{n:"003_003 - Stephanie",spend:1.41,rev7:0.0,rev1v:0.0,purch:0,ctr:1.59,cpc:0.47,atc:0},{n:"005-003 - Copy",spend:1.37,rev7:0.0,rev1v:0.0,purch:0,ctr:2.92,cpc:0.34,atc:0}]},
   {d:"2026-08-11",ads:[{n:"002_004",spend:53.84,rev7:0.0,rev1v:0.0,purch:0,ctr:3.84,cpc:0.18,atc:1},{n:"006_002",spend:41.09,rev7:149.0,rev1v:0.0,purch:1,ctr:1.32,cpc:0.58,atc:1},{n:"001_002",spend:34.61,rev7:0.0,rev1v:0.0,purch:0,ctr:2.59,cpc:0.47,atc:1},{n:"002-003",spend:29.43,rev7:0.0,rev1v:0.0,purch:0,ctr:0.83,cpc:1.47,atc:2},{n:"006_002 - New Size",spend:21.07,rev7:0.0,rev1v:0.0,purch:0,ctr:0.97,cpc:0.92,atc:0},{n:"007_003",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0},{n:"006_003",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0},{n:"003_004 - annemarie",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0}]},
   {d:"2026-08-12",ads:[{n:"001_002",spend:50.73,rev7:298.0,rev1v:0.0,purch:2,ctr:1.88,cpc:0.65,atc:2},{n:"006_002",spend:42.99,rev7:0.0,rev1v:0.0,purch:0,ctr:1.05,cpc:0.74,atc:2},{n:"002_004",spend:40.05,rev7:159.0,rev1v:0.0,purch:1,ctr:3.32,cpc:0.25,atc:2},{n:"006_002 - New Size",spend:27.94,rev7:239.0,rev1v:0.0,purch:2,ctr:1.24,cpc:0.72,atc:1},{n:"002-003",spend:24.33,rev7:0.0,rev1v:0.0,purch:0,ctr:0.61,cpc:1.52,atc:0},{n:"007_003",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0},{n:"003_004 - annemarie",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0}]},
-  {d:"2026-08-13",ads:[{n:"001_002",spend:65.75,rev7:149.0,rev1v:0.0,purch:1,ctr:1.84,cpc:0.61,atc:3},{n:"002_004",spend:38.77,rev7:298.0,rev1v:0.0,purch:2,ctr:3.75,cpc:0.24,atc:1},{n:"006_002",spend:35.33,rev7:0.0,rev1v:0.0,purch:0,ctr:1.08,cpc:0.68,atc:0},{n:"006_002 - New Size",spend:27.27,rev7:149.0,rev1v:0.0,purch:1,ctr:1.27,cpc:0.63,atc:1},{n:"002-003",spend:18.73,rev7:0.0,rev1v:239.0,purch:1,ctr:0.62,cpc:1.44,atc:2},{n:"004_003",spend:10.81,rev7:0.0,rev1v:0.0,purch:0,ctr:2.76,cpc:0.19,atc:0},{n:"007_003",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0}]},
-  {d:"2026-08-14",ads:[{n:"001_002",spend:44.67,rev7:0.0,rev1v:0.0,purch:0,ctr:2.25,cpc:0.49,atc:0},{n:"004_003",spend:34.49,rev7:0.0,rev1v:0.0,purch:0,ctr:2.44,cpc:0.15,atc:5},{n:"002_004",spend:32.21,rev7:0.0,rev1v:0.0,purch:0,ctr:4.2,cpc:0.21,atc:3},{n:"006_002",spend:27.98,rev7:0.0,rev1v:0.0,purch:0,ctr:1.05,cpc:0.78,atc:0},{n:"006_002 - New Size",spend:21.15,rev7:0.0,rev1v:0.0,purch:0,ctr:1.53,cpc:0.52,atc:1},{n:"002-003",spend:6.85,rev7:0.0,rev1v:0.0,purch:0,ctr:0.85,cpc:0.69,atc:0},{n:"007_003",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0},{n:"003_004 - annemarie",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0}]}
+  {d:"2026-08-13",ads:[{n:"001_002",spend:65.75,rev7:149.0,rev1v:0.0,purch:1,ctr:1.84,cpc:0.61,atc:3},{n:"002_004",spend:38.79,rev7:298.0,rev1v:0.0,purch:2,ctr:3.75,cpc:0.24,atc:1},{n:"006_002",spend:35.33,rev7:0.0,rev1v:0.0,purch:0,ctr:1.08,cpc:0.68,atc:0},{n:"006_002 - New Size",spend:27.27,rev7:149.0,rev1v:0.0,purch:1,ctr:1.27,cpc:0.63,atc:1},{n:"002-003",spend:18.73,rev7:0.0,rev1v:239.0,purch:1,ctr:0.62,cpc:1.44,atc:2},{n:"004_003",spend:10.81,rev7:0.0,rev1v:0.0,purch:0,ctr:2.76,cpc:0.19,atc:0},{n:"007_003",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0}]},
+  {d:"2026-08-14",ads:[{n:"001_002",spend:47.09,rev7:0.0,rev1v:0.0,purch:0,ctr:2.33,cpc:0.47,atc:0},{n:"004_003",spend:36.76,rev7:0.0,rev1v:0.0,purch:0,ctr:2.4,cpc:0.15,atc:5},{n:"002_004",spend:33.4,rev7:0.0,rev1v:0.0,purch:0,ctr:4.1,cpc:0.21,atc:3},{n:"006_002",spend:30.04,rev7:0.0,rev1v:0.0,purch:0,ctr:1.12,cpc:0.73,atc:0},{n:"006_002 - New Size",spend:22.99,rev7:0.0,rev1v:0.0,purch:0,ctr:1.58,cpc:0.51,atc:1},{n:"002-003",spend:7.21,rev7:0.0,rev1v:0.0,purch:0,ctr:0.88,cpc:0.66,atc:0},{n:"007_003",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0},{n:"003_004 - annemarie",spend:0.0,rev7:0.0,rev1v:0.0,purch:0,ctr:0.0,cpc:0.0,atc:0}]}
 ];
 
 // Google Ads data — TrackBee Google Campaign Insights (account 7645288282)
@@ -2177,26 +2177,24 @@ function renderRoasChart(wrap){
   const xAt=i=>n<=1?padL+plotW/2:padL+(i/(n-1))*plotW;
   const barW=Math.max(3,Math.min(18,(plotW/n)*0.55));
 
+  // Slechts 2 referentiewaarden i.p.v. 3 — break-even + doel — anders staan
+  // de stippellijnen te dicht op elkaar bij een smalle ROAS-marge.
   const showBeRef=CX && CX.be;
   const doelRoas=showBeRef?1/(1/CX.be-SCALE_T):null;
-  const comfyRoas=showBeRef?1/(1/CX.be-SCALE_H):null;
   const allRoasVals=[...data.map(x=>x.roas),...roas3].filter(v=>v!=null);
   let yMin=Math.min(...allRoasVals), yMax=Math.max(...allRoasVals);
-  if(showBeRef){ yMin=Math.min(yMin,CX.be,doelRoas,comfyRoas); yMax=Math.max(yMax,CX.be,doelRoas,comfyRoas); }
+  if(showBeRef){ yMin=Math.min(yMin,CX.be,doelRoas); yMax=Math.max(yMax,CX.be,doelRoas); }
   if(!isFinite(yMin)||!isFinite(yMax)){yMin=0;yMax=1;}
   if(yMin===yMax){yMin-=1;yMax+=1;}
   const ypad=(yMax-yMin)*0.12; yMin-=ypad; yMax+=ypad;
   const yAt=v=>roasTop+roasH-((v-yMin)/(yMax-yMin))*roasH;
 
+  // Verbindt alleen de dagen mét data rechtstreeks met elkaar — een dag
+  // zonder spend/omzet voor het gekozen segment wordt overgeslagen i.p.v.
+  // een verwarrend "los zwevend" lijnstukje te tekenen.
   const pathFor=vals=>{
-    let d="",open=false;
-    vals.forEach((v,i)=>{
-      if(v==null){open=false;return;}
-      const x=xAt(i),y=yAt(v);
-      d+=(open?"L":"M")+x.toFixed(1)+","+y.toFixed(1)+" ";
-      open=true;
-    });
-    return d.trim();
+    const pts=vals.map((v,i)=>v==null?null:[xAt(i),yAt(v)]).filter(Boolean);
+    return pts.map((p,i)=>(i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
   };
   const dotsFor=(vals,color,r)=>vals.map((v,i)=>v==null?"":
     `<circle class="kpi-chart-dot" cx="${xAt(i).toFixed(1)}" cy="${yAt(v).toFixed(1)}" r="${r}" fill="${color}" data-i="${i}"></circle>`).join("");
@@ -2209,12 +2207,11 @@ function renderRoasChart(wrap){
 
   const refPts=showBeRef?[
     {v:CX.be,cls:"be",lbl:`break-even ${x2(CX.be)}`},
-    {v:doelRoas,cls:"doel",lbl:`doel ${x2(doelRoas)} · ${(SCALE_T*100).toFixed(0)}% nettomarge`},
-    {v:comfyRoas,cls:"comfy",lbl:`schaaldoel ${x2(comfyRoas)} · ${(SCALE_H*100).toFixed(0)}% nettomarge`},
+    {v:doelRoas,cls:"doel",lbl:`doel ${x2(doelRoas)}`},
   ].sort((a,b)=>a.v-b.v):[];
   refPts.forEach((p,i)=>{
     const y=yAt(p.v);
-    p.labelY=i>0 && (refPts[i-1]._y-y)<12 ? refPts[i-1].labelY-12 : y-4;
+    p.labelY=i>0 && (refPts[i-1]._y-y)<14 ? refPts[i-1].labelY-14 : y-4;
     p._y=y;
   });
   const refLines=refPts.map(p=>`<line class="kpi-chart-${p.cls}" x1="${padL}" x2="${W-padR}" y1="${p._y.toFixed(1)}" y2="${p._y.toFixed(1)}"></line><text class="kpi-chart-${p.cls}-lbl" x="${W-padR}" y="${p.labelY.toFixed(1)}" text-anchor="end">${p.lbl}</text>`).join("");
@@ -2224,10 +2221,14 @@ function renderRoasChart(wrap){
     const h=(x.purch/maxPurch)*barAreaH;
     return `<rect class="kpi-chart-purchbar" x="${(xAt(i)-barW/2).toFixed(1)}" y="${(barBot-h).toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(1,h).toFixed(1)}" rx="1.5" data-i="${i}"></rect>`;
   }).join("");
-  const barAxisLbl=`<text class="kpi-chart-ylbl" x="${padL-8}" y="${(barBot+3).toFixed(1)}" text-anchor="end">0</text><text class="kpi-chart-ylbl" x="${padL-8}" y="${(barTop+3).toFixed(1)}" text-anchor="end">${maxPurch}</text>`;
+  const barBg=`<rect x="${padL}" y="${barTop}" width="${plotW}" height="${barAreaH}" fill="rgba(255,255,255,.02)" rx="4"></rect>`;
+  const barAxisLbl=`<text class="kpi-chart-ylbl" x="${padL-8}" y="${(barBot+3).toFixed(1)}" text-anchor="end">0</text><text class="kpi-chart-ylbl" x="${padL-8}" y="${(barTop+8).toFixed(1)}" text-anchor="end">${maxPurch}</text>`;
 
-  const roasLine=`<path class="kpi-chart-line" d="${pathFor(data.map(x=>x.roas))}" stroke="#4EA8DE" fill="none"></path>${dotsFor(data.map(x=>x.roas),"#4EA8DE",2)}`;
-  const roas3Line=`<path class="kpi-chart-line-thick" d="${pathFor(roas3)}" stroke="#93C5F5" fill="none"></path>`;
+  // Dag-ROAS: alleen stippen (geen verbindende lijn) — de 3-daagse lijn is
+  // de enige doorlopende trendlijn, dat voorkomt twee elkaar overlappende
+  // lijnen die moeilijk uit elkaar te houden zijn.
+  const roasDots=dotsFor(data.map(x=>x.roas),"#4EA8DE",2.6);
+  const roas3Line=`<path class="kpi-chart-line-thick" d="${pathFor(roas3)}" stroke="#4EA8DE" fill="none"></path>`;
 
   wrap.innerHTML=`
     <div class="kpi-chart-hd">
@@ -2235,13 +2236,13 @@ function renderRoasChart(wrap){
     </div>
     ${segToggle}
     <div class="kpi-chart-legend">
-      <span class="kpi-chart-legend-item"><span class="kpi-chart-legend-dot" style="background:#4EA8DE"></span>Dag-ROAS</span>
-      <span class="kpi-chart-legend-item"><span class="kpi-chart-legend-line" style="background:#93C5F5"></span>3-daags gewogen ROAS</span>
+      <span class="kpi-chart-legend-item"><span class="kpi-chart-legend-line" style="background:#4EA8DE"></span>3-daags gewogen ROAS</span>
+      <span class="kpi-chart-legend-item"><span class="kpi-chart-legend-dot" style="background:#4EA8DE;opacity:.6"></span>Dag-ROAS</span>
       <span class="kpi-chart-legend-item"><span class="kpi-chart-legend-bar"></span>Aankopen</span>
     </div>
     <div class="kpi-chart-svgwrap" id="kpiChartSvgWrap">
       <svg viewBox="0 0 ${W} ${H}" class="kpi-chart-svg" id="kpiChartSvg">
-        ${yGrid}${refLines}${bars}${barAxisLbl}${roas3Line}${roasLine}${xLabels}
+        ${yGrid}${refLines}${barBg}${bars}${barAxisLbl}${roas3Line}${roasDots}${xLabels}
         <line class="kpi-chart-cross" id="kpiChartCross" x1="0" x2="0" y1="${padT}" y2="${barBot}" style="opacity:0"></line>
       </svg>
       <div class="kpi-chart-tooltip" id="kpiChartTooltip" style="opacity:0"></div>
