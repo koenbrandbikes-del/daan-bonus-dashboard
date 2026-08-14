@@ -190,9 +190,10 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 
 /* ── Footer ── */
 .footer{text-align:center;padding:16px 20px 4px;display:flex;align-items:center;justify-content:center}
-.footer-pill{display:inline-flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:5px 7px;font-size:11px;color:#cbd5e1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);padding:6px 14px;border-radius:14px;backdrop-filter:blur(8px);max-width:100%}
-.footer-line{white-space:nowrap}
-.footer-sep{color:#7C8CA6}
+.footer-pill{display:inline-flex;flex-direction:column;align-items:flex-start;gap:4px;font-size:11px;color:#cbd5e1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);padding:9px 16px;border-radius:14px;backdrop-filter:blur(8px);max-width:100%}
+.footer-line{white-space:nowrap;display:flex;align-items:center;gap:6px}
+.footer-line-main{font-weight:700;color:#f1f5f9;font-size:12px}
+.footer-line-sub{color:#93A2B8;padding-left:13px}
 .live-dot{width:7px;height:7px;border-radius:50%;background:#8FC49B;box-shadow:0 0 0 rgba(143,196,155,.6);animation:live-pulse 2s ease-out infinite;flex-shrink:0}
 @keyframes live-pulse{
   0%{box-shadow:0 0 0 0 rgba(143,196,155,.55)}
@@ -341,8 +342,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
   .fc-steps{flex-wrap:nowrap;overflow-x:auto}
   .card-meta{flex-wrap:wrap;line-height:1.8}
   .gauge-bar .g-tick:last-child{display:none}
-  .footer-pill{flex-direction:column;gap:3px;border-radius:12px}
-  .footer-sep{display:none}
 }
 </style>
 </head>
@@ -486,7 +485,10 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 
 </div>
 
-<div class="footer"><span class="footer-pill"><span class="live-dot"></span><span class="footer-line">Bijgewerkt: <span id="footerDate"></span></span><span class="footer-sep">·</span><span class="footer-line">Data: Meta · Shopify · TrackBee</span></span></div>
+<div class="footer"><span class="footer-pill">
+  <span class="footer-line footer-line-main"><span class="live-dot"></span>Bijgewerkt: <span id="footerDate"></span></span>
+  <span class="footer-line footer-line-sub">Data: Meta · Shopify · TrackBee</span>
+</span></div>
 <div id="dataCheck" style="display:none;text-align:center;font-size:11px;color:#DD9280;padding:4px 0 8px;font-weight:600"></div>
 </div>
 
