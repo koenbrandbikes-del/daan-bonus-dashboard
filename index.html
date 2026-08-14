@@ -25,8 +25,8 @@ body{background:
 /* ── Header ── */
 .hd{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:32px 0 20px}
 .hd-left{display:flex;align-items:center;gap:14px;min-width:0;flex:1}
-.hd-text{min-width:0;overflow:hidden}
-.hd h1{font-family:'Newsreader',Georgia,serif;font-size:clamp(16px,4vw,23px);font-weight:600;letter-spacing:-.01em;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd-text{min-width:0;flex:1;overflow:hidden}
+.hd h1{font-family:'Newsreader',Georgia,serif;font-size:clamp(16px,4vw,23px);font-weight:600;letter-spacing:-.01em;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:clip}
 .hd p{font-size:13px;color:#93A2B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .period-wrap{flex-shrink:0}
 .avatar-wrap{position:relative;width:38px;height:38px;flex-shrink:0}
@@ -320,11 +320,14 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .seg-fill{height:100%;border-radius:2px}
 
 @media(max-width:540px){
-  .hd{padding:24px 0 16px}
+  .hd{padding:24px 0 16px;gap:8px}
   .hd h1{font-size:17px}
   .hd p{display:none}
+  .hd-left{gap:9px}
+  .avatar-wrap{width:30px;height:30px}
   .period-btn{padding:7px 10px;font-size:12px;gap:5px}
   .period-btn svg{flex-shrink:0}
+  .pbt-range{display:none}
   .roas-hero-val{font-size:38px}
   .mrow{grid-template-columns:1fr}
   .mc{border-right:none;border-bottom:1px solid rgba(255,255,255,.08)}
@@ -1113,7 +1116,20 @@ function render(){
   /* update dropdown labels */
   {
     const bt=document.getElementById("periodBtnTxt");
-    if(bt){const m={vandaag:`Vandaag (${fmtS(pd.from)})`,gisteren:`Gisteren (${fmtS(pd.from)})`,week:`Deze week (${fmtS(PERIODS.week?.from)}–${fmtS(PERIODS.week?.to)})`,r7:`Afgelopen 7 dagen (${fmtS(PERIODS.r7?.from)}–${fmtS(PERIODS.r7?.to)})`,aug:"Augustus (v.a. 5 aug)",jul:"Juli",contract:"Volledige periode",custom:pd.label};bt.textContent=m[P]||pd.label;}
+    if(bt){
+      const m={
+        vandaag:{main:"Vandaag",range:`(${fmtS(pd.from)})`},
+        gisteren:{main:"Gisteren",range:`(${fmtS(pd.from)})`},
+        week:{main:"Deze week",range:`(${fmtS(PERIODS.week?.from)}–${fmtS(PERIODS.week?.to)})`},
+        r7:{main:"Afgelopen 7 dagen",range:`(${fmtS(PERIODS.r7?.from)}–${fmtS(PERIODS.r7?.to)})`},
+        aug:{main:"Augustus",range:"(v.a. 5 aug)"},
+        jul:{main:"Juli",range:""},
+        contract:{main:"Volledige periode",range:""},
+        custom:{main:pd.label,range:""},
+      };
+      const cur=m[P]||{main:pd.label,range:""};
+      bt.innerHTML=cur.main+(cur.range?` <span class="pbt-range">${cur.range}</span>`:"");
+    }
     const lv=document.getElementById("lbl-vandaag"),lg=document.getElementById("lbl-gisteren"),lw=document.getElementById("lbl-week"),l7=document.getElementById("lbl-r7");
     if(lv)lv.textContent=fmtS(PERIODS.vandaag.from);
     if(lg)lg.textContent=fmtS(PERIODS.gisteren.from);
@@ -1288,7 +1304,24 @@ function render(){
 
   document.getElementById("footerDate").textContent=fmtL(SNAP)+(SNAP_TIME&&SNAP_TIME!=="00:00"?" · "+SNAP_TIME:"");
   renderKpiBar(CX, CT, TG, prevCT, prevCX, prevLabel);
+  fitTitle();
 }
+
+// Krimpt de header-titel net zo ver dat hij altijd past naast de periodeknop
+// — nooit een afgekapte "…", op elke schermbreedte en bij elke lengte van de
+// geselecteerde periode (die de resterende ruimte voor de titel bepaalt).
+function fitTitle(){
+  const h1=document.querySelector(".hd h1"), wrap=document.querySelector(".hd-text");
+  if(!h1||!wrap)return;
+  h1.style.fontSize="";
+  const maxPx=parseFloat(getComputedStyle(h1).fontSize);
+  const avail=wrap.clientWidth, natural=h1.scrollWidth;
+  if(natural>avail && natural>0){
+    h1.style.fontSize=Math.max(11,Math.floor(maxPx*avail/natural*0.97))+"px";
+  }
+}
+let _fitT;
+window.addEventListener("resize",()=>{clearTimeout(_fitT);_fitT=setTimeout(fitTitle,120)});
 
 /* ═══ GAUGE ══════════════════════════════════════════════════════ */
 function renderGauge(be,schaal,comfy,roas,purch){
