@@ -262,8 +262,13 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-sub{font-size:10px;color:#A6B3C4;margin-top:3px}
 .kpi-delta{font-weight:700}
 .kpi-compare-cap{font-size:10px;color:#7C8CA6;text-align:right;margin:-8px 2px 16px;min-height:14px}
-.kpi-headline{font-size:13px;color:#cbd5e1;line-height:1.6;margin:-4px 2px 16px;padding:12px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px}
+.kpi-headline{margin:-4px 2px 16px;padding:14px 16px;background:linear-gradient(160deg,rgba(32,40,92,.42) 0%,rgba(18,24,60,.38) 100%);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border:1px solid rgba(255,255,255,.1);border-top-color:rgba(255,255,255,.2);border-radius:12px;box-shadow:0 8px 20px rgba(6,8,24,.3),inset 0 1px 0 rgba(255,255,255,.08)}
 .kpi-headline:empty{display:none}
+.kpi-headline-hd{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7C8CA6;margin-bottom:9px}
+.kpi-headline-row{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:#a8b3c5;line-height:1.55;margin-bottom:6px}
+.kpi-headline-row:last-child{margin-bottom:0}
+.kpi-headline-row strong{color:#f1f5f9;font-weight:700}
+.kpi-headline-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6.5px}
 
 /* ── Dashboard-brede test/schaal-segmentbalk ── */
 .dash-seg-bar{margin-bottom:12px}
@@ -315,7 +320,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-chart-svgwrap{position:relative}
 .kpi-chart-svg{width:100%;height:auto;display:block;overflow:visible}
 .kpi-chart-line{stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.kpi-chart-line-thick{stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;opacity:.55}
+.kpi-chart-line-thick{stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 .kpi-chart-purchbar{fill:rgba(255,255,255,.16)}
 .kpi-chart-dot{transition:r .15s ease}
 .kpi-chart-grid{stroke:rgba(255,255,255,.08);stroke-width:1}
@@ -1115,32 +1120,35 @@ function renderKpiHeadline(fxFrom,fxTo){
   if(!el)return;
   const pd=PERIODS[P]||PERIODS.aug;
   const allCT = pd.tb ? tbCalc(pd.tb) : tbCalcRange(fxFrom,fxTo);
-  if(!allCT || !CX.be || allCT.spend<=0){ el.textContent=""; return; }
+  if(!allCT || !CX.be || allCT.spend<=0){ el.innerHTML=""; return; }
 
   const margePct = CX.rev>0 ? CX.pro/CX.rev : 0;
   const doel=1/(1/CX.be-SCALE_T), comfy=1/(1/CX.be-SCALE_H);
   const netTotal = margePct*(allCT.rev7+allCT.rev1v) - allCT.spend;
-  const parts=[`Meta draait ${eur(Math.abs(netTotal))} ${netTotal>=0?"boven":"onder"} break-even.`];
+  const rows=[{dot:netTotal>=0?"good":"bad", html:`Meta draait <strong>${eur(Math.abs(netTotal))}</strong> ${netTotal>=0?"boven":"onder"} break-even.`}];
 
-  const segLine=(label,tag)=>{
+  const segRow=(label,tag)=>{
     const s=segRangeCT(fxFrom,fxTo,tag);
     if(!s || s.spend<=0) return null;
-    if(s.roas>=comfy) return `${label} presteren boven doel met ${x2(s.roas)} ROAS.`;
-    if(s.roas>=doel)  return `${label} draaien op doel met ${x2(s.roas)} ROAS.`;
-    if(s.roas>=CX.be) return `${label} draaien boven break-even met ${x2(s.roas)} ROAS.`;
-    return `${label} zitten met ${x2(s.roas)} ROAS onder break-even.`;
+    if(s.roas>=comfy) return {dot:"good", html:`${label} presteren boven doel met <strong>${x2(s.roas)}</strong> ROAS.`};
+    if(s.roas>=doel)  return {dot:"good", html:`${label} draaien op doel met <strong>${x2(s.roas)}</strong> ROAS.`};
+    if(s.roas>=CX.be) return {dot:"warn", html:`${label} draaien boven break-even met <strong>${x2(s.roas)}</strong> ROAS.`};
+    return {dot:"bad", html:`${label} zitten met <strong>${x2(s.roas)}</strong> ROAS onder break-even.`};
   };
-  const schaalLine=segLine("Schaalcampagnes","schaal");
-  const testLine=segLine("Testcampagnes","test");
-  if(schaalLine) parts.push(schaalLine);
-  if(testLine) parts.push(testLine);
+  const schaalRow=segRow("Schaalcampagnes","schaal");
+  const testRow=segRow("Testcampagnes","test");
+  if(schaalRow) rows.push(schaalRow);
+  if(testRow) rows.push(testRow);
 
   const {testSpend,schaalSpend,totalSpend}=segSpendSplit(fxFrom,fxTo);
   if(totalSpend>0){
     const upPct=Math.max(0,100-(testSpend+schaalSpend)/totalSpend*100);
-    if(upPct>=1) parts.push(`Ongeclassificeerde campagnes vertegenwoordigen ${upPct.toFixed(0)}% van de totale spend.`);
+    if(upPct>=1) rows.push({dot:"neutral", html:`Ongeclassificeerde campagnes vertegenwoordigen <strong>${upPct.toFixed(0)}%</strong> van de totale spend.`});
   }
-  el.textContent=parts.join(" ");
+
+  const dotColor={good:"#8FC49B",warn:"#E5B863",bad:"#DD9280",neutral:"#7C8CA6"};
+  el.innerHTML=`<div class="kpi-headline-hd">Samenvatting</div>`+
+    rows.map(r=>`<div class="kpi-headline-row"><span class="kpi-headline-dot" style="background:${dotColor[r.dot]}"></span><span>${r.html}</span></div>`).join("");
 }
 
 function setPeriod(v){P=v;render()}
