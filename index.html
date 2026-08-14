@@ -262,6 +262,8 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-sub{font-size:10px;color:#A6B3C4;margin-top:3px}
 .kpi-delta{font-weight:700}
 .kpi-compare-cap{font-size:10px;color:#7C8CA6;text-align:right;margin:-8px 2px 16px;min-height:14px}
+.kpi-headline{font-size:13px;color:#cbd5e1;line-height:1.6;margin:-4px 2px 16px;padding:12px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px}
+.kpi-headline:empty{display:none}
 
 /* ── Dashboard-brede test/schaal-segmentbalk ── */
 .dash-seg-bar{margin-bottom:12px}
@@ -308,9 +310,13 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-chart-legend{display:flex;gap:14px;margin-bottom:8px}
 .kpi-chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#cbd5e1}
 .kpi-chart-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.kpi-chart-legend-line{width:14px;height:3px;border-radius:2px;flex-shrink:0}
+.kpi-chart-legend-bar{width:8px;height:10px;border-radius:1px;flex-shrink:0;background:rgba(255,255,255,.35)}
 .kpi-chart-svgwrap{position:relative}
 .kpi-chart-svg{width:100%;height:auto;display:block;overflow:visible}
 .kpi-chart-line{stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.kpi-chart-line-thick{stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;opacity:.55}
+.kpi-chart-purchbar{fill:rgba(255,255,255,.16)}
 .kpi-chart-dot{transition:r .15s ease}
 .kpi-chart-grid{stroke:rgba(255,255,255,.08);stroke-width:1}
 .kpi-chart-zero{stroke:rgba(255,255,255,.22);stroke-width:1;stroke-dasharray:3 3}
@@ -490,6 +496,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 <!-- KPI strip -->
 <div id="kpiStrip" class="kpi-strip"></div>
 <div id="kpiCompareCap" class="kpi-compare-cap"></div>
+<div id="kpiHeadline" class="kpi-headline"></div>
 <div id="kpiChartWrap" class="kpi-chart-wrap"></div>
 
 <!-- Main card -->
@@ -1100,6 +1107,42 @@ function renderDashSegBar(fxFrom,fxTo){
   el.innerHTML=`<div class="dash-seg-row"><div class="dash-seg-toggle">${segBtn("all","Alle")}${segBtn("test","Test")}${segBtn("schaal","Schaal")}</div>${splitHtml}</div>`;
 }
 
+// Automatisch opgebouwde hoofdconclusie — beschrijft altijd het hele account
+// (los van een eventueel actief test/schaal-filter elders op de pagina) plus
+// per-segment ROAS en het aandeel ongeclassificeerde spend, in gewone taal.
+function renderKpiHeadline(fxFrom,fxTo){
+  const el=document.getElementById("kpiHeadline");
+  if(!el)return;
+  const pd=PERIODS[P]||PERIODS.aug;
+  const allCT = pd.tb ? tbCalc(pd.tb) : tbCalcRange(fxFrom,fxTo);
+  if(!allCT || !CX.be || allCT.spend<=0){ el.textContent=""; return; }
+
+  const margePct = CX.rev>0 ? CX.pro/CX.rev : 0;
+  const doel=1/(1/CX.be-SCALE_T), comfy=1/(1/CX.be-SCALE_H);
+  const netTotal = margePct*(allCT.rev7+allCT.rev1v) - allCT.spend;
+  const parts=[`Meta draait ${eur(Math.abs(netTotal))} ${netTotal>=0?"boven":"onder"} break-even.`];
+
+  const segLine=(label,tag)=>{
+    const s=segRangeCT(fxFrom,fxTo,tag);
+    if(!s || s.spend<=0) return null;
+    if(s.roas>=comfy) return `${label} presteren boven doel met ${x2(s.roas)} ROAS.`;
+    if(s.roas>=doel)  return `${label} draaien op doel met ${x2(s.roas)} ROAS.`;
+    if(s.roas>=CX.be) return `${label} draaien boven break-even met ${x2(s.roas)} ROAS.`;
+    return `${label} zitten met ${x2(s.roas)} ROAS onder break-even.`;
+  };
+  const schaalLine=segLine("Schaalcampagnes","schaal");
+  const testLine=segLine("Testcampagnes","test");
+  if(schaalLine) parts.push(schaalLine);
+  if(testLine) parts.push(testLine);
+
+  const {testSpend,schaalSpend,totalSpend}=segSpendSplit(fxFrom,fxTo);
+  if(totalSpend>0){
+    const upPct=Math.max(0,100-(testSpend+schaalSpend)/totalSpend*100);
+    if(upPct>=1) parts.push(`Ongeclassificeerde campagnes vertegenwoordigen ${upPct.toFixed(0)}% van de totale spend.`);
+  }
+  el.textContent=parts.join(" ");
+}
+
 function setPeriod(v){P=v;render()}
 
 /* ── Period dropdown & kalender ── */
@@ -1366,6 +1409,7 @@ function render(){
   }
 
   renderDashSegBar(fxFrom,fxTo);
+  renderKpiHeadline(fxFrom,fxTo);
 
   /* card meta */
   const segNote = dashSegment!=="all" ? ` <span class="capi-badge" style="background:${dashSegment==="test"?"rgba(91,158,232,.18)":"rgba(74,222,128,.16)"};border-color:${dashSegment==="test"?"rgba(91,158,232,.5)":"rgba(74,222,128,.45)"};color:${dashSegment==="test"?"#93C5F5":"#8FE0A8"}">${dashSegment==="test"?"Test":"Schaal"}-groepen</span>` : "";
@@ -2090,11 +2134,166 @@ function toggleKpiChart(key){
   renderKpiChart();
 }
 
+// Verrijkte ROAS-grafiek: dunne dag-ROAS-lijn + dikkere 3-daagse gewogen
+// ROAS-lijn (som omzet/som spend over 3 dagen, niet het gemiddelde van de
+// dagcijfers — dat vertekent bij dagen met weinig spend), aankoopbalken
+// onderin (context: hoeveel aankopen dragen die ROAS?), en break-even/doel/
+// schaaldoel als stippellijnen. Spend/CAC/marge alleen in de hover-tooltip.
+function renderRoasChart(wrap){
+  const pd=PERIODS[P]||PERIODS.aug;
+  const rangeFrom=pd.from, rangeTo=pd.to;
+  const seg=kpiChartSeg;
+  const dailySource = seg==="all" ? kpiDailySeries() : kpiDailySeriesSegment(seg);
+  const filteredDaily=dailySource.filter(x=>x.d>=rangeFrom && x.d<=rangeTo);
+
+  if(filteredDaily.length===0 || filteredDaily.every(x=>x.spend===0 && x.purch===0 && x.rev===0)){
+    const segNote = seg!=="all" ? ` (label "${seg==="test"?"Test":"Schaal"}")` : "";
+    wrap.innerHTML=`
+      <div class="kpi-chart-hd"><div class="kpi-chart-title">Meta ROAS</div></div>
+      <div class="kpi-chart-empty">Geen dagelijkse data beschikbaar voor de geselecteerde periode (${pd.label})${segNote}. <button class="kpi-chart-jump" onclick="jumpToPeriodSelector()">Kies een andere periode ↑</button></div>`;
+    return;
+  }
+
+  const data=filteredDaily.map(x=>({...x,label:fmtS(x.d),...kpiDeriveMetrics(x)}));
+  const n=data.length;
+  const actualFrom=data[0].d, actualTo=data[n-1].d;
+
+  // Gewogen 3-daags voortschrijdend ROAS: som omzet/som spend over het
+  // venster [i-2..i], niet het gemiddelde van de losse dag-ROAS'en.
+  const roas3=data.map((x,i)=>{
+    let sSpend=0,sRev=0;
+    for(let j=Math.max(0,i-2);j<=i;j++){ sSpend+=data[j].spend; sRev+=data[j].rev; }
+    return sSpend>0?sRev/sSpend:null;
+  });
+
+  const segAllowed=true;
+  const segBtn=(s,l)=>`<button class="kpi-chart-seg-btn${kpiChartSeg===s?" active "+s:""}" onclick="kpiChartSeg='${s}';renderKpiChart()">${l}</button>`;
+  const segToggle=`<div class="kpi-chart-seg">${segBtn("all","Alle")}${segBtn("test","Test")}${segBtn("schaal","Schaal")}</div>`;
+
+  const W=680,H=270,padL=48,padR=14,padT=16,padBAxis=26,barAreaH=46,gapArea=10;
+  const plotW=W-padL-padR;
+  const roasTop=padT, roasBot=H-padBAxis-barAreaH-gapArea, roasH=roasBot-roasTop;
+  const barTop=roasBot+gapArea, barBot=H-padBAxis;
+  const xAt=i=>n<=1?padL+plotW/2:padL+(i/(n-1))*plotW;
+  const barW=Math.max(3,Math.min(18,(plotW/n)*0.55));
+
+  const showBeRef=CX && CX.be;
+  const doelRoas=showBeRef?1/(1/CX.be-SCALE_T):null;
+  const comfyRoas=showBeRef?1/(1/CX.be-SCALE_H):null;
+  const allRoasVals=[...data.map(x=>x.roas),...roas3].filter(v=>v!=null);
+  let yMin=Math.min(...allRoasVals), yMax=Math.max(...allRoasVals);
+  if(showBeRef){ yMin=Math.min(yMin,CX.be,doelRoas,comfyRoas); yMax=Math.max(yMax,CX.be,doelRoas,comfyRoas); }
+  if(!isFinite(yMin)||!isFinite(yMax)){yMin=0;yMax=1;}
+  if(yMin===yMax){yMin-=1;yMax+=1;}
+  const ypad=(yMax-yMin)*0.12; yMin-=ypad; yMax+=ypad;
+  const yAt=v=>roasTop+roasH-((v-yMin)/(yMax-yMin))*roasH;
+
+  const pathFor=vals=>{
+    let d="",open=false;
+    vals.forEach((v,i)=>{
+      if(v==null){open=false;return;}
+      const x=xAt(i),y=yAt(v);
+      d+=(open?"L":"M")+x.toFixed(1)+","+y.toFixed(1)+" ";
+      open=true;
+    });
+    return d.trim();
+  };
+  const dotsFor=(vals,color,r)=>vals.map((v,i)=>v==null?"":
+    `<circle class="kpi-chart-dot" cx="${xAt(i).toFixed(1)}" cy="${yAt(v).toFixed(1)}" r="${r}" fill="${color}" data-i="${i}"></circle>`).join("");
+
+  const step=Math.max(1,Math.ceil(n/6));
+  const xLabels=data.map((d,i)=>i%step===0||i===n-1?`<text class="kpi-chart-xlbl" x="${xAt(i).toFixed(1)}" y="${H-6}" text-anchor="middle">${d.label}</text>`:"").join("");
+
+  const yTicks=[yMin+ypad,(yMin+yMax)/2,yMax-ypad];
+  const yGrid=yTicks.map(v=>`<line class="kpi-chart-grid" x1="${padL}" x2="${W-padR}" y1="${yAt(v).toFixed(1)}" y2="${yAt(v).toFixed(1)}"></line><text class="kpi-chart-ylbl" x="${padL-8}" y="${(yAt(v)+3).toFixed(1)}" text-anchor="end">${x2(v)}</text>`).join("");
+
+  const refPts=showBeRef?[
+    {v:CX.be,cls:"be",lbl:`break-even ${x2(CX.be)}`},
+    {v:doelRoas,cls:"doel",lbl:`doel ${x2(doelRoas)} · ${(SCALE_T*100).toFixed(0)}% nettomarge`},
+    {v:comfyRoas,cls:"comfy",lbl:`schaaldoel ${x2(comfyRoas)} · ${(SCALE_H*100).toFixed(0)}% nettomarge`},
+  ].sort((a,b)=>a.v-b.v):[];
+  refPts.forEach((p,i)=>{
+    const y=yAt(p.v);
+    p.labelY=i>0 && (refPts[i-1]._y-y)<12 ? refPts[i-1].labelY-12 : y-4;
+    p._y=y;
+  });
+  const refLines=refPts.map(p=>`<line class="kpi-chart-${p.cls}" x1="${padL}" x2="${W-padR}" y1="${p._y.toFixed(1)}" y2="${p._y.toFixed(1)}"></line><text class="kpi-chart-${p.cls}-lbl" x="${W-padR}" y="${p.labelY.toFixed(1)}" text-anchor="end">${p.lbl}</text>`).join("");
+
+  const maxPurch=Math.max(1,...data.map(x=>x.purch));
+  const bars=data.map((x,i)=>{
+    const h=(x.purch/maxPurch)*barAreaH;
+    return `<rect class="kpi-chart-purchbar" x="${(xAt(i)-barW/2).toFixed(1)}" y="${(barBot-h).toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(1,h).toFixed(1)}" rx="1.5" data-i="${i}"></rect>`;
+  }).join("");
+  const barAxisLbl=`<text class="kpi-chart-ylbl" x="${padL-8}" y="${(barBot+3).toFixed(1)}" text-anchor="end">0</text><text class="kpi-chart-ylbl" x="${padL-8}" y="${(barTop+3).toFixed(1)}" text-anchor="end">${maxPurch}</text>`;
+
+  const roasLine=`<path class="kpi-chart-line" d="${pathFor(data.map(x=>x.roas))}" stroke="#4EA8DE" fill="none"></path>${dotsFor(data.map(x=>x.roas),"#4EA8DE",2)}`;
+  const roas3Line=`<path class="kpi-chart-line-thick" d="${pathFor(roas3)}" stroke="#93C5F5" fill="none"></path>`;
+
+  wrap.innerHTML=`
+    <div class="kpi-chart-hd">
+      <div class="kpi-chart-title">Meta ROAS<button class="kpi-chart-sub" onclick="jumpToPeriodSelector()" title="Kies een andere periode">${fmtS(actualFrom)} – ${fmtS(actualTo)}${seg!=="all"?` · label: ${seg==="test"?"Test":"Schaal"}`:""} ↑</button></div>
+    </div>
+    ${segToggle}
+    <div class="kpi-chart-legend">
+      <span class="kpi-chart-legend-item"><span class="kpi-chart-legend-dot" style="background:#4EA8DE"></span>Dag-ROAS</span>
+      <span class="kpi-chart-legend-item"><span class="kpi-chart-legend-line" style="background:#93C5F5"></span>3-daags gewogen ROAS</span>
+      <span class="kpi-chart-legend-item"><span class="kpi-chart-legend-bar"></span>Aankopen</span>
+    </div>
+    <div class="kpi-chart-svgwrap" id="kpiChartSvgWrap">
+      <svg viewBox="0 0 ${W} ${H}" class="kpi-chart-svg" id="kpiChartSvg">
+        ${yGrid}${refLines}${bars}${barAxisLbl}${roas3Line}${roasLine}${xLabels}
+        <line class="kpi-chart-cross" id="kpiChartCross" x1="0" x2="0" y1="${padT}" y2="${barBot}" style="opacity:0"></line>
+      </svg>
+      <div class="kpi-chart-tooltip" id="kpiChartTooltip" style="opacity:0"></div>
+    </div>`;
+
+  attachRoasChartHover(data,roas3,xAt,W);
+}
+
+function attachRoasChartHover(data,roas3,xAt,W){
+  const svgWrap=document.getElementById("kpiChartSvgWrap");
+  const svg=document.getElementById("kpiChartSvg");
+  const cross=document.getElementById("kpiChartCross");
+  const tip=document.getElementById("kpiChartTooltip");
+  if(!svgWrap||!svg)return;
+  const n=data.length;
+  svgWrap.onmousemove=(e)=>{
+    const r=svg.getBoundingClientRect();
+    const xSvg=((e.clientX-r.left)/r.width)*W;
+    let best=0,bestD=Infinity;
+    for(let i=0;i<n;i++){const dx=Math.abs(xAt(i)-xSvg);if(dx<bestD){bestD=dx;best=i;}}
+    const px=xAt(best), x=data[best];
+    cross.setAttribute("x1",px);cross.setAttribute("x2",px);cross.style.opacity="1";
+    tip.innerHTML=`
+      <div class="kpi-chart-tip-date">${x.label}${roas3[best]!=null?` · 3d: ${x2(roas3[best])}`:""}</div>
+      <div class="kpi-chart-tip-row"><span class="kpi-chart-tip-dot" style="background:#4EA8DE"></span>ROAS: <strong>${x.roas!=null?x2(x.roas):"—"}</strong></div>
+      <div class="kpi-chart-tip-row">Aankopen: <strong>${x.purch}</strong></div>
+      <div class="kpi-chart-tip-row">Omzet: <strong>${eur(x.rev)}</strong></div>
+      <div class="kpi-chart-tip-row">Spend: <strong>${eur(x.spend)}</strong></div>
+      <div class="kpi-chart-tip-row">CAC: <strong>${x.cac!=null?eur(x.cac):"—"}</strong></div>
+      <div class="kpi-chart-tip-row">Brutomarge: <strong>${x.bruto!=null?eur(x.bruto):"—"}</strong></div>
+      <div class="kpi-chart-tip-row">Netto na Meta: <strong>${x.net!=null?eur(x.net):"—"}</strong></div>`;
+    tip.style.opacity="1";
+    const wrapR=svgWrap.getBoundingClientRect();
+    const px_screen=(px/W)*wrapR.width;
+    let left=px_screen+10;
+    if(left+170>wrapR.width) left=px_screen-180;
+    tip.style.left=Math.max(0,left)+"px";
+    tip.style.top="8px";
+  };
+  svgWrap.onmouseleave=()=>{cross.style.opacity="0";tip.style.opacity="0";};
+}
+
 function renderKpiChart(){
   const wrap=document.getElementById("kpiChartWrap");
   if(!wrap)return;
   if(kpiChartSel.length===0){wrap.classList.remove("open");wrap.innerHTML="";return;}
   wrap.classList.add("open");
+
+  // Meta ROAS los geselecteerd → verrijkte weergave (aankoopbalken + dag-
+  // en 3-daagse gewogen ROAS-lijn). Andere metrics en de 2-lijnen-vergelijking
+  // houden de bestaande, eenvoudigere grafiek.
+  if(kpiChartSel.length===1 && kpiChartSel[0]==="roas"){ renderRoasChart(wrap); return; }
 
   // Grafiek volgt de bovenin geselecteerde periode (net als de rest van
   // het dashboard) i.p.v. altijd de volledige geschiedenis te tonen — zo
