@@ -314,6 +314,9 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-chart-seg-btn.active.schaal{background:rgba(74,222,128,.16);border-color:rgba(74,222,128,.5);color:#8FE0A8}
 .kpi-chart-legend{display:flex;gap:14px;margin-bottom:8px}
 .kpi-chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#cbd5e1}
+.kpi-chart-legend-toggle{cursor:pointer;user-select:none;transition:opacity .15s,color .15s}
+.kpi-chart-legend-toggle:hover{color:#f1f5f9}
+.kpi-chart-legend-toggle.off{opacity:.35}
 .kpi-chart-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .kpi-chart-legend-line{width:14px;height:3px;border-radius:2px;flex-shrink:0}
 .kpi-chart-legend-bar{width:8px;height:10px;border-radius:1px;flex-shrink:0;background:rgba(255,255,255,.35)}
@@ -2066,6 +2069,8 @@ const KPI_CHART_COLORS = ["#4EA8DE","#4ECB71"];
 let kpiChartSel = [];
 let kpiChartGran = "day";
 let kpiChartSeg = "all"; // all | test | schaal — alleen relevant bij 1 metric, niet bruto/net
+let roasChartVis = {line:true, dot:true, bar:true}; // welke series van de ROAS-grafiek zichtbaar zijn, via legenda toggle
+function toggleRoasSeries(key){ roasChartVis[key]=!roasChartVis[key]; renderKpiChart(); }
 let _kpiDailyCache = null;
 
 function kpiDailySeries(){
@@ -2235,8 +2240,11 @@ function renderRoasChart(wrap){
   // Dag-ROAS: alleen stippen (geen verbindende lijn) — de 3-daagse lijn is
   // de enige doorlopende trendlijn, dat voorkomt twee elkaar overlappende
   // lijnen die moeilijk uit elkaar te houden zijn.
-  const roasDots=dotsFor(data.map(x=>x.roas),"#4EA8DE",2.6);
-  const roas3Line=`<path class="kpi-chart-line-thick" d="${pathFor(roas3)}" stroke="#4EA8DE" fill="none"></path>`;
+  const roasDots=roasChartVis.dot ? dotsFor(data.map(x=>x.roas),"#4EA8DE",2.6) : "";
+  const roas3Line=roasChartVis.line ? `<path class="kpi-chart-line-thick" d="${pathFor(roas3)}" stroke="#4EA8DE" fill="none"></path>` : "";
+  const barsOut=roasChartVis.bar ? bars : "";
+  const barBgOut=roasChartVis.bar ? barBg : "";
+  const barAxisLblOut=roasChartVis.bar ? barAxisLbl : "";
 
   wrap.innerHTML=`
     <div class="kpi-chart-hd">
@@ -2244,13 +2252,13 @@ function renderRoasChart(wrap){
     </div>
     ${segToggle}
     <div class="kpi-chart-legend">
-      <span class="kpi-chart-legend-item"><span class="kpi-chart-legend-line" style="background:#4EA8DE"></span>3-daags gewogen ROAS</span>
-      <span class="kpi-chart-legend-item"><span class="kpi-chart-legend-dot" style="background:#4EA8DE;opacity:.6"></span>Dag-ROAS</span>
-      <span class="kpi-chart-legend-item"><span class="kpi-chart-legend-bar"></span>Aankopen</span>
+      <span class="kpi-chart-legend-item kpi-chart-legend-toggle${roasChartVis.line?"":" off"}" onclick="toggleRoasSeries('line')"><span class="kpi-chart-legend-line" style="background:#4EA8DE"></span>3-daags gewogen ROAS</span>
+      <span class="kpi-chart-legend-item kpi-chart-legend-toggle${roasChartVis.dot?"":" off"}" onclick="toggleRoasSeries('dot')"><span class="kpi-chart-legend-dot" style="background:#4EA8DE;opacity:.6"></span>Dag-ROAS</span>
+      <span class="kpi-chart-legend-item kpi-chart-legend-toggle${roasChartVis.bar?"":" off"}" onclick="toggleRoasSeries('bar')"><span class="kpi-chart-legend-bar"></span>Aankopen</span>
     </div>
     <div class="kpi-chart-svgwrap" id="kpiChartSvgWrap">
       <svg viewBox="0 0 ${W} ${H}" class="kpi-chart-svg" id="kpiChartSvg">
-        ${yGrid}${refLines}${barBg}${bars}${barAxisLbl}${roas3Line}${roasDots}${xLabels}
+        ${yGrid}${refLines}${barBgOut}${barsOut}${barAxisLblOut}${roas3Line}${roasDots}${xLabels}
         <line class="kpi-chart-cross" id="kpiChartCross" x1="0" x2="0" y1="${padT}" y2="${barBot}" style="opacity:0"></line>
       </svg>
       <div class="kpi-chart-tooltip" id="kpiChartTooltip" style="opacity:0"></div>
