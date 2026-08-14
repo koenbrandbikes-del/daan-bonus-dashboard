@@ -234,6 +234,8 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-lbl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#93A2B8;margin-bottom:5px;white-space:normal;line-height:1.3;min-height:2.6em}
 .kpi-val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
 .kpi-sub{font-size:10px;color:#A6B3C4;margin-top:3px}
+.kpi-delta{font-weight:700}
+.kpi-compare-cap{font-size:10px;color:#7C8CA6;text-align:right;margin:-8px 2px 16px;min-height:14px}
 .kpi-item.good .kpi-val{color:#8FC49B}
 .kpi-item.bad .kpi-val{color:#DD9280}
 .kpi-item.warn .kpi-val{color:#E5B863}
@@ -368,6 +370,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
       <div class="pm-opt" data-p="vandaag" onclick="selectP('vandaag')">Vandaag (<span id="lbl-vandaag"></span>)</div>
       <div class="pm-opt" data-p="gisteren" onclick="selectP('gisteren')">Gisteren (<span id="lbl-gisteren"></span>)</div>
       <div class="pm-opt" data-p="week" onclick="selectP('week')">Deze week (<span id="lbl-week"></span>)</div>
+      <div class="pm-opt" data-p="r7" onclick="selectP('r7')">Afgelopen 7 dagen (<span id="lbl-r7"></span>)</div>
       <div class="pm-div"></div>
       <div class="pm-grp">Bonusperiode</div>
       <div class="pm-opt active" data-p="aug" onclick="selectP('aug')">Augustus (v.a. 5 aug)</div>
@@ -389,6 +392,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 
 <!-- KPI strip -->
 <div id="kpiStrip" class="kpi-strip"></div>
+<div id="kpiCompareCap" class="kpi-compare-cap"></div>
 
 <!-- Main card -->
 <div class="card">
@@ -910,11 +914,19 @@ const ADS_JUL = [
 // wordt bijgewerkt.
 
 /* ═══ PERIODS ════════════════════════════════════════════════════ */
+// Rollend venster "afgelopen 7 dagen", opgebouwd uit DAILY_META (dagcijfers
+// v.a. 5 aug, de CAPI-fix datum) — dus automatisch gekapt op 5 aug zolang
+// dat venster daar overheen zou lopen.
+const R7_FROM_D = new Date(SNAP+"T00:00:00"); R7_FROM_D.setDate(R7_FROM_D.getDate()-6);
+const R7_FROM = ymd(R7_FROM_D) < "2026-08-05" ? "2026-08-05" : ymd(R7_FROM_D);
+const R7_DAYS = DAILY_META.filter(d=>d.d>=R7_FROM && d.d<=SNAP);
+
 const PERIODS = {
   vandaag:  {label:"Vandaag",           from:"2026-08-14",to:"2026-08-14",tb:[TB_VANDAAG],tg:TG_VANDAAG},
   gisteren: {label:"Gisteren",          from:"2026-08-13",to:"2026-08-13",tb:[TB_GISTEREN],tg:TG_GISTEREN},
   week:     {label:"Deze week",         from:TB_WEEK.from, to:TB_WEEK.to,  tb:[TB_WEEK],     capiNote: TB_WEEK.from<"2026-08-05", tg:TG_WEEK},
   prevweek: {label:"Vorige week",       from:"2026-07-28",to:"2026-08-03",tb:[TB_PREVWEEK],tg:TG_PREVWEEK,capiNote:true,adsExtra:ADS_JUL},
+  r7:       {label:"Afgelopen 7 dagen", from:R7_FROM,      to:SNAP,        tb:R7_DAYS.length?R7_DAYS:null},
   aug:      {label:"Augustus",          from:"2026-08-05",to:"2026-08-14",tb:[TB_AUG_CLEAN],tg:TG_AUG_CLEAN,capiNote:true},
   jul:      {label:"Juli",              from:"2026-07-16",to:"2026-07-31",tb:[TB_JUL],adsExtra:ADS_JUL},
   contract: {label:"Volledige periode", from:"2026-07-16",to:"2026-08-14",tb:[TB_JUL,TB_AUG_CLEAN],adsExtra:ADS_JUL},
@@ -1099,11 +1111,12 @@ function render(){
   /* update dropdown labels */
   {
     const bt=document.getElementById("periodBtnTxt");
-    if(bt){const m={vandaag:`Vandaag (${fmtS(pd.from)})`,gisteren:`Gisteren (${fmtS(pd.from)})`,week:`Deze week (${fmtS(PERIODS.week?.from)}–${fmtS(PERIODS.week?.to)})`,aug:"Augustus (v.a. 5 aug)",jul:"Juli",contract:"Volledige periode",custom:pd.label};bt.textContent=m[P]||pd.label;}
-    const lv=document.getElementById("lbl-vandaag"),lg=document.getElementById("lbl-gisteren"),lw=document.getElementById("lbl-week");
+    if(bt){const m={vandaag:`Vandaag (${fmtS(pd.from)})`,gisteren:`Gisteren (${fmtS(pd.from)})`,week:`Deze week (${fmtS(PERIODS.week?.from)}–${fmtS(PERIODS.week?.to)})`,r7:`Afgelopen 7 dagen (${fmtS(PERIODS.r7?.from)}–${fmtS(PERIODS.r7?.to)})`,aug:"Augustus (v.a. 5 aug)",jul:"Juli",contract:"Volledige periode",custom:pd.label};bt.textContent=m[P]||pd.label;}
+    const lv=document.getElementById("lbl-vandaag"),lg=document.getElementById("lbl-gisteren"),lw=document.getElementById("lbl-week"),l7=document.getElementById("lbl-r7");
     if(lv)lv.textContent=fmtS(PERIODS.vandaag.from);
     if(lg)lg.textContent=fmtS(PERIODS.gisteren.from);
     if(lw&&PERIODS.week)lw.textContent=`${fmtS(PERIODS.week.from)}–${fmtS(PERIODS.week.to)}`;
+    if(l7&&PERIODS.r7)l7.textContent=`${fmtS(PERIODS.r7.from)}–${fmtS(PERIODS.r7.to)}`;
     document.querySelectorAll(".pm-opt").forEach(el=>el.classList.toggle("active",el.dataset.p===P));
   }
   const TG = pd.tg || null;
@@ -1123,16 +1136,18 @@ function render(){
 
   // Prev period voor trends + bonus vergelijking
   const tbDC=t=>Math.floor((new Date(t.to)-new Date(t.from))/86400000)+1;
-  let prevCT=null, prevLabel=null, prevDays=0, ctDays=0, prevBon=null;
+  let prevCT=null, prevCX=null, prevLabel=null, prevDays=0, ctDays=0, prevBon=null;
   if(P==="vandaag"){
     prevCT=tbCalc([TB_GISTEREN]); prevLabel="gisteren"; ctDays=tbDC(TB_VANDAAG); prevDays=tbDC(TB_GISTEREN);
+    prevCX=ordCalc(TB_GISTEREN.from,TB_GISTEREN.to);
   } else if(P==="week"){
     prevCT=tbCalc([TB_PREVWEEK]); prevLabel="vorige week"; ctDays=tbDC(TB_WEEK); prevDays=tbDC(TB_PREVWEEK);
+    prevCX=ordCalc(TB_PREVWEEK.from,TB_PREVWEEK.to);
   } else if(P==="aug"){
     prevCT=tbCalc([TB_JUL]); prevLabel="juli"; ctDays=tbDC(TB_AUG_CLEAN); prevDays=tbDC(TB_JUL);
-    const px=ordCalc("2026-07-16","2026-07-31");
-    px.be=shopifyBeroas("2026-07-16","2026-07-31");
-    prevBon=bonCalc(px,prevCT).raw;
+    prevCX=ordCalc("2026-07-16","2026-07-31");
+    prevCX.be=shopifyBeroas("2026-07-16","2026-07-31");
+    prevBon=bonCalc(prevCX,prevCT).raw;
   } else {
     // Generieke vergelijking voor alle overige periodes (Gisteren, Vorige
     // week, Juli, Volledige periode, custom range): dezelfde periodelengte
@@ -1146,6 +1161,7 @@ function render(){
     if(pc){
       prevCT=pc; prevDays=ctDays;
       prevLabel=pFromS===pToS?fmtS(pFromS):`${fmtS(pFromS)}–${fmtS(pToS)}`;
+      prevCX=ordCalc(pFromS,pToS);
     }
   }
 
@@ -1269,7 +1285,7 @@ function render(){
   }
 
   document.getElementById("footerDate").textContent=fmtL(SNAP)+(SNAP_TIME&&SNAP_TIME!=="00:00"?" · "+SNAP_TIME:"");
-  renderKpiBar(CX, CT, TG);
+  renderKpiBar(CX, CT, TG, prevCT, prevCX, prevLabel);
 }
 
 /* ═══ GAUGE ══════════════════════════════════════════════════════ */
@@ -1584,7 +1600,11 @@ const GA4_PERIOD_MAP = {
 };
 
 /* ═══ KPI STRIP ══════════════════════════════════════════════════════ */
-function renderKpiBar(cx, ct, tg){
+// Vergelijking t.o.v. vorige periode (prevCT/prevCX), zelfde bron als de
+// "▲ vs. vorige week"-badges in de metric-rij, nu ook op elke KPI-tegel —
+// vergelijkbaar met hoe Google Ads een "vs. vorige periode" op elke metric
+// toont zodra compare actief is.
+function renderKpiBar(cx, ct, tg, prevCt, prevCx, prevLabel){
   const metaSpend = ct ? ct.spend : 0;
   const metaRev   = ct ? ct.rev7 + ct.rev1v : 0;
   const metaPurch = ct ? ct.purch : 0;
@@ -1596,17 +1616,35 @@ function renderKpiBar(cx, ct, tg){
   const netMeta   = metaBruto != null && metaSpend > 0 ? metaBruto - metaSpend : null;
   const brutoCls  = metaBruto == null ? "" : metaBruto > 0 ? " good" : " warn";
   const netCls    = netMeta == null ? "" : netMeta > 0 ? " good" : " bad";
+
+  const pSpend = prevCt ? prevCt.spend : null;
+  const pPurch = prevCt ? prevCt.purch : null;
+  const pRev   = prevCt ? prevCt.rev7 + prevCt.rev1v : null;
+  const pRoas  = prevCt && prevCt.spend > 0 && pRev > 0 ? pRev / prevCt.spend : null;
+  const pCac   = prevCt && prevCt.spend > 0 && prevCt.purch > 0 ? prevCt.spend / prevCt.purch : null;
+  const pMarge = prevCx && prevCx.rev > 0 ? prevCx.pro / prevCx.rev : null;
+  const pBruto = pMarge != null && pRev != null ? pMarge * pRev : null;
+  const pNet   = pBruto != null && pSpend != null ? pBruto - pSpend : null;
+  const delta=(cur,prev,invert)=>{
+    if(cur==null||prev==null||prev===0)return "";
+    const d=(cur-prev)/prev*100, up=d>=0, good=invert?!up:up;
+    const col=good?"#8FC49B":"#DD9280";
+    return ` <span class="kpi-delta" style="color:${col}">${up?"▲":"▼"}${Math.abs(d).toFixed(0)}%</span>`;
+  };
+
   const items = [
-    {l:"Meta spend",    v:ct?eur(metaSpend):"—",              s:ct?`${metaPurch} aankopen`:"geen data",   c:""},
-    {l:"Meta aankopen", v:ct?metaPurch:"—",                   s:"7d click + 1d view",                     c:""},
-    {l:"Meta omzet",    v:ct?eur(metaRev):"—",                s:"7d click + 1d view",                     c:""},
-    {l:"Meta ROAS",     v:metaRoas!=null?x2(metaRoas):"—",    s:`break-even ${x2(cx.be)}`,               c:roasCls},
-    {l:"CAC",           v:cac!=null?eur(cac):"—",             s:"per aankoop",                            c:""},
-    {l:"Brutomarge",    v:metaBruto!=null?eur(metaBruto):"—", s:metaBruto!=null?`${(margePct*100).toFixed(1)}% op Meta omzet`:"geen data", c:brutoCls},
-    {l:"Nettomarge",    v:netMeta!=null?eur(netMeta):"—",     s:netMeta!=null?(netMeta>0?"na Meta spend":"verlies na Meta"):"geen spend",  c:netCls},
+    {l:"Meta spend",    v:ct?eur(metaSpend):"—",              s:ct?`${metaPurch} aankopen`:"geen data",   c:"",        d:delta(metaSpend,pSpend,true)},
+    {l:"Meta aankopen", v:ct?metaPurch:"—",                   s:"7d click + 1d view",                     c:"",        d:delta(metaPurch,pPurch,false)},
+    {l:"Meta omzet",    v:ct?eur(metaRev):"—",                s:"7d click + 1d view",                     c:"",        d:delta(metaRev,pRev,false)},
+    {l:"Meta ROAS",     v:metaRoas!=null?x2(metaRoas):"—",    s:`break-even ${x2(cx.be)}`,               c:roasCls,   d:delta(metaRoas,pRoas,false)},
+    {l:"CAC",           v:cac!=null?eur(cac):"—",             s:"per aankoop",                            c:"",        d:delta(cac,pCac,true)},
+    {l:"Brutomarge",    v:metaBruto!=null?eur(metaBruto):"—", s:metaBruto!=null?`${(margePct*100).toFixed(1)}% op Meta omzet`:"geen data", c:brutoCls, d:delta(metaBruto,pBruto,false)},
+    {l:"Nettomarge",    v:netMeta!=null?eur(netMeta):"—",     s:netMeta!=null?(netMeta>0?"na Meta spend":"verlies na Meta"):"geen spend",  c:netCls,   d:delta(netMeta,pNet,false)},
   ];
   document.getElementById("kpiStrip").innerHTML =
-    items.map(it=>`<div class="kpi-item${it.c}"><div class="kpi-lbl">${it.l}</div><div class="kpi-val">${it.v}</div><div class="kpi-sub">${it.s}</div></div>`).join("");
+    items.map(it=>`<div class="kpi-item${it.c}"><div class="kpi-lbl">${it.l}</div><div class="kpi-val">${it.v}</div><div class="kpi-sub">${it.s}${it.d}</div></div>`).join("");
+  const cap=document.getElementById("kpiCompareCap");
+  if(cap)cap.textContent=prevCt?`t.o.v. ${prevLabel}`:"";
 }
 
 /* ═══ FUNNEL CARD ════════════════════════════════════════════════════ */
