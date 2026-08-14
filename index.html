@@ -264,7 +264,11 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-compare-cap{font-size:10px;color:#7C8CA6;text-align:right;margin:-8px 2px 16px;min-height:14px}
 .kpi-headline{margin:-4px 2px 16px;padding:14px 16px;background:linear-gradient(160deg,rgba(32,40,92,.42) 0%,rgba(18,24,60,.38) 100%);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border:1px solid rgba(255,255,255,.1);border-top-color:rgba(255,255,255,.2);border-radius:12px;box-shadow:0 8px 20px rgba(6,8,24,.3),inset 0 1px 0 rgba(255,255,255,.08)}
 .kpi-headline:empty{display:none}
-.kpi-headline-hd{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7C8CA6;margin-bottom:9px}
+.kpi-headline-hd{display:flex;align-items:center;justify-content:space-between;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7C8CA6;margin-bottom:9px;cursor:pointer;user-select:none}
+.kpi-headline-hd:hover{color:#a8b3c5}
+.kpi-headline-chev{font-size:9px;color:#7C8CA6;transition:color .15s}
+.kpi-headline.collapsed .kpi-headline-hd{margin-bottom:0}
+.kpi-headline.collapsed .kpi-headline-body{display:none}
 .kpi-headline-row{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:#a8b3c5;line-height:1.55;margin-bottom:6px}
 .kpi-headline-row:last-child{margin-bottom:0}
 .kpi-headline-row strong{color:#f1f5f9;font-weight:700}
@@ -1150,8 +1154,9 @@ function renderKpiHeadline(fxFrom,fxTo){
   }
 
   const dotColor={good:"#8FC49B",warn:"#E5B863",bad:"#DD9280",neutral:"#7C8CA6"};
-  el.innerHTML=`<div class="kpi-headline-hd">Samenvatting</div>`+
-    rows.map(r=>`<div class="kpi-headline-row"><span class="kpi-headline-dot" style="background:${dotColor[r.dot]}"></span><span>${r.html}</span></div>`).join("");
+  el.className = "kpi-headline" + (kpiHeadlineCollapsed ? " collapsed" : "");
+  el.innerHTML=`<div class="kpi-headline-hd" onclick="toggleKpiHeadline()">Samenvatting<span class="kpi-headline-chev">${kpiHeadlineCollapsed?"▸":"▾"}</span></div>`+
+    `<div class="kpi-headline-body">`+rows.map(r=>`<div class="kpi-headline-row"><span class="kpi-headline-dot" style="background:${dotColor[r.dot]}"></span><span>${r.html}</span></div>`).join("")+`</div>`;
 }
 
 function setPeriod(v){P=v;render()}
@@ -2070,6 +2075,17 @@ let kpiChartSel = [];
 let kpiChartGran = "day";
 let kpiChartSeg = "all"; // all | test | schaal — alleen relevant bij 1 metric, niet bruto/net
 let roasChartVis = {line:true, dot:true, bar:true}; // welke series van de ROAS-grafiek zichtbaar zijn, via legenda toggle
+let kpiHeadlineCollapsed = false;
+try{ kpiHeadlineCollapsed = localStorage.getItem("daan_kh_collapsed")==="1"; }catch(e){}
+function toggleKpiHeadline(){
+  kpiHeadlineCollapsed=!kpiHeadlineCollapsed;
+  try{ localStorage.setItem("daan_kh_collapsed", kpiHeadlineCollapsed?"1":"0"); }catch(e){}
+  const el=document.getElementById("kpiHeadline");
+  if(!el)return;
+  el.classList.toggle("collapsed", kpiHeadlineCollapsed);
+  const chev=el.querySelector(".kpi-headline-chev");
+  if(chev) chev.textContent = kpiHeadlineCollapsed?"▸":"▾";
+}
 function toggleRoasSeries(key){ roasChartVis[key]=!roasChartVis[key]; renderKpiChart(); }
 let _kpiDailyCache = null;
 
