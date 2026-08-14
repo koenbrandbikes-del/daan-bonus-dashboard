@@ -116,6 +116,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .ad-tag-badge:hover{filter:brightness(1.3)}
 .ad-tag-badge.test{background:rgba(91,158,232,.18);color:#93C5F5}
 .ad-tag-badge.schaal{background:rgba(74,222,128,.16);color:#8FE0A8}
+.ad-tag-badge.ongeclassificeerd{background:rgba(255,255,255,.08);color:#93A2B8}
 .ad-tag-badge.empty{background:rgba(255,255,255,.06);color:#7C8CA6;width:14px;height:14px;padding:0;border-radius:50%}
 .ad-tag-menu{display:none;position:fixed;background:rgba(13,18,45,.97);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border:1px solid rgba(255,255,255,.14);border-radius:10px;min-width:130px;z-index:300;box-shadow:0 12px 32px rgba(0,0,0,.6);padding:5px 0}
 .ad-tag-menu.open{display:block}
@@ -134,11 +135,11 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .ad-table-filter-btn.active.schaal{background:rgba(74,222,128,.16);border-color:rgba(74,222,128,.5);color:#8FE0A8}
 .ad-seg-summary{margin-bottom:12px}
 .ad-seg-hint{font-size:12px;color:#93A2B8;padding:10px 4px}
-.ad-seg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ad-seg-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .ad-seg-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px 14px}
-.ad-seg-card-hd{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.ad-seg-card-hd{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .ad-seg-card-n{font-size:10px;color:#7C8CA6}
-.ad-seg-card-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.ad-seg-card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 6px}
 .ad-seg-lbl{font-size:8px;color:#7C8CA6;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
 .ad-seg-val{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
 
@@ -1093,7 +1094,7 @@ function renderDashSegBar(fxFrom,fxTo){
     const tp=testSpend/totalSpend*100, sp=schaalSpend/totalSpend*100, up=Math.max(0,100-tp-sp);
     splitHtml=`<div class="dash-seg-split">
       <div class="dash-seg-split-bar">${sp>0?`<div class="dash-seg-split-seg schaal" style="width:${sp}%"></div>`:""}${tp>0?`<div class="dash-seg-split-seg test" style="width:${tp}%"></div>`:""}${up>0?`<div class="dash-seg-split-seg untagged" style="width:${up}%"></div>`:""}</div>
-      <div class="dash-seg-split-lbl">${sp>0?`<span class="dash-seg-split-item schaal">Schaal ${sp.toFixed(0)}%</span>`:""}${tp>0?`<span class="dash-seg-split-item test">Test ${tp.toFixed(0)}%</span>`:""}${up>0?`<span class="dash-seg-split-item untagged">Overig ${up.toFixed(0)}%</span>`:""}</div>
+      <div class="dash-seg-split-lbl">${sp>0?`<span class="dash-seg-split-item schaal">Schaal ${sp.toFixed(0)}%</span>`:""}${tp>0?`<span class="dash-seg-split-item test">Test ${tp.toFixed(0)}%</span>`:""}${up>0?`<span class="dash-seg-split-item untagged">Ongeclassificeerd ${up.toFixed(0)}%</span>`:""}</div>
     </div>`;
   }
   el.innerHTML=`<div class="dash-seg-row"><div class="dash-seg-toggle">${segBtn("all","Alle")}${segBtn("test","Test")}${segBtn("schaal","Schaal")}</div>${splitHtml}</div>`;
@@ -1424,7 +1425,7 @@ function render(){
     }
   } else if(prevBon!==null && CB){
     const d=CB.raw-prevBon, up=d>=0;
-    bHtml=`<span style="color:${up?"#8FC49B":"#DD9280"}">${up?"▲":"▼"} ${eur(Math.abs(d))} vs. juli</span>`;
+    bHtml=`<span style="color:${up?"#8FC49B":"#DD9280"}">${up?"▲":"▼"} ${eur(Math.abs(d))} vs. ${prevLabel}</span>`;
   } else if(!hasTB && dashSegment!=="all"){
     bHtml=`<span style="color:#93A2B8">geen data voor dit segment</span>`;
   } else if(P==="jul"){
@@ -1480,7 +1481,7 @@ function render(){
   }
 
   document.getElementById("footerDate").textContent=fmtL(SNAP)+(SNAP_TIME&&SNAP_TIME!=="00:00"?" · "+SNAP_TIME:"");
-  renderKpiBar(CX, CT, TG, prevCT, prevCX, prevLabel);
+  renderKpiBar(CX, CT, TG, prevCT, prevCX, prevLabel, ctDays, prevDays);
   fitTitle();
 }
 
@@ -1880,21 +1881,23 @@ function renderAds(adsRaw, beroas){
 
   document.getElementById("adsTable").innerHTML=html;
 
-  // Samenvatting per label — alleen spend/aankopen/omzet/ROAS/CAC, want
-  // brutomarge/nettomarge is niet naar advertentiegroep te herleiden.
-  const segSum={test:{spend:0,purch:0,ri:0,n:0},schaal:{spend:0,purch:0,ri:0,n:0}};
+  // Samenvatting per label, incl. Ongeclassificeerd (nog niet gelabeld).
+  // Nettoresultaat is een schatting: gemiddeld marge% van het hele account
+  // toegepast op de omzet van dat segment (geen exacte order-koppeling).
+  const segSum={test:{spend:0,purch:0,ri:0,n:0},schaal:{spend:0,purch:0,ri:0,n:0},ongeclassificeerd:{spend:0,purch:0,ri:0,n:0}};
   for(const r of rows){
-    const tag=AD_TAGS[r.n];
-    if(!tag)continue;
+    const tag=AD_TAGS[r.n]||"ongeclassificeerd";
     const s=segSum[tag];
     s.spend+=r.spend; s.purch+=r.purch; s.ri+=r.ri; s.n++;
   }
   const segEl=document.getElementById("adSegSummary");
-  if(!segSum.test.n && !segSum.schaal.n){
-    segEl.innerHTML=`<div class="ad-seg-hint">Nog geen groepen gelabeld — klik op een rij om te beginnen met test/schaal.</div>`;
+  if(!rows.length){
+    segEl.innerHTML="";
   } else {
+    const margePct=CX.rev>0?CX.pro/CX.rev:0;
     const card=(label,cls,s)=>{
       const roas=s.spend>0?s.ri/s.spend:0, cac=s.purch>0?s.spend/s.purch:0;
+      const netEst=s.spend>0?margePct*s.ri-s.spend:null;
       return `<div class="ad-seg-card ${cls}">
         <div class="ad-seg-card-hd"><span class="ad-tag-badge ${cls}">${label}</span><span class="ad-seg-card-n">${s.n} groep${s.n===1?"":"en"}</span></div>
         <div class="ad-seg-card-grid">
@@ -1903,10 +1906,11 @@ function renderAds(adsRaw, beroas){
           <div><div class="ad-seg-lbl">Omzet</div><div class="ad-seg-val">${s.ri>0?eur(s.ri):"—"}</div></div>
           <div><div class="ad-seg-lbl">ROAS</div><div class="ad-seg-val">${roas>0?x2(roas):"—"}</div></div>
           <div><div class="ad-seg-lbl">CAC</div><div class="ad-seg-val">${cac>0?eur(cac):"—"}</div></div>
+          <div><div class="ad-seg-lbl">Netto (schatting)</div><div class="ad-seg-val" style="color:${netEst==null?"inherit":netEst>0?"#8FC49B":"#DD9280"}">${netEst!=null?eur(netEst):"—"}</div></div>
         </div>
       </div>`;
     };
-    segEl.innerHTML=`<div class="ad-seg-grid">${card("TEST","test",segSum.test)}${card("SCHAAL","schaal",segSum.schaal)}</div>`;
+    segEl.innerHTML=`<div class="ad-seg-grid">${card("TEST","test",segSum.test)}${card("SCHAAL","schaal",segSum.schaal)}${card("ONGECLASSIFICEERD","ongeclassificeerd",segSum.ongeclassificeerd)}</div>`;
   }
 }
 
@@ -1921,18 +1925,20 @@ const GA4_PERIOD_MAP = {
 // "▲ vs. vorige week"-badges in de metric-rij, nu ook op elke KPI-tegel —
 // vergelijkbaar met hoe Google Ads een "vs. vorige periode" op elke metric
 // toont zodra compare actief is.
-function renderKpiBar(cx, ct, tg, prevCt, prevCx, prevLabel){
+function renderKpiBar(cx, ct, tg, prevCt, prevCx, prevLabel, ctDays, prevDays){
   const metaSpend = ct ? ct.spend : 0;
   const metaRev   = ct ? ct.rev7 + ct.rev1v : 0;
   const metaPurch = ct ? ct.purch : 0;
   const metaRoas  = metaSpend > 0 && metaRev > 0 ? metaRev / metaSpend : null;
   const roasCls   = metaRoas == null ? "" : metaRoas >= cx.be ? " good" : metaRoas >= 1 ? " warn" : " bad";
   const cac       = metaSpend > 0 && metaPurch > 0 ? metaSpend / metaPurch : null;
+  // Brutomarge/nettomarge zijn niet exact naar advertentiegroep te herleiden
+  // (geen koppeling tussen een Shopify-order en de ad die 'm opleverde) — bij
+  // een actief test/schaal-filter passen we daarom het gemiddelde marge% van
+  // het hele account toe op de omzet van dat segment: een schatting, geen
+  // exact cijfer, duidelijk gelabeld als zodanig in de subtekst.
   const margePct  = cx.rev > 0 ? cx.pro / cx.rev : 0;
-  // Brutomarge/nettomarge zijn niet naar advertentiegroep te herleiden (geen
-  // koppeling tussen een Shopify-order en de ad die 'm opleverde) — dus bij
-  // een actief test/schaal-filter altijd "geen data" i.p.v. een onjuist cijfer.
-  const metaBruto = (ct && dashSegment==="all") ? margePct * metaRev : null;
+  const metaBruto = ct ? margePct * metaRev : null;
   const netMeta   = metaBruto != null && metaSpend > 0 ? metaBruto - metaSpend : null;
   const brutoCls  = metaBruto == null ? "" : metaBruto > 0 ? " good" : " warn";
   const netCls    = netMeta == null ? "" : netMeta > 0 ? " good" : " bad";
@@ -1945,26 +1951,47 @@ function renderKpiBar(cx, ct, tg, prevCt, prevCx, prevLabel){
   const pMarge = prevCx && prevCx.rev > 0 ? prevCx.pro / prevCx.rev : null;
   const pBruto = pMarge != null && pRev != null ? pMarge * pRev : null;
   const pNet   = pBruto != null && pSpend != null ? pBruto - pSpend : null;
-  const delta=(cur,prev,invert)=>{
+
+  // Bij duidelijk verschillende periodelengtes (bv. 10 dagen aug vs 16 dagen
+  // juli) normaliseren we totalen naar "/dag" vóór de %-vergelijking — anders
+  // ontstaan tegenstrijdige percentages t.o.v. de al genormaliseerde
+  // metric-rij eronder. ROAS/CAC zijn al ratio's en hoeven niet genormaliseerd.
+  const norm = !!prevCt && ctDays>0 && prevDays>0 && Math.abs(ctDays-prevDays)>1;
+  const nrm=(cur,days)=>norm&&cur!=null?cur/days:cur;
+  const delta=(cur,prev,invert,isRatio)=>{
+    if(!isRatio){ cur=nrm(cur,ctDays); prev=nrm(prev,prevDays); }
     if(cur==null||prev==null||prev===0)return "";
     const d=(cur-prev)/prev*100, up=d>=0, good=invert?!up:up;
     const col=good?"#8FC49B":"#DD9280";
     return ` <span class="kpi-delta" style="color:${col}">${up?"▲":"▼"}${Math.abs(d).toFixed(0)}%</span>`;
   };
 
+  const brutoSub = dashSegment!=="all"
+    ? (metaBruto!=null?`~${(margePct*100).toFixed(1)}% (gem.)`:"geen data")
+    : (metaBruto!=null?`${(margePct*100).toFixed(1)}% op Meta omzet`:"geen data");
+  const netSub = dashSegment!=="all"
+    ? (netMeta!=null?"schatting, gem. marge":"geen spend")
+    : (netMeta!=null?(netMeta>0?"na Meta spend":"verlies na Meta"):"geen spend");
+  // Nettomarge: bij vergelijking met een resultaat dicht bij nul levert een
+  // %-verschil onbruikbare uitschieters op (bv. "▼2460%") — toon in plaats
+  // daarvan altijd het verschil in euro's t.o.v. de vorige periode.
+  const netDelta = (netMeta!=null && pNet!=null)
+    ? ` <span class="kpi-delta" style="color:${netMeta-pNet>=0?"#8FC49B":"#DD9280"}">${netMeta-pNet>=0?"▲":"▼"}${eur(Math.abs(netMeta-pNet))}</span>`
+    : "";
+
   const items = [
     {k:"spend", l:"Meta spend",    v:ct?eur(metaSpend):"—",              s:ct?`${metaPurch} aankopen`:"geen data",   c:"",        d:delta(metaSpend,pSpend,true)},
     {k:"purch", l:"Meta aankopen", v:ct?metaPurch:"—",                   s:"7d click + 1d view",                     c:"",        d:delta(metaPurch,pPurch,false)},
     {k:"rev",   l:"Meta omzet",    v:ct?eur(metaRev):"—",                s:"7d click + 1d view",                     c:"",        d:delta(metaRev,pRev,false)},
-    {k:"roas",  l:"Meta ROAS",     v:metaRoas!=null?x2(metaRoas):"—",    s:`break-even ${x2(cx.be)}`,               c:roasCls,   d:delta(metaRoas,pRoas,false)},
-    {k:"cac",   l:"CAC",           v:cac!=null?eur(cac):"—",             s:"per aankoop",                            c:"",        d:delta(cac,pCac,true)},
-    {k:"bruto", l:"Brutomarge",    v:metaBruto!=null?eur(metaBruto):"—", s:dashSegment!=="all"?"niet per segment":(metaBruto!=null?`${(margePct*100).toFixed(1)}% op Meta omzet`:"geen data"), c:brutoCls, d:delta(metaBruto,pBruto,false)},
-    {k:"net",   l:"Nettomarge",    v:netMeta!=null?eur(netMeta):"—",     s:dashSegment!=="all"?"niet per segment":(netMeta!=null?(netMeta>0?"na Meta spend":"verlies na Meta"):"geen spend"),  c:netCls,   d:delta(netMeta,pNet,false)},
+    {k:"roas",  l:"Meta ROAS",     v:metaRoas!=null?x2(metaRoas):"—",    s:`break-even ${x2(cx.be)}`,               c:roasCls,   d:delta(metaRoas,pRoas,false,true)},
+    {k:"cac",   l:"CAC",           v:cac!=null?eur(cac):"—",             s:"per aankoop",                            c:"",        d:delta(cac,pCac,true,true)},
+    {k:"bruto", l:"Brutomarge",    v:metaBruto!=null?eur(metaBruto):"—", s:brutoSub, c:brutoCls, d:delta(metaBruto,pBruto,false)},
+    {k:"net",   l:"Nettomarge",    v:netMeta!=null?eur(netMeta):"—",     s:netSub,   c:netCls,   d:netDelta},
   ];
   document.getElementById("kpiStrip").innerHTML =
     items.map(it=>`<div class="kpi-item${it.c}${kpiChartSel.includes(it.k)?" chart-active":""}" data-kpi="${it.k}" onclick="toggleKpiChart('${it.k}')"><div class="kpi-lbl">${it.l}</div><div class="kpi-val">${it.v}</div><div class="kpi-sub">${it.s}${it.d}</div></div>`).join("");
   const cap=document.getElementById("kpiCompareCap");
-  if(cap)cap.textContent=prevCt?`t.o.v. ${prevLabel}`:"";
+  if(cap)cap.textContent=prevCt?`t.o.v. ${prevLabel}${norm?" (genormaliseerd naar /dag, ongelijke periodelengtes)":""}`:"";
   renderKpiChart();
 }
 
