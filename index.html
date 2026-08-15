@@ -113,8 +113,8 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 
 /* ── Advertentiegroep-rij: klikbaar om uit te klappen ── */
 .ad-row{cursor:pointer}
-.ad-row-chv{display:inline-block;width:11px;font-size:9px;color:#7C8CA6;transition:transform .15s ease}
-.ad-row-chv.open{transform:rotate(90deg)}
+.ad-row-chv{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-right:7px;vertical-align:middle;border-radius:50%;background:rgba(96,165,250,.14);color:#60a5fa;font-size:12px;font-weight:700;line-height:1}
+.ad-row:hover .ad-row-chv{background:rgba(96,165,250,.26)}
 .ad-detail-row td{background:rgba(255,255,255,.02);border-bottom:1px solid rgba(31,45,69,.5);padding:12px 14px;white-space:normal}
 .ad-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 6px}
 @media(max-width:540px){.ad-detail-grid{grid-template-columns:repeat(2,1fr);row-gap:12px}}
@@ -1886,7 +1886,7 @@ function renderAds(adsRaw, beroas){
     const escN=r.n.replace(/'/g,"\\'");
     const badge=tag?`<span class="ad-tag-badge ${tag}" onclick="openAdTagMenu(event,'${escN}')">${tagLbl[tag]}</span>`:`<span class="ad-tag-badge empty" onclick="openAdTagMenu(event,'${escN}')">+</span>`;
     const expanded=adsExpanded.has(r.n);
-    const chevron=`<span class="ad-row-chv${expanded?" open":""}">▸</span>`;
+    const chevron=`<span class="ad-row-chv">${expanded?"−":"+"}</span>`;
     html+=`<tr class="ad-row" onclick="toggleAdRow('${escN}')">
       <td>${chevron}${badge}${r.n}</td>
       <td class="r">${eur(r.spend)}</td>
