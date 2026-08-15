@@ -2122,7 +2122,11 @@ function toggleKpiChart(key){
 // dagcijfers — dat vertekent bij dagen met weinig spend), aankoopbalken
 // onderin (context: hoeveel aankopen dragen die ROAS?), en break-even/doel/
 // schaaldoel als stippellijnen. Spend/CAC/marge alleen in de hover-tooltip.
-function renderRoasChart(wrap){
+function renderRatioChart(wrap,metric){
+  const isRoas=metric==="roas";
+  const metricLabel=isRoas?"Meta ROAS":"CAC";
+  const fmtRatio=isRoas?x2:eur;
+  const valOf=x=>isRoas?x.roas:x.cac;
   const pd=PERIODS[P]||PERIODS.aug;
   const rangeFrom=pd.from, rangeTo=pd.to;
   const seg=kpiChartSeg;
@@ -2132,7 +2136,7 @@ function renderRoasChart(wrap){
   if(filteredDaily.length===0 || filteredDaily.every(x=>x.spend===0 && x.purch===0 && x.rev===0)){
     const segNote = seg!=="all" ? ` (label "${seg==="test"?"Test":"Schaal"}")` : "";
     wrap.innerHTML=`
-      <div class="kpi-chart-hd"><div class="kpi-chart-title">Meta ROAS</div></div>
+      <div class="kpi-chart-hd"><div class="kpi-chart-title">${metricLabel}</div></div>
       <div class="kpi-chart-empty">Geen dagelijkse data beschikbaar voor de geselecteerde periode (${pd.label})${segNote}. <button class="kpi-chart-jump" onclick="jumpToPeriodSelector()">Kies een andere periode ↑</button></div>`;
     return;
   }
@@ -2141,12 +2145,15 @@ function renderRoasChart(wrap){
   const n=data.length;
   const actualFrom=data[0].d, actualTo=data[n-1].d;
 
-  // Gewogen 3-daags voortschrijdend ROAS: som omzet/som spend over het
-  // venster [i-2..i], niet het gemiddelde van de losse dag-ROAS'en.
-  const roas3=data.map((x,i)=>{
-    let sSpend=0,sRev=0;
-    for(let j=Math.max(0,i-2);j<=i;j++){ sSpend+=data[j].spend; sRev+=data[j].rev; }
-    return sSpend>0?sRev/sSpend:null;
+  // Gewogen 3-daags voortschrijdend ROAS/CAC: som omzet/som spend (ROAS) of
+  // som spend/som aankopen (CAC) over het venster [i-2..i], niet het
+  // gemiddelde van de losse dagcijfers — dat vertekent bij dagen met weinig
+  // spend of weinig aankopen.
+  const ratio3=data.map((x,i)=>{
+    let sSpend=0,sRev=0,sPurch=0;
+    for(let j=Math.max(0,i-2);j<=i;j++){ sSpend+=data[j].spend; sRev+=data[j].rev; sPurch+=data[j].purch; }
+    if(isRoas) return sSpend>0?sRev/sSpend:null;
+    return sPurch>0?sSpend/sPurch:null;
   });
 
   const segAllowed=true;
@@ -2161,11 +2168,12 @@ function renderRoasChart(wrap){
   const barW=Math.max(3,Math.min(18,(plotW/n)*0.55));
 
   // Slechts 2 referentiewaarden i.p.v. 3 — break-even + doel — anders staan
-  // de stippellijnen te dicht op elkaar bij een smalle ROAS-marge.
-  const showBeRef=CX && CX.be;
+  // de stippellijnen te dicht op elkaar bij een smalle ROAS-marge. Alleen
+  // zinvol bij ROAS zelf, CAC heeft geen break-even-referentie op dezelfde as.
+  const showBeRef=isRoas && CX && CX.be;
   const doelRoas=showBeRef?1/(1/CX.be-SCALE_T):null;
-  const allRoasVals=[...data.map(x=>x.roas),...roas3].filter(v=>v!=null);
-  let yMin=Math.min(...allRoasVals), yMax=Math.max(...allRoasVals);
+  const allRatioVals=[...data.map(valOf),...ratio3].filter(v=>v!=null);
+  let yMin=Math.min(...allRatioVals), yMax=Math.max(...allRatioVals);
   if(showBeRef){ yMin=Math.min(yMin,CX.be,doelRoas); yMax=Math.max(yMax,CX.be,doelRoas); }
   if(!isFinite(yMin)||!isFinite(yMax)){yMin=0;yMax=1;}
   if(yMin===yMax){yMin-=1;yMax+=1;}
@@ -2186,7 +2194,7 @@ function renderRoasChart(wrap){
   const xLabels=data.map((d,i)=>i%step===0||i===n-1?`<text class="kpi-chart-xlbl" x="${xAt(i).toFixed(1)}" y="${H-6}" text-anchor="middle">${d.label}</text>`:"").join("");
 
   const yTicks=[yMin+ypad,(yMin+yMax)/2,yMax-ypad];
-  const yGrid=yTicks.map(v=>`<line class="kpi-chart-grid" x1="${padL}" x2="${W-padR}" y1="${yAt(v).toFixed(1)}" y2="${yAt(v).toFixed(1)}"></line><text class="kpi-chart-ylbl" x="${padL-8}" y="${(yAt(v)+3).toFixed(1)}" text-anchor="end">${x2(v)}</text>`).join("");
+  const yGrid=yTicks.map(v=>`<line class="kpi-chart-grid" x1="${padL}" x2="${W-padR}" y1="${yAt(v).toFixed(1)}" y2="${yAt(v).toFixed(1)}"></line><text class="kpi-chart-ylbl" x="${padL-8}" y="${(yAt(v)+3).toFixed(1)}" text-anchor="end">${fmtRatio(v)}</text>`).join("");
 
   const refPts=showBeRef?[
     {v:CX.be,cls:"be",lbl:`break-even ${x2(CX.be)}`},
@@ -2207,28 +2215,28 @@ function renderRoasChart(wrap){
   const barBg=`<rect x="${padL}" y="${barTop}" width="${plotW}" height="${barAreaH}" fill="rgba(255,255,255,.02)" rx="4"></rect>`;
   const barAxisLbl=`<text class="kpi-chart-ylbl" x="${padL-8}" y="${(barBot+3).toFixed(1)}" text-anchor="end">0</text><text class="kpi-chart-ylbl" x="${padL-8}" y="${(barTop+8).toFixed(1)}" text-anchor="end">${maxPurch}</text>`;
 
-  // Dag-ROAS: alleen stippen (geen verbindende lijn) — de 3-daagse lijn is
+  // Dag-waarde: alleen stippen (geen verbindende lijn) — de 3-daagse lijn is
   // de enige doorlopende trendlijn, dat voorkomt twee elkaar overlappende
   // lijnen die moeilijk uit elkaar te houden zijn.
-  const roasDots=roasChartVis.dot ? dotsFor(data.map(x=>x.roas),"#4EA8DE",2.6) : "";
-  const roas3Line=roasChartVis.line ? `<path class="kpi-chart-line-thick" d="${pathFor(roas3)}" stroke="#4EA8DE" fill="none"></path>` : "";
+  const ratioDots=roasChartVis.dot ? dotsFor(data.map(valOf),"#4EA8DE",2.6) : "";
+  const ratio3Line=roasChartVis.line ? `<path class="kpi-chart-line-thick" d="${pathFor(ratio3)}" stroke="#4EA8DE" fill="none"></path>` : "";
   const barsOut=roasChartVis.bar ? bars : "";
   const barBgOut=roasChartVis.bar ? barBg : "";
   const barAxisLblOut=roasChartVis.bar ? barAxisLbl : "";
 
   wrap.innerHTML=`
     <div class="kpi-chart-hd">
-      <div class="kpi-chart-title">Meta ROAS<button class="kpi-chart-sub" onclick="jumpToPeriodSelector()" title="Kies een andere periode">${fmtS(actualFrom)} – ${fmtS(actualTo)}${seg!=="all"?` · label: ${seg==="test"?"Test":"Schaal"}`:""} ↑</button></div>
+      <div class="kpi-chart-title">${metricLabel}<button class="kpi-chart-sub" onclick="jumpToPeriodSelector()" title="Kies een andere periode">${fmtS(actualFrom)} – ${fmtS(actualTo)}${seg!=="all"?` · label: ${seg==="test"?"Test":"Schaal"}`:""} ↑</button></div>
     </div>
     ${segToggle}
     <div class="kpi-chart-legend">
-      <span class="kpi-chart-legend-item kpi-chart-legend-toggle${roasChartVis.line?"":" off"}" onclick="toggleRoasSeries('line')"><span class="kpi-chart-legend-line" style="background:#4EA8DE"></span>3-daags gewogen ROAS</span>
-      <span class="kpi-chart-legend-item kpi-chart-legend-toggle${roasChartVis.dot?"":" off"}" onclick="toggleRoasSeries('dot')"><span class="kpi-chart-legend-dot" style="background:#4EA8DE;opacity:.6"></span>Dag-ROAS</span>
+      <span class="kpi-chart-legend-item kpi-chart-legend-toggle${roasChartVis.line?"":" off"}" onclick="toggleRoasSeries('line')"><span class="kpi-chart-legend-line" style="background:#4EA8DE"></span>3-daags gewogen ${metricLabel}</span>
+      <span class="kpi-chart-legend-item kpi-chart-legend-toggle${roasChartVis.dot?"":" off"}" onclick="toggleRoasSeries('dot')"><span class="kpi-chart-legend-dot" style="background:#4EA8DE;opacity:.6"></span>Dag-${metricLabel}</span>
       <span class="kpi-chart-legend-item kpi-chart-legend-toggle${roasChartVis.bar?"":" off"}" onclick="toggleRoasSeries('bar')"><span class="kpi-chart-legend-bar"></span>Aankopen</span>
     </div>
     <div class="kpi-chart-svgwrap" id="kpiChartSvgWrap">
       <svg viewBox="0 0 ${W} ${H}" class="kpi-chart-svg" id="kpiChartSvg">
-        ${yGrid}${refLines}${barBgOut}${barsOut}${barAxisLblOut}${roas3Line}${roasDots}${xLabels}
+        ${yGrid}${refLines}${barBgOut}${barsOut}${barAxisLblOut}${ratio3Line}${ratioDots}${xLabels}
         <rect class="kpi-chart-selrect" id="kpiChartSelRect" x="0" y="${padT}" width="0" height="${barBot-padT}" style="opacity:0"></rect>
         <line class="kpi-chart-cross" id="kpiChartCross" x1="0" x2="0" y1="${padT}" y2="${barBot}" style="opacity:0"></line>
       </svg>
@@ -2237,7 +2245,7 @@ function renderRoasChart(wrap){
     <div class="kpi-chart-selection-summary" id="kpiChartSelSummary" style="display:none"></div>
     <div class="kpi-chart-selhint">Sleep over de grafiek om een periode te selecteren</div>`;
 
-  attachRoasChartHover(data,roas3,xAt,W);
+  attachRatioChartHover(data,ratio3,xAt,W,metric);
 }
 
 // Gedeelde samenvattingskaart voor een sleepselectie op een van de
@@ -2269,7 +2277,8 @@ function buildSelSummaryHtml(slice,unitSingular,unitPlural){
     </div>`;
 }
 
-function attachRoasChartHover(data,roas3,xAt,W){
+function attachRatioChartHover(data,ratio3,xAt,W,metric){
+  const isRoas=metric==="roas";
   const svgWrap=document.getElementById("kpiChartSvgWrap");
   const svg=document.getElementById("kpiChartSvg");
   const cross=document.getElementById("kpiChartCross");
@@ -2292,7 +2301,7 @@ function attachRoasChartHover(data,roas3,xAt,W){
     const px=xAt(best), x=data[best];
     cross.setAttribute("x1",px);cross.setAttribute("x2",px);cross.style.opacity="1";
     tip.innerHTML=`
-      <div class="kpi-chart-tip-date">${x.label}${roas3[best]!=null?` · 3d: ${x2(roas3[best])}`:""}</div>
+      <div class="kpi-chart-tip-date">${x.label}${ratio3[best]!=null?` · 3d ${isRoas?"ROAS":"CAC"}: ${isRoas?x2(ratio3[best]):eur(ratio3[best])}`:""}</div>
       <div class="kpi-chart-tip-row"><span class="kpi-chart-tip-dot" style="background:#4EA8DE"></span>ROAS: <strong>${x.roas!=null?x2(x.roas):"—"}</strong></div>
       <div class="kpi-chart-tip-row">Aankopen: <strong>${x.purch}</strong></div>
       <div class="kpi-chart-tip-row">Omzet: <strong>${eur(x.rev)}</strong></div>
@@ -2378,10 +2387,11 @@ function renderKpiChart(){
   if(kpiChartSel.length===0){wrap.classList.remove("open");wrap.innerHTML="";return;}
   wrap.classList.add("open");
 
-  // Meta ROAS los geselecteerd → verrijkte weergave (aankoopbalken + dag-
-  // en 3-daagse gewogen ROAS-lijn). Andere metrics en de 2-lijnen-vergelijking
-  // houden de bestaande, eenvoudigere grafiek.
-  if(kpiChartSel.length===1 && kpiChartSel[0]==="roas"){ renderRoasChart(wrap); return; }
+  // Meta ROAS of CAC los geselecteerd → verrijkte weergave (aankoopbalken +
+  // dag- en 3-daagse gewogen lijn, zelfde principe voor beide: som/som over
+  // het venster, niet het gemiddelde van losse dagcijfers). Andere metrics
+  // en de 2-lijnen-vergelijking houden de bestaande, eenvoudigere grafiek.
+  if(kpiChartSel.length===1 && (kpiChartSel[0]==="roas"||kpiChartSel[0]==="cac")){ renderRatioChart(wrap,kpiChartSel[0]); return; }
 
   // Grafiek volgt de bovenin geselecteerde periode (net als de rest van
   // het dashboard) i.p.v. altijd de volledige geschiedenis te tonen — zo
