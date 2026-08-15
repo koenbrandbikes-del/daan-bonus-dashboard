@@ -2,6 +2,12 @@ name = "daan-shopify-webhook"
 main = "src/index.js"
 compatibility_date = "2026-08-15"
 
+# Elke 15 minuten: Meta-sync (data/meta.json), volledig los van de Mac.
+[triggers]
+crons = ["*/15 * * * *"]
+
 # Secrets (NIET hier, via `wrangler secret put`):
 #   GITHUB_TOKEN            — fine-grained PAT, alleen repo daan-bonus-dashboard, Contents: Read/write
 #   SHOPIFY_WEBHOOK_SECRET  — het gedeelde geheim van Shopify Admin > Instellingen > Meldingen > Webhooks
+#   META_ACCESS_TOKEN       — Meta Marketing API system-user token (ads_read)
+#   META_SYNC_TRIGGER_KEY   — willekeurige sleutel om de cron ook handmatig te triggeren via GET /run-meta-sync?key=...

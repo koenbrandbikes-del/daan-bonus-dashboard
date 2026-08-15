@@ -1,16 +1,20 @@
 #!/bin/bash
-# Dashboard updater.
-#   - Meta: elke run, direct via Marketing API (geen Claude, geen LLM).
-#   - Shopify: real-time en gratis via een Cloudflare Worker-webhook
-#     (cloudflare-worker/) die nieuwe orders rechtstreeks in data/shopify.json
-#     zet zodra Shopify "Aanmaken van bestelling" meldt. Dit script doet
-#     Shopify alleen nog als vangnet, max 1x per SHOPIFY_SYNC_HOURS uur via
-#     Claude CLI + Shopify MCP — de enige stap die nog credits kost.
-#   - Google Ads (TrackBee): NIET meer automatisch ververst (bewust besluit —
+# Dashboard updater — draait lokaal op de Mac, maar is sinds 15 aug 2026 niet
+# meer verantwoordelijk voor Meta of de real-time Shopify-orders: die lopen
+# via de Cloudflare Worker (cloudflare-worker/), volledig los van of deze Mac
+# wakker is. Reden: bij lage accu onderdrukt macOS geplande achtergrond-wakes
+# (DarkWake), waardoor dit script uren kon overslaan.
+#   - Meta: cron-trigger in de Worker zelf (elke 15 min), niet hier.
+#   - Shopify: real-time via de Worker-webhook. Dit script doet Shopify
+#     alleen nog als vangnet voor gemiste webhooks, max 1x per
+#     SHOPIFY_SYNC_HOURS uur via Claude CLI + Shopify MCP — de enige stap
+#     hier die nog credits kost.
+#   - Google Ads (TrackBee): NIET automatisch ververst (bewust besluit —
 #     TrackBee heeft geen directe API zonder Claude/MCP; zie data/status.json).
-#   - Wijzigt uitsluitend data/*.json. index.html/CSS/JS blijven onaangeroerd
-#     tijdens een normale sync.
-# Draait elke 15 minuten via launchd (StartInterval).
+#   - Wijzigt uitsluitend data/shopify.json. index.html/CSS/JS blijven
+#     onaangeroerd tijdens een normale sync.
+# Draait elke 15 minuten via launchd (StartInterval) — vooral om het
+# Shopify-vangnet tijdig te checken zodra de Mac toevallig wakker is.
 
 set -uo pipefail
 
@@ -49,13 +53,7 @@ git stash -u --quiet 2>/dev/null || true
 git pull --rebase origin main --quiet 2>/dev/null || true
 git stash pop --quiet 2>/dev/null || true
 
-# 2. Meta — elke run, gratis, deterministisch. Mag falen zonder de rest
-#    (vooral de wake-timer hierboven) te breken.
-if ! python3 "$SCRIPT_DIR/sync_dashboard_data.py"; then
-    echo "⚠️  Meta-sync mislukt deze run — data/meta.json blijft ongewijzigd, volgend uur opnieuw"
-fi
-
-# 3. Shopify — sinds 15 aug 2026 vangt de Cloudflare Worker
+# 2. Shopify — sinds 15 aug 2026 vangt de Cloudflare Worker
 #    (cloudflare-worker/, Shopify "Aanmaken van bestelling"-webhook) nieuwe
 #    orders al real-time en gratis op. Dit is dus nu alleen nog een vangnet
 #    voor gemiste webhooks (Shopify geeft na 48u retries op) — via Claude CLI,
@@ -80,7 +78,7 @@ else
     echo "Shopify-sync overgeslagen (laatste sync ${elapsed_h}u geleden, drempel ${SHOPIFY_SYNC_HOURS}u)"
 fi
 
-# 4. Commit en push — alleen data/*.json, nooit index.html/CSS/JS.
+# 3. Commit en push — alleen data/*.json, nooit index.html/CSS/JS.
 #    Met retry als er ondertussen elders gepusht is.
 if ! git diff --quiet -- data/; then
     git add data/
