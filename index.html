@@ -111,6 +111,14 @@ tr:last-child td{border-bottom:none}
 tbody tr:hover{background:rgba(255,255,255,.02)}
 .tot td{font-weight:700;background:rgba(96,165,250,.05);border-top:1px solid #1f2d45}
 
+/* ── Advertentiegroep-rij: klikbaar om uit te klappen ── */
+.ad-row{cursor:pointer}
+.ad-row-chv{display:inline-block;width:11px;font-size:9px;color:#7C8CA6;transition:transform .15s ease}
+.ad-row-chv.open{transform:rotate(90deg)}
+.ad-detail-row td{background:rgba(255,255,255,.02);border-bottom:1px solid rgba(31,45,69,.5);padding:12px 14px;white-space:normal}
+.ad-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 6px}
+@media(max-width:540px){.ad-detail-grid{grid-template-columns:repeat(2,1fr);row-gap:12px}}
+
 /* ── Advertentiegroep test/schaal-labels ── */
 .ad-tag-badge{display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;letter-spacing:.04em;padding:2px 5px;border-radius:4px;margin-right:7px;vertical-align:middle;min-width:8px;cursor:pointer;transition:filter .15s ease}
 .ad-tag-badge:hover{filter:brightness(1.3)}
@@ -1728,6 +1736,15 @@ function adsForRange(from,to){
 let adsSortCol="spend", adsSortDir=-1; // -1 = aflopend, 1 = oplopend
 let _adsLastRaw=null, _adsLastBeroas=1.35;
 
+// Uitklapbare rij per advertentiegroep — toont metrics die niet in de
+// tabelkolommen passen (CAC, nettoschatting, aandeel in aankopen, ATC→aankoop-
+// conversie, klik/view-omzetverdeling, actieve dagen).
+let adsExpanded=new Set();
+function toggleAdRow(name){
+  if(adsExpanded.has(name)) adsExpanded.delete(name); else adsExpanded.add(name);
+  renderAds(_adsLastRaw,_adsLastBeroas);
+}
+
 // Test/schaal-labels per advertentiegroep — handmatig ingesteld door de
 // gebruiker (klik op een rij). Gedeeld tussen iedereen via een Google Sheet
 // (Apps Script als simpele REST-API); localStorage is alleen een snelle
@@ -1824,6 +1841,11 @@ function renderAds(adsRaw, beroas){
     m._ctr+=a.ctr; m._cpc+=a.cpc; m._cnt++;
   }
   const totSpend=Object.values(map).reduce((s,r)=>s+r.spend,0);
+  const totPurchAllRows=Object.values(map).reduce((s,r)=>s+r.purch,0);
+  // Zelfde schattingsmethode als de TEST/SCHAAL/ONGECLASSIFICEERD-kaarten
+  // hierboven: geen exacte order-koppeling per advertentiegroep, dus het
+  // gemiddelde marge% van het hele account toegepast op de omzet van de rij.
+  const margePct=CX.rev>0?CX.pro/CX.rev:0;
 
   // Afgeleide velden (nodig voor zowel weergave als sortering)
   let rows=Object.values(map).map(r=>{
@@ -1863,8 +1885,10 @@ function renderAds(adsRaw, beroas){
     const tag=AD_TAGS[r.n];
     const escN=r.n.replace(/'/g,"\\'");
     const badge=tag?`<span class="ad-tag-badge ${tag}" onclick="openAdTagMenu(event,'${escN}')">${tagLbl[tag]}</span>`:`<span class="ad-tag-badge empty" onclick="openAdTagMenu(event,'${escN}')">+</span>`;
-    html+=`<tr>
-      <td>${badge}${r.n}</td>
+    const expanded=adsExpanded.has(r.n);
+    const chevron=`<span class="ad-row-chv${expanded?" open":""}">▸</span>`;
+    html+=`<tr class="ad-row" onclick="toggleAdRow('${escN}')">
+      <td>${chevron}${badge}${r.n}</td>
       <td class="r">${eur(r.spend)}</td>
       <td class="r" style="color:#93A2B8">${r.pct.toFixed(1)}%</td>
       <td class="r">${r.purch||"—"}</td>
@@ -1874,6 +1898,24 @@ function renderAds(adsRaw, beroas){
       <td class="r">€${r.cpc.toFixed(2)}</td>
       <td class="r">${r.atc||"—"}</td>
     </tr>`;
+    if(expanded){
+      const cac=r.purch>0?r.spend/r.purch:null;
+      const netEst=r.spend>0?margePct*r.ri-r.spend:null;
+      const purchShare=totPurchAllRows>0?r.purch/totPurchAllRows*100:null;
+      const atcRate=r.atc>0?r.purch/r.atc*100:null;
+      const clickPct=r.ri>0?r.rev7/r.ri*100:null;
+      const viewPct=r.ri>0?r.rev1v/r.ri*100:null;
+      html+=`<tr class="ad-detail-row"><td colspan="${ADS_COLS.length}">
+        <div class="ad-detail-grid">
+          <div><div class="ad-seg-lbl">CAC</div><div class="ad-seg-val">${cac!=null?eur(cac):"—"}</div></div>
+          <div><div class="ad-seg-lbl">Netto (schatting)</div><div class="ad-seg-val" style="color:${netEst==null?"inherit":netEst>0?"#8FC49B":"#DD9280"}">${netEst!=null?eur(netEst):"—"}</div></div>
+          <div><div class="ad-seg-lbl">Aandeel aankopen</div><div class="ad-seg-val">${purchShare!=null?purchShare.toFixed(1)+"%":"—"}</div></div>
+          <div><div class="ad-seg-lbl">ATC → aankoop</div><div class="ad-seg-val">${atcRate!=null?atcRate.toFixed(0)+"%":"—"}</div></div>
+          <div><div class="ad-seg-lbl">Omzet: klik vs. view</div><div class="ad-seg-val">${clickPct!=null?clickPct.toFixed(0)+"% / "+viewPct.toFixed(0)+"%":"—"}</div></div>
+          <div><div class="ad-seg-lbl">Actieve dagen</div><div class="ad-seg-val">${r._cnt}</div></div>
+        </div>
+      </td></tr>`;
+    }
   }
   // Totaalrij — op basis van displayRows, dus volgt de Alle/Test/Schaal-filter
   const dispSpend=displayRows.reduce((s,r)=>s+r.spend,0);
@@ -1908,7 +1950,6 @@ function renderAds(adsRaw, beroas){
   if(!rows.length){
     segEl.innerHTML="";
   } else {
-    const margePct=CX.rev>0?CX.pro/CX.rev:0;
     const card=(label,cls,s)=>{
       const roas=s.spend>0?s.ri/s.spend:0, cac=s.purch>0?s.spend/s.purch:0;
       const netEst=s.spend>0?margePct*s.ri-s.spend:null;
