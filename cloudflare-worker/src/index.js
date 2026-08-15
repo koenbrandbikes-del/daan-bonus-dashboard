@@ -15,7 +15,7 @@ const BRANCH = "main";
 const TEST_CODES = new Set(["pim100", "koen100", "job100"]);
 const GH_API = "https://api.github.com";
 
-export { verifyHmac, mapOrder, timingSafeEqual, orderNumInt };
+export { verifyHmac, mapOrder, timingSafeEqual, orderNumInt, toAmsterdamDate };
 
 export default {
   async fetch(request, env) {
@@ -108,9 +108,24 @@ function mapOrder(o) {
   }
   const code = (o.discount_codes && o.discount_codes[0] && o.discount_codes[0].code) || "";
   const incl = Math.round(parseFloat(o.total_price || o.current_total_price || "0") * 100) / 100;
-  const rec = { d: createdAt.slice(0, 10), num: name, items, code, incl };
+  const rec = { d: toAmsterdamDate(createdAt), num: name, items, code, incl };
   if (TEST_CODES.has(code.toLowerCase()) || incl < 10) rec.test = true;
   return rec;
+}
+
+// Neemt géén afhankelijkheid van of Shopify het tijdzone-offset in de string
+// laat staan (REST/webhook doet dat meestal wel, GraphQL normaliseert naar
+// UTC) — rekent altijd expliciet om naar Europe/Amsterdam. Anders valt een
+// bestelling vlak na lokale middernacht op de verkeerde kalenderdag (bug die
+// eerder order #1122 trof: 00:05 lokale tijd werd als "vorige dag" gelezen).
+function toAmsterdamDate(isoString) {
+  const d = new Date(isoString);
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Amsterdam",
+    year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(d);
+  const get = (type) => parts.find((p) => p.type === type).value;
+  return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
 function orderNumInt(num) {

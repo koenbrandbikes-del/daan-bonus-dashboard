@@ -128,10 +128,16 @@ def main():
         f"order number strictly greater than #{last_num} (query: \"created_at:>=2026-08-01\", "
         f"sort by CREATED_AT, first 20 is enough), with name, createdAt, totalPriceSet "
         f"shopMoney amount, discountCodes, and lineItems title+quantity. "
+        f"IMPORTANT: the GraphQL Admin API returns createdAt in UTC. Convert it to "
+        f"Europe/Amsterdam local time (CEST, UTC+2) BEFORE extracting the calendar date for "
+        f"the \"d\" field — do not just take the first 10 characters of the raw UTC string, "
+        f"that gives the wrong day for orders placed shortly after local midnight (e.g. UTC "
+        f"22:05 the previous day is 00:05 local time, i.e. the NEXT calendar day locally). "
         f"Output ONLY a raw JSON array on stdout, nothing else — no markdown fences, no "
         f"explanation, no leading/trailing text. Each element: "
         f'{{"d":"YYYY-MM-DD","num":"#XXXX","items":["Product",...],"code":"discountcode-or-empty",'
-        f'"incl":123.45}}. If there are no orders newer than #{last_num}, output exactly: []'
+        f'"incl":123.45}} where "d" is the Europe/Amsterdam LOCAL date. '
+        f'If there are no orders newer than #{last_num}, output exactly: []'
     )
 
     try:
