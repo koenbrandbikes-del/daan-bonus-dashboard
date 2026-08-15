@@ -10,7 +10,7 @@
 #     TrackBee heeft geen directe API zonder Claude/MCP; zie data/status.json).
 #   - Wijzigt uitsluitend data/*.json. index.html/CSS/JS blijven onaangeroerd
 #     tijdens een normale sync.
-# Draait elk uur om :10 via launchd.
+# Draait elke 15 minuten via launchd (StartInterval).
 
 set -uo pipefail
 
@@ -33,9 +33,10 @@ trap 'rmdir "$LOCK_DIR"' EXIT
 #    "koengrosman ALL=(root) NOPASSWD: /usr/bin/pmset schedule wake *,
 #    /usr/bin/pmset schedule cancel *" (eenmalig handmatig ingesteld).
 #    Stond dit onderaan (na de data-fetch), dan brak een API-timeout eerder
-#    de hele keten: het script crashte op die stap en de wake voor het
-#    vólgende uur werd dan nooit ingepland.
-NEXT_WAKE="$(date -v+1H -v8M -v0S '+%m/%d/%y %H:%M:%S')"
+#    de hele keten: het script crashte op die stap en de wake voor de
+#    vólgende run werd dan nooit ingepland.
+#    +17 min = 15-minuten-interval (StartInterval in de plist) + 2 min marge.
+NEXT_WAKE="$(date -v+17M -v0S '+%m/%d/%y %H:%M:%S')"
 if sudo -n /usr/bin/pmset schedule wake "$NEXT_WAKE" >/dev/null 2>&1; then
     echo "✓ Volgende wake ingepland: $NEXT_WAKE"
 else
