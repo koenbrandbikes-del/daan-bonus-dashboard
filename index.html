@@ -2240,6 +2240,35 @@ function renderRoasChart(wrap){
   attachRoasChartHover(data,roas3,xAt,W);
 }
 
+// Gedeelde samenvattingskaart voor een sleepselectie op een van de
+// KPI-grafieken. `slice` is een deelverzameling van datapunten die elk
+// {label,spend,purch,rev,net} hebben (dag/week/maand-granulariteit maakt
+// niet uit) — ROAS/CAC worden hier herberekend uit de opgetelde spend/omzet,
+// niet als gemiddelde van losse dag-ROAS'en (zelfde principe als de
+// 3-daagse lijn: een dag met weinig spend mag de uitkomst niet vertekenen).
+function buildSelSummaryHtml(slice,unitSingular,unitPlural){
+  const spend=slice.reduce((s,x)=>s+x.spend,0);
+  const purch=slice.reduce((s,x)=>s+x.purch,0);
+  const rev=slice.reduce((s,x)=>s+x.rev,0);
+  const roas=spend>0?rev/spend:null;
+  const cac=purch>0?spend/purch:null;
+  const net=slice.reduce((s,x)=>s+(x.net||0),0);
+  const rangeLbl=slice.length===1?slice[0].label:`${slice[0].label} – ${slice[slice.length-1].label}`;
+  return `
+    <div class="kpi-chart-selsum-hd">
+      <span class="kpi-chart-selsum-title">Selectie · ${rangeLbl} · ${slice.length} ${slice.length===1?unitSingular:unitPlural}</span>
+      <button class="kpi-chart-selsum-close" onclick="document.getElementById('kpiChartSelSummary').style.display='none';document.getElementById('kpiChartSelRect').style.opacity='0'">×</button>
+    </div>
+    <div class="kpi-chart-selsum-grid">
+      <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">SPEND</div><div class="kpi-chart-selsum-val">${eur(spend)}</div></div>
+      <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">AANKOPEN</div><div class="kpi-chart-selsum-val">${purch}</div></div>
+      <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">OMZET</div><div class="kpi-chart-selsum-val">${eur(rev)}</div></div>
+      <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">ROAS</div><div class="kpi-chart-selsum-val">${roas!=null?x2(roas):"—"}</div></div>
+      <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">CAC</div><div class="kpi-chart-selsum-val">${cac!=null?eur(cac):"—"}</div></div>
+      <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">NETTO</div><div class="kpi-chart-selsum-val" style="color:${net>=0?"#8FC49B":"#DD9280"}">${eur(net)}</div></div>
+    </div>`;
+}
+
 function attachRoasChartHover(data,roas3,xAt,W){
   const svgWrap=document.getElementById("kpiChartSvgWrap");
   const svg=document.getElementById("kpiChartSvg");
@@ -2302,26 +2331,7 @@ function attachRoasChartHover(data,roas3,xAt,W){
   const showSelSummary=(i0,i1)=>{
     const lo=Math.min(i0,i1), hi=Math.max(i0,i1);
     const slice=data.slice(lo,hi+1);
-    const spend=slice.reduce((s,x)=>s+x.spend,0);
-    const purch=slice.reduce((s,x)=>s+x.purch,0);
-    const rev=slice.reduce((s,x)=>s+x.rev,0);
-    const roas=spend>0?rev/spend:null;
-    const cac=purch>0?spend/purch:null;
-    const net=slice.reduce((s,x)=>s+(x.net||0),0);
-    const rangeLbl=slice.length===1?slice[0].label:`${slice[0].label} – ${slice[slice.length-1].label}`;
-    summary.innerHTML=`
-      <div class="kpi-chart-selsum-hd">
-        <span class="kpi-chart-selsum-title">Selectie · ${rangeLbl} · ${slice.length} ${slice.length===1?"dag":"dagen"}</span>
-        <button class="kpi-chart-selsum-close" onclick="document.getElementById('kpiChartSelSummary').style.display='none';document.getElementById('kpiChartSelRect').style.opacity='0'">×</button>
-      </div>
-      <div class="kpi-chart-selsum-grid">
-        <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">SPEND</div><div class="kpi-chart-selsum-val">${eur(spend)}</div></div>
-        <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">AANKOPEN</div><div class="kpi-chart-selsum-val">${purch}</div></div>
-        <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">OMZET</div><div class="kpi-chart-selsum-val">${eur(rev)}</div></div>
-        <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">ROAS</div><div class="kpi-chart-selsum-val">${roas!=null?x2(roas):"—"}</div></div>
-        <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">CAC</div><div class="kpi-chart-selsum-val">${cac!=null?eur(cac):"—"}</div></div>
-        <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">NETTO</div><div class="kpi-chart-selsum-val" style="color:${net>=0?"#8FC49B":"#DD9280"}">${eur(net)}</div></div>
-      </div>`;
+    summary.innerHTML=buildSelSummaryHtml(slice,"dag","dagen");
     summary.style.display="block";
   };
 
@@ -2517,10 +2527,13 @@ function renderKpiChart(){
     <div class="kpi-chart-svgwrap" id="kpiChartSvgWrap">
       <svg viewBox="0 0 ${W} ${H}" class="kpi-chart-svg" id="kpiChartSvg">
         ${yGrid}${zeroLine}${zeroAreaFill}${refLines}${lines}${xLabels}
+        <rect class="kpi-chart-selrect" id="kpiChartSelRect" x="0" y="${padT}" width="0" height="${(H-padB)-padT}" style="opacity:0"></rect>
         <line class="kpi-chart-cross" id="kpiChartCross" x1="0" x2="0" y1="${padT}" y2="${H-padB}" style="opacity:0"></line>
       </svg>
       <div class="kpi-chart-tooltip" id="kpiChartTooltip" style="opacity:0"></div>
-    </div>`;
+    </div>
+    <div class="kpi-chart-selection-summary" id="kpiChartSelSummary" style="display:none"></div>
+    <div class="kpi-chart-selhint">Sleep over de grafiek om een periode te selecteren</div>`;
 
   attachKpiChartHover(plot,data,xAt,padL,padR,W,H,padT,padB);
 }
@@ -2530,13 +2543,21 @@ function attachKpiChartHover(plot,data,xAt,padL,padR,W,H,padT,padB){
   const svg=document.getElementById("kpiChartSvg");
   const cross=document.getElementById("kpiChartCross");
   const tip=document.getElementById("kpiChartTooltip");
+  const selRect=document.getElementById("kpiChartSelRect");
+  const summary=document.getElementById("kpiChartSelSummary");
   if(!svgWrap||!svg)return;
   const n=data.length;
-  svgWrap.onmousemove=(e)=>{
+
+  const idxAt=(clientX)=>{
     const r=svg.getBoundingClientRect();
-    const xSvg=((e.clientX-r.left)/r.width)*W;
+    const xSvg=((clientX-r.left)/r.width)*W;
     let best=0,bestD=Infinity;
     for(let i=0;i<n;i++){const dx=Math.abs(xAt(i)-xSvg);if(dx<bestD){bestD=dx;best=i;}}
+    return best;
+  };
+
+  const showHover=(clientX)=>{
+    const best=idxAt(clientX);
     const px=xAt(best);
     cross.setAttribute("x1",px);cross.setAttribute("x2",px);cross.style.opacity="1";
     const rows=plot.map(s=>{
@@ -2552,7 +2573,65 @@ function attachKpiChartHover(plot,data,xAt,padL,padR,W,H,padT,padB){
     tip.style.left=Math.max(0,left)+"px";
     tip.style.top="8px";
   };
-  svgWrap.onmouseleave=()=>{cross.style.opacity="0";tip.style.opacity="0";};
+  const hideHover=()=>{cross.style.opacity="0";tip.style.opacity="0";};
+
+  const unitS = kpiChartGran==="week"?"week":kpiChartGran==="month"?"maand":"dag";
+  const unitP = kpiChartGran==="week"?"weken":kpiChartGran==="month"?"maanden":"dagen";
+  const barW2=n>1?Math.abs(xAt(1)-xAt(0)):20;
+  const drawSel=(i0,i1)=>{
+    const lo=Math.min(i0,i1), hi=Math.max(i0,i1);
+    const x1=xAt(lo)-barW2/2, x2v=xAt(hi)+barW2/2;
+    selRect.setAttribute("x",Math.max(0,x1).toFixed(1));
+    selRect.setAttribute("width",Math.max(1,x2v-x1).toFixed(1));
+    selRect.style.opacity="1";
+  };
+  const clearSel=()=>{
+    selRect.style.opacity="0";
+    summary.style.display="none";
+    summary.innerHTML="";
+  };
+  const showSelSummary=(i0,i1)=>{
+    const lo=Math.min(i0,i1), hi=Math.max(i0,i1);
+    const slice=data.slice(lo,hi+1);
+    summary.innerHTML=buildSelSummaryHtml(slice,unitS,unitP);
+    summary.style.display="block";
+  };
+
+  let dragging=false, startIdx=0, lastIdx=0, moved=false;
+  svgWrap.onmousedown=(e)=>{ dragging=true; moved=false; startIdx=lastIdx=idxAt(e.clientX); e.preventDefault(); };
+  svgWrap.onmousemove=(e)=>{
+    showHover(e.clientX);
+    if(dragging){
+      lastIdx=idxAt(e.clientX);
+      if(lastIdx!==startIdx) moved=true;
+      drawSel(startIdx,lastIdx);
+    }
+  };
+  svgWrap.onmouseup=(e)=>{
+    if(!dragging)return;
+    dragging=false;
+    lastIdx=idxAt(e.clientX);
+    if(moved) showSelSummary(startIdx,lastIdx);
+    else clearSel();
+  };
+  svgWrap.onmouseleave=()=>{
+    hideHover();
+    if(dragging){ dragging=false; if(moved) showSelSummary(startIdx,lastIdx); }
+  };
+  svgWrap.ontouchstart=(e)=>{ dragging=true; moved=false; startIdx=lastIdx=idxAt(e.touches[0].clientX); };
+  svgWrap.ontouchmove=(e)=>{
+    if(!dragging)return;
+    e.preventDefault();
+    lastIdx=idxAt(e.touches[0].clientX);
+    if(lastIdx!==startIdx) moved=true;
+    drawSel(startIdx,lastIdx);
+  };
+  svgWrap.ontouchend=(e)=>{
+    if(!dragging)return;
+    dragging=false;
+    if(moved) showSelSummary(startIdx,idxAt(e.changedTouches[0].clientX));
+    else clearSel();
+  };
 }
 
 /* ═══ FUNNEL CARD ════════════════════════════════════════════════════ */
