@@ -1,9 +1,11 @@
 #!/bin/bash
 # Dashboard updater.
 #   - Meta: elke run, direct via Marketing API (geen Claude, geen LLM).
-#   - Shopify: max 1x per SHOPIFY_SYNC_HOURS uur, via Claude CLI + Shopify MCP
-#     — de enige stap die credits kost, en de enige werkende manier om
-#     Shopify-orders op te halen (zie scripts/sync_shopify.py voor waarom).
+#   - Shopify: real-time en gratis via een Cloudflare Worker-webhook
+#     (cloudflare-worker/) die nieuwe orders rechtstreeks in data/shopify.json
+#     zet zodra Shopify "Aanmaken van bestelling" meldt. Dit script doet
+#     Shopify alleen nog als vangnet, max 1x per SHOPIFY_SYNC_HOURS uur via
+#     Claude CLI + Shopify MCP — de enige stap die nog credits kost.
 #   - Google Ads (TrackBee): NIET meer automatisch ververst (bewust besluit —
 #     TrackBee heeft geen directe API zonder Claude/MCP; zie data/status.json).
 #   - Wijzigt uitsluitend data/*.json. index.html/CSS/JS blijven onaangeroerd
@@ -52,9 +54,17 @@ if ! python3 "$SCRIPT_DIR/sync_dashboard_data.py"; then
     echo "⚠️  Meta-sync mislukt deze run — data/meta.json blijft ongewijzigd, volgend uur opnieuw"
 fi
 
-# 3. Shopify — via Claude CLI, throttled op SHOPIFY_SYNC_HOURS uur bijgehouden
-#    via een timestamp-bestand buiten de repo.
-SHOPIFY_SYNC_HOURS=4
+# 3. Shopify — sinds 15 aug 2026 vangt de Cloudflare Worker
+#    (cloudflare-worker/, Shopify "Aanmaken van bestelling"-webhook) nieuwe
+#    orders al real-time en gratis op. Dit is dus nu alleen nog een vangnet
+#    voor gemiste webhooks (Shopify geeft na 48u retries op) — via Claude CLI,
+#    throttled op SHOPIFY_SYNC_HOURS uur bijgehouden via een timestamp-bestand
+#    buiten de repo.
+#    Afbouwplan (in overleg gekozen, geen automatisch aftellen): begin op 24u
+#    (dagelijks vangnet, eerste week). Blijkt de webhook een week lang
+#    betrouwbaar te werken (geen gaten in de ordernummering), zet dan naar 72
+#    (1x/3 dagen); daarna eventueel naar 168 (1x/week).
+SHOPIFY_SYNC_HOURS=24
 SHOPIFY_SYNC_STAMP="$HOME/.secrets/last_shopify_sync"
 now_epoch=$(date +%s)
 last_epoch=$(cat "$SHOPIFY_SYNC_STAMP" 2>/dev/null || echo 0)

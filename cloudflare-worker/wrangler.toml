@@ -1,0 +1,7 @@
+name = "daan-shopify-webhook"
+main = "src/index.js"
+compatibility_date = "2026-08-15"
+
+# Secrets (NIET hier, via `wrangler secret put`):
+#   GITHUB_TOKEN            — fine-grained PAT, alleen repo daan-bonus-dashboard, Contents: Read/write
+#   SHOPIFY_WEBHOOK_SECRET  — het gedeelde geheim van Shopify Admin > Instellingen > Meldingen > Webhooks
