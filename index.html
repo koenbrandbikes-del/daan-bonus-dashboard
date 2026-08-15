@@ -324,8 +324,19 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-chart-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .kpi-chart-legend-line{width:14px;height:3px;border-radius:2px;flex-shrink:0}
 .kpi-chart-legend-bar{width:8px;height:10px;border-radius:1px;flex-shrink:0;background:rgba(255,255,255,.35)}
-.kpi-chart-svgwrap{position:relative}
+.kpi-chart-svgwrap{position:relative;cursor:crosshair;user-select:none;-webkit-user-select:none;touch-action:pan-y}
 .kpi-chart-svg{width:100%;height:auto;display:block;overflow:visible}
+.kpi-chart-selrect{fill:rgba(78,168,222,.14);stroke:rgba(78,168,222,.45);stroke-width:1;pointer-events:none;transition:opacity .1s ease}
+.kpi-chart-selhint{font-size:10px;color:#5A6478;text-align:center;margin-top:6px}
+.kpi-chart-selection-summary{margin-top:10px;padding:12px 14px;background:rgba(78,168,222,.06);border:1px solid rgba(78,168,222,.22);border-radius:10px}
+.kpi-chart-selsum-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.kpi-chart-selsum-title{font-size:11px;font-weight:700;letter-spacing:.04em;color:#93C5F5}
+.kpi-chart-selsum-close{cursor:pointer;color:#7C8CA6;font-size:16px;line-height:1;background:none;border:none;padding:2px 6px;flex-shrink:0}
+.kpi-chart-selsum-close:hover{color:#f1f5f9}
+.kpi-chart-selsum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 8px}
+.kpi-chart-selsum-lbl{font-size:9px;font-weight:700;letter-spacing:.04em;color:#7C8CA6;margin-bottom:2px}
+.kpi-chart-selsum-val{font-size:15px;font-weight:700;color:#f1f5f9}
+@media(max-width:540px){.kpi-chart-selsum-grid{grid-template-columns:repeat(2,1fr)}}
 .kpi-chart-line{stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .kpi-chart-line-thick{stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 .kpi-chart-purchbar{fill:rgba(255,255,255,.16)}
@@ -2218,10 +2229,13 @@ function renderRoasChart(wrap){
     <div class="kpi-chart-svgwrap" id="kpiChartSvgWrap">
       <svg viewBox="0 0 ${W} ${H}" class="kpi-chart-svg" id="kpiChartSvg">
         ${yGrid}${refLines}${barBgOut}${barsOut}${barAxisLblOut}${roas3Line}${roasDots}${xLabels}
+        <rect class="kpi-chart-selrect" id="kpiChartSelRect" x="0" y="${padT}" width="0" height="${barBot-padT}" style="opacity:0"></rect>
         <line class="kpi-chart-cross" id="kpiChartCross" x1="0" x2="0" y1="${padT}" y2="${barBot}" style="opacity:0"></line>
       </svg>
       <div class="kpi-chart-tooltip" id="kpiChartTooltip" style="opacity:0"></div>
-    </div>`;
+    </div>
+    <div class="kpi-chart-selection-summary" id="kpiChartSelSummary" style="display:none"></div>
+    <div class="kpi-chart-selhint">Sleep over de grafiek om een periode te selecteren</div>`;
 
   attachRoasChartHover(data,roas3,xAt,W);
 }
@@ -2231,13 +2245,21 @@ function attachRoasChartHover(data,roas3,xAt,W){
   const svg=document.getElementById("kpiChartSvg");
   const cross=document.getElementById("kpiChartCross");
   const tip=document.getElementById("kpiChartTooltip");
+  const selRect=document.getElementById("kpiChartSelRect");
+  const summary=document.getElementById("kpiChartSelSummary");
   if(!svgWrap||!svg)return;
   const n=data.length;
-  svgWrap.onmousemove=(e)=>{
+
+  const idxAt=(clientX)=>{
     const r=svg.getBoundingClientRect();
-    const xSvg=((e.clientX-r.left)/r.width)*W;
+    const xSvg=((clientX-r.left)/r.width)*W;
     let best=0,bestD=Infinity;
     for(let i=0;i<n;i++){const dx=Math.abs(xAt(i)-xSvg);if(dx<bestD){bestD=dx;best=i;}}
+    return best;
+  };
+
+  const showHover=(clientX)=>{
+    const best=idxAt(clientX);
     const px=xAt(best), x=data[best];
     cross.setAttribute("x1",px);cross.setAttribute("x2",px);cross.style.opacity="1";
     tip.innerHTML=`
@@ -2257,7 +2279,87 @@ function attachRoasChartHover(data,roas3,xAt,W){
     tip.style.left=Math.max(0,left)+"px";
     tip.style.top="8px";
   };
-  svgWrap.onmouseleave=()=>{cross.style.opacity="0";tip.style.opacity="0";};
+  const hideHover=()=>{cross.style.opacity="0";tip.style.opacity="0";};
+
+  // Sleepselectie: klik-en-sleep over de grafiek om een reeks dagen te
+  // selecteren en de opgetelde/gewogen cijfers voor precies die dagen te
+  // zien — dezelfde interactie als het uitsnijden van een segment in
+  // TrainingPeaks. Een gewone klik (geen sleepbeweging) sluit een eventuele
+  // eerdere selectie juist weer.
+  const barW2=n>1?Math.abs(xAt(1)-xAt(0)):20;
+  const drawSel=(i0,i1)=>{
+    const lo=Math.min(i0,i1), hi=Math.max(i0,i1);
+    const x1=xAt(lo)-barW2/2, x2v=xAt(hi)+barW2/2;
+    selRect.setAttribute("x",Math.max(0,x1).toFixed(1));
+    selRect.setAttribute("width",Math.max(1,x2v-x1).toFixed(1));
+    selRect.style.opacity="1";
+  };
+  const clearSel=()=>{
+    selRect.style.opacity="0";
+    summary.style.display="none";
+    summary.innerHTML="";
+  };
+  const showSelSummary=(i0,i1)=>{
+    const lo=Math.min(i0,i1), hi=Math.max(i0,i1);
+    const slice=data.slice(lo,hi+1);
+    const spend=slice.reduce((s,x)=>s+x.spend,0);
+    const purch=slice.reduce((s,x)=>s+x.purch,0);
+    const rev=slice.reduce((s,x)=>s+x.rev,0);
+    const roas=spend>0?rev/spend:null;
+    const cac=purch>0?spend/purch:null;
+    const net=slice.reduce((s,x)=>s+(x.net||0),0);
+    const rangeLbl=slice.length===1?slice[0].label:`${slice[0].label} – ${slice[slice.length-1].label}`;
+    summary.innerHTML=`
+      <div class="kpi-chart-selsum-hd">
+        <span class="kpi-chart-selsum-title">Selectie · ${rangeLbl} · ${slice.length} ${slice.length===1?"dag":"dagen"}</span>
+        <button class="kpi-chart-selsum-close" onclick="document.getElementById('kpiChartSelSummary').style.display='none';document.getElementById('kpiChartSelRect').style.opacity='0'">×</button>
+      </div>
+      <div class="kpi-chart-selsum-grid">
+        <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">SPEND</div><div class="kpi-chart-selsum-val">${eur(spend)}</div></div>
+        <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">AANKOPEN</div><div class="kpi-chart-selsum-val">${purch}</div></div>
+        <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">OMZET</div><div class="kpi-chart-selsum-val">${eur(rev)}</div></div>
+        <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">ROAS</div><div class="kpi-chart-selsum-val">${roas!=null?x2(roas):"—"}</div></div>
+        <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">CAC</div><div class="kpi-chart-selsum-val">${cac!=null?eur(cac):"—"}</div></div>
+        <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">NETTO</div><div class="kpi-chart-selsum-val" style="color:${net>=0?"#8FC49B":"#DD9280"}">${eur(net)}</div></div>
+      </div>`;
+    summary.style.display="block";
+  };
+
+  let dragging=false, startIdx=0, lastIdx=0, moved=false;
+  svgWrap.onmousedown=(e)=>{ dragging=true; moved=false; startIdx=lastIdx=idxAt(e.clientX); e.preventDefault(); };
+  svgWrap.onmousemove=(e)=>{
+    showHover(e.clientX);
+    if(dragging){
+      lastIdx=idxAt(e.clientX);
+      if(lastIdx!==startIdx) moved=true;
+      drawSel(startIdx,lastIdx);
+    }
+  };
+  svgWrap.onmouseup=(e)=>{
+    if(!dragging)return;
+    dragging=false;
+    lastIdx=idxAt(e.clientX);
+    if(moved) showSelSummary(startIdx,lastIdx);
+    else clearSel();
+  };
+  svgWrap.onmouseleave=()=>{
+    hideHover();
+    if(dragging){ dragging=false; if(moved) showSelSummary(startIdx,lastIdx); }
+  };
+  svgWrap.ontouchstart=(e)=>{ dragging=true; moved=false; startIdx=idxAt(e.touches[0].clientX); };
+  svgWrap.ontouchmove=(e)=>{
+    if(!dragging)return;
+    e.preventDefault();
+    const curIdx=idxAt(e.touches[0].clientX);
+    if(curIdx!==startIdx) moved=true;
+    drawSel(startIdx,curIdx);
+  };
+  svgWrap.ontouchend=(e)=>{
+    if(!dragging)return;
+    dragging=false;
+    if(moved) showSelSummary(startIdx,idxAt(e.changedTouches[0].clientX));
+    else clearSel();
+  };
 }
 
 function renderKpiChart(){
