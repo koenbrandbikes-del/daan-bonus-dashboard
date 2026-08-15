@@ -17,6 +17,10 @@ from zoneinfo import ZoneInfo
 INDEX_PATH = sys.argv[1] if len(sys.argv) > 1 else str(
     Path(__file__).parent.parent / "index.html"
 )
+# ORDERS_SHOPIFY leeft apart van index.html (zie orders_google.js) zodat de
+# Claude-CLI-syncstap in update_tb_data.sh maar een klein bestand hoeft te
+# lezen/bewerken i.p.v. het hele dashboard — scheelt tokens dus credits.
+ORDERS_GOOGLE_PATH = str(Path(INDEX_PATH).parent / "orders_google.js")
 
 # Altijd Europe/Amsterdam, ongeacht of dit lokaal (CEST) of op een runner in
 # UTC (GitHub Actions / cloud routine) draait — anders verschilt "vandaag"
@@ -347,7 +351,7 @@ if daily_ads:
     else:
         print("⚠️  DAILY_ADS patroon niet gevonden")
 
-# Shopify orders
+# Shopify orders — leven in het aparte orders_google.js, niet in index.html
 if orders:
     lines = []
     for o in orders:
@@ -358,12 +362,15 @@ if orders:
             f'code:"{o["code"]}",incl:{o["incl"]}{test_part}}}'
         )
     block = "const ORDERS_SHOPIFY = [\n" + ",\n".join(lines) + "\n];"
-    new = re.sub(r'const ORDERS_SHOPIFY\s*=\s*\[[^\]]*\];', block, html, flags=re.DOTALL)
-    if new != html:
-        print(f"✓ {len(orders)} Shopify orders bijgewerkt")
-        html = new
+    with open(ORDERS_GOOGLE_PATH) as f:
+        og = f.read()
+    new_og = re.sub(r'const ORDERS_SHOPIFY\s*=\s*\[[^\]]*\];', block, og, flags=re.DOTALL)
+    if new_og != og:
+        print(f"✓ {len(orders)} Shopify orders bijgewerkt (orders_google.js)")
+        with open(ORDERS_GOOGLE_PATH, "w") as f:
+            f.write(new_og)
     else:
-        print("⚠️  ORDERS_SHOPIFY patroon niet gevonden")
+        print("⚠️  ORDERS_SHOPIFY patroon niet gevonden in orders_google.js")
 
 with open(INDEX_PATH, "w") as f:
     f.write(html)

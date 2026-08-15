@@ -59,11 +59,11 @@ last_epoch=$(cat "$SHOPIFY_SYNC_STAMP" 2>/dev/null || echo 0)
 elapsed_h=$(( (now_epoch - last_epoch) / 3600 ))
 if [ "$elapsed_h" -ge "$SHOPIFY_SYNC_HOURS" ]; then
     echo "Shopify + Google Ads ophalen via MCP... (laatste sync ${elapsed_h}u geleden)"
-    if "$CLAUDE" --print --dangerously-skip-permissions "Do TWO things in $REPO_DIR/index.html, then stop (do not commit or push):
+    if "$CLAUDE" --print --dangerously-skip-permissions "Do TWO things in $REPO_DIR/orders_google.js — a small standalone data file loaded by index.html via <script src>, NOT index.html itself (don't touch index.html, don't read it, that file is huge and irrelevant to this task). Then stop (do not commit or push):
 
-1. SHOPIFY ORDERS: Use the Shopify MCP graphql_query tool to fetch all orders from lumeworksnl.myshopify.com since 2026-08-01 with their name, createdAt, totalPriceSet shopMoney amount, discountCodes, and lineItems title and quantity. Update the ORDERS_SHOPIFY JavaScript array. Format: {d:\"YYYY-MM-DD\",num:\"#XXXX\",items:[\"Product\"],code:\"kortingscode\",incl:PRICE}. Add ,test:true for orders with code pim100/koen100/job100 or price < 10.
+1. SHOPIFY ORDERS: Use the Shopify MCP graphql_query tool to fetch all orders from lumeworksnl.myshopify.com since 2026-08-01 with their name, createdAt, totalPriceSet shopMoney amount, discountCodes, and lineItems title and quantity. Update the ORDERS_SHOPIFY JavaScript array in orders_google.js. Format: {d:\"YYYY-MM-DD\",num:\"#XXXX\",items:[\"Product\"],code:\"kortingscode\",incl:PRICE}. Add ,test:true for orders with code pim100/koen100/job100 or price < 10.
 
-2. GOOGLE ADS: Run \`date -u +%Y-%m-%d\` for today and compute yesterday. Use the TrackBee-Insights MCP tool get_google_campaign_insights with store=53920, once for today (start_date=end_date=today) and once for yesterday (start_date=end_date=yesterday). Sum across all returned campaigns: spend, conversions (integer field, not all_conversions), conversions_value (as rev), impressions, clicks. Replace these two lines in index.html with the fresh numbers, keeping the exact format:
+2. GOOGLE ADS: Run \`date -u +%Y-%m-%d\` for today and compute yesterday. Use the TrackBee-Insights MCP tool get_google_campaign_insights with store=53920, once for today (start_date=end_date=today) and once for yesterday (start_date=end_date=yesterday). Sum across all returned campaigns: spend, conversions (integer field, not all_conversions), conversions_value (as rev), impressions, clicks. Replace these two lines in orders_google.js with the fresh numbers, keeping the exact format:
 const TG_VANDAAG = {from:\"YYYY-MM-DD\",to:\"YYYY-MM-DD\",spend:N,conv:N,rev:N,impr:N,cl:N};
 const TG_GISTEREN = {from:\"YYYY-MM-DD\",to:\"YYYY-MM-DD\",spend:N,conv:N,rev:N,impr:N,cl:N};" \
       2>/dev/null; then
@@ -76,8 +76,8 @@ else
 fi
 
 # 4. Commit en push — met retry als GitHub Action ondertussen pushte
-if ! git diff --quiet index.html; then
-    git add index.html
+if ! git diff --quiet index.html orders_google.js; then
+    git add index.html orders_google.js
     git commit -m "Auto-update $(date -u '+%Y-%m-%d %H:%M') UTC"
     if ! git push origin main 2>/dev/null; then
         echo "Push gefaald (remote ahead) — rebase en retry..."
