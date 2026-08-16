@@ -182,6 +182,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .be-stat:last-child{border-right:none}
 .be-lbl{font-size:10px;color:#93A2B8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
 .be-val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.be-filter-note{grid-column:1/-1;padding:10px 16px;font-size:11px;color:#93A2B8;border-top:1px solid #1f2d45;background:rgba(255,255,255,.02)}
 
 /* ── Kerncijfers grid ── */
 .kern-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden}
@@ -297,14 +298,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-headline-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6.5px}
 
 /* ── Dashboard-brede test/schaal-segmentbalk ── */
-.dash-seg-bar{margin-bottom:12px}
-.dash-seg-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
-.dash-seg-toggle{display:flex;gap:4px;flex-shrink:0}
-.dash-seg-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#93A2B8;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .15s}
-.dash-seg-btn:hover{color:#f1f5f9;border-color:rgba(255,255,255,.2)}
-.dash-seg-btn.active{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:#f1f5f9}
-.dash-seg-btn.active.test{background:rgba(91,158,232,.18);border-color:rgba(91,158,232,.55);color:#93C5F5}
-.dash-seg-btn.active.schaal{background:rgba(74,222,128,.16);border-color:rgba(74,222,128,.5);color:#8FE0A8}
 .dash-seg-split{display:flex;align-items:center;gap:10px;flex:1;min-width:180px}
 .dash-seg-split-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;flex:1;min-width:80px;background:rgba(255,255,255,.06)}
 .dash-seg-split-seg{height:100%}
@@ -314,6 +307,39 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .dash-seg-split-lbl{display:flex;gap:10px;font-size:11px;color:#93A2B8;white-space:nowrap}
 .dash-seg-split-item.test{color:#93C5F5}
 .dash-seg-split-item.schaal{color:#8FE0A8}
+
+/* ── Analysefilters (strategie × platform × plaatsing) ── */
+.filter-bar{margin-bottom:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px}
+.filter-bar-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-bar-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7C8CA6;flex-shrink:0}
+.filter-strat-group{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap}
+.filter-strat-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#93A2B8;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .15s}
+.filter-strat-btn:hover{color:#f1f5f9;border-color:rgba(255,255,255,.2)}
+.filter-strat-btn.active{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:#f1f5f9}
+.filter-strat-btn.active.test{background:rgba(91,158,232,.18);border-color:rgba(91,158,232,.55);color:#93C5F5}
+.filter-strat-btn.active.schaal{background:rgba(74,222,128,.16);border-color:rgba(74,222,128,.5);color:#8FE0A8}
+.filter-strat-btn.active.ongeclassificeerd{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35);color:#e2e8f0}
+.filter-select-group{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.filter-select{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);color:#cbd5e1;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;cursor:pointer;max-width:100%}
+.filter-select:hover{border-color:rgba(255,255,255,.28)}
+.filter-select:focus-visible{outline:1px solid #60a5fa;outline-offset:1px}
+.filter-select option{background:#0d122d;color:#e2e8f0}
+.filter-reset-btn{background:transparent;border:1px solid rgba(255,255,255,.14);color:#93A2B8;font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;transition:all .15s;flex-shrink:0}
+.filter-reset-btn:hover:not(:disabled){color:#f1f5f9;border-color:rgba(255,255,255,.3)}
+.filter-reset-btn:disabled{opacity:.35;cursor:default}
+.filter-bar .dash-seg-split{margin-top:10px}
+.filter-status{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:8px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.22);border-radius:8px;flex-wrap:wrap}
+.filter-status-txt{font-size:12px;color:#cbd5e1}
+.filter-status-txt strong{color:#93C5F5}
+.filter-status-clear{background:transparent;border:1px solid rgba(255,255,255,.18);color:#93A2B8;font-size:11px;font-weight:600;padding:4px 10px;border-radius:14px;cursor:pointer;flex-shrink:0}
+.filter-status-clear:hover{color:#f1f5f9;border-color:rgba(255,255,255,.35)}
+@media(max-width:640px){
+  .filter-bar-row{flex-direction:column;align-items:stretch}
+  .filter-select-group{margin-left:0}
+  .filter-select{flex:1}
+  .filter-reset-btn{width:100%}
+  .filter-status{flex-direction:column;align-items:stretch}
+}
 .kpi-item{cursor:pointer;transition:background .15s ease,box-shadow .2s ease}
 .kpi-item.chart-active{box-shadow:inset 0 0 0 1.5px rgba(20,166,241,.6);background:rgba(20,166,241,.06)}
 
@@ -487,7 +513,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
   .gauge-bar .g-tick:last-child{display:none}
   .ad-seg-grid{grid-template-columns:1fr}
   .ad-seg-card-grid{grid-template-columns:repeat(3,1fr);row-gap:8px}
-  .dash-seg-row{flex-direction:column;align-items:stretch}
   .dash-seg-split{min-width:0}
 }
 </style>
@@ -535,8 +560,9 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
-<!-- Test/schaal-segmentfilter voor het hele dashboard -->
-<div id="dashSegBar" class="dash-seg-bar"></div>
+<!-- Analysefilters: strategie × platform × plaatsing, voor het hele dashboard
+     (niet alleen de advertentiegroepentabel) -->
+<div id="filterBar" class="filter-bar"></div>
 
 <!-- KPI strip -->
 <div id="kpiStrip" class="kpi-strip"></div>
@@ -695,6 +721,11 @@ const TB_JUL = _META.tb.jul;
 const TB_AUG_CLEAN = _META.tb.aug_clean;
 const DAILY_META = _META.daily_meta;
 const DAILY_ADS = _META.daily_ads;
+// Platform/plaatsing-uitsplitsing per advertentiegroep, voor het analysefilter
+// (Facebook/Instagram × Feed/Stories/Reels/Overig). Kan ontbreken op oudere
+// data (veld toegevoegd 16 aug 2026) — dan gewoon leeg, filter degradeert
+// netjes naar "geen data" i.p.v. te crashen.
+const DAILY_ADS_BREAKDOWN = _META.daily_ads_breakdown || [];
 const TG_VANDAAG = _GOOGLE.vandaag;
 const TG_GISTEREN = _GOOGLE.gisteren;
 const ORDERS_SHOPIFY = _SHOPIFY.orders;
@@ -1042,19 +1073,59 @@ const PERIODS = {
 /* ═══ STATE ══════════════════════════════════════════════════════ */
 let P="aug", CX, CT, CB;
 let ordFilter="alle";
-let dashSegment="all"; // all | test | schaal — filtert het hele bovenste dashboard, niet alleen de tabel
 
-// Som van spend/aankopen/omzet voor één label binnen een datumrange, uit
-// DAILY_ADS. Retourneert null als er geen enkele advertentie met dat label
-// in die range valt (bv. periode zonder daggegevens, of nog niets gelabeld).
-function segRangeCT(from,to,seg){
+/* ═══ ANALYSEFILTERS (strategie × platform × plaatsing) ═══════════
+   Eén centrale filterset die het hele bovenste dashboard bepaalt — niet
+   alleen de advertentiegroepentabel. Bonus, BEROAS-onderbouwing en Shopify
+   blijven hier expliciet buiten (zie render(): die gebruiken altijd CT_ALL,
+   nooit de gefilterde CT). Bewaard voor de duur van de browsersessie. */
+let filterStrategy="all";  // all | test | schaal | ongeclassificeerd
+let filterPlatform="all";  // all | facebook | instagram
+let filterPlacement="all"; // all | feed | stories | reels | overig
+try{
+  const saved=JSON.parse(sessionStorage.getItem("daan_filters")||"null");
+  if(saved){
+    filterStrategy=saved.strategy||"all";
+    filterPlatform=saved.platform||"all";
+    filterPlacement=saved.placement||"all";
+  }
+}catch(e){}
+function saveFilters(){ try{ sessionStorage.setItem("daan_filters",JSON.stringify({strategy:filterStrategy,platform:filterPlatform,placement:filterPlacement})); }catch(e){} }
+function filtersActive(){ return filterStrategy!=="all"||filterPlatform!=="all"||filterPlacement!=="all"; }
+function setFilterStrategy(s){ filterStrategy=s; saveFilters(); render(); }
+function setFilterPlatform(p){ filterPlatform=p; saveFilters(); render(); }
+function setFilterPlacement(p){ filterPlacement=p; saveFilters(); render(); }
+function resetFilters(){ filterStrategy="all"; filterPlatform="all"; filterPlacement="all"; saveFilters(); render(); }
+
+// Som van spend/aankopen/omzet over een datumrange, met optioneel strategie-
+// EN platform/plaatsing-filter. Bij alle drie op "all" exact hetzelfde
+// resultaat als tbCalcRange(from,to) (getest) — dat pad blijft dan ook
+// ongebruikt zodat bestaande cijfers nooit door dit filter kunnen wijzigen.
+// Retourneert null als er geen enkele match is (periode zonder data voor
+// deze combinatie, of nog niets gelabeld).
+function filteredRangeCT(from,to,strategy,platform,placement){
   let spend=0,purch=0,rev7=0,rev1v=0,any=false;
-  for(const day of DAILY_ADS){
-    if(day.d<from||day.d>to) continue;
-    for(const a of day.ads){
-      if(AD_TAGS[a.n]!==seg) continue;
-      any=true;
-      spend+=a.spend; purch+=a.purch; rev7+=a.rev7; rev1v+=a.rev1v;
+  if(platform==="all" && placement==="all"){
+    if(strategy==="all") return tbCalcRange(from,to);
+    for(const day of DAILY_ADS){
+      if(day.d<from||day.d>to) continue;
+      for(const a of day.ads){
+        const tag=AD_TAGS[a.n]||"ongeclassificeerd";
+        if(tag!==strategy) continue;
+        any=true;
+        spend+=a.spend; purch+=a.purch; rev7+=a.rev7; rev1v+=a.rev1v;
+      }
+    }
+  } else {
+    for(const day of DAILY_ADS_BREAKDOWN){
+      if(day.d<from||day.d>to) continue;
+      for(const r of day.b){
+        if(strategy!=="all" && (AD_TAGS[r.n]||"ongeclassificeerd")!==strategy) continue;
+        if(platform!=="all" && r.platform!==platform) continue;
+        if(placement!=="all" && r.placement!==placement) continue;
+        any=true;
+        spend+=r.spend; purch+=r.purch; rev7+=r.rev7; rev1v+=r.rev1v;
+      }
     }
   }
   if(!any) return null;
@@ -1062,13 +1133,22 @@ function segRangeCT(from,to,seg){
   return {spend,rev7,rev1v,ri,re:ri/BTW,roas:spend>0?ri/spend:0,purch,impr:0,cl:0,ctr:0};
 }
 
-function setDashSegment(s){ dashSegment=s; render(); }
-
-function segSpendSplit(from,to){
+// Spend-verdeling over Test/Schaal/Ongeclassificeerd binnen een periode —
+// optioneel ook binnen een platform/plaatsing-doorsnede (voor de balk onder
+// de filterbalk, die altijd de HUIDIGE platform/plaatsing-selectie volgt,
+// los van welke strategie-knop actief is — dat is precies het doel van de
+// balk: laten zien hoe die selectie over de 3 strategieën verdeeld is).
+function filteredSpendSplit(from,to,platform,placement){
   let testSpend=0,schaalSpend=0,totalSpend=0;
-  for(const day of DAILY_ADS){
+  const useBreakdown = platform!=="all" || placement!=="all";
+  const source = useBreakdown ? DAILY_ADS_BREAKDOWN.map(d=>({d:d.d,ads:d.b})) : DAILY_ADS;
+  for(const day of source){
     if(day.d<from||day.d>to) continue;
     for(const a of day.ads){
+      if(useBreakdown){
+        if(platform!=="all" && a.platform!==platform) continue;
+        if(placement!=="all" && a.placement!==placement) continue;
+      }
       totalSpend+=a.spend;
       if(AD_TAGS[a.n]==="test") testSpend+=a.spend;
       else if(AD_TAGS[a.n]==="schaal") schaalSpend+=a.spend;
@@ -1077,13 +1157,22 @@ function segSpendSplit(from,to){
   return {testSpend,schaalSpend,totalSpend};
 }
 
-// Alle/Test/Schaal-selector bovenaan + een balkje dat in één oogopslag
-// laat zien welk deel van het budget naar test vs. schaal gaat.
-function renderDashSegBar(fxFrom,fxTo){
-  const el=document.getElementById("dashSegBar");
-  if(!el)return;
-  const segBtn=(s,l)=>`<button class="dash-seg-btn${dashSegment===s?" active "+s:""}" onclick="setDashSegment('${s}')">${l}</button>`;
-  const {testSpend,schaalSpend,totalSpend}=segSpendSplit(fxFrom,fxTo);
+const FILTER_PLATFORM_LBL={all:"Alle",facebook:"Facebook",instagram:"Instagram"};
+const FILTER_PLACEMENT_LBL={all:"Alle",feed:"Feed",stories:"Stories",reels:"Reels",overig:"Overig"};
+const FILTER_STRATEGY_LBL={all:"Alle",test:"Test",schaal:"Schaal",ongeclassificeerd:"Ongeclassificeerd"};
+
+// Eén centrale filterbalk bovenaan (vóór de KPI-balk) i.p.v. los boven de
+// advertentiegroepentabel — anders lijkt het ten onrechte alsof het filter
+// alleen die tabel raakt. CT_/CT_ALL_ komen van render(): CT_ is de
+// (mogelijk gefilterde) periode-CT, CT_ALL_ altijd het volledige account,
+// nodig voor het "% van totale spend" in de filterstatusregel.
+function renderFilterBar(CT_,CT_ALL_,fxFrom,fxTo){
+  const el=document.getElementById("filterBar");
+  if(!el) return;
+
+  const stratBtn=(s,l)=>`<button class="filter-strat-btn${filterStrategy===s?" active "+s:""}" onclick="setFilterStrategy('${s}')">${l}</button>`;
+
+  const {testSpend,schaalSpend,totalSpend}=filteredSpendSplit(fxFrom,fxTo,filterPlatform,filterPlacement);
   let splitHtml="";
   if(totalSpend>0){
     const tp=testSpend/totalSpend*100, sp=schaalSpend/totalSpend*100, up=Math.max(0,100-tp-sp);
@@ -1092,39 +1181,64 @@ function renderDashSegBar(fxFrom,fxTo){
       <div class="dash-seg-split-lbl">${sp>0?`<span class="dash-seg-split-item schaal">Schaal ${sp.toFixed(0)}%</span>`:""}${tp>0?`<span class="dash-seg-split-item test">Test ${tp.toFixed(0)}%</span>`:""}${up>0?`<span class="dash-seg-split-item untagged">Ongeclassificeerd ${up.toFixed(0)}%</span>`:""}</div>
     </div>`;
   }
-  el.innerHTML=`<div class="dash-seg-row"><div class="dash-seg-toggle">${segBtn("all","Alle")}${segBtn("test","Test")}${segBtn("schaal","Schaal")}</div>${splitHtml}</div>`;
+
+  let statusHtml="";
+  if(filtersActive()){
+    const parts=[];
+    if(filterStrategy!=="all") parts.push(FILTER_STRATEGY_LBL[filterStrategy]);
+    if(filterPlatform!=="all") parts.push(FILTER_PLATFORM_LBL[filterPlatform]);
+    if(filterPlacement!=="all") parts.push(FILTER_PLACEMENT_LBL[filterPlacement]);
+    const spendPct = (CT_ALL_ && CT_ALL_.spend>0 && CT_) ? (CT_.spend/CT_ALL_.spend*100) : null;
+    const purch = CT_ ? CT_.purch : 0;
+    statusHtml=`<div class="filter-status">
+      <div class="filter-status-txt">Gefilterd op: <strong>${parts.join(" · ")}</strong>${spendPct!=null?` · ${spendPct.toFixed(0)}% van totale Meta-spend`:""}${CT_?` · ${purch} aankop${purch===1?"":"en"}`:" · geen data"}</div>
+      <button class="filter-status-clear" onclick="resetFilters()">Filters wissen</button>
+    </div>`;
+  }
+
+  el.innerHTML=`
+    <div class="filter-bar-row">
+      <span class="filter-bar-label">Analysefilters</span>
+      <div class="filter-strat-group">${stratBtn("all","Alle")}${stratBtn("test","Test")}${stratBtn("schaal","Schaal")}${stratBtn("ongeclassificeerd","Ongeclassificeerd")}</div>
+      <div class="filter-select-group">
+        <select class="filter-select" onchange="setFilterPlatform(this.value)" aria-label="Platform filteren" title="Platform filteren">${["all","facebook","instagram"].map(v=>`<option value="${v}"${filterPlatform===v?" selected":""}>Platform: ${FILTER_PLATFORM_LBL[v]}</option>`).join("")}</select>
+        <select class="filter-select" onchange="setFilterPlacement(this.value)" aria-label="Plaatsing filteren" title="Plaatsing filteren">${["all","feed","stories","reels","overig"].map(v=>`<option value="${v}"${filterPlacement===v?" selected":""}>Plaatsing: ${FILTER_PLACEMENT_LBL[v]}</option>`).join("")}</select>
+      </div>
+      <button class="filter-reset-btn"${filtersActive()?"":" disabled"} onclick="resetFilters()" title="Alle analysefilters terugzetten naar Alle" aria-label="Alle analysefilters terugzetten naar Alle">Reset</button>
+    </div>
+    ${splitHtml}
+    ${statusHtml}`;
 }
 
-// Automatisch opgebouwde hoofdconclusie — beschrijft altijd het hele account
-// (los van een eventueel actief test/schaal-filter elders op de pagina) plus
-// per-segment ROAS en het aandeel ongeclassificeerde spend, in gewone taal.
-function renderKpiHeadline(fxFrom,fxTo){
+// Automatisch opgebouwde hoofdconclusie — volgt de actieve analysefilters
+// (net als de KPI-balk erboven: CT is al gefilterd door render()). Bonus en
+// BEROAS-onderbouwing gebruiken hier bewust NIET van — die blijven altijd op
+// het volledige account gebaseerd, zie render().
+function renderKpiHeadline(CT_,fxFrom,fxTo){
   const el=document.getElementById("kpiHeadline");
   if(!el)return;
-  const pd=PERIODS[P]||PERIODS.aug;
-  const allCT = pd.tb ? tbCalc(pd.tb) : tbCalcRange(fxFrom,fxTo);
-  if(!allCT || !CX.be || allCT.spend<=0){ el.innerHTML=""; return; }
+  if(!CT_ || !CX.be || CT_.spend<=0){ el.innerHTML=""; return; }
 
   const margePct = CX.rev>0 ? CX.pro/CX.rev : 0;
   const doel=1/(1/CX.be-SCALE_T), comfy=1/(1/CX.be-SCALE_H);
-  const netTotal = margePct*(allCT.rev7+allCT.rev1v) - allCT.spend;
+  const netTotal = margePct*(CT_.rev7+CT_.rev1v) - CT_.spend;
   const rows=[{dot:netTotal>=0?"good":"bad", html:`Meta draait <strong>${eur(Math.abs(netTotal))}</strong> ${netTotal>=0?"boven":"onder"} break-even.`}];
 
   const segRow=(label,tag)=>{
-    const s=segRangeCT(fxFrom,fxTo,tag);
+    const s=filteredRangeCT(fxFrom,fxTo,tag,filterPlatform,filterPlacement);
     if(!s || s.spend<=0) return null;
     if(s.roas>=comfy) return {dot:"good", html:`${label} presteren boven doel met <strong>${x2(s.roas)}</strong> ROAS.`};
     if(s.roas>=doel)  return {dot:"good", html:`${label} draaien op doel met <strong>${x2(s.roas)}</strong> ROAS.`};
     if(s.roas>=CX.be) return {dot:"warn", html:`${label} draaien boven break-even met <strong>${x2(s.roas)}</strong> ROAS.`};
     return {dot:"bad", html:`${label} zitten met <strong>${x2(s.roas)}</strong> ROAS onder break-even.`};
   };
-  const schaalRow=segRow("Schaalcampagnes","schaal");
-  const testRow=segRow("Testcampagnes","test");
-  if(schaalRow) rows.push(schaalRow);
-  if(testRow) rows.push(testRow);
+  // Bij een actief strategiefilter alleen dat segment tonen — de andere rij
+  // zou verwarrend zijn naast een verder helemaal gefilterd dashboard.
+  if(filterStrategy!=="test"){ const r=segRow("Schaalcampagnes","schaal"); if(r) rows.push(r); }
+  if(filterStrategy!=="schaal"){ const r=segRow("Testcampagnes","test"); if(r) rows.push(r); }
 
-  const {testSpend,schaalSpend,totalSpend}=segSpendSplit(fxFrom,fxTo);
-  if(totalSpend>0){
+  const {testSpend,schaalSpend,totalSpend}=filteredSpendSplit(fxFrom,fxTo,filterPlatform,filterPlacement);
+  if(totalSpend>0 && filterStrategy==="all"){
     const upPct=Math.max(0,100-(testSpend+schaalSpend)/totalSpend*100);
     if(upPct>=1) rows.push({dot:"neutral", html:`Ongeclassificeerde campagnes vertegenwoordigen <strong>${upPct.toFixed(0)}%</strong> van de totale spend.`});
   }
@@ -1349,20 +1463,22 @@ function render(){
 
   CX=ordCalc(fxFrom,fxTo);
   CX.be=shopifyBeroas(fxFrom,fxTo);
-  if(dashSegment!=="all"){
-    // Test/schaal-filter: spend/aankopen/omzet/ROAS/CAC per label, uit
-    // DAILY_ADS. Brutomarge/nettomarge blijven "geen data" (zie
-    // renderKpiBar) — niet te herleiden naar advertentiegroep.
-    CT=segRangeCT(fxFrom,fxTo,dashSegment);
+
+  // CT_ALL: altijd het volledige, ongefilterde account — voedt de officiële
+  // bonus en de BEROAS-onderbouwing (CB), die nooit door een analysefilter
+  // mogen veranderen. Exact hetzelfde pad als vóór de analysefilters bestonden.
+  const CT_ALL = tbs ? tbCalc(tbs) : tbCalcRange(fxFrom,fxTo);
+  CB = CT_ALL ? bonCalc(CX,CT_ALL) : null;
+
+  if(filtersActive()){
+    // Analysefilter actief: spend/aankopen/omzet/ROAS/CAC voor de gekozen
+    // strategie/platform/plaatsing-doorsnede. Brutomarge/nettomarge blijven
+    // "geen data" (zie renderKpiBar) — niet te herleiden naar advertentiegroep.
+    CT=filteredRangeCT(fxFrom,fxTo,filterStrategy,filterPlatform,filterPlacement);
     hasTB=CT!=null;
-    CB=CT?bonCalc(CX,CT):null;
-  } else if(hasTB){
-    CT=tbCalc(tbs);
-    CB=bonCalc(CX,CT);
-    selfCheck(P, CT, fxFrom, fxTo);
   } else {
-    CT=tbCalcRange(fxFrom,fxTo);
-    CB=CT?bonCalc(CX,CT):null;
+    CT=CT_ALL;
+    if(tbs) selfCheck(P, CT, fxFrom, fxTo);
   }
   const schaal=1/(1/CX.be-SCALE_T), comfy=1/(1/CX.be-SCALE_H);
 
@@ -1396,15 +1512,17 @@ function render(){
     const pc=tbCalcRange(prevFrom,prevTo);
     if(pc){ prevCT=pc; prevCX=ordCalc(prevFrom,prevTo); }
   }
-  if(dashSegment!=="all" && prevFrom){
-    prevCT=segRangeCT(prevFrom,prevTo,dashSegment); // null als er geen data is → geen vs.-vergelijking getoond
+  if(filtersActive() && prevFrom){
+    prevCT=filteredRangeCT(prevFrom,prevTo,filterStrategy,filterPlatform,filterPlacement); // null als er geen data is → geen vs.-vergelijking getoond
   }
 
-  renderDashSegBar(fxFrom,fxTo);
-  renderKpiHeadline(fxFrom,fxTo);
+  renderFilterBar(CT,CT_ALL,fxFrom,fxTo);
+  renderKpiHeadline(CT,fxFrom,fxTo);
 
   /* card meta */
-  const segNote = dashSegment!=="all" ? ` <span class="capi-badge" style="background:${dashSegment==="test"?"rgba(91,158,232,.18)":"rgba(74,222,128,.16)"};border-color:${dashSegment==="test"?"rgba(91,158,232,.5)":"rgba(74,222,128,.45)"};color:${dashSegment==="test"?"#93C5F5":"#8FE0A8"}">${dashSegment==="test"?"Test":"Schaal"}-groepen</span>` : "";
+  const STRAT_STYLE={test:["rgba(91,158,232,.18)","rgba(91,158,232,.5)","#93C5F5"],schaal:["rgba(74,222,128,.16)","rgba(74,222,128,.45)","#8FE0A8"],ongeclassificeerd:["rgba(255,255,255,.08)","rgba(255,255,255,.22)","#93A2B8"]};
+  const STRAT_LBL={test:"Test",schaal:"Schaal",ongeclassificeerd:"Ongeclassificeerd"};
+  const segNote = filterStrategy!=="all" ? (()=>{const[bg,bd,fg]=STRAT_STYLE[filterStrategy];return ` <span class="capi-badge" style="background:${bg};border-color:${bd};color:${fg}">${STRAT_LBL[filterStrategy]}-groepen</span>`;})() : "";
   if(hasTB){
     const mn=maandNr(SNAP);
     const tbFrom=tbs?tbs[0].from:fxFrom, tbTo=tbs?tbs[tbs.length-1].to:fxTo;
@@ -1413,8 +1531,8 @@ function render(){
       : "";
     document.getElementById("cardMeta").innerHTML=
       `Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · Maand ${mn}${capiWarn}${segNote} <span class="info-i" data-tip="Maand ${mn} van het contract · start 16 jul 2026 · BEROAS op basis van werkelijke Shopify orders">i</span>`;
-  } else if(dashSegment!=="all"){
-    document.getElementById("cardMeta").innerHTML=`Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · geen data voor dit segment in deze periode${segNote}`;
+  } else if(filtersActive()){
+    document.getElementById("cardMeta").innerHTML=`Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · geen data voor dit filter in deze periode${segNote}`;
   } else {
     const nDays=Math.floor((new Date(fxTo)-new Date(fxFrom))/86400000)+1;
     document.getElementById("cardMeta").innerHTML=`Shopify · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · ${nDays} dag${nDays!==1?"en":""}`;
@@ -1448,22 +1566,23 @@ function render(){
   /* bonus (nu mc-val) */
   const bonusLabels={vandaag:"BONUS VANDAAG",gisteren:"BONUS GISTEREN",week:"BONUS DEZE WEEK",prevweek:"BONUS VORIGE WEEK",aug:"BONUS TOT NU TOE",jul:"BONUS JULI",contract:"BONUS TOTAAL"};
   document.getElementById("bonusLbl").textContent=bonusLabels[P]||"BONUS";
-  document.getElementById("bonusAmt").textContent=hasTB?eur(CB.raw):"—";
+  document.getElementById("bonusAmt").textContent=CB?eur(CB.raw):"—";
 
-  /* bonus badge (nu mc-sub) */
+  /* bonus badge (nu mc-sub) — altijd op CT_ALL gebaseerd, nooit op de
+     gefilterde CT: dit hoort bij het ongefilterde bonusbedrag erboven. */
   const shortLabel={vandaag:"Vandaag",gisteren:"Gisteren",week:"Deze week",prevweek:"Vorige week"};
   let bHtml;
   if(shortLabel[P]){
-    if(hasTB && CT.purch>0){
-      bHtml=`<span style="color:#94a3b8">${CT.purch} via Meta</span>`;
+    if(CT_ALL && CT_ALL.purch>0){
+      bHtml=`<span style="color:#94a3b8">${CT_ALL.purch} via Meta</span>`;
     } else {
       bHtml=`<span style="color:#93A2B8">${CX.oc} ${CX.oc===1?"order":"orders"}</span>`;
     }
   } else if(prevBon!==null && CB){
     const d=CB.raw-prevBon, up=d>=0;
     bHtml=`<span style="color:${up?"#8FC49B":"#DD9280"}">${up?"▲":"▼"} ${eur(Math.abs(d))} vs. ${prevLabel}</span>`;
-  } else if(!hasTB && dashSegment!=="all"){
-    bHtml=`<span style="color:#93A2B8">geen data voor dit segment</span>`;
+  } else if(!CT_ALL){
+    bHtml=`<span style="color:#93A2B8">geen data voor deze periode</span>`;
   } else if(P==="jul"){
     bHtml=`<span style="color:#93A2B8">campagnestart</span>`;
   } else {
@@ -1498,18 +1617,19 @@ function render(){
     document.getElementById("mPurchLbl").textContent="AANKOPEN";
   }
 
-  /* tables */
+  /* tables — BEROAS-onderbouwing blijft altijd op het volledige account
+     gebaseerd (CT_ALL), net als de bonus: geen analysefilter hierop. */
   renderOrders(fxFrom,fxTo);
-  renderBeroas(CT,CX.be,CX,fxFrom,fxTo);
+  renderBeroas(CT_ALL,CX.be,CX,fxFrom,fxTo,filtersActive());
   const adsData = [...(pd.adsExtra||[]), ...adsForRange(fxFrom, fxTo)];
   renderAds(adsData, CX.be);
 
-  /* simulator */
-  if(hasTB){
+  /* simulator — ook altijd ongefilterd (bonussimulator, zie renderBeroas) */
+  if(CT_ALL){
     const sl=document.getElementById("simSlider");
     sl.min=Math.max(0.5,CX.be*0.5).toFixed(2);
-    sl.max=(Math.max(CT.roas,comfy)*2).toFixed(2);
-    sl.value=CT.roas.toFixed(2);
+    sl.max=(Math.max(CT_ALL.roas,comfy)*2).toFixed(2);
+    sl.value=CT_ALL.roas.toFixed(2);
     const spEl=document.getElementById("simSpend");
     if(!simSpendLocked) spEl.value=200;
     document.getElementById("simSpendNote").textContent=simSpendLocked?"aangepast":"standaard";
@@ -1625,7 +1745,7 @@ function renderOrders(from,to){
 </tr></tbody>`;
 }
 
-function renderBeroas(ct, be, fx, from, to){
+function renderBeroas(ct, be, fx, from, to, filterNote){
   // Werkelijke productmix op basis van Shopify ORDERS (zelfde filter als hoofdkaart)
   const grps={};
   let totIncl=0,totWinst=0,totCnt=0;
@@ -1646,10 +1766,12 @@ function renderBeroas(ct, be, fx, from, to){
   const wMarg=totIncl>0?(totWinst/(totIncl/BTW)*100).toFixed(1):"—";
   const sorted=Object.values(grps).sort((a,b)=>b.inclTotal-a.inclTotal);
 
+  const filterNoteHtml = filterNote
+    ? `<div class="be-filter-note">Gebaseerd op het volledige Meta-account; analysefilters zijn hier niet toegepast.</div>` : "";
   document.getElementById("beSummary").innerHTML=`
 <div class="be-stat"><div class="be-lbl">Gem. orderwaarde (Shopify)</div><div class="be-val">${eur(avgIncl)} incl.</div><div style="font-size:11px;color:#93A2B8;margin-top:2px">${eur(avgExcl)} excl. BTW · ${totCnt} orders</div></div>
 <div class="be-stat"><div class="be-lbl">Gewogen marge</div><div class="be-val">${wMarg}%</div></div>
-<div class="be-stat"><div class="be-lbl">BEROAS (incl. BTW)</div><div class="be-val">${x2(be)}</div></div>`;
+<div class="be-stat"><div class="be-lbl">BEROAS (incl. BTW)</div><div class="be-val">${x2(be)}</div></div>${filterNoteHtml}`;
 
   document.getElementById("beTable").innerHTML=`
 <thead><tr><th>Product(mix)</th><th class="r">Orders</th><th class="r">Volume%</th><th class="r">Gem. incl. BTW</th><th class="r">Gem. winst</th><th class="r">BEROAS</th></tr></thead>
@@ -2110,10 +2232,10 @@ function renderKpiBar(cx, ct, tg, prevCt, prevCx, prevLabel, ctDays, prevDays){
     return ` <span class="kpi-delta" style="color:${col}">${up?"▲":"▼"}${Math.abs(d).toFixed(0)}%</span>`;
   };
 
-  const brutoSub = dashSegment!=="all"
+  const brutoSub = filtersActive()
     ? (metaBruto!=null?`~${(margePct*100).toFixed(1)}% (gem.)`:"geen data")
     : (metaBruto!=null?`${(margePct*100).toFixed(1)}% op Meta omzet`:"geen data");
-  const netSub = dashSegment!=="all"
+  const netSub = filtersActive()
     ? (netMeta!=null?"schatting, gem. marge":"geen spend")
     : (netMeta!=null?(netMeta>0?"na Meta spend":"verlies na Meta"):"geen spend");
   // Nettomarge: bij vergelijking met een resultaat dicht bij nul levert een
