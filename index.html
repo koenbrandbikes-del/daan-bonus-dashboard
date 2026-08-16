@@ -89,8 +89,8 @@ body{background:
 .acc-item:hover{border-color:rgba(255,255,255,.16);box-shadow:0 10px 28px rgba(6,8,24,.35),0 0 0 1px rgba(42,49,160,.25),inset 0 1px 0 rgba(255,255,255,.1)}
 .acc-hd{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;cursor:pointer;user-select:none;font-size:14px;font-weight:500}
 .acc-hd:hover{background:rgba(255,255,255,.03)}
-.acc-chv{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.09);color:#dfe6f2;font-size:15px;line-height:1;transition:transform .25s ease,background .2s ease,color .2s ease}
-.acc-item:hover .acc-chv{background:rgba(255,255,255,.16);color:#fff}
+.acc-chv,.kpi-headline-chev{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.09);color:#dfe6f2;font-size:14px;line-height:1;transition:transform .2s ease,background .15s ease,color .15s ease}
+.acc-item:hover .acc-chv,.kpi-headline-hd:hover .kpi-headline-chev{background:rgba(255,255,255,.16);color:#fff}
 .acc-item.open .acc-chv{transform:rotate(90deg)}
 .acc-body{display:none;border-top:1px solid rgba(255,255,255,.08)}
 .acc-item.open .acc-body{display:block}
@@ -163,6 +163,30 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .ad-seg-card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 6px}
 .ad-seg-lbl{font-size:8px;color:#7C8CA6;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
 .ad-seg-val{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* ── Advertentiegroepen: mobiele kaartweergave (i.p.v. horizontale tabel) ── */
+.ads-cards{display:none}
+.ad-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.ad-card.tot{background:rgba(96,165,250,.06);border-color:rgba(96,165,250,.25)}
+.ad-card-hd{display:flex;align-items:center;gap:6px;padding:12px;cursor:pointer;user-select:none;min-height:44px}
+.ad-card-name{flex:1;min-width:0;overflow-wrap:anywhere;font-size:13px;font-weight:600}
+.ad-card-kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px 8px;padding:0 12px 12px}
+.ad-card-detail{padding:2px 12px 14px;border-top:1px solid rgba(255,255,255,.07)}
+.adkpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 8px;margin-top:4px}
+.adkpi-item{min-width:0}
+.adkpi-item.full{grid-column:1/-1}
+.adkpi-lbl{font-size:8px;color:#7C8CA6;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.adkpi-val{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.adkpi-funnel-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.adkpi-funnel-item{background:rgba(255,255,255,.05);border-radius:8px;padding:8px 10px;min-width:0}
+.ad-platform-cards{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.ad-platform-card{background:rgba(255,255,255,.04);border-radius:8px;padding:8px 10px}
+.ad-platform-card-name{font-size:11px;font-weight:600;color:#cbd5e1;margin-bottom:6px}
+.ad-platform-showall{background:transparent;border:1px solid #1f3050;color:#93C5F5;font-size:11px;font-weight:600;padding:8px 10px;border-radius:8px;cursor:pointer;width:100%;margin-top:2px;min-height:44px}
+@media(max-width:768px){
+  #adsTscroll{display:none}
+  .ads-cards{display:block}
+}
 
 /* ── Simulator ── */
 .sim-wrap{padding:18px 20px}
@@ -288,8 +312,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-headline:empty{display:none}
 .kpi-headline-hd{display:flex;align-items:center;justify-content:space-between;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7C8CA6;margin-bottom:9px;cursor:pointer;user-select:none}
 .kpi-headline-hd:hover{color:#a8b3c5}
-.kpi-headline-chev{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.09);color:#dfe6f2;font-size:11px;transition:background .15s,color .15s}
-.kpi-headline-hd:hover .kpi-headline-chev{background:rgba(255,255,255,.16);color:#fff}
 .kpi-headline.collapsed .kpi-headline-hd{margin-bottom:0}
 .kpi-headline.collapsed .kpi-headline-body{display:none}
 .kpi-headline-row{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:#a8b3c5;line-height:1.55;margin-bottom:6px}
@@ -508,15 +530,9 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
   .ad-seg-grid{grid-template-columns:1fr}
   .ad-seg-card-grid{grid-template-columns:repeat(3,1fr);row-gap:8px}
   .dash-seg-split{min-width:0}
-  /* Advertentiegroepentabel op mobiel: krappere cellen + afgekapte naam +
-     "% spend" (kolom 3, dubbel met de spend-kolom zelf) weg — anders past de
-     tabel niet en moet je horizontaal scrollen. */
-  #adsTable td,#adsTable th{padding:6px 4px;font-size:11px}
-  #adsTable th:nth-child(3),#adsTable td:nth-child(3){display:none}
-  .ad-row-name{display:inline-block;max-width:46px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
-  #adsTable .ad-tag-badge{font-size:7px;padding:2px 3px;margin-right:3px;letter-spacing:0}
-  #adsTable .ad-tag-edit-hint{display:none}
-  #adsTable .ad-row-chv{width:9px;margin-right:3px;font-size:11px}
+}
+@media(max-width:360px){
+  .ad-card-kpis,.adkpi-grid,.adkpi-funnel-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -609,6 +625,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     <div class="acc-body">
       <div id="adSegSummary" class="ad-seg-summary"></div>
       <div class="tscroll" id="adsTscroll"><table id="adsTable"></table></div>
+      <div class="ads-cards" id="adsCards"></div>
     </div>
   </div>
 
@@ -1911,6 +1928,13 @@ function toggleAdRow(name){
   if(adsExpanded.has(name)) adsExpanded.delete(name); else adsExpanded.add(name);
   renderAds(_adsLastRaw,_adsLastBeroas,_adsLastFrom,_adsLastTo);
 }
+// Mobiele kaartweergave: "Toon alle plaatsingen" per advertentiegroep
+// (platform/plaatsing-subtabel toont daar standaard maar de eerste 3).
+let adPlatformShowAll=new Set();
+function toggleAdPlatformShowAll(name){
+  if(adPlatformShowAll.has(name)) adPlatformShowAll.delete(name); else adPlatformShowAll.add(name);
+  renderAds(_adsLastRaw,_adsLastBeroas,_adsLastFrom,_adsLastTo);
+}
 
 // Test/schaal-labels per advertentiegroep — handmatig ingesteld door de
 // gebruiker (klik op een rij). Gedeeld tussen iedereen via een Google Sheet
@@ -2030,7 +2054,7 @@ function adPlatformBreakdown(adsetName,from,to){
   return Object.values(map).filter(x=>x.spend>0||x.purch>0).sort((a,b)=>b.spend-a.spend);
 }
 
-function renderAdDetail(r,margePct,beroas,fxFrom,fxTo){
+function renderAdDetail(r,margePct,beroas,fxFrom,fxTo,mobile){
   const impr=r.impr||0, reach=r.reach||0, linkCl=r.linkCl||0, atc=r.atc||0, purch=r.purch||0;
   const ctr        = impr>0   ? linkCl/impr*100 : null;   // Impressies → linkkliks
   const clickToAtc = linkCl>0 ? atc/linkCl*100   : null;   // Linkkliks → ATC
@@ -2042,6 +2066,7 @@ function renderAdDetail(r,margePct,beroas,fxFrom,fxTo){
   const viewSharePct = r.ri>0 ? r.rev1v/r.ri*100 : null;
   const cac    = r.purch>0 ? r.spend/r.purch : null;
   const netEst = r.spend>0 ? margePct*r.ri-r.spend : null;
+  const roasDiff = (r.roas>0 && beroas>0) ? r.roas-beroas : null;
   const hasFunnelData = impr>0 || linkCl>0;
 
   const nfmt=v=>v.toLocaleString("nl");
@@ -2050,40 +2075,90 @@ function renderAdDetail(r,margePct,beroas,fxFrom,fxTo){
     const f=items.filter(Boolean);
     return f.length?`<div class="ad-detail-block"><div class="ad-detail-block-lbl">${title}</div><div class="ad-detail-block-vals">${f.join(" · ")}</div></div>`:"";
   };
+  // Mobiele varianten: dezelfde berekende waarden, maar als los scanbaar
+  // label/waarde-rastertje i.p.v. een doorlopende "·"-zin die op smalle
+  // schermen buiten beeld liep.
+  const pillItem=(lbl,val,color)=>val!=null?{lbl,val,color}:null;
+  const kpiGrid=items=>{
+    const f=items.filter(Boolean);
+    return f.length?`<div class="adkpi-grid">${f.map(it=>`<div class="adkpi-item${it.full?" full":""}"><div class="adkpi-lbl">${it.lbl}</div><div class="adkpi-val"${it.color?` style="color:${it.color}"`:""}>${it.val}</div></div>`).join("")}</div>`:"";
+  };
+  const mblock=(title,items)=>{
+    const g=kpiGrid(items);
+    return g?`<div class="ad-detail-block"><div class="ad-detail-block-lbl">${title}</div>${g}</div>`:"";
+  };
 
   let funnelHtml;
   if(hasFunnelData){
-    const stages=[["Impressies",impr],["Linkkliks",linkCl],["ATC",atc],["Aankopen",purch]];
-    const rates=[null,ctr,clickToAtc,atcToPurch];
-    const steps=stages.map(([lbl,val],i)=>{
-      const arr=i===0?"":"<span class='fc-arr'>›</span>";
-      const rate=rates[i];
-      const drop=i===0?"":`<div class="fc-drop" style="color:#93C5F5">${rate!=null?rate.toFixed(rate<10?2:1)+"%":"—"}</div>`;
-      return `${arr}<div class="fc-step"><div class="fc-step-in"><div class="fc-lbl" style="color:${FC_COLORS[i]}">${lbl}</div><div class="fc-val">${nfmt(val)}</div>${drop}</div></div>`;
-    }).join("");
-    const note=clickToPurch!=null?`<div class="ad-funnel-note">Klik → aankoop: <b>${clickToPurch.toFixed(2)}%</b></div>`:"";
-    funnelHtml=`<div class="fc-steps">${steps}</div>${note}`;
+    if(mobile){
+      const stages=[["Impressies",impr],["Linkkliks",linkCl],["ATC",atc],["Aankopen",purch]];
+      const rates=[null,ctr,clickToAtc,atcToPurch];
+      const items=stages.map(([lbl,val],i)=>{
+        const rate=rates[i];
+        const rateHtml=i===0?"":`<div class="fc-drop" style="color:#93C5F5">${rate!=null?rate.toFixed(rate<10?2:1)+"%":"—"}</div>`;
+        return `<div class="adkpi-funnel-item"><div class="fc-lbl" style="color:${FC_COLORS[i]}">${lbl}</div><div class="fc-val">${nfmt(val)}</div>${rateHtml}</div>`;
+      }).join("");
+      const note=clickToPurch!=null?`<div class="ad-funnel-note">Klik → aankoop: <b>${clickToPurch.toFixed(2)}%</b></div>`:"";
+      funnelHtml=`<div class="adkpi-funnel-grid">${items}</div>${note}`;
+    } else {
+      const stages=[["Impressies",impr],["Linkkliks",linkCl],["ATC",atc],["Aankopen",purch]];
+      const rates=[null,ctr,clickToAtc,atcToPurch];
+      const steps=stages.map(([lbl,val],i)=>{
+        const arr=i===0?"":"<span class='fc-arr'>›</span>";
+        const rate=rates[i];
+        const drop=i===0?"":`<div class="fc-drop" style="color:#93C5F5">${rate!=null?rate.toFixed(rate<10?2:1)+"%":"—"}</div>`;
+        return `${arr}<div class="fc-step"><div class="fc-step-in"><div class="fc-lbl" style="color:${FC_COLORS[i]}">${lbl}</div><div class="fc-val">${nfmt(val)}</div>${drop}</div></div>`;
+      }).join("");
+      const note=clickToPurch!=null?`<div class="ad-funnel-note">Klik → aankoop: <b>${clickToPurch.toFixed(2)}%</b></div>`:"";
+      funnelHtml=`<div class="fc-steps">${steps}</div>${note}`;
+    }
   } else {
     funnelHtml=`<div class="ad-detail-note">Geen funnel-data (impressies/linkkliks) voor deze periode — dit zijn recent toegevoegde velden, oudere dagen hebben ze nog niet.</div>`;
   }
 
-  const verkeerskosten=block("Verkeerskosten",[
+  // Alleen op mobiel: omzet en % van totale spend staan niet meer in de
+  // (verborgen) tabelkolommen, dus die komen hier terug als eerste blok.
+  const overzicht = mobile ? mblock("Overzicht",[
+    pillItem("Omzet",r.ri>0?eur(r.ri):"—"),
+    pillItem("% v/d totale spend",r.pct!=null?r.pct.toFixed(1)+"%":null),
+  ]) : "";
+
+  const verkeerskosten = mobile ? mblock("Verkeerskosten",[
+    pillItem("CPM",cpm!=null?eur(cpm):null),
+    pillItem("CPC",cpcLink!=null?eur(cpcLink):null),
+    pillItem("Frequentie",freq!=null?freq.toFixed(2)+"×":null),
+    pillItem("CTR",ctr!=null?ctr.toFixed(2)+"%":null),
+  ]) : block("Verkeerskosten",[
     pill("CPM",cpm!=null?eur(cpm):null),
     pill("CPC",cpcLink!=null?eur(cpcLink):null),
     pill("Frequentie",freq!=null?freq.toFixed(2)+"×":null),
   ]);
-  const attributie=block("Attributie",[
+  const attributie = mobile ? mblock("Attributie",[
+    pillItem("Klikomzet",eur(r.rev7)),
+    pillItem("Viewomzet",eur(r.rev1v)),
+    pillItem("View-aandeel",viewSharePct!=null?viewSharePct.toFixed(1)+"%":null),
+  ]) : block("Attributie",[
     pill("Klikomzet",eur(r.rev7)),
     pill("Viewomzet",eur(r.rev1v)),
     pill("View-aandeel",viewSharePct!=null?viewSharePct.toFixed(1)+"%":null),
   ]);
-  const resultaat=block("Resultaat",[
+  const resultaat = mobile ? mblock("Resultaat",[
+    pillItem("CAC",cac!=null?eur(cac):null),
+    pillItem("ROAS",r.roas>0?x2(r.roas):null),
+    pillItem("BEROAS",beroas>0?x2(beroas):null),
+    pillItem("Verschil",roasDiff!=null?(roasDiff>=0?"+":"")+roasDiff.toFixed(2)+"×":null,roasDiff!=null?(roasDiff>=0?"#8FC49B":"#DD9280"):null),
+    netEst!=null?{lbl:"Nettoresultaat (schatting)",val:(netEst>=0?"+":"")+eur(netEst),color:netEst>=0?"#8FC49B":"#DD9280",full:true}:null,
+  ]) : block("Resultaat",[
     pill("CAC",cac!=null?eur(cac):null),
     pill("ROAS",r.roas>0?x2(r.roas):null),
     pill("BEROAS",beroas>0?x2(beroas):null),
     netEst!=null?`Netto <b style="color:${netEst>=0?"#8FC49B":"#DD9280"}">${eur(netEst)}</b>`:null,
   ]);
-  const context=block("Context",[
+  const context = mobile ? mblock("Context",[
+    pillItem("Aankopen",String(purch)),
+    pillItem("Actieve dagen",String(r._cnt)),
+    pillItem("Betrouwbaarheid",adReliability(r._cnt,purch)),
+  ]) : block("Context",[
     pill("Aankopen",String(purch)),
     pill("Actieve dagen",String(r._cnt)),
     `Betrouwbaarheid <b>${adReliability(r._cnt,purch)}</b>`,
@@ -2098,30 +2173,56 @@ function renderAdDetail(r,margePct,beroas,fxFrom,fxTo){
     if(pbRows.length){
       const filterNote=(filterPlatform!=="all"||filterPlacement!=="all")
         ? `<div class="ad-detail-block-lbl" style="margin-top:2px">Details binnen actieve analysefilters</div>` : "";
-      const rowsHtml=pbRows.map(p=>{
-        const roas=p.spend>0?p.rev/p.spend:null;
-        const cac=p.purch>0?p.spend/p.purch:null;
-        return `<tr>
-          <td>${FILTER_PLATFORM_LBL[p.platform]||p.platform} ${FILTER_PLACEMENT_LBL[p.placement]||p.placement}</td>
-          <td class="r">${eur(p.spend)}</td>
-          <td class="r">${p.purch||"—"}</td>
-          <td class="r">${p.rev>0?eur(p.rev):"—"}</td>
-          <td class="r">${roas>0?x2(roas):"—"}</td>
-          <td class="r">${cac!=null?eur(cac):"—"}</td>
-        </tr>`;
-      }).join("");
-      platformTable=`<div class="ad-detail-block">
-        <div class="ad-detail-block-lbl">Platform / plaatsing</div>
-        ${filterNote}
-        <table class="ad-platform-table">
-          <thead><tr><th>Platform/plaatsing</th><th class="r">Spend</th><th class="r">Aankopen</th><th class="r">Omzet</th><th class="r">ROAS</th><th class="r">CAC</th></tr></thead>
-          <tbody>${rowsHtml}</tbody>
-        </table>
-      </div>`;
+      if(mobile){
+        const showAll=adPlatformShowAll.has(r.n);
+        const visRows=showAll?pbRows:pbRows.slice(0,3);
+        const cardsHtml=visRows.map(p=>{
+          const roas=p.spend>0?p.rev/p.spend:null;
+          const cac=p.purch>0?p.spend/p.purch:null;
+          return `<div class="ad-platform-card">
+            <div class="ad-platform-card-name">${FILTER_PLATFORM_LBL[p.platform]||p.platform} ${FILTER_PLACEMENT_LBL[p.placement]||p.placement}</div>
+            ${kpiGrid([
+              pillItem("Spend",eur(p.spend)),
+              pillItem("Aankopen",p.purch||"—"),
+              pillItem("ROAS",roas>0?x2(roas):"—"),
+              pillItem("CAC",cac!=null?eur(cac):"—"),
+            ])}
+          </div>`;
+        }).join("");
+        const escN=r.n.replace(/'/g,"\\'");
+        const toggleBtn=pbRows.length>3?`<button type="button" class="ad-platform-showall" onclick="toggleAdPlatformShowAll('${escN}')">${showAll?"Toon minder":`Toon alle plaatsingen (${pbRows.length})`}</button>`:"";
+        platformTable=`<div class="ad-detail-block">
+          <div class="ad-detail-block-lbl">Platform / plaatsing</div>
+          ${filterNote}
+          <div class="ad-platform-cards">${cardsHtml}</div>
+          ${toggleBtn}
+        </div>`;
+      } else {
+        const rowsHtml=pbRows.map(p=>{
+          const roas=p.spend>0?p.rev/p.spend:null;
+          const cac=p.purch>0?p.spend/p.purch:null;
+          return `<tr>
+            <td>${FILTER_PLATFORM_LBL[p.platform]||p.platform} ${FILTER_PLACEMENT_LBL[p.placement]||p.placement}</td>
+            <td class="r">${eur(p.spend)}</td>
+            <td class="r">${p.purch||"—"}</td>
+            <td class="r">${p.rev>0?eur(p.rev):"—"}</td>
+            <td class="r">${roas>0?x2(roas):"—"}</td>
+            <td class="r">${cac!=null?eur(cac):"—"}</td>
+          </tr>`;
+        }).join("");
+        platformTable=`<div class="ad-detail-block">
+          <div class="ad-detail-block-lbl">Platform / plaatsing</div>
+          ${filterNote}
+          <table class="ad-platform-table">
+            <thead><tr><th>Platform/plaatsing</th><th class="r">Spend</th><th class="r">Aankopen</th><th class="r">Omzet</th><th class="r">ROAS</th><th class="r">CAC</th></tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>`;
+      }
     }
   }
 
-  return `${funnelHtml}${verkeerskosten}${attributie}${resultaat}${context}${platformTable}`;
+  return `${overzicht}${funnelHtml}${verkeerskosten}${attributie}${resultaat}${context}${platformTable}`;
 }
 
 function renderAds(adsRaw, beroas, fxFrom, fxTo){
@@ -2242,6 +2343,47 @@ function renderAds(adsRaw, beroas, fxFrom, fxTo){
 
   document.getElementById("adsTable").innerHTML=html;
   document.getElementById("adsTscroll")?.classList.toggle("ad-expanded-open",adsExpanded.size>0);
+
+  // Mobiele kaartweergave — zelfde displayRows/totalen als de tabel
+  // hierboven, alleen anders gepresenteerd (geen horizontale tabel, geen
+  // doorlopende "·"-zinnen in de details). CSS schakelt onder 768px van
+  // tabel naar kaarten (#adsTscroll verborgen, #adsCards zichtbaar).
+  let cardsHtml=displayRows.map(r=>{
+    const roasColor=r.roas===0?"#DD9280":r.roas>=beroas?"#8FC49B":"#E5B863";
+    const tag=AD_TAGS[r.n]||"ongeclassificeerd";
+    const escN=r.n.replace(/'/g,"\\'");
+    const badge=`<span class="ad-tag-badge ${tag}" tabindex="0" role="button" aria-haspopup="true" title="Classificatie wijzigen" aria-label="Classificatie: ${tagLbl[tag]}. Klik om te wijzigen." onclick="openAdTagMenu(event,'${escN}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAdTagMenu(event,'${escN}')}">${tagLbl[tag]}<span class="ad-tag-edit-hint">✎</span></span>`;
+    const expanded=adsExpanded.has(r.n);
+    const chevron=`<span class="ad-row-chv${expanded?" open":""}" title="${expanded?"Details verbergen":"Details tonen"}">›</span>`;
+    const cac=r.purch>0?r.spend/r.purch:null;
+    const kpis=`<div class="ad-card-kpis">
+      <div class="adkpi-item"><div class="adkpi-lbl">Spend</div><div class="adkpi-val">${eur(r.spend)}</div></div>
+      <div class="adkpi-item"><div class="adkpi-lbl">ROAS</div><div class="adkpi-val" style="color:${roasColor}">${r.roas>0?x2(r.roas):"—"}</div></div>
+      <div class="adkpi-item"><div class="adkpi-lbl">Aankopen</div><div class="adkpi-val">${r.purch||"—"}</div></div>
+      <div class="adkpi-item"><div class="adkpi-lbl">CAC</div><div class="adkpi-val">${cac!=null?eur(cac):"—"}</div></div>
+    </div>`;
+    const detail=expanded?`<div class="ad-card-detail">${renderAdDetail(r,margePct,beroas,fxFrom,fxTo,true)}</div>`:"";
+    return `<div class="ad-card">
+      <div class="ad-card-hd" tabindex="0" role="button" aria-expanded="${expanded}" aria-label="${expanded?"Details verbergen":"Details tonen"} voor ${r.n}" onclick="toggleAdRow('${escN}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAdRow('${escN}')}">
+        ${chevron}${badge}<span class="ad-card-name">${r.n}</span>
+      </div>
+      ${kpis}
+      ${detail}
+    </div>`;
+  }).join("");
+  cardsHtml+=`<div class="ad-card tot">
+    <div class="ad-card-hd" style="cursor:default">
+      <span class="ad-card-name">Totaal · ${displayRows.length} groep${displayRows.length===1?"":"en"}${filterStrategy!=="all"?` (${FILTER_STRATEGY_LBL[filterStrategy]})`:""}</span>
+    </div>
+    <div class="ad-card-kpis">
+      <div class="adkpi-item"><div class="adkpi-lbl">Spend</div><div class="adkpi-val">${eur(dispSpend)}</div></div>
+      <div class="adkpi-item"><div class="adkpi-lbl">Aankopen</div><div class="adkpi-val">${totPurch}</div></div>
+      <div class="adkpi-item"><div class="adkpi-lbl">Omzet</div><div class="adkpi-val">${totRi>0?eur(totRi):"—"}</div></div>
+      <div class="adkpi-item"><div class="adkpi-lbl">ROAS</div><div class="adkpi-val" style="font-weight:700">${totRoas>0?x2(totRoas):"—"}</div></div>
+      ${!platformFiltered?`<div class="adkpi-item full"><div class="adkpi-lbl">ATC</div><div class="adkpi-val">${totAtc}</div></div>`:""}
+    </div>
+  </div>`;
+  document.getElementById("adsCards").innerHTML=cardsHtml;
 
   // Samenvatting per label, incl. Ongeclassificeerd (nog niet gelabeld).
   // Nettoresultaat is een schatting: gemiddeld marge% van het hele account
