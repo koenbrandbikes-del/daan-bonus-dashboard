@@ -118,7 +118,7 @@ def meta_insights(start: datetime.date, end: datetime.date) -> dict:
 def meta_insights_by_adset(start: datetime.date, end: datetime.date) -> list:
     url = f"https://graph.facebook.com/v21.0/act_{META_ACCOUNT}/insights"
     params = {
-        "fields": "adset_name,spend,impressions,clicks,ctr,cpc,actions,action_values",
+        "fields": "adset_name,spend,impressions,reach,clicks,inline_link_clicks,ctr,cpc,actions,action_values",
         "action_attribution_windows": '["7d_click","1d_view"]',
         "time_range": json.dumps({"since": str(start), "until": str(end)}),
         "level": "adset",
@@ -151,6 +151,11 @@ def meta_insights_by_adset(start: datetime.date, end: datetime.date) -> list:
             "ctr":   round(float(row.get("ctr", 0)), 2),
             "cpc":   round(float(row.get("cpc", 0)), 2),
             "atc":   int(a7 + a1v),
+            # Funnel-detail voor de uitklapbare rij in het dashboard — zie
+            # dezelfde velden in cloudflare-worker/src/index.js.
+            "impr":   int(float(row.get("impressions", 0))),
+            "reach":  int(float(row.get("reach", 0))),
+            "linkCl": int(float(row.get("inline_link_clicks", 0))),
         })
     out.sort(key=lambda a: -a["spend"])
     return out

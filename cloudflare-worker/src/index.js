@@ -289,6 +289,17 @@ function parseMetaAdsetInsights(json) {
       ctr: round2(parseFloat(row.ctr || 0)),
       cpc: round2(parseFloat(row.cpc || 0)),
       atc: Math.round(a7 + a1v),
+      // Funnel-detail (dashboard: uitklapbare rij per advertentiegroep) —
+      // linkCl is inline_link_clicks, bewust apart van "clicks"/ctr/cpc
+      // hierboven (die tellen alle click-types en blijven ongewijzigd voor
+      // de bestaande tabelkolommen). impr/reach zijn per dag, worden in het
+      // dashboard over de periode gesommeerd; frequentie wordt daar herleid
+      // uit de gesommeerde impr/reach, niet hier per dag opgeslagen (reach
+      // is niet optelbaar over dagen zonder de "unieke gebruiker"-aanname
+      // te schenden — een som is een benadering, geen exact periode-bereik).
+      impr: Math.round(parseFloat(row.impressions || 0)),
+      reach: Math.round(parseFloat(row.reach || 0)),
+      linkCl: Math.round(parseFloat(row.inline_link_clicks || 0)),
     });
   }
   out.sort((a, b) => b.spend - a.spend);
@@ -309,7 +320,7 @@ async function metaInsights(token, account, start, end) {
 
 async function metaInsightsByAdset(token, account, start, end) {
   const url = new URL(`https://graph.facebook.com/v21.0/act_${account}/insights`);
-  url.searchParams.set("fields", "adset_name,spend,impressions,clicks,ctr,cpc,actions,action_values");
+  url.searchParams.set("fields", "adset_name,spend,impressions,reach,clicks,inline_link_clicks,ctr,cpc,actions,action_values");
   url.searchParams.set("action_attribution_windows", JSON.stringify(["7d_click", "1d_view"]));
   url.searchParams.set("time_range", JSON.stringify({ since: start, until: end }));
   url.searchParams.set("level", "adset");

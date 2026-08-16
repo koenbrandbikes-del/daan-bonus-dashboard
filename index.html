@@ -103,6 +103,11 @@ body{background:
 
 /* ── Tables ── */
 .tscroll{overflow-x:auto;max-height:340px;overflow-y:auto}
+/* Een opengeklapte advertentiegroep-rij (funnel + 4 blokken) is een stuk
+   hoger dan een gewone rij — bij de vaste 340px zou je dan zowel binnen de
+   tabel als op de pagina moeten scrollen. Zodra er een rij openstaat, geven
+   we de tabel meer ruimte i.p.v. die dubbele scroll. */
+.tscroll.ad-expanded-open{max-height:640px}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{padding:9px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#93A2B8;border-bottom:1px solid #1f2d45;white-space:nowrap}
 th.r,td.r{text-align:right}
@@ -113,26 +118,35 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 
 /* ── Advertentiegroep-rij: klikbaar om uit te klappen ── */
 .ad-row{cursor:pointer}
-.ad-row-chv{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-right:7px;vertical-align:middle;border-radius:50%;background:rgba(96,165,250,.14);color:#60a5fa;font-size:12px;font-weight:700;line-height:1}
-.ad-row:hover .ad-row-chv{background:rgba(96,165,250,.26)}
-.ad-detail-row td{background:rgba(255,255,255,.02);border-bottom:1px solid rgba(31,45,69,.5);padding:12px 14px;white-space:normal}
-.ad-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 6px}
-@media(max-width:540px){.ad-detail-grid{grid-template-columns:repeat(2,1fr);row-gap:12px}}
+.ad-row:hover,.ad-row:focus-visible{background:rgba(255,255,255,.03)}
+.ad-row:focus-visible{outline:1px solid rgba(96,165,250,.5);outline-offset:-1px}
+.ad-row-chv{display:inline-block;width:12px;margin-right:7px;vertical-align:middle;color:#7C8CA6;font-size:13px;font-weight:700;transition:transform .15s ease}
+.ad-row-chv.open{transform:rotate(90deg)}
+.ad-detail-row td{background:rgba(255,255,255,.02);border-bottom:1px solid rgba(31,45,69,.5);padding:14px 16px;white-space:normal}
+.ad-funnel-note{font-size:11px;color:#93A2B8;margin-top:6px}
+.ad-funnel-note b{color:#e2e8f0}
+.ad-detail-note{font-size:12px;color:#7C8CA6}
+.ad-detail-block{margin-top:12px;font-size:12px}
+.ad-detail-block-lbl{font-size:9px;color:#7C8CA6;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.ad-detail-block-vals{color:#cbd5e1;font-variant-numeric:tabular-nums}
+.ad-detail-block-vals b{color:#f1f5f9;font-weight:700}
 
-/* ── Advertentiegroep test/schaal-labels ── */
-.ad-tag-badge{display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;letter-spacing:.04em;padding:2px 5px;border-radius:4px;margin-right:7px;vertical-align:middle;min-width:8px;cursor:pointer;transition:filter .15s ease}
-.ad-tag-badge:hover{filter:brightness(1.3)}
+/* ── Advertentiegroep classificatie-badge: altijd zichtbaar, klikbaar ── */
+.ad-tag-badge{display:inline-flex;align-items:center;gap:4px;font-size:8px;font-weight:700;letter-spacing:.04em;padding:2px 5px;border-radius:4px;margin-right:7px;vertical-align:middle;cursor:pointer;transition:filter .15s ease}
+.ad-tag-badge:hover,.ad-tag-badge:focus-visible{filter:brightness(1.3)}
+.ad-tag-badge:focus-visible{outline:1px solid currentColor;outline-offset:1px}
 .ad-tag-badge.test{background:rgba(91,158,232,.18);color:#93C5F5}
 .ad-tag-badge.schaal{background:rgba(74,222,128,.16);color:#8FE0A8}
 .ad-tag-badge.ongeclassificeerd{background:rgba(255,255,255,.08);color:#93A2B8}
-.ad-tag-badge.empty{background:rgba(255,255,255,.06);color:#7C8CA6;width:14px;height:14px;padding:0;border-radius:50%}
+.ad-tag-edit-hint{opacity:0;font-size:8px;transition:opacity .15s ease}
+.ad-tag-badge:hover .ad-tag-edit-hint,.ad-tag-badge:focus-visible .ad-tag-edit-hint{opacity:.8}
 .ad-tag-menu{display:none;position:fixed;background:rgba(13,18,45,.97);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border:1px solid rgba(255,255,255,.14);border-radius:10px;min-width:130px;z-index:300;box-shadow:0 12px 32px rgba(0,0,0,.6);padding:5px 0}
 .ad-tag-menu.open{display:block}
-.ad-tag-menu-opt{padding:7px 14px;cursor:pointer;font-size:12px;color:#cbd5e1;display:flex;align-items:center;gap:8px}
+.ad-tag-menu-opt{width:100%;background:none;border:none;font:inherit;text-align:left;padding:7px 14px;cursor:pointer;font-size:12px;color:#cbd5e1;display:flex;align-items:center;gap:8px}
 .ad-tag-menu-opt::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.5}
 .ad-tag-menu-opt.test{color:#93C5F5}
 .ad-tag-menu-opt.schaal{color:#8FE0A8}
-.ad-tag-menu-opt:hover{background:rgba(255,255,255,.06);color:#f1f5f9}
+.ad-tag-menu-opt:hover,.ad-tag-menu-opt:focus-visible{background:rgba(255,255,255,.06);color:#f1f5f9}
 .ad-tag-menu-opt.clear{color:#7C8CA6}
 .ad-tag-menu-div{border-top:1px solid rgba(255,255,255,.08);margin:4px 0}
 .ad-table-filter{display:flex;gap:4px;margin-bottom:10px}
@@ -566,15 +580,15 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     <div class="acc-body">
       <div id="adSegSummary" class="ad-seg-summary"></div>
       <div id="adTableFilterBar" class="ad-table-filter"></div>
-      <div class="tscroll"><table id="adsTable"></table></div>
+      <div class="tscroll" id="adsTscroll"><table id="adsTable"></table></div>
     </div>
   </div>
 
-  <div id="adTagMenu" class="ad-tag-menu" onclick="event.stopPropagation()">
-    <div class="ad-tag-menu-opt test" onclick="pickAdTag('test')">Test</div>
-    <div class="ad-tag-menu-opt schaal" onclick="pickAdTag('schaal')">Schaal</div>
+  <div id="adTagMenu" class="ad-tag-menu" role="menu" onclick="event.stopPropagation()">
+    <button type="button" class="ad-tag-menu-opt test" role="menuitem" onclick="pickAdTag('test')">Test</button>
+    <button type="button" class="ad-tag-menu-opt schaal" role="menuitem" onclick="pickAdTag('schaal')">Schaal</button>
     <div class="ad-tag-menu-div"></div>
-    <div class="ad-tag-menu-opt clear" onclick="pickAdTag(null)">Geen label</div>
+    <button type="button" class="ad-tag-menu-opt clear" role="menuitem" onclick="pickAdTag(null)">Ongeclassificeerd</button>
   </div>
 
 
@@ -1796,6 +1810,9 @@ function openAdTagMenu(ev,name){
   menu.style.top=(r.bottom+4)+"px";
   menu.style.left=r.left+"px";
   menu.classList.add("open");
+  // Focus meteen naar de eerste menu-optie zodat toetsenbordgebruikers direct
+  // met Tab/Enter verder kunnen zonder eerst zelf naar het menu te navigeren.
+  menu.querySelector(".ad-tag-menu-opt")?.focus();
 }
 function pickAdTag(tag){
   if(_adTagMenuTarget!=null) setAdTagValue(_adTagMenuTarget,tag);
@@ -1825,19 +1842,105 @@ function sortAds(col){
   renderAds(_adsLastRaw,_adsLastBeroas);
 }
 
+// Vuistregel voor "hoe serieus moet je deze cijfers nemen" — geen statistiek,
+// gewoon een grove indicatie op basis van steekproefgrootte (linkkliks) en
+// hoe lang de groep al loopt. Eén dag met een paar euro spend zegt nog
+// niets; dat moet niet als "geen aankopen" gelezen worden maar als
+// "nog te vroeg om iets te concluderen".
+function adReliability(activeDays,linkCl,purch){
+  if(activeDays<=1 || linkCl<20) return "onvoldoende data";
+  if(activeDays<3 || linkCl<75 || purch<3) return "beperkt";
+  if(activeDays<7 || linkCl<200) return "redelijk";
+  return "goed";
+}
+
+// Uitgeklapte rij-inhoud: funnel (impressies→linkkliks→ATC→aankopen, elke
+// pijl toont de stap-op-stap conversie) + compacte blokken eronder. Doel is
+// "waar in de funnel gaat het goed/fout" te kunnen beantwoorden, niet alleen
+// het financiële eindresultaat te herhalen dat al in de tabelkolommen staat.
+function renderAdDetail(r,margePct,beroas){
+  const impr=r.impr||0, reach=r.reach||0, linkCl=r.linkCl||0, atc=r.atc||0, purch=r.purch||0;
+  const ctr        = impr>0   ? linkCl/impr*100 : null;   // Impressies → linkkliks
+  const clickToAtc = linkCl>0 ? atc/linkCl*100   : null;   // Linkkliks → ATC
+  const atcToPurch = atc>0    ? purch/atc*100    : null;   // ATC → aankoop
+  const clickToPurch = linkCl>0 ? purch/linkCl*100 : null; // Klik → aankoop (overslaat ATC)
+  const cpm     = impr>0   ? r.spend/impr*1000 : null;
+  const cpcLink = linkCl>0 ? r.spend/linkCl    : null;
+  const freq    = reach>0  ? impr/reach        : null;
+  const viewSharePct = r.ri>0 ? r.rev1v/r.ri*100 : null;
+  const cac    = r.purch>0 ? r.spend/r.purch : null;
+  const netEst = r.spend>0 ? margePct*r.ri-r.spend : null;
+  const hasFunnelData = impr>0 || linkCl>0;
+
+  const nfmt=v=>v.toLocaleString("nl");
+  const pill=(lbl,val)=>val!=null?`${lbl} <b>${val}</b>`:null;
+  const block=(title,items)=>{
+    const f=items.filter(Boolean);
+    return f.length?`<div class="ad-detail-block"><div class="ad-detail-block-lbl">${title}</div><div class="ad-detail-block-vals">${f.join(" · ")}</div></div>`:"";
+  };
+
+  let funnelHtml;
+  if(hasFunnelData){
+    const stages=[["Impressies",impr],["Linkkliks",linkCl],["ATC",atc],["Aankopen",purch]];
+    const rates=[null,ctr,clickToAtc,atcToPurch];
+    const steps=stages.map(([lbl,val],i)=>{
+      const arr=i===0?"":"<span class='fc-arr'>›</span>";
+      const rate=rates[i];
+      const drop=i===0?"":`<div class="fc-drop" style="color:#93C5F5">${rate!=null?rate.toFixed(rate<10?2:1)+"%":"—"}</div>`;
+      return `${arr}<div class="fc-step"><div class="fc-step-in"><div class="fc-lbl" style="color:${FC_COLORS[i]}">${lbl}</div><div class="fc-val">${nfmt(val)}</div>${drop}</div></div>`;
+    }).join("");
+    const note=clickToPurch!=null?`<div class="ad-funnel-note">Klik → aankoop: <b>${clickToPurch.toFixed(2)}%</b></div>`:"";
+    funnelHtml=`<div class="fc-steps">${steps}</div>${note}`;
+  } else {
+    funnelHtml=`<div class="ad-detail-note">Geen funnel-data (impressies/linkkliks) voor deze periode — dit zijn recent toegevoegde velden, oudere dagen hebben ze nog niet.</div>`;
+  }
+
+  const verkeerskosten=block("Verkeerskosten",[
+    pill("CPM",cpm!=null?eur(cpm):null),
+    pill("CPC",cpcLink!=null?eur(cpcLink):null),
+    pill("Frequentie",freq!=null?freq.toFixed(2)+"×":null),
+  ]);
+  const attributie=block("Attributie",[
+    pill("Klikomzet",eur(r.rev7)),
+    pill("Viewomzet",eur(r.rev1v)),
+    pill("View-aandeel",viewSharePct!=null?viewSharePct.toFixed(1)+"%":null),
+  ]);
+  const resultaat=block("Resultaat",[
+    pill("CAC",cac!=null?eur(cac):null),
+    pill("ROAS",r.roas>0?x2(r.roas):null),
+    pill("BEROAS",beroas>0?x2(beroas):null),
+    netEst!=null?`Netto <b style="color:${netEst>=0?"#8FC49B":"#DD9280"}">${eur(netEst)}</b>`:null,
+  ]);
+  const context=block("Context",[
+    pill("Aankopen",String(purch)),
+    pill("Actieve dagen",String(r._cnt)),
+    `Betrouwbaarheid <b>${adReliability(r._cnt,linkCl,purch)}</b>`,
+  ]);
+
+  return `${funnelHtml}${verkeerskosten}${attributie}${resultaat}${context}`;
+}
+
 function renderAds(adsRaw, beroas){
   const acc=document.getElementById("acc-ads");
   if(!adsRaw||!adsRaw.length){acc.style.display="none";return;}
   acc.style.display="";
   _adsLastRaw=adsRaw; _adsLastBeroas=beroas;
 
-  // Merge duplicate adset names (meerdere dagen / jul+aug combineren)
+  // Merge duplicate adset names (meerdere dagen / jul+aug combineren).
+  // impr/linkCl zijn optelbaar (echte tellingen per dag); reach is dat
+  // strikt genomen niet (dezelfde persoon kan op meerdere dagen meetellen),
+  // maar zonder een losse periode-level API-call per advertentiegroep is de
+  // som over dagen de enige haalbare benadering — frequentie hieronder wordt
+  // daarom ook uit de gesómmeerde impr/reach herleid, niet gemiddeld.
+  // impr/reach/linkCl ontbreken op oudere dagen (van vóór deze velden zijn
+  // toegevoegd) — `||0` behandelt die dagen als 0 i.p.v. NaN te produceren.
   const map={};
   for(const a of adsRaw){
-    if(!map[a.n]) map[a.n]={n:a.n,spend:0,rev7:0,rev1v:0,purch:0,atc:0,_ctr:0,_cpc:0,_cnt:0};
+    if(!map[a.n]) map[a.n]={n:a.n,spend:0,rev7:0,rev1v:0,purch:0,atc:0,impr:0,reach:0,linkCl:0,_ctr:0,_cpc:0,_cnt:0};
     const m=map[a.n];
     m.spend+=a.spend; m.rev7+=a.rev7; m.rev1v+=a.rev1v;
     m.purch+=a.purch; m.atc+=a.atc;
+    m.impr+=(a.impr||0); m.reach+=(a.reach||0); m.linkCl+=(a.linkCl||0);
     m._ctr+=a.ctr; m._cpc+=a.cpc; m._cnt++;
   }
   const totSpend=Object.values(map).reduce((s,r)=>s+r.spend,0);
@@ -1879,15 +1982,15 @@ function renderAds(adsRaw, beroas){
     `<th class="${c.cls}" style="cursor:pointer;user-select:none" onclick="sortAds('${c.key}')">${c.label}${adsSortCol===c.key?` ${arrow(adsSortDir)}`:""}</th>`
   ).join("")+`</tr></thead><tbody>`;
 
-  const tagLbl={test:"TEST",schaal:"SCHAAL"};
+  const tagLbl={test:"TEST",schaal:"SCHAAL",ongeclassificeerd:"ONGECLASSIFICEERD"};
   for(const r of displayRows){
     const roasColor=r.roas===0?"#DD9280":r.roas>=beroas?"#8FC49B":"#E5B863";
-    const tag=AD_TAGS[r.n];
+    const tag=AD_TAGS[r.n]||"ongeclassificeerd";
     const escN=r.n.replace(/'/g,"\\'");
-    const badge=tag?`<span class="ad-tag-badge ${tag}" onclick="openAdTagMenu(event,'${escN}')">${tagLbl[tag]}</span>`:`<span class="ad-tag-badge empty" onclick="openAdTagMenu(event,'${escN}')">+</span>`;
+    const badge=`<span class="ad-tag-badge ${tag}" tabindex="0" role="button" aria-haspopup="true" title="Classificatie wijzigen" aria-label="Classificatie: ${tagLbl[tag]}. Klik om te wijzigen." onclick="openAdTagMenu(event,'${escN}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAdTagMenu(event,'${escN}')}">${tagLbl[tag]}<span class="ad-tag-edit-hint">✎</span></span>`;
     const expanded=adsExpanded.has(r.n);
-    const chevron=`<span class="ad-row-chv">${expanded?"−":"+"}</span>`;
-    html+=`<tr class="ad-row" onclick="toggleAdRow('${escN}')">
+    const chevron=`<span class="ad-row-chv${expanded?" open":""}" title="${expanded?"Details verbergen":"Details tonen"}">›</span>`;
+    html+=`<tr class="ad-row" tabindex="0" aria-expanded="${expanded}" onclick="toggleAdRow('${escN}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAdRow('${escN}')}">
       <td>${chevron}${badge}${r.n}</td>
       <td class="r">${eur(r.spend)}</td>
       <td class="r" style="color:#93A2B8">${r.pct.toFixed(1)}%</td>
@@ -1899,22 +2002,7 @@ function renderAds(adsRaw, beroas){
       <td class="r">${r.atc||"—"}</td>
     </tr>`;
     if(expanded){
-      const cac=r.purch>0?r.spend/r.purch:null;
-      const netEst=r.spend>0?margePct*r.ri-r.spend:null;
-      const purchShare=totPurchAllRows>0?r.purch/totPurchAllRows*100:null;
-      const atcRate=r.atc>0?r.purch/r.atc*100:null;
-      const clickPct=r.ri>0?r.rev7/r.ri*100:null;
-      const viewPct=r.ri>0?r.rev1v/r.ri*100:null;
-      html+=`<tr class="ad-detail-row"><td colspan="${ADS_COLS.length}">
-        <div class="ad-detail-grid">
-          <div><div class="ad-seg-lbl">CAC</div><div class="ad-seg-val">${cac!=null?eur(cac):"—"}</div></div>
-          <div><div class="ad-seg-lbl">Netto (schatting)</div><div class="ad-seg-val" style="color:${netEst==null?"inherit":netEst>0?"#8FC49B":"#DD9280"}">${netEst!=null?eur(netEst):"—"}</div></div>
-          <div><div class="ad-seg-lbl">Aandeel aankopen</div><div class="ad-seg-val">${purchShare!=null?purchShare.toFixed(1)+"%":"—"}</div></div>
-          <div><div class="ad-seg-lbl">ATC → aankoop</div><div class="ad-seg-val">${atcRate!=null?atcRate.toFixed(0)+"%":"—"}</div></div>
-          <div><div class="ad-seg-lbl">Omzet: klik vs. view</div><div class="ad-seg-val">${clickPct!=null?clickPct.toFixed(0)+"% / "+viewPct.toFixed(0)+"%":"—"}</div></div>
-          <div><div class="ad-seg-lbl">Actieve dagen</div><div class="ad-seg-val">${r._cnt}</div></div>
-        </div>
-      </td></tr>`;
+      html+=`<tr class="ad-detail-row"><td colspan="${ADS_COLS.length}">${renderAdDetail(r,margePct,beroas)}</td></tr>`;
     }
   }
   // Totaalrij — op basis van displayRows, dus volgt de Alle/Test/Schaal-filter
@@ -1936,6 +2024,7 @@ function renderAds(adsRaw, beroas){
   </tr></tfoot>`;
 
   document.getElementById("adsTable").innerHTML=html;
+  document.getElementById("adsTscroll")?.classList.toggle("ad-expanded-open",adsExpanded.size>0);
 
   // Samenvatting per label, incl. Ongeclassificeerd (nog niet gelabeld).
   // Nettoresultaat is een schatting: gemiddeld marge% van het hele account
