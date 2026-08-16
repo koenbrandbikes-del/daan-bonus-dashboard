@@ -507,6 +507,15 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
   .ad-seg-grid{grid-template-columns:1fr}
   .ad-seg-card-grid{grid-template-columns:repeat(3,1fr);row-gap:8px}
   .dash-seg-split{min-width:0}
+  /* Advertentiegroepentabel op mobiel: krappere cellen + afgekapte naam +
+     "% spend" (kolom 3, dubbel met de spend-kolom zelf) weg — anders past de
+     tabel niet en moet je horizontaal scrollen. */
+  #adsTable td,#adsTable th{padding:6px 4px;font-size:11px}
+  #adsTable th:nth-child(3),#adsTable td:nth-child(3){display:none}
+  .ad-row-name{display:inline-block;max-width:46px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+  #adsTable .ad-tag-badge{font-size:7px;padding:2px 3px;margin-right:3px;letter-spacing:0}
+  #adsTable .ad-tag-edit-hint{display:none}
+  #adsTable .ad-row-chv{width:9px;margin-right:3px;font-size:11px}
 }
 </style>
 </head>
@@ -1983,14 +1992,15 @@ function sortAds(col){
 }
 
 // Vuistregel voor "hoe serieus moet je deze cijfers nemen" — geen statistiek,
-// gewoon een grove indicatie op basis van steekproefgrootte (linkkliks) en
-// hoe lang de groep al loopt. Eén dag met een paar euro spend zegt nog
-// niets; dat moet niet als "geen aankopen" gelezen worden maar als
-// "nog te vroeg om iets te concluderen".
-function adReliability(activeDays,linkCl,purch){
-  if(activeDays<=1 || linkCl<20) return "onvoldoende data";
-  if(activeDays<3 || linkCl<75 || purch<3) return "beperkt";
-  if(activeDays<7 || linkCl<200) return "redelijk";
+// gewoon een grove indicatie op basis van aantal aankopen en hoe lang de
+// groep al loopt. Bewust NIET op linkkliks gebaseerd: die ontbreken voor de
+// meeste geschiedenis (recent toegevoegd veld) en dat gaf een misleidend
+// "onvoldoende data" bij rijen met prima aankoopaantallen — dat ontbreken
+// van klikdata staat al apart gemeld bij de funnel zelf.
+function adReliability(activeDays,purch){
+  if(activeDays<=1 || purch===0) return "onvoldoende data";
+  if(activeDays<3 || purch<3) return "beperkt";
+  if(activeDays<7 || purch<10) return "redelijk";
   return "goed";
 }
 
@@ -2075,7 +2085,7 @@ function renderAdDetail(r,margePct,beroas,fxFrom,fxTo){
   const context=block("Context",[
     pill("Aankopen",String(purch)),
     pill("Actieve dagen",String(r._cnt)),
-    `Betrouwbaarheid <b>${adReliability(r._cnt,linkCl,purch)}</b>`,
+    `Betrouwbaarheid <b>${adReliability(r._cnt,purch)}</b>`,
   ]);
 
   // Platform/plaatsing-subtabel — alleen als we een periode meekregen (bij
@@ -2178,8 +2188,13 @@ function renderAds(adsRaw, beroas, fxFrom, fxTo){
   // filter alleen deze tabel raakt).
   const displayRows = filterStrategy==="all" ? rows : rows.filter(r=>(AD_TAGS[r.n]||"ongeclassificeerd")===filterStrategy);
 
+  // Bij een platform/plaatsing-filter zijn CTR/CPC/ATC structureel niet
+  // beschikbaar (Meta splitst die niet uit) — die kolommen dan helemaal
+  // weglaten i.p.v. vol te zetten met "—", dat oogde rommelig en maakte de
+  // tabel op mobiel onnodig breed.
+  const visibleCols = platformFiltered ? ADS_COLS.filter(c=>!["ctr","cpc","atc"].includes(c.key)) : ADS_COLS;
   const arrow=dir=>dir===1?"▲":"▼";
-  let html=`<thead><tr>`+ADS_COLS.map(c=>
+  let html=`<thead><tr>`+visibleCols.map(c=>
     `<th class="${c.cls}" style="cursor:pointer;user-select:none" onclick="sortAds('${c.key}')">${c.label}${adsSortCol===c.key?` ${arrow(adsSortDir)}`:""}</th>`
   ).join("")+`</tr></thead><tbody>`;
 
@@ -2191,19 +2206,20 @@ function renderAds(adsRaw, beroas, fxFrom, fxTo){
     const badge=`<span class="ad-tag-badge ${tag}" tabindex="0" role="button" aria-haspopup="true" title="Classificatie wijzigen" aria-label="Classificatie: ${tagLbl[tag]}. Klik om te wijzigen." onclick="openAdTagMenu(event,'${escN}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAdTagMenu(event,'${escN}')}">${tagLbl[tag]}<span class="ad-tag-edit-hint">✎</span></span>`;
     const expanded=adsExpanded.has(r.n);
     const chevron=`<span class="ad-row-chv${expanded?" open":""}" title="${expanded?"Details verbergen":"Details tonen"}">›</span>`;
+    const extraCols = platformFiltered ? "" : `
+      <td class="r">${r.ctr.toFixed(2)}%</td>
+      <td class="r">€${r.cpc.toFixed(2)}</td>
+      <td class="r">${r.atc||"—"}</td>`;
     html+=`<tr class="ad-row" tabindex="0" aria-expanded="${expanded}" onclick="toggleAdRow('${escN}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAdRow('${escN}')}">
-      <td>${chevron}${badge}${r.n}</td>
+      <td>${chevron}${badge}<span class="ad-row-name">${r.n}</span></td>
       <td class="r">${eur(r.spend)}</td>
       <td class="r" style="color:#93A2B8">${r.pct.toFixed(1)}%</td>
       <td class="r">${r.purch||"—"}</td>
       <td class="r">${r.ri>0?eur(r.ri):"—"}</td>
-      <td class="r" style="color:${roasColor};font-weight:700">${r.roas>0?x2(r.roas):"—"}</td>
-      <td class="r">${platformFiltered?"—":r.ctr.toFixed(2)+"%"}</td>
-      <td class="r">${platformFiltered?"—":"€"+r.cpc.toFixed(2)}</td>
-      <td class="r">${platformFiltered?"—":(r.atc||"—")}</td>
+      <td class="r" style="color:${roasColor};font-weight:700">${r.roas>0?x2(r.roas):"—"}</td>${extraCols}
     </tr>`;
     if(expanded){
-      html+=`<tr class="ad-detail-row"><td colspan="${ADS_COLS.length}">${renderAdDetail(r,margePct,beroas,fxFrom,fxTo)}</td></tr>`;
+      html+=`<tr class="ad-detail-row"><td colspan="${visibleCols.length}">${renderAdDetail(r,margePct,beroas,fxFrom,fxTo)}</td></tr>`;
     }
   }
   // Totaalrij — op basis van displayRows, dus volgt het strategiefilter
@@ -2213,15 +2229,14 @@ function renderAds(adsRaw, beroas, fxFrom, fxTo){
   const totPurch=displayRows.reduce((s,r)=>s+r.purch,0);
   const totAtc=displayRows.reduce((s,r)=>s+r.atc,0);
   const totPctOfAll=totSpend>0?dispSpend/totSpend*100:0;
+  const totExtraCols = platformFiltered ? "" : `<td class="r">—</td><td class="r">—</td><td class="r">${totAtc}</td>`;
   html+=`</tbody><tfoot><tr class="tot">
     <td>Totaal · ${displayRows.length} groep${displayRows.length===1?"":"en"}${filterStrategy!=="all"?` (${FILTER_STRATEGY_LBL[filterStrategy]})`:""}</td>
     <td class="r">${eur(dispSpend)}</td>
     <td class="r">${totPctOfAll.toFixed(1)}%</td>
     <td class="r">${totPurch}</td>
     <td class="r">${totRi>0?eur(totRi):"—"}</td>
-    <td class="r" style="font-weight:700">${totRoas>0?x2(totRoas):"—"}</td>
-    <td class="r">—</td><td class="r">—</td>
-    <td class="r">${platformFiltered?"—":totAtc}</td>
+    <td class="r" style="font-weight:700">${totRoas>0?x2(totRoas):"—"}</td>${totExtraCols}
   </tr></tfoot>`;
 
   document.getElementById("adsTable").innerHTML=html;
