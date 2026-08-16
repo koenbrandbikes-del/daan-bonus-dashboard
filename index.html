@@ -130,6 +130,11 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .ad-detail-block-lbl{font-size:9px;color:#7C8CA6;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
 .ad-detail-block-vals{color:#cbd5e1;font-variant-numeric:tabular-nums}
 .ad-detail-block-vals b{color:#f1f5f9;font-weight:700}
+.ad-platform-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px}
+.ad-platform-table th{padding:4px 8px;text-align:left;font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#7C8CA6;border-bottom:1px solid rgba(31,45,69,.6)}
+.ad-platform-table th.r,.ad-platform-table td.r{text-align:right}
+.ad-platform-table td{padding:5px 8px;border-bottom:1px solid rgba(31,45,69,.35);color:#cbd5e1;font-variant-numeric:tabular-nums}
+.ad-platform-table tr:last-child td{border-bottom:none}
 
 /* ── Advertentiegroep classificatie-badge: altijd zichtbaar, klikbaar ── */
 .ad-tag-badge{display:inline-flex;align-items:center;gap:4px;font-size:8px;font-weight:700;letter-spacing:.04em;padding:2px 5px;border-radius:4px;margin-right:7px;vertical-align:middle;cursor:pointer;transition:filter .15s ease}
@@ -149,12 +154,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .ad-tag-menu-opt:hover,.ad-tag-menu-opt:focus-visible{background:rgba(255,255,255,.06);color:#f1f5f9}
 .ad-tag-menu-opt.clear{color:#7C8CA6}
 .ad-tag-menu-div{border-top:1px solid rgba(255,255,255,.08);margin:4px 0}
-.ad-table-filter{display:flex;gap:4px;margin-bottom:10px}
-.ad-table-filter-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#93A2B8;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;cursor:pointer;transition:all .15s}
-.ad-table-filter-btn:hover{color:#f1f5f9;border-color:rgba(255,255,255,.2)}
-.ad-table-filter-btn.active{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:#f1f5f9}
-.ad-table-filter-btn.active.test{background:rgba(91,158,232,.18);border-color:rgba(91,158,232,.55);color:#93C5F5}
-.ad-table-filter-btn.active.schaal{background:rgba(74,222,128,.16);border-color:rgba(74,222,128,.5);color:#8FE0A8}
 .ad-seg-summary{margin-bottom:12px}
 .ad-seg-hint{font-size:12px;color:#93A2B8;padding:10px 4px}
 .ad-seg-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
@@ -358,12 +357,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .kpi-chart-gran-btn:hover:not(:disabled){color:#f1f5f9;border-color:rgba(255,255,255,.2)}
 .kpi-chart-gran-btn.active{background:rgba(20,166,241,.16);border-color:rgba(20,166,241,.5);color:#f1f5f9}
 .kpi-chart-gran-btn:disabled{opacity:.35;cursor:default}
-.kpi-chart-seg{display:flex;gap:4px;margin-bottom:10px}
-.kpi-chart-seg-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#93A2B8;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;cursor:pointer;transition:all .15s}
-.kpi-chart-seg-btn:hover{color:#f1f5f9;border-color:rgba(255,255,255,.2)}
-.kpi-chart-seg-btn.active{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:#f1f5f9}
-.kpi-chart-seg-btn.active.test{background:rgba(91,158,232,.18);border-color:rgba(91,158,232,.55);color:#93C5F5}
-.kpi-chart-seg-btn.active.schaal{background:rgba(74,222,128,.16);border-color:rgba(74,222,128,.5);color:#8FE0A8}
 .kpi-chart-legend{display:flex;gap:14px;margin-bottom:8px}
 .kpi-chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#cbd5e1}
 .kpi-chart-legend-toggle{cursor:pointer;user-select:none;transition:opacity .15s,color .15s}
@@ -605,7 +598,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     <div class="acc-hd" onclick="tog('acc-ads')"><span id="adsHdr">Meta advertentiegroepen</span><span class="acc-chv">›</span></div>
     <div class="acc-body">
       <div id="adSegSummary" class="ad-seg-summary"></div>
-      <div id="adTableFilterBar" class="ad-table-filter"></div>
       <div class="tscroll" id="adsTscroll"><table id="adsTable"></table></div>
     </div>
   </div>
@@ -1160,6 +1152,15 @@ function filteredSpendSplit(from,to,platform,placement){
 const FILTER_PLATFORM_LBL={all:"Alle",facebook:"Facebook",instagram:"Instagram"};
 const FILTER_PLACEMENT_LBL={all:"Alle",feed:"Feed",stories:"Stories",reels:"Reels",overig:"Overig"};
 const FILTER_STRATEGY_LBL={all:"Alle",test:"Test",schaal:"Schaal",ongeclassificeerd:"Ongeclassificeerd"};
+// Compacte "Schaal · Instagram · Feed"-samenvatting van de actieve filters,
+// hergebruikt in de grafiek- en tabeltitels. Leeg als er niets actief is.
+function activeFilterLabel(){
+  const parts=[];
+  if(filterStrategy!=="all") parts.push(FILTER_STRATEGY_LBL[filterStrategy]);
+  if(filterPlatform!=="all") parts.push(FILTER_PLATFORM_LBL[filterPlatform]);
+  if(filterPlacement!=="all") parts.push(FILTER_PLACEMENT_LBL[filterPlacement]);
+  return parts.join(" · ");
+}
 
 // Eén centrale filterbalk bovenaan (vóór de KPI-balk) i.p.v. los boven de
 // advertentiegroepentabel — anders lijkt het ten onrechte alsof het filter
@@ -1621,8 +1622,10 @@ function render(){
      gebaseerd (CT_ALL), net als de bonus: geen analysefilter hierop. */
   renderOrders(fxFrom,fxTo);
   renderBeroas(CT_ALL,CX.be,CX,fxFrom,fxTo,filtersActive());
-  const adsData = [...(pd.adsExtra||[]), ...adsForRange(fxFrom, fxTo)];
-  renderAds(adsData, CX.be);
+  const adsData = (filterPlatform!=="all"||filterPlacement!=="all")
+    ? adsBreakdownForRange(fxFrom,fxTo,filterPlatform,filterPlacement)
+    : [...(pd.adsExtra||[]), ...adsForRange(fxFrom, fxTo)];
+  renderAds(adsData, CX.be, fxFrom, fxTo);
 
   /* simulator — ook altijd ongefilterd (bonussimulator, zie renderBeroas) */
   if(CT_ALL){
@@ -1866,11 +1869,29 @@ function adsForRange(from,to){
   return out;
 }
 
+// Zelfde als adsForRange, maar dan uit DAILY_ADS_BREAKDOWN en gefilterd op
+// platform/plaatsing — voedt de advertentiegroepentabel zodra dat filter
+// actief is. Levert alleen n/spend/rev7/rev1v/purch (geen ctr/cpc/atc/
+// impr/reach/linkCl — die splitst Meta niet uit naar platform×plaatsing);
+// renderAds() toont die kolommen dan bewust als "—".
+function adsBreakdownForRange(from,to,platform,placement){
+  const out=[];
+  for(const day of DAILY_ADS_BREAKDOWN){
+    if(day.d<from||day.d>to) continue;
+    for(const r of day.b){
+      if(platform!=="all" && r.platform!==platform) continue;
+      if(placement!=="all" && r.placement!==placement) continue;
+      out.push(r);
+    }
+  }
+  return out;
+}
+
 // Sorteerbare kolommen: klik een kolomkop om te sorteren, nogmaals klikken
 // keert de richting om. Bewaart de laatst getoonde ruwe data zodat een
 // her-sortering geen volledige page-render hoeft te triggeren.
 let adsSortCol="spend", adsSortDir=-1; // -1 = aflopend, 1 = oplopend
-let _adsLastRaw=null, _adsLastBeroas=1.35;
+let _adsLastRaw=null, _adsLastBeroas=1.35, _adsLastFrom=null, _adsLastTo=null;
 
 // Uitklapbare rij per advertentiegroep — toont metrics die niet in de
 // tabelkolommen passen (CAC, nettoschatting, aandeel in aankopen, ATC→aankoop-
@@ -1878,7 +1899,7 @@ let _adsLastRaw=null, _adsLastBeroas=1.35;
 let adsExpanded=new Set();
 function toggleAdRow(name){
   if(adsExpanded.has(name)) adsExpanded.delete(name); else adsExpanded.add(name);
-  renderAds(_adsLastRaw,_adsLastBeroas);
+  renderAds(_adsLastRaw,_adsLastBeroas,_adsLastFrom,_adsLastTo);
 }
 
 // Test/schaal-labels per advertentiegroep — handmatig ingesteld door de
@@ -1943,9 +1964,6 @@ function pickAdTag(tag){
 }
 document.addEventListener("click",()=>document.getElementById("adTagMenu")?.classList.remove("open"));
 
-// Alle/Test/Schaal-filter boven de tabel — filtert de rijen én de totaalrij
-let adTableFilter="all";
-function setAdTableFilter(f){ adTableFilter=f; renderAds(_adsLastRaw,_adsLastBeroas); }
 const ADS_COLS=[
   {key:"n",    label:"Advertentiegroep", cls:""},
   {key:"spend",label:"Spend",            cls:"r"},
@@ -1961,7 +1979,7 @@ const ADS_COLS=[
 function sortAds(col){
   if(adsSortCol===col) adsSortDir=-adsSortDir;
   else{ adsSortCol=col; adsSortDir=col==="n"?1:-1; }
-  renderAds(_adsLastRaw,_adsLastBeroas);
+  renderAds(_adsLastRaw,_adsLastBeroas,_adsLastFrom,_adsLastTo);
 }
 
 // Vuistregel voor "hoe serieus moet je deze cijfers nemen" — geen statistiek,
@@ -1980,7 +1998,28 @@ function adReliability(activeDays,linkCl,purch){
 // pijl toont de stap-op-stap conversie) + compacte blokken eronder. Doel is
 // "waar in de funnel gaat het goed/fout" te kunnen beantwoorden, niet alleen
 // het financiële eindresultaat te herhalen dat al in de tabelkolommen staat.
-function renderAdDetail(r,margePct,beroas){
+// Platform×plaatsing-uitsplitsing voor één advertentiegroep, binnen de
+// gekozen periode — en, als er al een platform/plaatsing-filter actief is,
+// alleen binnen die doorsnede (anders zou de subtabel meer laten zien dan
+// de rest van de pagina, verwarrend). Alleen rijen met echte delivery.
+function adPlatformBreakdown(adsetName,from,to){
+  const map={};
+  for(const day of DAILY_ADS_BREAKDOWN){
+    if(day.d<from||day.d>to) continue;
+    for(const b of day.b){
+      if(b.n!==adsetName) continue;
+      if(filterPlatform!=="all" && b.platform!==filterPlatform) continue;
+      if(filterPlacement!=="all" && b.placement!==filterPlacement) continue;
+      const key=b.platform+"|"+b.placement;
+      if(!map[key]) map[key]={platform:b.platform,placement:b.placement,spend:0,purch:0,rev:0};
+      const m=map[key];
+      m.spend+=b.spend; m.purch+=b.purch; m.rev+=b.rev7+b.rev1v;
+    }
+  }
+  return Object.values(map).filter(x=>x.spend>0||x.purch>0).sort((a,b)=>b.spend-a.spend);
+}
+
+function renderAdDetail(r,margePct,beroas,fxFrom,fxTo){
   const impr=r.impr||0, reach=r.reach||0, linkCl=r.linkCl||0, atc=r.atc||0, purch=r.purch||0;
   const ctr        = impr>0   ? linkCl/impr*100 : null;   // Impressies → linkkliks
   const clickToAtc = linkCl>0 ? atc/linkCl*100   : null;   // Linkkliks → ATC
@@ -2039,14 +2078,51 @@ function renderAdDetail(r,margePct,beroas){
     `Betrouwbaarheid <b>${adReliability(r._cnt,linkCl,purch)}</b>`,
   ]);
 
-  return `${funnelHtml}${verkeerskosten}${attributie}${resultaat}${context}`;
+  // Platform/plaatsing-subtabel — alleen als we een periode meekregen (bij
+  // her-sorteren vóór de eerste keer renderen is dat altijd het geval zodra
+  // een rij open kan staan) en er daadwerkelijk breakdown-data is.
+  let platformTable="";
+  if(fxFrom && fxTo){
+    const pbRows=adPlatformBreakdown(r.n,fxFrom,fxTo);
+    if(pbRows.length){
+      const filterNote=(filterPlatform!=="all"||filterPlacement!=="all")
+        ? `<div class="ad-detail-block-lbl" style="margin-top:2px">Details binnen actieve analysefilters</div>` : "";
+      const rowsHtml=pbRows.map(p=>{
+        const roas=p.spend>0?p.rev/p.spend:null;
+        const cac=p.purch>0?p.spend/p.purch:null;
+        return `<tr>
+          <td>${FILTER_PLATFORM_LBL[p.platform]||p.platform} ${FILTER_PLACEMENT_LBL[p.placement]||p.placement}</td>
+          <td class="r">${eur(p.spend)}</td>
+          <td class="r">${p.purch||"—"}</td>
+          <td class="r">${p.rev>0?eur(p.rev):"—"}</td>
+          <td class="r">${roas>0?x2(roas):"—"}</td>
+          <td class="r">${cac!=null?eur(cac):"—"}</td>
+        </tr>`;
+      }).join("");
+      platformTable=`<div class="ad-detail-block">
+        <div class="ad-detail-block-lbl">Platform / plaatsing</div>
+        ${filterNote}
+        <table class="ad-platform-table">
+          <thead><tr><th>Platform/plaatsing</th><th class="r">Spend</th><th class="r">Aankopen</th><th class="r">Omzet</th><th class="r">ROAS</th><th class="r">CAC</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>`;
+    }
+  }
+
+  return `${funnelHtml}${verkeerskosten}${attributie}${resultaat}${context}${platformTable}`;
 }
 
-function renderAds(adsRaw, beroas){
+function renderAds(adsRaw, beroas, fxFrom, fxTo){
   const acc=document.getElementById("acc-ads");
   if(!adsRaw||!adsRaw.length){acc.style.display="none";return;}
   acc.style.display="";
-  _adsLastRaw=adsRaw; _adsLastBeroas=beroas;
+  _adsLastRaw=adsRaw; _adsLastBeroas=beroas; _adsLastFrom=fxFrom; _adsLastTo=fxTo;
+  // Platform/plaatsing-breakdown levert geen CTR/CPC/ATC/funnel-velden per
+  // advertentiegroep — die kolommen tonen dan bewust "—" i.p.v. verzonnen
+  // nullen (renderAdDetail's eigen "geen funnel-data"-melding vangt de
+  // uitgeklapte rij al op dezelfde manier op).
+  const platformFiltered = filterPlatform!=="all" || filterPlacement!=="all";
 
   // Merge duplicate adset names (meerdere dagen / jul+aug combineren).
   // impr/linkCl zijn optelbaar (echte tellingen per dag); reach is dat
@@ -2056,14 +2132,19 @@ function renderAds(adsRaw, beroas){
   // daarom ook uit de gesómmeerde impr/reach herleid, niet gemiddeld.
   // impr/reach/linkCl ontbreken op oudere dagen (van vóór deze velden zijn
   // toegevoegd) — `||0` behandelt die dagen als 0 i.p.v. NaN te produceren.
+  // adsRaw komt óf uit adsForRange() (volledige velden, incl. ctr/cpc/atc/
+  // impr/reach/linkCl) óf, bij een actief platform/plaatsing-filter, uit
+  // adsBreakdownForRange() (alleen n/spend/rev7/rev1v/purch — Meta's
+  // breakdown-endpoint levert geen CTR/CPC/ATC per platform×plaatsing).
+  // `||0` overal nodig zodat het tweede geval geen NaN oplevert.
   const map={};
   for(const a of adsRaw){
     if(!map[a.n]) map[a.n]={n:a.n,spend:0,rev7:0,rev1v:0,purch:0,atc:0,impr:0,reach:0,linkCl:0,_ctr:0,_cpc:0,_cnt:0};
     const m=map[a.n];
-    m.spend+=a.spend; m.rev7+=a.rev7; m.rev1v+=a.rev1v;
-    m.purch+=a.purch; m.atc+=a.atc;
+    m.spend+=(a.spend||0); m.rev7+=(a.rev7||0); m.rev1v+=(a.rev1v||0);
+    m.purch+=(a.purch||0); m.atc+=(a.atc||0);
     m.impr+=(a.impr||0); m.reach+=(a.reach||0); m.linkCl+=(a.linkCl||0);
-    m._ctr+=a.ctr; m._cpc+=a.cpc; m._cnt++;
+    m._ctr+=(a.ctr||0); m._cpc+=(a.cpc||0); m._cnt++;
   }
   const totSpend=Object.values(map).reduce((s,r)=>s+r.spend,0);
   const totPurchAllRows=Object.values(map).reduce((s,r)=>s+r.purch,0);
@@ -2092,12 +2173,10 @@ function renderAds(adsRaw, beroas){
 
   document.getElementById("adsHdr").textContent=`Meta advertentiegroepen · ${rows.length} groepen`;
 
-  // Alle/Test/Schaal-filter boven de tabel: filtert welke rijen zichtbaar
-  // zijn én herberekent de totaalrij op basis van alleen die selectie.
-  const filterBar=document.getElementById("adTableFilterBar");
-  const fBtn=(f,l)=>`<button class="ad-table-filter-btn${adTableFilter===f?" active "+f:""}" onclick="setAdTableFilter('${f}')">${l}</button>`;
-  if(filterBar) filterBar.innerHTML=`${fBtn("all","Alle")}${fBtn("test","Test")}${fBtn("schaal","Schaal")}`;
-  const displayRows = adTableFilter==="all" ? rows : rows.filter(r=>AD_TAGS[r.n]===adTableFilter);
+  // Strategiefilter komt nu van de centrale filterbalk bovenaan (niet meer
+  // een eigen knoppenrij hier — dat gaf ten onrechte de indruk dat het
+  // filter alleen deze tabel raakt).
+  const displayRows = filterStrategy==="all" ? rows : rows.filter(r=>(AD_TAGS[r.n]||"ongeclassificeerd")===filterStrategy);
 
   const arrow=dir=>dir===1?"▲":"▼";
   let html=`<thead><tr>`+ADS_COLS.map(c=>
@@ -2119,15 +2198,15 @@ function renderAds(adsRaw, beroas){
       <td class="r">${r.purch||"—"}</td>
       <td class="r">${r.ri>0?eur(r.ri):"—"}</td>
       <td class="r" style="color:${roasColor};font-weight:700">${r.roas>0?x2(r.roas):"—"}</td>
-      <td class="r">${r.ctr.toFixed(2)}%</td>
-      <td class="r">€${r.cpc.toFixed(2)}</td>
-      <td class="r">${r.atc||"—"}</td>
+      <td class="r">${platformFiltered?"—":r.ctr.toFixed(2)+"%"}</td>
+      <td class="r">${platformFiltered?"—":"€"+r.cpc.toFixed(2)}</td>
+      <td class="r">${platformFiltered?"—":(r.atc||"—")}</td>
     </tr>`;
     if(expanded){
-      html+=`<tr class="ad-detail-row"><td colspan="${ADS_COLS.length}">${renderAdDetail(r,margePct,beroas)}</td></tr>`;
+      html+=`<tr class="ad-detail-row"><td colspan="${ADS_COLS.length}">${renderAdDetail(r,margePct,beroas,fxFrom,fxTo)}</td></tr>`;
     }
   }
-  // Totaalrij — op basis van displayRows, dus volgt de Alle/Test/Schaal-filter
+  // Totaalrij — op basis van displayRows, dus volgt het strategiefilter
   const dispSpend=displayRows.reduce((s,r)=>s+r.spend,0);
   const totRi=displayRows.reduce((s,r)=>s+r.ri,0);
   const totRoas=dispSpend>0?totRi/dispSpend:0;
@@ -2135,14 +2214,14 @@ function renderAds(adsRaw, beroas){
   const totAtc=displayRows.reduce((s,r)=>s+r.atc,0);
   const totPctOfAll=totSpend>0?dispSpend/totSpend*100:0;
   html+=`</tbody><tfoot><tr class="tot">
-    <td>Totaal · ${displayRows.length} groep${displayRows.length===1?"":"en"}${adTableFilter!=="all"?` (${adTableFilter})`:""}</td>
+    <td>Totaal · ${displayRows.length} groep${displayRows.length===1?"":"en"}${filterStrategy!=="all"?` (${FILTER_STRATEGY_LBL[filterStrategy]})`:""}</td>
     <td class="r">${eur(dispSpend)}</td>
     <td class="r">${totPctOfAll.toFixed(1)}%</td>
     <td class="r">${totPurch}</td>
     <td class="r">${totRi>0?eur(totRi):"—"}</td>
     <td class="r" style="font-weight:700">${totRoas>0?x2(totRoas):"—"}</td>
     <td class="r">—</td><td class="r">—</td>
-    <td class="r">${totAtc}</td>
+    <td class="r">${platformFiltered?"—":totAtc}</td>
   </tr></tfoot>`;
 
   document.getElementById("adsTable").innerHTML=html;
@@ -2279,7 +2358,6 @@ const KPI_META = {
 const KPI_CHART_COLORS = ["#4EA8DE","#4ECB71"];
 let kpiChartSel = [];
 let kpiChartGran = "day";
-let kpiChartSeg = "all"; // all | test | schaal — alleen relevant bij 1 metric, niet bruto/net
 let roasChartVis = {line:true, dot:true, bar:true}; // welke series van de ROAS-grafiek zichtbaar zijn, via legenda toggle
 let kpiHeadlineCollapsed = false;
 try{ kpiHeadlineCollapsed = localStorage.getItem("daan_kh_collapsed")==="1"; }catch(e){}
@@ -2304,16 +2382,17 @@ function kpiDailySeries(){
   return _kpiDailyCache;
 }
 
-// Dagreeks voor één label (test/schaal), opgebouwd uit DAILY_ADS i.p.v.
-// DAILY_META — telt alleen de advertentiegroepen met dat label op. Marge
-// blijft altijd null (pro/shopRev blijven 0): niet te herleiden per groep.
+// Dagreeks voor één label (test/schaal/ongeclassificeerd), opgebouwd uit
+// DAILY_ADS i.p.v. DAILY_META — telt alleen de advertentiegroepen met dat
+// label op. Marge blijft altijd null (pro/shopRev blijven 0): niet te
+// herleiden per groep.
 const _kpiSegCache={};
 function kpiDailySeriesSegment(tag){
   if(_kpiSegCache[tag]) return _kpiSegCache[tag];
   _kpiSegCache[tag]=DAILY_ADS.map(day=>{
     let spend=0,purch=0,rev=0;
     for(const a of day.ads){
-      if(AD_TAGS[a.n]!==tag) continue;
+      if((AD_TAGS[a.n]||"ongeclassificeerd")!==tag) continue;
       spend+=a.spend; purch+=a.purch; rev+=a.rev7+a.rev1v;
     }
     return {d:day.d, spend, purch, rev, pro:0, shopRev:0};
@@ -2321,6 +2400,25 @@ function kpiDailySeriesSegment(tag){
   return _kpiSegCache[tag];
 }
 function clearKpiSegCache(){ for(const k in _kpiSegCache) delete _kpiSegCache[k]; }
+
+// Zelfde principe als filteredRangeCT, maar dan als dagreeks (voor de
+// tijdlijngrafiek). Bij platform/plaatsing op "all" identiek aan het
+// bestaande kpiDailySeries()/kpiDailySeriesSegment()-pad.
+function kpiDailySeriesFiltered(strategy,platform,placement){
+  if(platform==="all" && placement==="all"){
+    return strategy==="all" ? kpiDailySeries() : kpiDailySeriesSegment(strategy);
+  }
+  return DAILY_ADS_BREAKDOWN.map(day=>{
+    let spend=0,purch=0,rev=0;
+    for(const r of day.b){
+      if(strategy!=="all" && (AD_TAGS[r.n]||"ongeclassificeerd")!==strategy) continue;
+      if(platform!=="all" && r.platform!==platform) continue;
+      if(placement!=="all" && r.placement!==placement) continue;
+      spend+=r.spend; purch+=r.purch; rev+=r.rev7+r.rev1v;
+    }
+    return {d:day.d, spend, purch, rev, pro:0, shopRev:0};
+  });
+}
 
 function kpiDeriveMetrics(b){
   const roas = b.spend>0 && b.rev>0 ? b.rev/b.spend : null;
@@ -2331,8 +2429,8 @@ function kpiDeriveMetrics(b){
   return {roas,cac,bruto,net};
 }
 
-function kpiAggregate(gran,from,to,seg){
-  const source = (!seg||seg==="all") ? kpiDailySeries() : kpiDailySeriesSegment(seg);
+function kpiAggregate(gran,from,to,seg,platform,placement){
+  const source = kpiDailySeriesFiltered(seg||"all",platform||"all",placement||"all");
   const daily = source.filter(x=>(!from||x.d>=from)&&(!to||x.d<=to));
   if(gran==="day"){
     return daily.map(x=>({key:x.d,label:fmtS(x.d),spend:x.spend,purch:x.purch,rev:x.rev,...kpiDeriveMetrics(x)}));
@@ -2381,12 +2479,11 @@ function renderRatioChart(wrap,metric){
   const valOf=x=>isRoas?x.roas:x.cac;
   const pd=PERIODS[P]||PERIODS.aug;
   const rangeFrom=pd.from, rangeTo=pd.to;
-  const seg=kpiChartSeg;
-  const dailySource = seg==="all" ? kpiDailySeries() : kpiDailySeriesSegment(seg);
+  const dailySource = kpiDailySeriesFiltered(filterStrategy,filterPlatform,filterPlacement);
   const filteredDaily=dailySource.filter(x=>x.d>=rangeFrom && x.d<=rangeTo);
 
   if(filteredDaily.length===0 || filteredDaily.every(x=>x.spend===0 && x.purch===0 && x.rev===0)){
-    const segNote = seg!=="all" ? ` (label "${seg==="test"?"Test":"Schaal"}")` : "";
+    const segNote = filtersActive() ? ` (analysefilter actief)` : "";
     wrap.innerHTML=`
       <div class="kpi-chart-hd"><div class="kpi-chart-title">${metricLabel}</div></div>
       <div class="kpi-chart-empty">Geen dagelijkse data beschikbaar voor de geselecteerde periode (${pd.label})${segNote}. <button class="kpi-chart-jump" onclick="jumpToPeriodSelector()">Kies een andere periode ↑</button></div>`;
@@ -2407,10 +2504,6 @@ function renderRatioChart(wrap,metric){
     if(isRoas) return sSpend>0?sRev/sSpend:null;
     return sPurch>0?sSpend/sPurch:null;
   });
-
-  const segAllowed=true;
-  const segBtn=(s,l)=>`<button class="kpi-chart-seg-btn${kpiChartSeg===s?" active "+s:""}" onclick="kpiChartSeg='${s}';renderKpiChart()">${l}</button>`;
-  const segToggle=`<div class="kpi-chart-seg">${segBtn("all","Alle")}${segBtn("test","Test")}${segBtn("schaal","Schaal")}</div>`;
 
   const W=680,H=270,padL=48,padR=14,padT=16,padBAxis=26,barAreaH=46,gapArea=10;
   const plotW=W-padL-padR;
@@ -2478,9 +2571,8 @@ function renderRatioChart(wrap,metric){
 
   wrap.innerHTML=`
     <div class="kpi-chart-hd">
-      <div class="kpi-chart-title">${metricLabel}<button class="kpi-chart-sub" onclick="jumpToPeriodSelector()" title="Kies een andere periode">${fmtS(actualFrom)} – ${fmtS(actualTo)}${seg!=="all"?` · label: ${seg==="test"?"Test":"Schaal"}`:""} ↑</button></div>
+      <div class="kpi-chart-title">${metricLabel}<button class="kpi-chart-sub" onclick="jumpToPeriodSelector()" title="Kies een andere periode">${fmtS(actualFrom)} – ${fmtS(actualTo)}${filtersActive()?` · ${activeFilterLabel()}`:""} ↑</button></div>
     </div>
-    ${segToggle}
     <div class="kpi-chart-legend">
       <span class="kpi-chart-legend-item kpi-chart-legend-toggle${roasChartVis.line?"":" off"}" onclick="toggleRoasSeries('line')"><span class="kpi-chart-legend-line" style="background:#4EA8DE"></span>3-daags gewogen ${metricLabel}</span>
       <span class="kpi-chart-legend-item kpi-chart-legend-toggle${roasChartVis.dot?"":" off"}" onclick="toggleRoasSeries('dot')"><span class="kpi-chart-legend-dot" style="background:#4EA8DE;opacity:.6"></span>Dag-${metricLabel}</span>
@@ -2652,15 +2744,19 @@ function renderKpiChart(){
   const rangeFrom=pd.from, rangeTo=pd.to;
 
   const dual=kpiChartSel.length===2;
+  // Brutomarge/nettomarge zijn niet per advertentiegroep te herleiden, dus
+  // die grafiek blijft altijd op het volledige account gebaseerd, ongeacht
+  // een actief analysefilter (zelfde uitzondering als bonus/BEROAS).
   const segAllowed=!dual && kpiChartSel[0]!=="bruto" && kpiChartSel[0]!=="net";
-  if(!segAllowed) kpiChartSeg="all";
-  const seg=segAllowed?kpiChartSeg:"all";
+  const seg=segAllowed?filterStrategy:"all";
+  const plat=segAllowed?filterPlatform:"all";
+  const place=segAllowed?filterPlacement:"all";
 
-  const dailySource = seg==="all" ? kpiDailySeries() : kpiDailySeriesSegment(seg);
+  const dailySource = kpiDailySeriesFiltered(seg,plat,place);
   const filteredDaily=dailySource.filter(x=>x.d>=rangeFrom && x.d<=rangeTo);
 
   if(filteredDaily.length===0 || filteredDaily.every(x=>x.spend===0 && x.purch===0 && x.rev===0)){
-    const segNote = seg!=="all" ? ` (label "${seg==="test"?"Test":"Schaal"}")` : "";
+    const segNote = segAllowed && filtersActive() ? ` (${activeFilterLabel()})` : "";
     wrap.innerHTML=`
       <div class="kpi-chart-hd">
         <div class="kpi-chart-title">${kpiChartSel.map(k=>KPI_META[k].label).join(" · ")}</div>
@@ -2669,9 +2765,9 @@ function renderKpiChart(){
     return;
   }
 
-  const data=kpiAggregate(kpiChartGran,rangeFrom,rangeTo,seg);
+  const data=kpiAggregate(kpiChartGran,rangeFrom,rangeTo,seg,plat,place);
   const n=data.length;
-  const dayN=kpiAggregate("day",rangeFrom,rangeTo,seg).length, weekN=kpiAggregate("week",rangeFrom,rangeTo,seg).length, monthN=kpiAggregate("month",rangeFrom,rangeTo,seg).length;
+  const dayN=kpiAggregate("day",rangeFrom,rangeTo,seg,plat,place).length, weekN=kpiAggregate("week",rangeFrom,rangeTo,seg,plat,place).length, monthN=kpiAggregate("month",rangeFrom,rangeTo,seg,plat,place).length;
   const actualFrom=filteredDaily[0].d, actualTo=filteredDaily[filteredDaily.length-1].d;
 
   const series=kpiChartSel.map((key,i)=>({key,meta:KPI_META[key],color:KPI_CHART_COLORS[i],raw:data.map(d=>d[key])}));
@@ -2776,15 +2872,11 @@ function renderKpiChart(){
     const dis=cnt<2;
     return `<button class="kpi-chart-gran-btn${kpiChartGran===g?" active":""}" ${dis?"disabled":""} onclick="kpiChartGran='${g}';renderKpiChart()">${l}</button>`;
   };
-  const segBtn=(s,l)=>`<button class="kpi-chart-seg-btn${kpiChartSeg===s?" active "+s:""}" onclick="kpiChartSeg='${s}';renderKpiChart()">${l}</button>`;
-  const segToggle = segAllowed ? `<div class="kpi-chart-seg">${segBtn("all","Alle")}${segBtn("test","Test")}${segBtn("schaal","Schaal")}</div>` : "";
-
   wrap.innerHTML=`
     <div class="kpi-chart-hd">
-      <div class="kpi-chart-title">${plot.map(s=>s.meta.label).join(" · ")}<button class="kpi-chart-sub" onclick="jumpToPeriodSelector()" title="Kies een andere periode">${fmtS(actualFrom)} – ${fmtS(actualTo)}${dual?" · geïndexeerd op % verandering":""}${seg!=="all"?` · label: ${seg==="test"?"Test":"Schaal"}`:""} ↑</button></div>
+      <div class="kpi-chart-title">${plot.map(s=>s.meta.label).join(" · ")}<button class="kpi-chart-sub" onclick="jumpToPeriodSelector()" title="Kies een andere periode">${fmtS(actualFrom)} – ${fmtS(actualTo)}${dual?" · geïndexeerd op % verandering":""}${segAllowed && filtersActive()?` · ${activeFilterLabel()}`:""} ↑</button></div>
       <div class="kpi-chart-gran">${granBtn("day","Dag")}${granBtn("week","Week")}${granBtn("month","Maand")}</div>
     </div>
-    ${segToggle}
     ${legend}
     <div class="kpi-chart-svgwrap" id="kpiChartSvgWrap">
       <svg viewBox="0 0 ${W} ${H}" class="kpi-chart-svg" id="kpiChartSvg">
