@@ -30,10 +30,40 @@ const LOOKBACK_DAYS = 3;
 const PURCHASE_TYPES = ["purchase", "offsite_conversion.fb_pixel_purchase"];
 const ATC_TYPES = ["add_to_cart", "offsite_conversion.fb_pixel_add_to_cart"];
 
+// Meta's platform_position-waarden zijn veel gedetailleerder dan de 4 knoppen
+// die het dashboardfilter toont. Vastgesteld via een live call op dit account
+// (2026-08-16) — geen verzonnen indeling. Alles dat hier niet in staat (nieuwe
+// placements die Meta later toevoegt, Audience Network-posities, etc.) valt
+// bewust in "overig" i.p.v. te worden weggelaten.
+const PLACEMENT_MAP = {
+  feed: "feed",
+  facebook_profile_feed: "feed",
+  facebook_stories: "stories",
+  instagram_stories: "stories",
+  facebook_reels: "reels",
+  facebook_reels_overlay: "reels",
+  instagram_reels: "reels",
+};
+function mapPlacement(pos) { return PLACEMENT_MAP[pos] || "overig"; }
+// Alleen deze twee gelden als "platform" in het dashboardfilter — Audience
+// Network en Threads tellen wel mee in het totaal ("Alle platformen") maar
+// hebben geen eigen filterknop (zie sectie 3/9 van de opdracht: Facebook +
+// Instagram hoeft niet op te tellen tot het grote totaal, alleen tot het
+// "ondersteunde platforms"-totaal).
+const FILTERABLE_PLATFORMS = new Set(["facebook", "instagram"]);
+// Platform/plaatsing-breakdown is een async Meta-rapport (geen direct
+// antwoord) — traag genoeg om niet elke 15 min te herhalen. Ververst hooguit
+// eens per uur; de hoofdcijfers (spend/ROAS/bonus) blijven wel elke 15 min
+// vers, die lopen via metaInsights/metaInsightsByAdset hierboven, ongemoeid.
+const BREAKDOWN_REFRESH_MIN_MS = 55 * 60 * 1000;
+const BREAKDOWN_POLL_MS = 2000;
+const BREAKDOWN_MAX_POLLS = 15; // 15 × 2s = 30s max wachttijd per dag, dan niet-fataal opgeven
+
 export {
   verifyHmac, mapOrder, timingSafeEqual, orderNumInt, toAmsterdamDate,
   amsterdamTodayStr, addDaysStr, dowMonday0, sumDaily, validateMeta,
-  parseMetaInsights, parseMetaAdsetInsights,
+  parseMetaInsights, parseMetaAdsetInsights, mapPlacement, parseMetaBreakdown,
+  metaInsightsBreakdown,
 };
 
 export default {
@@ -190,13 +220,24 @@ async function runMetaSync(env) {
     spend: d.spend, rev7: d.rev7, rev1v: d.rev1v, purch: d.purch, impr: d.impr, cl: d.cl,
   }]));
   const dailyAds = new Map((existing.daily_ads || []).map((d) => [d.d, d.ads]));
+  const dailyBreakdown = new Map((existing.daily_ads_breakdown || []).map((d) => [d.d, d.b]));
   const existingDayCount = dailyMeta.size;
+
+  // Platform/plaatsing-breakdown is traag (async Meta-rapport) en verandert
+  // niet elke 15 min noemenswaardig — alleen verversen als de vorige keer
+  // langer dan BREAKDOWN_REFRESH_MIN_MS geleden is. De hoofdcijfers hierboven
+  // blijven wel elke cron-tick vers.
+  const lastBreakdownSync = existing.breakdown_synced_at ? new Date(existing.breakdown_synced_at).getTime() : 0;
+  const refreshBreakdown = (Date.now() - lastBreakdownSync) >= BREAKDOWN_REFRESH_MIN_MS;
 
   let d = LOOKBACK_FROM;
   while (d <= TODAY) {
     const dayData = await metaInsights(TOKEN, ACCOUNT, d, d);
     dailyMeta.set(d, dayData);
     dailyAds.set(d, await metaInsightsByAdset(TOKEN, ACCOUNT, d, d));
+    if (refreshBreakdown) {
+      dailyBreakdown.set(d, await metaInsightsBreakdown(TOKEN, ACCOUNT, d, d));
+    }
     d = addDaysStr(d, 1);
   }
 
@@ -232,6 +273,8 @@ async function runMetaSync(env) {
     },
     daily_meta: sortedDates.map((ds) => ({ d: ds, ...dailyMeta.get(ds) })),
     daily_ads: sortedDates.filter((ds) => dailyAds.has(ds)).map((ds) => ({ d: ds, ads: dailyAds.get(ds) })),
+    daily_ads_breakdown: [...dailyBreakdown.keys()].sort().map((ds) => ({ d: ds, b: dailyBreakdown.get(ds) })),
+    breakdown_synced_at: refreshBreakdown ? new Date().toISOString() : (existing.breakdown_synced_at || null),
   };
 
   const put = await ghPutFile(
@@ -241,7 +284,7 @@ async function runMetaSync(env) {
   if (!put.ok) throw new Error(`PUT ${META_PATH} ${put.status}: ${put.text}`);
 
   await updateStatus(env.GITHUB_TOKEN, "meta", true, null);
-  return { ok: true, days: dailyMeta.size, snap: TODAY, snap_time: metaOut.snap_time };
+  return { ok: true, days: dailyMeta.size, snap: TODAY, snap_time: metaOut.snap_time, breakdown_refreshed: refreshBreakdown };
 }
 
 function zeroDay() { return { spend: 0, rev7: 0, rev1v: 0, purch: 0, impr: 0, cl: 0 }; }
@@ -329,6 +372,99 @@ async function metaInsightsByAdset(token, account, start, end) {
   const r = await fetch(url.toString());
   if (!r.ok) { console.error(`Meta adset API fout (${start}–${end}): ${r.status}`); return []; }
   return parseMetaAdsetInsights(await r.json());
+}
+
+function parseMetaBreakdown(rows) {
+  const out = [];
+  for (const row of (rows || [])) {
+    const acts = row.actions || [], avls = row.action_values || [];
+    const p7 = Math.max(...PURCHASE_TYPES.map((t) => avAction(acts, t, "7d_click")));
+    const p1v = Math.max(...PURCHASE_TYPES.map((t) => avAction(acts, t, "1d_view")));
+    const r7 = Math.max(...PURCHASE_TYPES.map((t) => avAction(avls, t, "7d_click")));
+    const r1v = Math.max(...PURCHASE_TYPES.map((t) => avAction(avls, t, "1d_view")));
+    out.push({
+      n: row.adset_name || "?",
+      platform: row.publisher_platform || "?",
+      placement: mapPlacement(row.platform_position),
+      spend: round2(parseFloat(row.spend || 0)),
+      rev7: round2(r7), rev1v: round2(r1v),
+      purch: Math.round(p7 + p1v),
+    });
+  }
+  return out;
+}
+
+// Platform/plaatsing-breakdowns kunnen bij Meta zowel synchroon (direct
+// "data" terug) als asynchroon (alleen een report_run_id, moet gepolld
+// worden) beantwoord worden — vastgesteld via live tests op dit account:
+// exact dezelfde soort call gaf de ene keer meteen data, de andere keer een
+// report_run_id. Kennelijk beslist Meta dat zelf per keer (load-afhankelijk),
+// dus deze functie moet allebei afhandelen. Niet-fataal bij fout/timeout:
+// loggen en [] teruggeven, precies zoals metaInsightsByAdset hierboven — de
+// hoofdcijfers (spend/ROAS/bonus) mogen hier nooit van afhangen, dit voedt
+// alleen het analysefilter.
+async function metaInsightsBreakdown(token, account, start, end) {
+  try {
+    const createUrl = new URL(`https://graph.facebook.com/v21.0/act_${account}/insights`);
+    createUrl.searchParams.set("fields", "adset_name,spend,actions,action_values");
+    createUrl.searchParams.set("breakdowns", "publisher_platform,platform_position");
+    createUrl.searchParams.set("action_attribution_windows", JSON.stringify(["7d_click", "1d_view"]));
+    createUrl.searchParams.set("time_range", JSON.stringify({ since: start, until: end }));
+    createUrl.searchParams.set("level", "adset");
+    createUrl.searchParams.set("limit", "500");
+    createUrl.searchParams.set("access_token", token);
+    const createR = await fetch(createUrl.toString());
+    if (!createR.ok) { console.error(`Meta breakdown-job aanmaken mislukt (${start}–${end}): ${createR.status}`); return []; }
+    const createJson = await createR.json();
+
+    let rows;
+    if (Array.isArray(createJson.data)) {
+      // Synchroon antwoord — geen report_run_id, meteen bruikbare data.
+      rows = await collectPaginated(createJson, token);
+    } else {
+      const runId = createJson.report_run_id;
+      if (!runId) { console.error(`Meta breakdown: geen data en geen report_run_id (${start}–${end})`); return []; }
+
+      let completed = false;
+      for (let i = 0; i < BREAKDOWN_MAX_POLLS; i++) {
+        await sleep(BREAKDOWN_POLL_MS);
+        const statusR = await fetch(`https://graph.facebook.com/v21.0/${runId}?fields=async_status,async_percent_completion&access_token=${token}`);
+        if (!statusR.ok) continue;
+        const statusJson = await statusR.json();
+        if (statusJson.async_status === "Job Completed") { completed = true; break; }
+        if (statusJson.async_status === "Job Failed" || statusJson.async_status === "Job Skipped") {
+          console.error(`Meta breakdown-job ${statusJson.async_status} (${start}–${end})`);
+          return [];
+        }
+      }
+      if (!completed) { console.error(`Meta breakdown-job timeout na ${BREAKDOWN_MAX_POLLS * BREAKDOWN_POLL_MS / 1000}s (${start}–${end})`); return []; }
+
+      const firstR = await fetch(`https://graph.facebook.com/v21.0/${runId}/insights?limit=500&access_token=${token}`);
+      if (!firstR.ok) { console.error(`Meta breakdown-resultaten ophalen mislukt (${start}–${end}): ${firstR.status}`); return []; }
+      rows = await collectPaginated(await firstR.json(), token);
+    }
+    return parseMetaBreakdown(rows);
+  } catch (e) {
+    console.error(`Meta breakdown onverwachte fout (${start}–${end}): ${e.message}`);
+    return [];
+  }
+}
+
+// Volgt paging.next (indien aanwezig) vanaf een reeds opgehaalde eerste
+// pagina — gebruikt voor zowel het synchrone als het asynchrone pad hierboven.
+async function collectPaginated(firstPage, token) {
+  const rows = [...(firstPage.data || [])];
+  let nextUrl = (firstPage.paging && firstPage.paging.next) || null;
+  let pages = 1;
+  while (nextUrl && pages < 10) {
+    const r = await fetch(nextUrl);
+    if (!r.ok) break;
+    const json = await r.json();
+    rows.push(...(json.data || []));
+    nextUrl = (json.paging && json.paging.next) || null;
+    pages++;
+  }
+  return rows;
 }
 
 function sumDaily(dailyMetaMap, from, to) {

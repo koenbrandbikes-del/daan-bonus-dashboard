@@ -60,6 +60,21 @@ LOOKBACK_FROM = max(CLEAN_S, TODAY - datetime.timedelta(days=LOOKBACK_DAYS - 1))
 PURCHASE_TYPES = ["purchase", "offsite_conversion.fb_pixel_purchase"]
 ATC_TYPES = ["add_to_cart", "offsite_conversion.fb_pixel_add_to_cart"]
 
+# Zie dezelfde mapping/toelichting in cloudflare-worker/src/index.js —
+# vastgesteld via een live call op dit account, geen verzonnen indeling.
+# Onbekende/toekomstige placements vallen bewust in "overig".
+PLACEMENT_MAP = {
+    "feed": "feed", "facebook_profile_feed": "feed",
+    "facebook_stories": "stories", "instagram_stories": "stories",
+    "facebook_reels": "reels", "facebook_reels_overlay": "reels", "instagram_reels": "reels",
+}
+def _map_placement(pos):
+    return PLACEMENT_MAP.get(pos, "overig")
+
+BREAKDOWN_REFRESH_MIN_S = 55 * 60   # zelfde throttle als de Worker: te traag (async) voor elke run
+BREAKDOWN_POLL_S = 2
+BREAKDOWN_MAX_POLLS = 15
+
 def _av(lst, atype, window=None):
     for a in (lst or []):
         if a.get("action_type") == atype:
@@ -160,6 +175,97 @@ def meta_insights_by_adset(start: datetime.date, end: datetime.date) -> list:
     out.sort(key=lambda a: -a["spend"])
     return out
 
+def meta_insights_breakdown(start: datetime.date, end: datetime.date) -> list:
+    """Platform/plaatsing-uitsplitsing per advertentiegroep — zie de uitgebreide
+    toelichting in cloudflare-worker/src/index.js (metaInsightsBreakdown): Meta
+    dwingt hiervoor altijd een asynchroon rapport af, nooit een direct antwoord.
+    Niet-fataal: bij fout/timeout loggen en [] teruggeven, precies zoals
+    meta_insights_by_adset hierboven — de hoofdcijfers mogen hier nooit van
+    afhangen."""
+    url = f"https://graph.facebook.com/v21.0/act_{META_ACCOUNT}/insights"
+    params = {
+        "fields": "adset_name,spend,actions,action_values",
+        "breakdowns": "publisher_platform,platform_position",
+        "action_attribution_windows": '["7d_click","1d_view"]',
+        "time_range": json.dumps({"since": str(start), "until": str(end)}),
+        "level": "adset",
+        "access_token": META_TOKEN,
+    }
+    def _collect_paginated(first_page):
+        rows = list(first_page.get("data", []))
+        nxt = (first_page.get("paging") or {}).get("next")
+        pages = 1
+        while nxt and pages < 10:
+            rr = requests.get(nxt, timeout=20)
+            rr.raise_for_status()
+            body = rr.json()
+            rows.extend(body.get("data", []))
+            nxt = (body.get("paging") or {}).get("next")
+            pages += 1
+        return rows
+
+    try:
+        r = requests.get(url, params=params, timeout=20)
+        r.raise_for_status()
+        first = r.json()
+
+        # Meta beantwoordt deze breakdown soms synchroon (meteen "data") en
+        # soms asynchroon (alleen een report_run_id, moet gepolld worden) —
+        # vastgesteld via live tests: exact dezelfde soort call gaf de ene
+        # keer het een, de andere keer het ander. Beide paden afhandelen.
+        if isinstance(first.get("data"), list):
+            rows = _collect_paginated(first)
+        else:
+            run_id = first.get("report_run_id")
+            if not run_id:
+                print(f"⚠️  Meta breakdown: geen data en geen report_run_id ({start}–{end}) — overgeslagen")
+                return []
+
+            completed = False
+            for _ in range(BREAKDOWN_MAX_POLLS):
+                time.sleep(BREAKDOWN_POLL_S)
+                sr = requests.get(f"https://graph.facebook.com/v21.0/{run_id}",
+                                   params={"fields": "async_status,async_percent_completion", "access_token": META_TOKEN},
+                                   timeout=20)
+                sr.raise_for_status()
+                status = sr.json().get("async_status")
+                if status == "Job Completed":
+                    completed = True
+                    break
+                if status in ("Job Failed", "Job Skipped"):
+                    print(f"⚠️  Meta breakdown-job {status} ({start}–{end}) — overgeslagen")
+                    return []
+            if not completed:
+                print(f"⚠️  Meta breakdown-job timeout na {BREAKDOWN_MAX_POLLS * BREAKDOWN_POLL_S}s ({start}–{end}) — overgeslagen")
+                return []
+
+            rr = requests.get(f"https://graph.facebook.com/v21.0/{run_id}/insights",
+                               params={"limit": 500, "access_token": META_TOKEN}, timeout=20)
+            rr.raise_for_status()
+            rows = _collect_paginated(rr.json())
+    except requests.RequestException as e:
+        print(f"⚠️  Meta breakdown-fout ({start}–{end}): {e} — overgeslagen")
+        return []
+
+    out = []
+    for row in rows:
+        acts = row.get("actions", [])
+        avls = row.get("action_values", [])
+        p7  = max(_av(acts, t, "7d_click") for t in PURCHASE_TYPES)
+        p1v = max(_av(acts, t, "1d_view")  for t in PURCHASE_TYPES)
+        r7  = max(_av(avls, t, "7d_click") for t in PURCHASE_TYPES)
+        r1v = max(_av(avls, t, "1d_view")  for t in PURCHASE_TYPES)
+        out.append({
+            "n":        row.get("adset_name", "?"),
+            "platform": row.get("publisher_platform", "?"),
+            "placement": _map_placement(row.get("platform_position")),
+            "spend": round(float(row.get("spend", 0)), 2),
+            "rev7":  round(r7, 2),
+            "rev1v": round(r1v, 2),
+            "purch": int(p7 + p1v),
+        })
+    return out
+
 def sum_daily(daily, from_date, to_date):
     total = {"spend": 0.0, "rev7": 0.0, "rev1v": 0.0, "purch": 0, "impr": 0, "cl": 0}
     for ds, x in daily.items():
@@ -257,7 +363,15 @@ def main():
 
     daily_meta = {d["d"]: {k: d[k] for k in DAY_FIELD_ORDER} for d in existing.get("daily_meta", [])}
     daily_ads  = {d["d"]: d["ads"] for d in existing.get("daily_ads", [])}
+    daily_breakdown = {d["d"]: d["b"] for d in existing.get("daily_ads_breakdown", [])}
     existing_day_count = len(daily_meta)
+
+    # Zelfde throttle als de Worker: platform/plaatsing-breakdown is traag
+    # (async rapport) en hoeft niet elke run ververst — de hoofdcijfers
+    # hieronder blijven wel elke run vers.
+    last_bd_sync_raw = existing.get("breakdown_synced_at")
+    last_bd_sync = datetime.datetime.fromisoformat(last_bd_sync_raw).timestamp() if last_bd_sync_raw else 0
+    refresh_breakdown = (time.time() - last_bd_sync) >= BREAKDOWN_REFRESH_MIN_S
 
     print(f"Meta dagelijkse data ophalen (account {META_ACCOUNT}), lookback {LOOKBACK_FROM}–{TODAY}...")
     d = LOOKBACK_FROM
@@ -265,6 +379,8 @@ def main():
         day_data = meta_insights(d, d)
         daily_meta[str(d)] = day_data
         daily_ads[str(d)] = meta_insights_by_adset(d, d)
+        if refresh_breakdown:
+            daily_breakdown[str(d)] = meta_insights_breakdown(d, d)
         print(f"  {d}: spend={day_data['spend']:7.2f}  rev7={day_data['rev7']:7.2f}  rev1v={day_data['rev1v']:6.2f}  purch={day_data['purch']}")
         d += datetime.timedelta(days=1)
 
@@ -311,6 +427,8 @@ def main():
         },
         "daily_meta": [{"d": ds, **daily_meta[ds]} for ds in sorted(daily_meta)],
         "daily_ads":  [{"d": ds, "ads": daily_ads[ds]} for ds in sorted(daily_ads) if ds in daily_meta],
+        "daily_ads_breakdown": [{"d": ds, "b": daily_breakdown[ds]} for ds in sorted(daily_breakdown)],
+        "breakdown_synced_at": datetime.datetime.now(datetime.timezone.utc).isoformat() if refresh_breakdown else existing.get("breakdown_synced_at"),
     }
 
     atomic_write_json(META_PATH, meta_out)

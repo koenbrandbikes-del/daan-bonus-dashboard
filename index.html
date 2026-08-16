@@ -2135,7 +2135,7 @@ function renderKpiBar(cx, ct, tg, prevCt, prevCx, prevLabel, ctDays, prevDays){
   document.getElementById("kpiStrip").innerHTML =
     items.map(it=>`<div class="kpi-item${it.c}${kpiChartSel.includes(it.k)?" chart-active":""}" data-kpi="${it.k}" onclick="toggleKpiChart('${it.k}')"><div class="kpi-lbl">${it.l}</div><div class="kpi-val">${it.v}</div><div class="kpi-sub">${it.s}${it.d}</div></div>`).join("");
   const cap=document.getElementById("kpiCompareCap");
-  if(cap)cap.textContent=prevCt?`t.o.v. ${prevLabel}${norm?" (genormaliseerd naar /dag, ongelijke periodelengtes)":""}`:"";
+  if(cap)cap.textContent=prevCt?`t.o.v. ${prevLabel}${norm?" (per dag)":""}`:"";
   renderKpiChart();
 }
 
