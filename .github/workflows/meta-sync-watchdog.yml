@@ -1,0 +1,36 @@
+name: Meta-sync watchdog
+
+# Onafhankelijke back-up voor de Cloudflare Cron Trigger (elke 15 min in
+# cloudflare-worker/wrangler.toml). Die trigger is op 2026-08-17 rond
+# 00:15 UTC stilletjes gestopt met vuren (geen foutmelding, geen commit,
+# gewoon niets meer) — pas de volgende ochtend gemerkt. Deze workflow
+# draait op GitHub's eigen infrastructuur, dus onafhankelijk van
+# Cloudflare's cron-subsysteem, en roept dezelfde sync-endpoint aan.
+# De sync zelf is incrementeel/idempotent (LOOKBACK_DAYS-venster), dus
+# vaker aanroepen dan strikt nodig is onschadelijk.
+#
+# Faalt deze stap (endpoint niet bereikbaar, of ok:false), dan faalt de
+# hele workflow-run — GitHub mailt de repo-eigenaar dan automatisch bij
+# een mislukte scheduled workflow, dat is de alarmering.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Meta-sync op de Cloudflare Worker
+        run: |
+          resp=$(curl -sS --max-time 60 -w '\n%{http_code}' \
+            "https://daan-shopify-webhook.koenbrandbikes.workers.dev/run-meta-sync?key=${{ secrets.META_SYNC_KEY }}")
+          status="${resp##*$'\n'}"
+          body="${resp%$'\n'*}"
+          echo "HTTP $status: $body"
+          if [ "$status" != "200" ]; then
+            echo "::error::Meta-sync endpoint gaf HTTP $status"
+            exit 1
+          fi
+          echo "$body" | grep -q '"ok":true' || { echo "::error::Meta-sync endpoint gaf geen ok:true terug"; exit 1; }
