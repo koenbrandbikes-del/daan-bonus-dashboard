@@ -1,45 +1,45 @@
 {
  "snap": "2026-08-17",
- "snap_time": "09:45",
+ "snap_time": "10:00",
  "tb": {
   "vandaag": {
    "from": "2026-08-17",
    "to": "2026-08-17",
-   "spend": 48.11,
+   "spend": 53.1,
    "rev7": 149,
    "rev1v": 0,
    "purch": 1,
-   "impr": 7529,
-   "cl": 166
+   "impr": 8262,
+   "cl": 198
   },
   "gisteren": {
    "from": "2026-08-16",
    "to": "2026-08-16",
-   "spend": 270.87,
+   "spend": 270.89,
    "rev7": 745,
    "rev1v": 0,
    "purch": 5,
-   "impr": 35272,
+   "impr": 35273,
    "cl": 760
   },
   "week": {
    "from": "2026-08-17",
    "to": "2026-08-17",
-   "spend": 48.11,
+   "spend": 53.1,
    "rev7": 149,
    "rev1v": 0,
    "purch": 1,
-   "impr": 7529,
-   "cl": 166
+   "impr": 8262,
+   "cl": 198
   },
   "prevweek": {
    "from": "2026-08-10",
    "to": "2026-08-16",
-   "spend": 1507.45,
+   "spend": 1507.47,
    "rev7": 3527,
    "rev1v": 239,
    "purch": 25,
-   "impr": 185930,
+   "impr": 185931,
    "cl": 3947
   },
   "jul": {
@@ -55,12 +55,12 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-08-17",
-   "spend": 3702.23,
+   "spend": 3707.24,
    "rev7": 6727.2,
    "rev1v": 537,
    "purch": 47,
-   "impr": 504159,
-   "cl": 10001
+   "impr": 504893,
+   "cl": 10033
   }
  },
  "daily_meta": [
@@ -165,21 +165,21 @@
   },
   {
    "d": "2026-08-16",
-   "spend": 270.87,
+   "spend": 270.89,
    "rev7": 745,
    "rev1v": 0,
    "purch": 5,
-   "impr": 35272,
+   "impr": 35273,
    "cl": 760
   },
   {
    "d": "2026-08-17",
-   "spend": 48.11,
+   "spend": 53.1,
    "rev7": 149,
    "rev1v": 0,
    "purch": 1,
-   "impr": 7529,
-   "cl": 166
+   "impr": 8262,
+   "cl": 198
   }
  ],
  "daily_ads": [
@@ -1724,14 +1724,14 @@
     },
     {
      "n": "006_002 - New Size",
-     "spend": 62.76,
+     "spend": 62.78,
      "rev7": 298,
      "rev1v": 0,
      "purch": 2,
      "ctr": 1.33,
      "cpc": 0.71,
      "atc": 2,
-     "impr": 6712,
+     "impr": 6713,
      "reach": 5300,
      "linkCl": 46
     },
@@ -1794,80 +1794,80 @@
    "ads": [
     {
      "n": "001_002",
-     "spend": 13.92,
+     "spend": 15.32,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 2.02,
-     "cpc": 0.5,
+     "ctr": 2.19,
+     "cpc": 0.45,
      "atc": 0,
-     "impr": 1388,
-     "reach": 1275,
-     "linkCl": 16
+     "impr": 1554,
+     "reach": 1432,
+     "linkCl": 20
     },
     {
      "n": "002_004",
-     "spend": 13.09,
+     "spend": 14.26,
      "rev7": 149,
      "rev1v": 0,
      "purch": 1,
-     "ctr": 2.87,
-     "cpc": 0.17,
+     "ctr": 3.18,
+     "cpc": 0.15,
      "atc": 2,
-     "impr": 2685,
-     "reach": 2384,
-     "linkCl": 36
+     "impr": 2927,
+     "reach": 2594,
+     "linkCl": 42
     },
     {
      "n": "006_002 - New Size",
-     "spend": 10.03,
+     "spend": 11.37,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 0.86,
-     "cpc": 0.91,
+     "ctr": 1,
+     "cpc": 0.81,
      "atc": 0,
-     "impr": 1272,
-     "reach": 1122,
-     "linkCl": 6
+     "impr": 1406,
+     "reach": 1249,
+     "linkCl": 8
     },
     {
      "n": "004_003",
-     "spend": 4.31,
+     "spend": 4.77,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 2.76,
-     "cpc": 0.12,
+     "ctr": 3.05,
+     "cpc": 0.11,
      "atc": 0,
-     "impr": 1266,
-     "reach": 1117,
+     "impr": 1376,
+     "reach": 1207,
      "linkCl": 19
     },
     {
-     "n": "002-003",
-     "spend": 3.47,
+     "n": "006_002",
+     "spend": 3.73,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.5,
-     "cpc": 0.5,
+     "ctr": 1.58,
+     "cpc": 0.47,
      "atc": 0,
-     "impr": 468,
-     "reach": 303,
+     "impr": 507,
+     "reach": 420,
      "linkCl": 6
     },
     {
-     "n": "006_002",
-     "spend": 3.36,
+     "n": "002-003",
+     "spend": 3.65,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.74,
-     "cpc": 0.42,
+     "ctr": 1.42,
+     "cpc": 0.52,
      "atc": 0,
-     "impr": 459,
-     "reach": 396,
+     "impr": 492,
+     "reach": 340,
      "linkCl": 6
     }
    ]
