@@ -1,36 +1,36 @@
 {
- "snap": "2026-08-18",
- "snap_time": "23:45",
+ "snap": "2026-08-19",
+ "snap_time": "00:00",
  "tb": {
   "vandaag": {
+   "from": "2026-08-19",
+   "to": "2026-08-19",
+   "spend": 0,
+   "rev7": 0,
+   "rev1v": 0,
+   "purch": 0,
+   "impr": 0,
+   "cl": 0
+  },
+  "gisteren": {
    "from": "2026-08-18",
    "to": "2026-08-18",
-   "spend": 288.07,
+   "spend": 289.84,
    "rev7": 268.2,
    "rev1v": 536.4,
    "purch": 6,
-   "impr": 33172,
-   "cl": 802
-  },
-  "gisteren": {
-   "from": "2026-08-17",
-   "to": "2026-08-17",
-   "spend": 229.36,
-   "rev7": 1192,
-   "rev1v": 0,
-   "purch": 8,
-   "impr": 33834,
-   "cl": 771
+   "impr": 33456,
+   "cl": 804
   },
   "week": {
    "from": "2026-08-17",
-   "to": "2026-08-18",
-   "spend": 517.43,
+   "to": "2026-08-19",
+   "spend": 519.2,
    "rev7": 1460.2,
    "rev1v": 536.4,
    "purch": 14,
-   "impr": 67006,
-   "cl": 1573
+   "impr": 67290,
+   "cl": 1575
   },
   "prevweek": {
    "from": "2026-08-10",
@@ -54,13 +54,13 @@
   },
   "aug_clean": {
    "from": "2026-08-05",
-   "to": "2026-08-18",
-   "spend": 4171.9,
+   "to": "2026-08-19",
+   "spend": 4173.67,
    "rev7": 8038.4,
    "rev1v": 1073.4,
    "purch": 60,
-   "impr": 563672,
-   "cl": 11409
+   "impr": 563956,
+   "cl": 11411
   }
  },
  "daily_meta": [
@@ -183,12 +183,21 @@
   },
   {
    "d": "2026-08-18",
-   "spend": 288.07,
+   "spend": 289.84,
    "rev7": 268.2,
    "rev1v": 536.4,
    "purch": 6,
-   "impr": 33172,
-   "cl": 802
+   "impr": 33456,
+   "cl": 804
+  },
+  {
+   "d": "2026-08-19",
+   "spend": 0,
+   "rev7": 0,
+   "rev1v": 0,
+   "purch": 0,
+   "impr": 0,
+   "cl": 0
   }
  ],
  "daily_ads": [
@@ -1899,96 +1908,100 @@
    "ads": [
     {
      "n": "001_002",
-     "spend": 87.51,
+     "spend": 88.11,
      "rev7": 0,
      "rev1v": 268.2,
      "purch": 2,
-     "ctr": 1.81,
+     "ctr": 1.79,
      "cpc": 0.63,
      "atc": 3,
-     "impr": 7735,
-     "reach": 6639,
-     "linkCl": 108
+     "impr": 7807,
+     "reach": 6685,
+     "linkCl": 109
     },
     {
      "n": "002_004",
-     "spend": 52.58,
+     "spend": 53.3,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 5.17,
+     "ctr": 5.08,
      "cpc": 0.15,
      "atc": 5,
-     "impr": 6678,
-     "reach": 5676,
-     "linkCl": 187
+     "impr": 6790,
+     "reach": 5832,
+     "linkCl": 189
     },
     {
      "n": "006_002 - New Size",
-     "spend": 50.66,
+     "spend": 50.73,
      "rev7": 0,
      "rev1v": 134.1,
      "purch": 1,
-     "ctr": 1.49,
+     "ctr": 1.48,
      "cpc": 0.6,
      "atc": 3,
-     "impr": 5649,
-     "reach": 4541,
-     "linkCl": 40
+     "impr": 5670,
+     "reach": 4578,
+     "linkCl": 41
     },
     {
      "n": "006_002",
-     "spend": 28.64,
+     "spend": 28.82,
      "rev7": 268.2,
      "rev1v": 134.1,
      "purch": 3,
-     "ctr": 1.63,
-     "cpc": 0.56,
+     "ctr": 1.62,
+     "cpc": 0.57,
      "atc": 5,
-     "impr": 3126,
-     "reach": 2051,
+     "impr": 3148,
+     "reach": 2078,
      "linkCl": 24
     },
     {
      "n": "007 BOF statics - 6",
-     "spend": 24.96,
+     "spend": 25.01,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.57,
-     "cpc": 0.69,
+     "ctr": 1.61,
+     "cpc": 0.68,
      "atc": 0,
-     "impr": 2287,
-     "reach": 1951,
+     "impr": 2298,
+     "reach": 1969,
      "linkCl": 25
     },
     {
      "n": "004_003",
-     "spend": 24.4,
+     "spend": 24.53,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
      "ctr": 2.21,
-     "cpc": 0.2,
+     "cpc": 0.19,
      "atc": 0,
-     "impr": 5656,
-     "reach": 4678,
+     "impr": 5693,
+     "reach": 4733,
      "linkCl": 62
     },
     {
      "n": "002-003",
-     "spend": 19.32,
+     "spend": 19.34,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.03,
+     "ctr": 1.02,
      "cpc": 0.92,
      "atc": 0,
-     "impr": 2041,
-     "reach": 1000,
+     "impr": 2050,
+     "reach": 1001,
      "linkCl": 12
     }
    ]
+  },
+  {
+   "d": "2026-08-19",
+   "ads": []
   }
  ],
  "daily_ads_breakdown": [
