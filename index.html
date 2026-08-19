@@ -332,6 +332,17 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 
 /* ── Analysefilters (strategie × platform × plaatsing) ── */
 .filter-bar{margin-bottom:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px}
+.discount-toggle-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.discount-toggle{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
+.discount-toggle input{position:absolute;opacity:0;width:0;height:0}
+.discount-toggle-track{width:34px;height:20px;border-radius:10px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);position:relative;transition:background .15s,border-color .15s;flex-shrink:0}
+.discount-toggle-thumb{position:absolute;top:1px;left:1px;width:16px;height:16px;border-radius:50%;background:#93A2B8;transition:transform .15s,background .15s}
+.discount-toggle input:checked+.discount-toggle-track{background:rgba(245,158,11,.35);border-color:#f59e0b}
+.discount-toggle input:checked+.discount-toggle-track .discount-toggle-thumb{transform:translateX(14px);background:#fbbf24}
+.discount-toggle input:focus-visible+.discount-toggle-track{outline:1px solid #60a5fa;outline-offset:2px}
+.discount-toggle-lbl{font-size:12px;font-weight:600;color:#e2e8f0}
+.discount-toggle-hint{color:#f59e0b;font-weight:700}
+.discount-toggle-note{font-size:11px;color:#fbbf24;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);padding:3px 9px;border-radius:12px}
 .filter-bar-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .filter-bar-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7C8CA6;flex-shrink:0}
 .filter-strat-group{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap}
@@ -1116,6 +1127,86 @@ function setFilterPlatform(p){ filterPlatform=p; saveFilters(); render(); }
 function setFilterPlacement(p){ filterPlacement=p; saveFilters(); render(); }
 function resetFilters(){ filterStrategy="all"; filterPlatform="all"; filterPlacement="all"; saveFilters(); render(); }
 
+/* ═══ KORTINGSCODE-CORRECTIE ═══════════════════════════════════════
+   Losstaand van de analysefilters hierboven — dit is geen "bekijk een
+   doorsnede"-filter maar een correctie op wat we als ECHTE Meta-prestatie
+   beschouwen, dus werkt door tot in de bonus/BEROAS-onderbouwing (in
+   tegenstelling tot filterStrategy/Platform/Placement, die daar bewust
+   buiten blijven). Filosofie: wie een klant het eerst over de streep
+   trekt is de driver van de conversie; bij een kortingscode weten we dat
+   zeker (de influencer/actie), dus die orders horen niet bij Meta, ook al
+   claimt Meta ze soms alsnog via het 1-day-view-venster. */
+let excludeDiscountCode=false;
+try{
+  const savedDC=sessionStorage.getItem("daan_exclude_discount");
+  if(savedDC!=null) excludeDiscountCode=savedDC==="1";
+}catch(e){}
+function setExcludeDiscountCode(v){ excludeDiscountCode=v; try{sessionStorage.setItem("daan_exclude_discount",v?"1":"0");}catch(e){} render(); }
+
+// Hoeveel er van kortingscode-orders in een periode daadwerkelijk van
+// Meta's cijfers afgetrokken mag worden. Er is geen koppeling tussen een
+// specifieke order en een specifieke Meta-conversie (Meta's API geeft geen
+// tijdstip per conversie, alleen dagtotalen per advertentiegroep) — dus
+// zowel "trek gewoon alle kortingscode-omzet af" als "trek nooit meer af
+// dan Meta die dag claimde" kunnen fout zitten. Voorbeeld dat dat blootlegt
+// (19 aug): 2 Marinte10-orders naast 4 gewone orders (6 totaal die dag),
+// en Meta claimt toevallig ook 2 aankopen — dat kunnen evengoed de 2
+// Marinte10-orders zijn als 2 van de 4 gewone, dat is uit deze data niet
+// te zien.
+//
+// Daarom: per dag, alleen aftrekken op dagen waarop Meta zelf al iets
+// claimde (anders trek je iets af dat Meta toch al niet had), en dan
+// PROPORTIONEEL aan het aandeel kortingscode-orders in het totaal aantal
+// orders die dag — niet het volledige Meta-dagtotaal. Zijn kortingscode-
+// orders een minderheid van de dag (zoals 19 aug: 2 van de 6, 33%), dan
+// wordt ook maar 33% van Meta's dagclaim toegerekend aan de correctie,
+// i.p.v. aangenomen dat alles overlapt. Is elke order die dag een
+// kortingscode-order (zoals 18 aug: 6 van de 6), dan is het aandeel 100%
+// en wordt gewoon alles afgetrokken, zoals eerder vastgesteld.
+function discountCutStats(from,to){
+  const byDay={}, dayTotals={};
+  let totalCount=0, totalRev=0;
+  for(const o of ORDERS){
+    if(o.test || (from&&o.d<from) || (to&&o.d>to)) continue;
+    dayTotals[o.d]=(dayTotals[o.d]||0)+1;
+    if(!o.code) continue;
+    if(!byDay[o.d]) byDay[o.d]={count:0,rev:0};
+    byDay[o.d].count++; byDay[o.d].rev+=o.incl;
+    totalCount++; totalRev+=o.incl;
+  }
+  let purchCut=0, revCut=0;
+  for(const d in byDay){
+    const dm=DAILY_META.find(x=>x.d===d);
+    const metaPurchThatDay = dm ? dm.purch : 0;
+    const metaRevThatDay = dm ? (dm.rev7+dm.rev1v) : 0;
+    if(metaPurchThatDay<=0) continue; // Meta claimde die dag zelf niks — niks om af te trekken
+    const share=Math.min(1, byDay[d].count/(dayTotals[d]||byDay[d].count));
+    purchCut += metaPurchThatDay*share;
+    revCut += metaRevThatDay*share;
+  }
+  return {totalCount, totalRev, purchCut:Math.round(purchCut), revCut};
+}
+
+// Trekt kortingscode-orders van een tbCalc-achtig object af, gecapt op wat
+// discountCutStats() toelaat. Spend blijft gelijk (dat heeft Meta echt
+// uitgegeven, dat verandert niet); alleen aankopen/omzet/ROAS/marge dalen
+// mee. rev1v (view-only) gaat er als eerste af — daar zat het probleem
+// vooral in — de rest komt van rev7. rev7/rev1v worden nergens los op
+// accountniveau getoond (alleen de som ri), dus deze verdeling is puur voor
+// interne consistentie, geen precisieclaim.
+function applyDiscountCorrection(tb,from,to){
+  if(!tb || !excludeDiscountCode) return tb;
+  const {purchCut,revCut}=discountCutStats(from,to);
+  if(purchCut<=0 && revCut<=0) return tb;
+
+  const purch=Math.max(0,tb.purch-purchCut);
+  let rem=revCut;
+  const rev1v=Math.max(0,tb.rev1v-rem); rem=Math.max(0,rem-tb.rev1v);
+  const rev7=Math.max(0,tb.rev7-rem);
+  const ri=rev7+rev1v;
+  return {...tb, purch, rev7, rev1v, ri, re:ri/BTW, roas:tb.spend>0?ri/tb.spend:0};
+}
+
 // Som van spend/aankopen/omzet over een datumrange, met optioneel strategie-
 // EN platform/plaatsing-filter. Bij alle drie op "all" exact hetzelfde
 // resultaat als tbCalcRange(from,to) (getest) — dat pad blijft dan ook
@@ -1224,7 +1315,27 @@ function renderFilterBar(CT_,CT_ALL_,fxFrom,fxTo){
     </div>`;
   }
 
+  // Kortingscode-correctie — géén analysefilter (die blijven boven met
+  // "Analysefilters" gegroepeerd), maar een correctie op wat we als échte
+  // Meta-prestatie beschouwen. Daarom losstaand, visueel anders (amber) en
+  // met een concreet cijfer erbij zodra hij aanstaat, zodat nooit onzichtbaar
+  // is dat bonus/BEROAS/KPI's hierdoor zijn aangepast.
+  const dc = discountCutStats(fxFrom,fxTo);
+  const discountNote = excludeDiscountCode
+    ? (dc.purchCut>0
+        ? `<span class="discount-toggle-note">−${dc.purchCut} aankoop${dc.purchCut===1?"":"en"} · −${eur(dc.revCut)} bij Meta afgetrokken (van ${dc.totalCount} kortingscode-order${dc.totalCount===1?"":"s"} in deze periode)</span>`
+        : `<span class="discount-toggle-note">${dc.totalCount>0?`${dc.totalCount} kortingscode-order${dc.totalCount===1?"":"s"}, maar Meta claimde die dag(en) zelf niks — niets afgetrokken`:"geen kortingscode-orders in deze periode"}</span>`)
+    : "";
+
   el.innerHTML=`
+    <div class="discount-toggle-row">
+      <label class="discount-toggle">
+        <input type="checkbox" ${excludeDiscountCode?"checked":""} onchange="setExcludeDiscountCode(this.checked)">
+        <span class="discount-toggle-track"><span class="discount-toggle-thumb"></span></span>
+        <span class="discount-toggle-lbl">Kortingscode-orders uitsluiten van Meta <span class="discount-toggle-hint">(incl. bonus)</span></span>
+      </label>
+      ${discountNote}
+    </div>
     <div class="filter-bar-row">
       <span class="filter-bar-label">Analysefilters</span>
       <div class="filter-strat-group">${stratBtn("all","Alle")}${stratBtn("test","Test")}${stratBtn("schaal","Schaal")}${stratBtn("ongeclassificeerd","Ongeclassificeerd")}</div>
@@ -1495,18 +1606,23 @@ function render(){
   // CT_ALL: altijd het volledige, ongefilterde account — voedt de officiële
   // bonus en de BEROAS-onderbouwing (CB), die nooit door een analysefilter
   // mogen veranderen. Exact hetzelfde pad als vóór de analysefilters bestonden.
-  const CT_ALL = tbs ? tbCalc(tbs) : tbCalcRange(fxFrom,fxTo);
+  // De kortingscode-correctie werkt hier wél door (in tegenstelling tot de
+  // analysefilters) — dat is bewust, zie applyDiscountCorrection() hierboven.
+  const CT_ALL = applyDiscountCorrection(tbs ? tbCalc(tbs) : tbCalcRange(fxFrom,fxTo), fxFrom, fxTo);
   CB = CT_ALL ? bonCalc(CX,CT_ALL) : null;
 
   if(filtersActive()){
     // Analysefilter actief: spend/aankopen/omzet/ROAS/CAC voor de gekozen
     // strategie/platform/plaatsing-doorsnede. Brutomarge/nettomarge blijven
     // "geen data" (zie renderKpiBar) — niet te herleiden naar advertentiegroep.
+    // Kortingscode-correctie wordt hier NIET toegepast: filteredRangeCT komt
+    // uit de platform/plaatsing-breakdown, die niet per dag naast DAILY_META
+    // te leggen is zoals discountCutStats() dat nodig heeft.
     CT=filteredRangeCT(fxFrom,fxTo,filterStrategy,filterPlatform,filterPlacement);
     hasTB=CT!=null;
   } else {
     CT=CT_ALL;
-    if(tbs) selfCheck(P, CT, fxFrom, fxTo);
+    if(tbs && !excludeDiscountCode) selfCheck(P, CT, fxFrom, fxTo);
   }
   const schaal=1/(1/CX.be-SCALE_T), comfy=1/(1/CX.be-SCALE_H);
 
@@ -1515,15 +1631,15 @@ function render(){
   let prevCT=null, prevCX=null, prevLabel=null, prevDays=0, ctDays=0, prevBon=null, prevFrom=null, prevTo=null;
   if(P==="vandaag"){
     prevFrom=TB_GISTEREN.from; prevTo=TB_GISTEREN.to;
-    prevCT=tbCalc([TB_GISTEREN]); prevLabel="gisteren"; ctDays=tbDC(TB_VANDAAG); prevDays=tbDC(TB_GISTEREN);
+    prevCT=applyDiscountCorrection(tbCalc([TB_GISTEREN]),prevFrom,prevTo); prevLabel="gisteren"; ctDays=tbDC(TB_VANDAAG); prevDays=tbDC(TB_GISTEREN);
     prevCX=ordCalc(TB_GISTEREN.from,TB_GISTEREN.to);
   } else if(P==="week"){
     prevFrom=TB_PREVWEEK.from; prevTo=TB_PREVWEEK.to;
-    prevCT=tbCalc([TB_PREVWEEK]); prevLabel="vorige week"; ctDays=tbDC(TB_WEEK); prevDays=tbDC(TB_PREVWEEK);
+    prevCT=applyDiscountCorrection(tbCalc([TB_PREVWEEK]),prevFrom,prevTo); prevLabel="vorige week"; ctDays=tbDC(TB_WEEK); prevDays=tbDC(TB_PREVWEEK);
     prevCX=ordCalc(TB_PREVWEEK.from,TB_PREVWEEK.to);
   } else if(P==="aug"){
     prevFrom="2026-07-16"; prevTo="2026-07-31";
-    prevCT=tbCalc([TB_JUL]); prevLabel="juli"; ctDays=tbDC(TB_AUG_CLEAN); prevDays=tbDC(TB_JUL);
+    prevCT=applyDiscountCorrection(tbCalc([TB_JUL]),prevFrom,prevTo); prevLabel="juli"; ctDays=tbDC(TB_AUG_CLEAN); prevDays=tbDC(TB_JUL);
     prevCX=ordCalc("2026-07-16","2026-07-31");
     prevCX.be=shopifyBeroas("2026-07-16","2026-07-31");
     prevBon=bonCalc(prevCX,prevCT).raw;
@@ -1538,7 +1654,7 @@ function render(){
     prevFrom=ymd(pFrom); prevTo=ymd(pTo); prevDays=ctDays;
     prevLabel=prevFrom===prevTo?fmtS(prevFrom):`${fmtS(prevFrom)}–${fmtS(prevTo)}`;
     const pc=tbCalcRange(prevFrom,prevTo);
-    if(pc){ prevCT=pc; prevCX=ordCalc(prevFrom,prevTo); }
+    if(pc){ prevCT=applyDiscountCorrection(pc,prevFrom,prevTo); prevCX=ordCalc(prevFrom,prevTo); }
   }
   if(filtersActive() && prevFrom){
     prevCT=filteredRangeCT(prevFrom,prevTo,filterStrategy,filterPlatform,filterPlacement); // null als er geen data is → geen vs.-vergelijking getoond
@@ -1616,6 +1732,7 @@ function render(){
   } else {
     bHtml=`<span style="color:#93A2B8">gehele periode</span>`;
   }
+  if(excludeDiscountCode) bHtml+=` <span style="color:#fbbf24" title="Kortingscode-orders zijn uitgesloten van dit bedrag">· gecorrigeerd</span>`;
   document.getElementById("bonusBadge").innerHTML=bHtml;
 
   /* metrics: BE | Doel ROAS */
