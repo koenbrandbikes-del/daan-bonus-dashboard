@@ -1,36 +1,36 @@
 {
- "snap": "2026-08-19",
- "snap_time": "23:45",
+ "snap": "2026-08-20",
+ "snap_time": "00:00",
  "tb": {
   "vandaag": {
+   "from": "2026-08-20",
+   "to": "2026-08-20",
+   "spend": 0,
+   "rev7": 0,
+   "rev1v": 0,
+   "purch": 0,
+   "impr": 0,
+   "cl": 0
+  },
+  "gisteren": {
    "from": "2026-08-19",
    "to": "2026-08-19",
-   "spend": 332.25,
+   "spend": 334.99,
    "rev7": 596,
    "rev1v": 134.1,
    "purch": 5,
-   "impr": 38014,
-   "cl": 888
-  },
-  "gisteren": {
-   "from": "2026-08-18",
-   "to": "2026-08-18",
-   "spend": 293.02,
-   "rev7": 268.2,
-   "rev1v": 536.4,
-   "purch": 6,
-   "impr": 33730,
-   "cl": 810
+   "impr": 38399,
+   "cl": 900
   },
   "week": {
    "from": "2026-08-17",
-   "to": "2026-08-19",
-   "spend": 854.63,
+   "to": "2026-08-20",
+   "spend": 857.37,
    "rev7": 2056.2,
    "rev1v": 670.5,
    "purch": 19,
-   "impr": 105579,
-   "cl": 2469
+   "impr": 105964,
+   "cl": 2481
   },
   "prevweek": {
    "from": "2026-08-10",
@@ -54,13 +54,13 @@
   },
   "aug_clean": {
    "from": "2026-08-05",
-   "to": "2026-08-19",
-   "spend": 4509.1,
+   "to": "2026-08-20",
+   "spend": 4511.84,
    "rev7": 8634.4,
    "rev1v": 1207.5,
    "purch": 65,
-   "impr": 602245,
-   "cl": 12305
+   "impr": 602630,
+   "cl": 12317
   }
  },
  "daily_meta": [
@@ -192,12 +192,21 @@
   },
   {
    "d": "2026-08-19",
-   "spend": 332.25,
+   "spend": 334.99,
    "rev7": 596,
    "rev1v": 134.1,
    "purch": 5,
-   "impr": 38014,
-   "cl": 888
+   "impr": 38399,
+   "cl": 900
+  },
+  {
+   "d": "2026-08-20",
+   "spend": 0,
+   "rev7": 0,
+   "rev1v": 0,
+   "purch": 0,
+   "impr": 0,
+   "cl": 0
   }
  ],
  "daily_ads": [
@@ -2004,96 +2013,100 @@
    "ads": [
     {
      "n": "001_002",
-     "spend": 92.24,
+     "spend": 92.9,
      "rev7": 298,
      "rev1v": 134.1,
      "purch": 3,
-     "ctr": 1.98,
+     "ctr": 1.97,
      "cpc": 0.55,
      "atc": 5,
-     "impr": 8478,
-     "reach": 7645,
-     "linkCl": 121
+     "impr": 8557,
+     "reach": 7692,
+     "linkCl": 123
     },
     {
      "n": "002_004",
-     "spend": 67.3,
+     "spend": 67.68,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 3.92,
+     "ctr": 3.9,
      "cpc": 0.21,
      "atc": 7,
-     "impr": 8268,
-     "reach": 7232,
-     "linkCl": 175
+     "impr": 8361,
+     "reach": 7307,
+     "linkCl": 177
     },
     {
      "n": "006_002 - New Size",
-     "spend": 48.97,
+     "spend": 49.23,
      "rev7": 149,
      "rev1v": 0,
      "purch": 1,
-     "ctr": 1.36,
+     "ctr": 1.37,
      "cpc": 0.65,
      "atc": 2,
-     "impr": 5526,
-     "reach": 4338,
+     "impr": 5553,
+     "reach": 4357,
      "linkCl": 42
     },
     {
      "n": "007 BOF statics - 6",
-     "spend": 43.53,
+     "spend": 44.25,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 2.48,
-     "cpc": 0.32,
+     "ctr": 2.55,
+     "cpc": 0.31,
      "atc": 3,
-     "impr": 5443,
-     "reach": 4791,
-     "linkCl": 97
+     "impr": 5521,
+     "reach": 4836,
+     "linkCl": 100
     },
     {
      "n": "006_002",
-     "spend": 33.4,
+     "spend": 33.43,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.37,
+     "ctr": 1.36,
      "cpc": 0.58,
      "atc": 2,
-     "impr": 4242,
-     "reach": 2886,
+     "impr": 4255,
+     "reach": 2916,
      "linkCl": 25
     },
     {
      "n": "002-003",
-     "spend": 23.92,
+     "spend": 24.32,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.14,
-     "cpc": 0.92,
+     "ctr": 1.17,
+     "cpc": 0.9,
      "atc": 0,
-     "impr": 2278,
-     "reach": 1330,
+     "impr": 2304,
+     "reach": 1335,
      "linkCl": 13
     },
     {
      "n": "004_003",
-     "spend": 22.89,
+     "spend": 22.99,
      "rev7": 149,
      "rev1v": 0,
      "purch": 1,
-     "ctr": 2.7,
+     "ctr": 2.71,
      "cpc": 0.22,
      "atc": 2,
-     "impr": 3779,
-     "reach": 3071,
+     "impr": 3801,
+     "reach": 3088,
      "linkCl": 68
     }
    ]
+  },
+  {
+   "d": "2026-08-20",
+   "ads": []
   }
  ],
  "daily_ads_breakdown": [
