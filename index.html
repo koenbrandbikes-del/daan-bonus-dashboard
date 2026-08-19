@@ -1136,7 +1136,7 @@ function resetFilters(){ filterStrategy="all"; filterPlatform="all"; filterPlace
    trekt is de driver van de conversie; bij een kortingscode weten we dat
    zeker (de influencer/actie), dus die orders horen niet bij Meta, ook al
    claimt Meta ze soms alsnog via het 1-day-view-venster. */
-let excludeDiscountCode=true; // standaard aan — zie filosofie hierboven
+let excludeDiscountCode=false;
 try{
   const savedDC=sessionStorage.getItem("daan_exclude_discount");
   if(savedDC!=null) excludeDiscountCode=savedDC==="1";
