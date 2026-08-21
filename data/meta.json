@@ -1,36 +1,36 @@
 {
- "snap": "2026-08-21",
- "snap_time": "23:45",
+ "snap": "2026-08-22",
+ "snap_time": "00:00",
  "tb": {
   "vandaag": {
+   "from": "2026-08-22",
+   "to": "2026-08-22",
+   "spend": 0,
+   "rev7": 0,
+   "rev1v": 0,
+   "purch": 0,
+   "impr": 0,
+   "cl": 0
+  },
+  "gisteren": {
    "from": "2026-08-21",
    "to": "2026-08-21",
-   "spend": 353.15,
+   "spend": 358.97,
    "rev7": 610.55,
    "rev1v": 0,
    "purch": 3,
-   "impr": 34825,
-   "cl": 825
-  },
-  "gisteren": {
-   "from": "2026-08-20",
-   "to": "2026-08-20",
-   "spend": 323.37,
-   "rev7": 892.1,
-   "rev1v": 134.1,
-   "purch": 6,
-   "impr": 33833,
-   "cl": 803
+   "impr": 35135,
+   "cl": 834
   },
   "week": {
    "from": "2026-08-17",
-   "to": "2026-08-21",
-   "spend": 1536.66,
+   "to": "2026-08-22",
+   "spend": 1542.48,
    "rev7": 3558.85,
    "rev1v": 804.6,
    "purch": 28,
-   "impr": 174855,
-   "cl": 4114
+   "impr": 175165,
+   "cl": 4123
   },
   "prevweek": {
    "from": "2026-08-10",
@@ -54,13 +54,13 @@
   },
   "aug_clean": {
    "from": "2026-08-05",
-   "to": "2026-08-21",
-   "spend": 5191.13,
+   "to": "2026-08-22",
+   "spend": 5196.95,
    "rev7": 10137.05,
    "rev1v": 1341.6,
    "purch": 74,
-   "impr": 671521,
-   "cl": 13950
+   "impr": 671831,
+   "cl": 13959
   }
  },
  "daily_meta": [
@@ -210,12 +210,21 @@
   },
   {
    "d": "2026-08-21",
-   "spend": 353.15,
+   "spend": 358.97,
    "rev7": 610.55,
    "rev1v": 0,
    "purch": 3,
-   "impr": 34825,
-   "cl": 825
+   "impr": 35135,
+   "cl": 834
+  },
+  {
+   "d": "2026-08-22",
+   "spend": 0,
+   "rev7": 0,
+   "rev1v": 0,
+   "purch": 0,
+   "impr": 0,
+   "cl": 0
   }
  ],
  "daily_ads": [
@@ -2214,96 +2223,100 @@
    "ads": [
     {
      "n": "001_002",
-     "spend": 118.72,
+     "spend": 119.34,
      "rev7": 149,
      "rev1v": 0,
      "purch": 1,
      "ctr": 2.08,
      "cpc": 0.55,
      "atc": 8,
-     "impr": 10394,
+     "impr": 10403,
      "reach": 9431,
      "linkCl": 164
     },
     {
      "n": "cycle 4",
-     "spend": 71.58,
+     "spend": 71.7,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
      "ctr": 3.99,
      "cpc": 0.22,
      "atc": 0,
-     "impr": 8177,
-     "reach": 6899,
+     "impr": 8180,
+     "reach": 6908,
      "linkCl": 184
     },
     {
-     "n": "cycle 3",
-     "spend": 44.55,
-     "rev7": 239,
-     "rev1v": 0,
-     "purch": 1,
-     "ctr": 2.09,
-     "cpc": 0.45,
-     "atc": 3,
-     "impr": 4690,
-     "reach": 3854,
-     "linkCl": 51
-    },
-    {
      "n": "006_002",
-     "spend": 42.63,
+     "spend": 45.01,
      "rev7": 222.55,
      "rev1v": 0,
      "purch": 1,
-     "ctr": 1.45,
+     "ctr": 1.5,
      "cpc": 0.63,
      "atc": 2,
-     "impr": 4692,
-     "reach": 3386,
+     "impr": 4810,
+     "reach": 3512,
+     "linkCl": 51
+    },
+    {
+     "n": "cycle 3",
+     "spend": 44.88,
+     "rev7": 239,
+     "rev1v": 0,
+     "purch": 1,
+     "ctr": 2.08,
+     "cpc": 0.46,
+     "atc": 3,
+     "impr": 4705,
+     "reach": 3894,
      "linkCl": 51
     },
     {
      "n": "006_002 - New Size",
-     "spend": 31.43,
+     "spend": 32.19,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.49,
-     "cpc": 0.77,
+     "ctr": 1.57,
+     "cpc": 0.73,
      "atc": 0,
-     "impr": 2745,
-     "reach": 2100,
-     "linkCl": 18
+     "impr": 2796,
+     "reach": 2154,
+     "linkCl": 19
     },
     {
      "n": "007 BOF statics - 6",
-     "spend": 24.09,
+     "spend": 24.73,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.91,
-     "cpc": 0.56,
+     "ctr": 1.86,
+     "cpc": 0.58,
      "atc": 0,
-     "impr": 2257,
-     "reach": 1875,
+     "impr": 2307,
+     "reach": 1896,
      "linkCl": 36
     },
     {
      "n": "004_003",
-     "spend": 20.15,
+     "spend": 21.12,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.76,
-     "cpc": 0.61,
+     "ctr": 1.81,
+     "cpc": 0.6,
      "atc": 0,
-     "impr": 1870,
-     "reach": 1275,
+     "impr": 1934,
+     "reach": 1299,
      "linkCl": 28
     }
    ]
+  },
+  {
+   "d": "2026-08-22",
+   "ads": []
   }
  ],
  "daily_ads_breakdown": [
