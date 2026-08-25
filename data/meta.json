@@ -1,16 +1,16 @@
 {
  "snap": "2026-08-25",
- "snap_time": "08:30",
+ "snap_time": "08:45",
  "tb": {
   "vandaag": {
    "from": "2026-08-25",
    "to": "2026-08-25",
-   "spend": 44.73,
-   "rev7": 0,
+   "spend": 48.23,
+   "rev7": 149,
    "rev1v": 0,
-   "purch": 0,
-   "impr": 4474,
-   "cl": 59
+   "purch": 1,
+   "impr": 4831,
+   "cl": 66
   },
   "gisteren": {
    "from": "2026-08-24",
@@ -25,21 +25,21 @@
   "week": {
    "from": "2026-08-24",
    "to": "2026-08-25",
-   "spend": 311.95,
-   "rev7": 1465.2,
+   "spend": 315.45,
+   "rev7": 1614.2,
    "rev1v": 149,
-   "purch": 11,
-   "impr": 34728,
-   "cl": 907
+   "purch": 12,
+   "impr": 35085,
+   "cl": 914
   },
   "prevweek": {
    "from": "2026-08-17",
    "to": "2026-08-23",
-   "spend": 2331.81,
+   "spend": 2331.89,
    "rev7": 5395.85,
    "rev1v": 804.6,
    "purch": 38,
-   "impr": 261635,
+   "impr": 261636,
    "cl": 6886
   },
   "jul": {
@@ -55,12 +55,12 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-08-25",
-   "spend": 6298.23,
-   "rev7": 13439.25,
+   "spend": 6301.81,
+   "rev7": 13588.25,
    "rev1v": 1490.6,
-   "purch": 95,
-   "impr": 793029,
-   "cl": 17629
+   "purch": 96,
+   "impr": 793387,
+   "cl": 17636
   }
  },
  "daily_meta": [
@@ -228,11 +228,11 @@
   },
   {
    "d": "2026-08-23",
-   "spend": 454.76,
+   "spend": 454.84,
    "rev7": 1043,
    "rev1v": 0,
    "purch": 7,
-   "impr": 50506,
+   "impr": 50507,
    "cl": 1601
   },
   {
@@ -246,12 +246,12 @@
   },
   {
    "d": "2026-08-25",
-   "spend": 44.73,
-   "rev7": 0,
+   "spend": 48.23,
+   "rev7": 149,
    "rev1v": 0,
-   "purch": 0,
-   "impr": 4474,
-   "cl": 59
+   "purch": 1,
+   "impr": 4831,
+   "cl": 66
   }
  ],
  "daily_ads": [
@@ -2442,14 +2442,14 @@
    "ads": [
     {
      "n": "001_002",
-     "spend": 122.88,
+     "spend": 122.96,
      "rev7": 745,
      "rev1v": 0,
      "purch": 5,
      "ctr": 2.18,
      "cpc": 0.54,
      "atc": 4,
-     "impr": 10502,
+     "impr": 10503,
      "reach": 9204,
      "linkCl": 170
     },
@@ -2660,81 +2660,81 @@
    "ads": [
     {
      "n": "001_002",
-     "spend": 15.9,
+     "spend": 16.87,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.53,
-     "cpc": 0.76,
+     "ctr": 1.56,
+     "cpc": 0.73,
      "atc": 0,
-     "impr": 1369,
-     "reach": 1196,
-     "linkCl": 11
+     "impr": 1478,
+     "reach": 1392,
+     "linkCl": 14
     },
     {
      "n": "Cycle 6",
-     "spend": 9.77,
-     "rev7": 0,
+     "spend": 10.97,
+     "rev7": 149,
      "rev1v": 0,
-     "purch": 0,
-     "ctr": 2.41,
-     "cpc": 0.98,
+     "purch": 1,
+     "ctr": 2.58,
+     "cpc": 0.91,
      "atc": 1,
-     "impr": 415,
-     "reach": 327,
-     "linkCl": 8
+     "impr": 466,
+     "reach": 368,
+     "linkCl": 9
     },
     {
      "n": "006_002",
-     "spend": 7.15,
+     "spend": 7.68,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 0.3,
-     "cpc": 2.38,
+     "ctr": 0.28,
+     "cpc": 2.56,
      "atc": 0,
-     "impr": 1006,
-     "reach": 809,
-     "linkCl": 0
+     "impr": 1078,
+     "reach": 860,
+     "linkCl": 1
     },
     {
      "n": "cycle 5",
-     "spend": 6.1,
+     "spend": 6.43,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
      "ctr": 1.75,
      "cpc": 0.36,
      "atc": 0,
-     "impr": 971,
-     "reach": 846,
+     "impr": 1028,
+     "reach": 901,
      "linkCl": 7
     },
     {
      "n": "004_003",
-     "spend": 3.06,
+     "spend": 3.27,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.78,
-     "cpc": 0.51,
+     "ctr": 1.65,
+     "cpc": 0.55,
      "atc": 0,
-     "impr": 338,
-     "reach": 278,
+     "impr": 364,
+     "reach": 298,
      "linkCl": 3
     },
     {
      "n": "007 BOF statics - 6",
-     "spend": 2.75,
+     "spend": 3.01,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 0.53,
-     "cpc": 1.38,
+     "ctr": 0.96,
+     "cpc": 0.75,
      "atc": 0,
-     "impr": 375,
-     "reach": 317,
-     "linkCl": 1
+     "impr": 417,
+     "reach": 346,
+     "linkCl": 2
     }
    ]
   }
