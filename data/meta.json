@@ -1,36 +1,36 @@
 {
  "snap": "2026-08-27",
- "snap_time": "07:00",
+ "snap_time": "07:15",
  "tb": {
   "vandaag": {
    "from": "2026-08-27",
    "to": "2026-08-27",
-   "spend": 28.78,
+   "spend": 31.31,
    "rev7": 0,
    "rev1v": 0,
    "purch": 0,
-   "impr": 3062,
-   "cl": 77
+   "impr": 3355,
+   "cl": 86
   },
   "gisteren": {
    "from": "2026-08-26",
    "to": "2026-08-26",
-   "spend": 376.44,
+   "spend": 376.45,
    "rev7": 522.1,
    "rev1v": 149,
    "purch": 4,
-   "impr": 38937,
+   "impr": 38938,
    "cl": 924
   },
   "week": {
    "from": "2026-08-24",
    "to": "2026-08-27",
-   "spend": 1030.66,
+   "spend": 1033.2,
    "rev7": 2722.3,
    "rev1v": 298,
    "purch": 20,
-   "impr": 108659,
-   "cl": 2517
+   "impr": 108953,
+   "cl": 2526
   },
   "prevweek": {
    "from": "2026-08-17",
@@ -55,12 +55,12 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-08-27",
-   "spend": 7017.06,
+   "spend": 7019.6,
    "rev7": 14696.35,
    "rev1v": 1639.6,
    "purch": 104,
-   "impr": 866965,
-   "cl": 19239
+   "impr": 867259,
+   "cl": 19248
   }
  },
  "daily_meta": [
@@ -255,21 +255,21 @@
   },
   {
    "d": "2026-08-26",
-   "spend": 376.44,
+   "spend": 376.45,
    "rev7": 522.1,
    "rev1v": 149,
    "purch": 4,
-   "impr": 38937,
+   "impr": 38938,
    "cl": 924
   },
   {
    "d": "2026-08-27",
-   "spend": 28.78,
+   "spend": 31.31,
    "rev7": 0,
    "rev1v": 0,
    "purch": 0,
-   "impr": 3062,
-   "cl": 77
+   "impr": 3355,
+   "cl": 86
   }
  ],
  "daily_ads": [
@@ -2813,14 +2813,14 @@
     },
     {
      "n": "006_002",
-     "spend": 62.85,
+     "spend": 62.86,
      "rev7": 224.1,
      "rev1v": 0,
      "purch": 1,
      "ctr": 1.21,
      "cpc": 0.63,
      "atc": 5,
-     "impr": 8236,
+     "impr": 8237,
      "reach": 5444,
      "linkCl": 54
     },
@@ -2909,94 +2909,94 @@
    "ads": [
     {
      "n": "Cycle 6",
-     "spend": 8.86,
+     "spend": 9.72,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.89,
-     "cpc": 0.89,
+     "ctr": 2.22,
+     "cpc": 0.75,
      "atc": 0,
-     "impr": 528,
-     "reach": 460,
-     "linkCl": 10
-    },
-    {
-     "n": "001_002",
-     "spend": 7.4,
-     "rev7": 0,
-     "rev1v": 0,
-     "purch": 0,
-     "ctr": 1.31,
-     "cpc": 1.06,
-     "atc": 0,
-     "impr": 535,
-     "reach": 478,
-     "linkCl": 6
-    },
-    {
-     "n": "cycle 3",
-     "spend": 3.96,
-     "rev7": 0,
-     "rev1v": 0,
-     "purch": 0,
-     "ctr": 4.47,
-     "cpc": 0.11,
-     "atc": 0,
-     "impr": 805,
-     "reach": 754,
+     "impr": 586,
+     "reach": 513,
      "linkCl": 11
     },
     {
-     "n": "006_002",
-     "spend": 3,
+     "n": "001_002",
+     "spend": 8.38,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.75,
-     "cpc": 0.43,
+     "ctr": 1.43,
+     "cpc": 0.93,
      "atc": 0,
-     "impr": 400,
-     "reach": 315,
+     "impr": 629,
+     "reach": 593,
+     "linkCl": 7
+    },
+    {
+     "n": "cycle 3",
+     "spend": 4.13,
+     "rev7": 0,
+     "rev1v": 0,
+     "purch": 0,
+     "ctr": 4.62,
+     "cpc": 0.11,
+     "atc": 0,
+     "impr": 844,
+     "reach": 788,
+     "linkCl": 12
+    },
+    {
+     "n": "006_002",
+     "spend": 3.66,
+     "rev7": 0,
+     "rev1v": 0,
+     "purch": 0,
+     "ctr": 1.88,
+     "cpc": 0.41,
+     "atc": 0,
+     "impr": 478,
+     "reach": 381,
      "linkCl": 4
     },
     {
      "n": "007 BOF statics - 6",
-     "spend": 2.49,
+     "spend": 3.17,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.31,
-     "cpc": 0.62,
+     "ctr": 1.06,
+     "cpc": 0.79,
      "atc": 1,
-     "impr": 306,
-     "reach": 278,
+     "impr": 379,
+     "reach": 298,
      "linkCl": 4
     },
     {
      "n": "004_003",
-     "spend": 1.62,
+     "spend": 1.82,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 2.46,
-     "cpc": 0.23,
+     "ctr": 2.24,
+     "cpc": 0.26,
      "atc": 0,
-     "impr": 284,
-     "reach": 245,
-     "linkCl": 1
+     "impr": 313,
+     "reach": 265,
+     "linkCl": 2
     },
     {
      "n": "cycle 4",
-     "spend": 1.01,
+     "spend": 1.22,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 3.66,
+     "ctr": 3.57,
      "cpc": 0.17,
      "atc": 0,
-     "impr": 164,
-     "reach": 143,
-     "linkCl": 2
+     "impr": 196,
+     "reach": 161,
+     "linkCl": 3
     }
    ]
   }
