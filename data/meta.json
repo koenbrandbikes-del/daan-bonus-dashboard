@@ -1,36 +1,36 @@
 {
  "snap": "2026-09-01",
- "snap_time": "08:15",
+ "snap_time": "08:30",
  "tb": {
   "vandaag": {
    "from": "2026-09-01",
    "to": "2026-09-01",
-   "spend": 37.39,
+   "spend": 41.01,
    "rev7": 0,
    "rev1v": 0,
    "purch": 0,
-   "impr": 3271,
-   "cl": 41
+   "impr": 3616,
+   "cl": 47
   },
   "gisteren": {
    "from": "2026-08-31",
    "to": "2026-08-31",
-   "spend": 332.75,
+   "spend": 332.82,
    "rev7": 1334.95,
    "rev1v": 0,
    "purch": 10,
-   "impr": 33503,
+   "impr": 33506,
    "cl": 655
   },
   "week": {
    "from": "2026-08-31",
    "to": "2026-09-01",
-   "spend": 370.14,
+   "spend": 373.83,
    "rev7": 1334.95,
    "rev1v": 0,
    "purch": 10,
-   "impr": 36774,
-   "cl": 696
+   "impr": 37122,
+   "cl": 702
   },
   "prevweek": {
    "from": "2026-08-24",
@@ -55,12 +55,12 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-09-01",
-   "spend": 8804.8,
+   "spend": 8808.49,
    "rev7": 19010.95,
    "rev1v": 1773.7,
    "purch": 134,
-   "impr": 1037907,
-   "cl": 23032
+   "impr": 1038255,
+   "cl": 23038
   }
  },
  "daily_meta": [
@@ -300,21 +300,21 @@
   },
   {
    "d": "2026-08-31",
-   "spend": 332.75,
+   "spend": 332.82,
    "rev7": 1334.95,
    "rev1v": 0,
    "purch": 10,
-   "impr": 33503,
+   "impr": 33506,
    "cl": 655
   },
   {
    "d": "2026-09-01",
-   "spend": 37.39,
+   "spend": 41.01,
    "rev7": 0,
    "rev1v": 0,
    "purch": 0,
-   "impr": 3271,
-   "cl": 41
+   "impr": 3616,
+   "cl": 47
   }
  ],
  "daily_ads": [
@@ -3364,40 +3364,40 @@
    "ads": [
     {
      "n": "001_002",
-     "spend": 102.2,
+     "spend": 102.21,
      "rev7": 298,
      "rev1v": 0,
      "purch": 2,
      "ctr": 1.41,
      "cpc": 0.77,
      "atc": 5,
-     "impr": 9377,
+     "impr": 9378,
      "reach": 8122,
      "linkCl": 105
     },
     {
      "n": "Cycle 6",
-     "spend": 82.47,
+     "spend": 82.52,
      "rev7": 149,
      "rev1v": 0,
      "purch": 1,
      "ctr": 2.35,
      "cpc": 0.64,
      "atc": 1,
-     "impr": 5488,
-     "reach": 4086,
+     "impr": 5489,
+     "reach": 4087,
      "linkCl": 90
     },
     {
      "n": "007 BOF statics - 6",
-     "spend": 71.2,
+     "spend": 71.21,
      "rev7": 686,
      "rev1v": 0,
      "purch": 5,
      "ctr": 1.33,
      "cpc": 0.67,
      "atc": 5,
-     "impr": 7995,
+     "impr": 7996,
      "reach": 5951,
      "linkCl": 79
     },
@@ -3434,68 +3434,68 @@
    "ads": [
     {
      "n": "001_002",
-     "spend": 12.9,
+     "spend": 14.05,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.42,
-     "cpc": 0.86,
+     "ctr": 1.43,
+     "cpc": 0.83,
      "atc": 0,
-     "impr": 1057,
-     "reach": 1003,
-     "linkCl": 10
+     "impr": 1186,
+     "reach": 1078,
+     "linkCl": 11
     },
     {
      "n": "Cycle 6",
-     "spend": 8.95,
+     "spend": 9.54,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 0.6,
-     "cpc": 2.98,
+     "ctr": 0.57,
+     "cpc": 3.18,
      "atc": 0,
-     "impr": 497,
-     "reach": 408,
-     "linkCl": 2
+     "impr": 528,
+     "reach": 441,
+     "linkCl": 3
     },
     {
      "n": "007 BOF statics - 6",
-     "spend": 7.16,
+     "spend": 8.17,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.72,
-     "cpc": 0.72,
+     "ctr": 1.52,
+     "cpc": 0.82,
      "atc": 0,
-     "impr": 581,
-     "reach": 488,
+     "impr": 658,
+     "reach": 564,
      "linkCl": 5
     },
     {
      "n": "006_002",
-     "spend": 5,
+     "spend": 5.47,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 0.23,
-     "cpc": 5,
+     "ctr": 0.42,
+     "cpc": 2.74,
      "atc": 0,
-     "impr": 441,
-     "reach": 346,
+     "impr": 474,
+     "reach": 380,
      "linkCl": 0
     },
     {
      "n": "004_003",
-     "spend": 3.61,
+     "spend": 3.78,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.8,
-     "cpc": 0.28,
+     "ctr": 1.95,
+     "cpc": 0.25,
      "atc": 0,
-     "impr": 723,
-     "reach": 609,
-     "linkCl": 4
+     "impr": 770,
+     "reach": 649,
+     "linkCl": 5
     }
    ]
   }
