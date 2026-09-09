@@ -448,8 +448,11 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .cd-off{color:#1f2d45!important;cursor:default}
 .cd-s,.cd-e{background:#2563eb!important;color:#fff!important;font-weight:700;border-radius:4px}
 .cd-r{background:#1e3050;color:#cbd5e1}
+.cd-solo{box-shadow:0 0 0 2px #93C5F5}
 .cd-today{color:#60a5fa}
 .cal-hint{font-size:10px;color:#7C8CA6;text-align:center;margin:5px 0}
+.cal-hint b{color:#cbd5e1;font-weight:700}
+.cal-hint .ch-mode{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#93C5F5;background:rgba(37,99,235,.16);border-radius:3px;padding:1px 5px;margin-right:5px}
 .cal-apply{width:100%;padding:6px;background:#2563eb;border:none;color:#fff;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;margin-top:2px}
 .cal-apply:disabled{background:#1a2844;color:#374151;cursor:default}
 /* ── Google campaign table ── */
@@ -560,6 +563,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
       <div class="pm-opt" data-p="gisteren" onclick="selectP('gisteren')">Gisteren (<span id="lbl-gisteren"></span>)</div>
       <div class="pm-opt" data-p="week" onclick="selectP('week')">Deze week (<span id="lbl-week"></span>)</div>
       <div class="pm-opt" data-p="r7" onclick="selectP('r7')">Afgelopen 7 dagen (<span id="lbl-r7"></span>)</div>
+      <div class="pm-opt" data-p="maand" onclick="selectP('maand')">Deze maand (<span id="lbl-maand"></span>)</div>
       <div class="pm-div"></div>
       <div class="pm-grp">Bonusperiode</div>
       <div class="pm-opt active" data-p="aug" onclick="selectP('aug')">Augustus (v.a. 5 aug)</div>
@@ -572,7 +576,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
           <button class="cal-nb" onclick="calNext()">›</button>
         </div>
         <div class="cal-grid" id="calGrid"></div>
-        <div class="cal-hint" id="calHint">Klik een startdatum</div>
+        <div class="cal-hint" id="calHint">Klik een dag</div>
         <button class="cal-apply" id="calApply" onclick="applyCustom()" disabled>Toepassen</button>
       </div>
     </div>
@@ -1078,12 +1082,23 @@ const R7_FROM_D = new Date(SNAP+"T00:00:00"); R7_FROM_D.setDate(R7_FROM_D.getDat
 const R7_FROM = ymd(R7_FROM_D) < "2026-08-05" ? "2026-08-05" : ymd(R7_FROM_D);
 const R7_DAYS = DAILY_META.filter(d=>d.d>=R7_FROM && d.d<=SNAP);
 
+// "Deze maand" = de huidige kalendermaand in lokale (Amsterdamse) tijd,
+// zelfde datum/tijdzone-logica als de andere snelkeuzes (kalenderdag-strings,
+// geen toISOString). Ondergrens gekapt op 5 aug (CAPI-fix, net als r7); de
+// bovengrens loopt tot de laatste beschikbare datadag (SNAP), niet verder.
+const _MON_D = new Date();
+const MONTH_FROM_D = new Date(_MON_D.getFullYear(), _MON_D.getMonth(), 1);
+const MONTH_FROM = ymd(MONTH_FROM_D) < "2026-08-05" ? "2026-08-05" : ymd(MONTH_FROM_D);
+const MONTH_TO = SNAP < MONTH_FROM ? MONTH_FROM : SNAP;
+const MONTH_DAYS = DAILY_META.filter(d=>d.d>=MONTH_FROM && d.d<=MONTH_TO);
+
 const PERIODS = {
   vandaag:  {label:"Vandaag",           from:TB_VANDAAG.from,  to:TB_VANDAAG.to,  tb:[TB_VANDAAG],tg:TG_VANDAAG},
   gisteren: {label:"Gisteren",          from:TB_GISTEREN.from, to:TB_GISTEREN.to, tb:[TB_GISTEREN],tg:TG_GISTEREN},
   week:     {label:"Deze week",         from:TB_WEEK.from, to:TB_WEEK.to,  tb:[TB_WEEK],     capiNote: TB_WEEK.from<"2026-08-05", tg:TG_WEEK},
   prevweek: {label:"Vorige week",       from:"2026-07-28",to:"2026-08-03",tb:[TB_PREVWEEK],tg:TG_PREVWEEK,capiNote:true,adsExtra:ADS_JUL},
   r7:       {label:"Afgelopen 7 dagen", from:R7_FROM,      to:SNAP,        tb:R7_DAYS.length?R7_DAYS:null},
+  maand:    {label:"Deze maand",        from:MONTH_FROM,   to:MONTH_TO,    tb:MONTH_DAYS.length?MONTH_DAYS:null, capiNote: MONTH_FROM<"2026-08-05"},
   aug:      {label:"Augustus",          from:"2026-08-05",to:TB_AUG_CLEAN.to,tb:[TB_AUG_CLEAN],tg:TG_AUG_CLEAN,capiNote:true},
   jul:      {label:"Juli",              from:"2026-07-16",to:"2026-07-31",tb:[TB_JUL],adsExtra:ADS_JUL},
   contract: {label:"Volledige periode", from:"2026-07-16",to:TB_AUG_CLEAN.to,tb:[TB_JUL,TB_AUG_CLEAN],adsExtra:ADS_JUL},
@@ -1281,6 +1296,11 @@ function setPeriod(v){P=v;render()}
 
 /* ── Period dropdown & kalender ── */
 let _cY=2026,_cM=7,_cS=null,_cE=null;
+// _cLocked: de huidige selectie is al toegepast (of er staat een snelkeuze
+// actief). De eerstvolgende klik in de kalender begint dan een verse losse-dag-
+// selectie i.p.v. de bestaande te verlengen tot een bereik — zo kan de
+// gebruiker een toegepaste selectie simpelweg vervangen.
+let _cLocked=false;
 const CAL_MIN="2026-08-05";
 
 function togglePM(){
@@ -1306,6 +1326,7 @@ function jumpToPeriodSelector(){
 
 function selectP(v){
   if(!PERIODS[v])return;
+  if(v!=="custom") _cLocked=true; // kalender begint vers zodra je 'm weer opent
   P=v;
   document.querySelectorAll(".pm-opt").forEach(el=>el.classList.toggle("active",el.dataset.p===v));
   document.getElementById("periodMenu").classList.remove("open");
@@ -1327,30 +1348,52 @@ function calRender(){
     const iS=ds===_cS,iE=ds===_cE;
     const iR=_cS&&_cE&&ds>_cS&&ds<_cE;
     const iT=ds===tod&&!iS&&!iE;
-    const cls="cal-day"+(isOff?" cd-off":"")+(iS?" cd-s":"")+(iE?" cd-e":"")+(iR?" cd-r":"")+(iT?" cd-today":"");
+    const solo=iS&&!_cE;
+    const cls="cal-day"+(isOff?" cd-off":"")+(iS?" cd-s":"")+(iE?" cd-e":"")+(iR?" cd-r":"")+(solo?" cd-solo":"")+(iT?" cd-today":"");
     h+=`<div class="${cls}"${!isOff?` onclick="calClick('${ds}')"`:""}>${d}</div>`;
   }
   document.getElementById("calGrid").innerHTML=h;
   const hint=document.getElementById("calHint"),apply=document.getElementById("calApply");
-  if(!_cS){hint.textContent="Klik een startdatum";apply.disabled=true;}
-  else if(!_cE){hint.textContent=`Van ${fmtS(_cS)} · klik einddatum`;apply.disabled=true;}
-  else{hint.textContent=`${fmtS(_cS)} t/m ${fmtS(_cE)}`;apply.disabled=false;}
+  if(!_cS){
+    hint.textContent="Klik een dag";
+    apply.disabled=true; apply.textContent="Toepassen";
+  } else if(!_cE){
+    // Eén klik = één losse dag. Direct toepasbaar; een 2e klik maakt er
+    // een bereik van.
+    hint.innerHTML=`<span class="ch-mode">1 dag</span><b>${fmtS(_cS)}</b> · klik nog een dag voor een bereik`;
+    apply.disabled=false; apply.textContent=`Toepassen · ${fmtS(_cS)}`;
+  } else {
+    const n=Math.round((new Date(_cE)-new Date(_cS))/86400000)+1;
+    hint.innerHTML=`<span class="ch-mode">Bereik</span><b>${fmtS(_cS)} t/m ${fmtS(_cE)}</b> · ${n} dagen`;
+    apply.disabled=false; apply.textContent="Toepassen · bereik";
+  }
 }
 
 function calClick(ds){
-  if(!_cS||(_cS&&_cE)){_cS=ds;_cE=null;}
-  else if(ds===_cS){_cS=null;}
-  else if(ds<_cS){_cE=_cS;_cS=ds;}
-  else{_cE=ds;}
+  if(_cLocked||!_cS||(_cS&&_cE)){ // vers begin: toegepast/snelkeuze actief, niets
+    _cS=ds; _cE=null;             // geselecteerd, of een afgerond bereik → losse dag
+    _cLocked=false;
+  } else if(ds===_cS){            // nogmaals dezelfde dag aanklikken → selectie wissen
+    _cS=null; _cE=null;
+  } else if(ds<_cS){              // 2e klik vóór de 1e → bereik
+    _cE=_cS; _cS=ds;
+  } else {                        // 2e klik ná de 1e → bereik
+    _cE=ds;
+  }
   calRender();
 }
 function calPrev(){if(_cY===2026&&_cM===7)return;_cM--;if(_cM<0){_cM=11;_cY--;}calRender();}
 function calNext(){const n=new Date();if(_cY>n.getFullYear()||(_cY===n.getFullYear()&&_cM>=n.getMonth()))return;_cM++;if(_cM>11){_cM=0;_cY++;}calRender();}
 function applyCustom(){
-  if(!_cS||!_cE)return;
-  const days=DAILY_META.filter(d=>d.d>=_cS&&d.d<=_cE);
-  PERIODS.custom={label:`${fmtS(_cS)}–${fmtS(_cE)}`,from:_cS,to:_cE,
-    tb:days.length?days:null,tg:null,ads:null};
+  if(!_cS)return;
+  // Eén dag: _cE leeg → van/tot dezelfde datum (volledige kalenderdag,
+  // zelfde inclusieve datumstring-logica als alle andere periodes, dus
+  // geen data van de volgende dag).
+  const from=_cS, to=_cE||_cS;
+  const days=DAILY_META.filter(d=>d.d>=from&&d.d<=to);
+  PERIODS.custom={label: from===to?fmtS(from):`${fmtS(from)}–${fmtS(to)}`,
+    from,to,tb:days.length?days:null,tg:null,ads:null};
+  _cLocked=true;
   selectP("custom");
 }
 
@@ -1471,6 +1514,7 @@ function render(){
         gisteren:{main:"Gisteren",range:`(${fmtS(pd.from)})`},
         week:{main:"Deze week",range:`(${fmtS(PERIODS.week?.from)}–${fmtS(PERIODS.week?.to)})`},
         r7:{main:"Afgelopen 7 dagen",range:`(${fmtS(PERIODS.r7?.from)}–${fmtS(PERIODS.r7?.to)})`},
+        maand:{main:"Deze maand",range:`(${fmtS(PERIODS.maand?.from)}–${fmtS(PERIODS.maand?.to)})`},
         aug:{main:"Augustus",range:"(v.a. 5 aug)"},
         jul:{main:"Juli",range:""},
         contract:{main:"Volledige periode",range:""},
@@ -1484,6 +1528,8 @@ function render(){
     if(lg)lg.textContent=fmtS(PERIODS.gisteren.from);
     if(lw&&PERIODS.week)lw.textContent=`${fmtS(PERIODS.week.from)}–${fmtS(PERIODS.week.to)}`;
     if(l7&&PERIODS.r7)l7.textContent=`${fmtS(PERIODS.r7.from)}–${fmtS(PERIODS.r7.to)}`;
+    const lmn=document.getElementById("lbl-maand");
+    if(lmn&&PERIODS.maand)lmn.textContent=`${fmtS(PERIODS.maand.from)}–${fmtS(PERIODS.maand.to)}`;
     document.querySelectorAll(".pm-opt").forEach(el=>el.classList.toggle("active",el.dataset.p===P));
   }
   const TG = pd.tg || null;
@@ -1592,7 +1638,7 @@ function render(){
   /* AI status box */
 
   /* bonus (nu mc-val) */
-  const bonusLabels={vandaag:"BONUS VANDAAG",gisteren:"BONUS GISTEREN",week:"BONUS DEZE WEEK",prevweek:"BONUS VORIGE WEEK",aug:"BONUS TOT NU TOE",jul:"BONUS JULI",contract:"BONUS TOTAAL"};
+  const bonusLabels={vandaag:"BONUS VANDAAG",gisteren:"BONUS GISTEREN",week:"BONUS DEZE WEEK",maand:"BONUS DEZE MAAND",prevweek:"BONUS VORIGE WEEK",aug:"BONUS TOT NU TOE",jul:"BONUS JULI",contract:"BONUS TOTAAL"};
   document.getElementById("bonusLbl").textContent=bonusLabels[P]||"BONUS";
   document.getElementById("bonusAmt").textContent=CB?eur(CB.raw):"—";
 
