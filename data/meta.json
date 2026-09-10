@@ -1,36 +1,36 @@
 {
  "snap": "2026-09-10",
- "snap_time": "07:30",
+ "snap_time": "07:45",
  "tb": {
   "vandaag": {
    "from": "2026-09-10",
    "to": "2026-09-10",
-   "spend": 64.97,
+   "spend": 70.54,
    "rev7": 283.1,
    "rev1v": 0,
    "purch": 2,
-   "impr": 7156,
-   "cl": 223
+   "impr": 7923,
+   "cl": 255
   },
   "gisteren": {
    "from": "2026-09-09",
    "to": "2026-09-09",
-   "spend": 639.53,
+   "spend": 639.58,
    "rev7": 2585,
    "rev1v": 134.1,
    "purch": 18,
-   "impr": 64294,
-   "cl": 1689
+   "impr": 64300,
+   "cl": 1690
   },
   "week": {
    "from": "2026-09-07",
    "to": "2026-09-10",
-   "spend": 1710.19,
+   "spend": 1715.81,
    "rev7": 6656.75,
    "rev1v": 134.1,
    "purch": 42,
-   "impr": 171356,
-   "cl": 4407
+   "impr": 172129,
+   "cl": 4440
   },
   "prevweek": {
    "from": "2026-08-31",
@@ -55,12 +55,12 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-09-10",
-   "spend": 12684.01,
+   "spend": 12689.63,
    "rev7": 30582.15,
    "rev1v": 2680.8,
    "purch": 214,
-   "impr": 1398395,
-   "cl": 31068
+   "impr": 1399168,
+   "cl": 31101
   }
  },
  "daily_meta": [
@@ -381,21 +381,21 @@
   },
   {
    "d": "2026-09-09",
-   "spend": 639.53,
+   "spend": 639.58,
    "rev7": 2585,
    "rev1v": 134.1,
    "purch": 18,
-   "impr": 64294,
-   "cl": 1689
+   "impr": 64300,
+   "cl": 1690
   },
   {
    "d": "2026-09-10",
-   "spend": 64.97,
+   "spend": 70.54,
    "rev7": 283.1,
    "rev1v": 0,
    "purch": 2,
-   "impr": 7156,
-   "cl": 223
+   "impr": 7923,
+   "cl": 255
   }
  ],
  "daily_ads": [
@@ -4173,33 +4173,33 @@
      "ctr": 2.64,
      "cpc": 0.51,
      "atc": 5,
-     "impr": 12879,
+     "impr": 12880,
      "reach": 11381,
      "linkCl": 294
     },
     {
      "n": "Cycle 8 - correct time",
-     "spend": 142.79,
+     "spend": 142.82,
      "rev7": 442,
      "rev1v": 0,
      "purch": 3,
-     "ctr": 3.7,
+     "ctr": 3.71,
      "cpc": 0.19,
      "atc": 8,
-     "impr": 20394,
-     "reach": 18210,
+     "impr": 20397,
+     "reach": 18230,
      "linkCl": 459
     },
     {
      "n": "001_002",
-     "spend": 130.44,
+     "spend": 130.46,
      "rev7": 466,
      "rev1v": 0,
      "purch": 3,
      "ctr": 1.82,
      "cpc": 0.6,
      "atc": 5,
-     "impr": 11951,
+     "impr": 11953,
      "reach": 10902,
      "linkCl": 176
     },
@@ -4275,93 +4275,93 @@
    "ads": [
     {
      "n": "Cycle 6",
-     "spend": 25.66,
+     "spend": 27.97,
      "rev7": 149,
      "rev1v": 0,
      "purch": 1,
-     "ctr": 2.82,
-     "cpc": 0.5,
+     "ctr": 3.07,
+     "cpc": 0.46,
      "atc": 2,
-     "impr": 1808,
-     "reach": 1621,
-     "linkCl": 44
+     "impr": 1987,
+     "reach": 1707,
+     "linkCl": 45
+    },
+    {
+     "n": "Cycle 8 - correct time",
+     "spend": 11.01,
+     "rev7": 0,
+     "rev1v": 0,
+     "purch": 0,
+     "ctr": 5.11,
+     "cpc": 0.1,
+     "atc": 0,
+     "impr": 2075,
+     "reach": 1873,
+     "linkCl": 49
     },
     {
      "n": "001_002",
-     "spend": 10.27,
+     "spend": 10.98,
      "rev7": 134.1,
      "rev1v": 0,
      "purch": 1,
      "ctr": 2.18,
-     "cpc": 0.57,
+     "cpc": 0.55,
      "atc": 3,
-     "impr": 827,
-     "reach": 779,
-     "linkCl": 15
-    },
-    {
-     "n": "Cycle 8 - correct time",
-     "spend": 9.96,
-     "rev7": 0,
-     "rev1v": 0,
-     "purch": 0,
-     "ctr": 4.91,
-     "cpc": 0.11,
-     "atc": 0,
-     "impr": 1853,
-     "reach": 1588,
-     "linkCl": 45
+     "impr": 919,
+     "reach": 841,
+     "linkCl": 16
     },
     {
      "n": "cycle 3 - Tiktok pov",
-     "spend": 7.38,
+     "spend": 8.05,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 2.13,
+     "ctr": 2.12,
      "cpc": 0.19,
      "atc": 0,
-     "impr": 1787,
-     "reach": 1487,
-     "linkCl": 15
+     "impr": 1978,
+     "reach": 1842,
+     "linkCl": 17
     },
     {
      "n": "Cycle 6 - listicle page",
-     "spend": 4.53,
+     "spend": 4.79,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 4.41,
-     "cpc": 0.35,
+     "ctr": 4.11,
+     "cpc": 0.37,
      "atc": 0,
-     "impr": 295,
+     "impr": 316,
      "reach": 291,
      "linkCl": 12
     },
     {
      "n": "006_002",
-     "spend": 4.35,
+     "spend": 4.77,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.41,
-     "cpc": 0.87,
+     "ctr": 1.27,
+     "cpc": 0.95,
      "atc": 0,
-     "impr": 355,
-     "reach": 252,
+     "impr": 395,
+     "reach": 301,
      "linkCl": 3
     },
     {
      "n": "007 BOF statics - 6",
-     "spend": 2.82,
+     "spend": 2.97,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 3.03,
-     "cpc": 0.4,
+     "ctr": 3.16,
+     "cpc": 0.37,
      "atc": 0,
-     "impr": 231,
-     "reach": 171,
+     "impr": 253,
+     "reach": 216,
      "linkCl": 3
     }
    ]
