@@ -1,16 +1,16 @@
 {
  "snap": "2026-09-11",
- "snap_time": "12:00",
+ "snap_time": "12:15",
  "tb": {
   "vandaag": {
    "from": "2026-09-11",
    "to": "2026-09-11",
-   "spend": 331.54,
+   "spend": 344.44,
    "rev7": 1081,
    "rev1v": 0,
    "purch": 7,
-   "impr": 38690,
-   "cl": 1024
+   "impr": 39936,
+   "cl": 1058
   },
   "gisteren": {
    "from": "2026-09-10",
@@ -19,18 +19,18 @@
    "rev7": 1364.1,
    "rev1v": 0,
    "purch": 9,
-   "impr": 74160,
+   "impr": 74161,
    "cl": 1936
   },
   "week": {
    "from": "2026-09-07",
    "to": "2026-09-11",
-   "spend": 2599.61,
+   "spend": 2612.51,
    "rev7": 8818.75,
    "rev1v": 134.1,
    "purch": 56,
-   "impr": 277157,
-   "cl": 7149
+   "impr": 278404,
+   "cl": 7183
   },
   "prevweek": {
    "from": "2026-08-31",
@@ -55,12 +55,12 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-09-11",
-   "spend": 13573.43,
+   "spend": 13586.33,
    "rev7": 32744.15,
    "rev1v": 2680.8,
    "purch": 228,
-   "impr": 1504196,
-   "cl": 33810
+   "impr": 1505443,
+   "cl": 33844
   }
  },
  "daily_meta": [
@@ -394,17 +394,17 @@
    "rev7": 1364.1,
    "rev1v": 0,
    "purch": 9,
-   "impr": 74160,
+   "impr": 74161,
    "cl": 1936
   },
   {
    "d": "2026-09-11",
-   "spend": 331.54,
+   "spend": 344.44,
    "rev7": 1081,
    "rev1v": 0,
    "purch": 7,
-   "impr": 38690,
-   "cl": 1024
+   "impr": 39936,
+   "cl": 1058
   }
  ],
  "daily_ads": [
@@ -4356,7 +4356,7 @@
      "ctr": 2.32,
      "cpc": 0.48,
      "atc": 1,
-     "impr": 3929,
+     "impr": 3930,
      "reach": 2975,
      "linkCl": 56
     },
@@ -4380,94 +4380,94 @@
    "ads": [
     {
      "n": "Cycle 6",
-     "spend": 104.23,
+     "spend": 107.59,
      "rev7": 298,
      "rev1v": 0,
      "purch": 2,
-     "ctr": 2.37,
+     "ctr": 2.38,
      "cpc": 0.43,
      "atc": 3,
-     "impr": 10212,
-     "reach": 9664,
-     "linkCl": 213
+     "impr": 10514,
+     "reach": 9948,
+     "linkCl": 222
     },
     {
      "n": "Cycle 8 - correct time",
-     "spend": 58.88,
+     "spend": 60.9,
      "rev7": 149,
      "rev1v": 0,
      "purch": 1,
      "ctr": 4.72,
      "cpc": 0.14,
      "atc": 2,
-     "impr": 8646,
-     "reach": 7998,
-     "linkCl": 179
+     "impr": 8900,
+     "reach": 8289,
+     "linkCl": 187
     },
     {
      "n": "001_002",
-     "spend": 57.96,
+     "spend": 59.72,
      "rev7": 634,
      "rev1v": 0,
      "purch": 4,
-     "ctr": 2.26,
+     "ctr": 2.28,
      "cpc": 0.62,
      "atc": 11,
-     "impr": 4106,
-     "reach": 3711,
-     "linkCl": 58
+     "impr": 4249,
+     "reach": 3867,
+     "linkCl": 61
     },
     {
      "n": "cycle 3 - Tiktok pov",
-     "spend": 34.12,
+     "spend": 35.39,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.56,
+     "ctr": 1.54,
      "cpc": 0.24,
      "atc": 0,
-     "impr": 9144,
-     "reach": 8503,
+     "impr": 9396,
+     "reach": 8746,
      "linkCl": 57
     },
     {
-     "n": "006_002",
-     "spend": 24.74,
-     "rev7": 0,
-     "rev1v": 0,
-     "purch": 0,
-     "ctr": 1.57,
-     "cpc": 0.62,
-     "atc": 2,
-     "impr": 2547,
-     "reach": 1886,
-     "linkCl": 29
-    },
-    {
      "n": "CYCLE 3 -Relaunch - new LP",
-     "spend": 23.94,
+     "spend": 26.5,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.98,
-     "cpc": 0.77,
+     "ctr": 1.89,
+     "cpc": 0.83,
      "atc": 1,
-     "impr": 1565,
-     "reach": 1059,
+     "impr": 1690,
+     "reach": 1115,
      "linkCl": 17
     },
     {
-     "n": "007 BOF statics - 6",
-     "spend": 21.75,
+     "n": "006_002",
+     "spend": 25.53,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 2.95,
-     "cpc": 0.37,
+     "ctr": 1.64,
+     "cpc": 0.59,
+     "atc": 2,
+     "impr": 2620,
+     "reach": 1951,
+     "linkCl": 29
+    },
+    {
+     "n": "007 BOF statics - 6",
+     "spend": 22.89,
+     "rev7": 0,
+     "rev1v": 0,
+     "purch": 0,
+     "ctr": 3.01,
+     "cpc": 0.36,
      "atc": 1,
-     "impr": 1998,
-     "reach": 1808,
-     "linkCl": 38
+     "impr": 2095,
+     "reach": 1867,
+     "linkCl": 41
     },
     {
      "n": "Cycle 6 - listicle page",
