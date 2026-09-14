@@ -1,6 +1,6 @@
 {
  "snap": "2026-09-14",
- "snap_time": "07:15",
+ "snap_time": "07:30",
  "tb": {
   "vandaag": {
    "from": "2026-09-14",
@@ -15,12 +15,12 @@
   "gisteren": {
    "from": "2026-09-13",
    "to": "2026-09-13",
-   "spend": 568.95,
+   "spend": 568.99,
    "rev7": 951,
    "rev1v": 298,
    "purch": 8,
-   "impr": 52817,
-   "cl": 1262
+   "impr": 52818,
+   "cl": 1263
   },
   "week": {
    "from": "2026-09-14",
@@ -35,12 +35,12 @@
   "prevweek": {
    "from": "2026-09-07",
    "to": "2026-09-13",
-   "spend": 4620.62,
+   "spend": 4620.66,
    "rev7": 13040.75,
    "rev1v": 777.1,
    "purch": 87,
-   "impr": 487097,
-   "cl": 12022
+   "impr": 487098,
+   "cl": 12023
   },
   "jul": {
    "from": "2026-07-01",
@@ -55,12 +55,12 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-09-14",
-   "spend": 15594.44,
+   "spend": 15594.48,
    "rev7": 36966.15,
    "rev1v": 3323.8,
    "purch": 259,
-   "impr": 1714136,
-   "cl": 38683
+   "impr": 1714137,
+   "cl": 38684
   }
  },
  "daily_meta": [
@@ -417,12 +417,12 @@
   },
   {
    "d": "2026-09-13",
-   "spend": 568.95,
+   "spend": 568.99,
    "rev7": 951,
    "rev1v": 298,
    "purch": 8,
-   "impr": 52817,
-   "cl": 1262
+   "impr": 52818,
+   "cl": 1263
   },
   {
    "d": "2026-09-14",
@@ -4638,14 +4638,14 @@
     },
     {
      "n": "Cycle 8 - correct time",
-     "spend": 62.26,
+     "spend": 62.3,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 3.26,
+     "ctr": 3.28,
      "cpc": 0.29,
      "atc": 4,
-     "impr": 6623,
+     "impr": 6624,
      "reach": 6300,
      "linkCl": 130
     },
@@ -46928,7 +46928,7 @@
      "n": "Cycle 8 - correct time",
      "platform": "facebook",
      "placement": "feed",
-     "spend": 19.67,
+     "spend": 19.71,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -47198,7 +47198,7 @@
      "n": "CYCLE 3 -Relaunch - new LP",
      "platform": "facebook",
      "placement": "feed",
-     "spend": 8.09,
+     "spend": 8.11,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -47301,5 +47301,5 @@
    ]
   }
  ],
- "breakdown_synced_at": "2026-09-14T04:30:29.305Z"
+ "breakdown_synced_at": "2026-09-14T05:30:29.070Z"
 }
