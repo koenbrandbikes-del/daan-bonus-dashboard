@@ -3,14 +3,20 @@ name: Meta-sync watchdog
 # Laatste-redmiddel back-up voor de Meta-sync — de strakke 15-minuten-
 # cadans wordt sinds 2026-08-18 gedekt door een externe cron-job.org-
 # pinger (onafhankelijk, niet in deze repo). Deze workflow draait op
-# GitHub's eigen infrastructuur en dient alleen nog als derde vangnet
-# voor het geval zowel Cloudflare's Cron Trigger (die op 2026-08-17
-# stilletjes stopte met vuren, geen foutmelding, geen commit) áls
-# cron-job.org tegelijk uitvallen. Bewust ruim ingesteld (elke 2 uur,
-# i.p.v. eerder elke 30 min) — met drie bronnen die alle drie ~15 min
+# GitHub's eigen infrastructuur en dient alleen nog als vangnet voor het
+# geval cron-job.org uitvalt.
+#
+# (Ooit ook bedoeld als vangnet vóór Cloudflare's eigen Cron Trigger, die
+# op 2026-08-17 stilletjes leek te stoppen. Bleek niet blijvend: een
+# latere `wrangler deploy` (19/20 aug) registreerde 'm weer, waardoor er
+# ongemerkt TWEE triggers tegelijk draaiden en af en toe met elkaar
+# botsten op data/meta.json — zie een cron-job.org faalmail 15 sep 07:00
+# UTC. Sindsdien staat die Cron Trigger bewust uit, crons = [] in
+# cloudflare-worker/wrangler.toml. Bewust ruim ingesteld hier, elke 2 uur
+# i.p.v. eerder elke 30 min — met meerdere bronnen die alle ~15 min
 # proberen te syncen, veroorzaakte de overlap onnodig veel "some jobs
-# were not successful"-mails van GitHub Pages (oudere deploy wordt
-# geannuleerd zodra een nieuwere binnenkomt tijdens dezelfde build).
+# were not successful"-mails van GitHub Pages, oudere deploy wordt
+# geannuleerd zodra een nieuwere binnenkomt tijdens dezelfde build.)
 #
 # Faalt deze stap (endpoint niet bereikbaar, of ok:false), dan faalt de
 # hele workflow-run — GitHub mailt de repo-eigenaar dan automatisch bij

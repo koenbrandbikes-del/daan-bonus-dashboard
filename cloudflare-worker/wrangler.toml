@@ -2,9 +2,20 @@ name = "daan-shopify-webhook"
 main = "src/index.js"
 compatibility_date = "2026-08-15"
 
-# Elke 15 minuten: Meta-sync (data/meta.json), volledig los van de Mac.
+# Cron Trigger UIT (bewust, sinds 15 sep 2026): de Meta-sync elke 15 min
+# loopt via een externe cron-job.org-pinger (GET /run-meta-sync?key=..., niet
+# in deze repo) i.p.v. via een ingebouwde Cloudflare Cron Trigger. Reden: op
+# 17 aug leek deze Cron Trigger stilletjes gestopt te zijn (vandaar cron-
+# job.org als vervanger), maar bleek na de deploys van 19/20 aug alsnog te
+# vuren — waardoor er stiekem TWEE triggers tegelijk draaiden (deze cron én
+# cron-job.org), elke 15 min binnen ~10s van elkaar. Ze lazen/schreven dan
+# allebei data/meta.json; wie het laatst wegschreef kreeg van GitHub's
+# Contents API soms een sha-conflict → 500 (zo gevonden via een cron-job.org
+# faalmail, "Meta sync" 15 sep 07:00 UTC). crons = [] hier zorgt dat een
+# `wrangler deploy` de Cron Trigger niet weer stilletjes aanzet — de
+# meta-sync-watchdog GitHub Action blijft als vangnet staan.
 [triggers]
-crons = ["*/15 * * * *"]
+crons = []
 
 # Secrets (NIET hier, via `wrangler secret put`):
 #   GITHUB_TOKEN            — fine-grained PAT, alleen repo daan-bonus-dashboard, Contents: Read/write

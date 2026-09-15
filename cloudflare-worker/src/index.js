@@ -4,11 +4,14 @@
  * 1. fetch(): vangt Shopify's "Orderaanmaak"-webhook op (real-time, gratis)
  *    en zet nieuwe orders in data/shopify.json — zelfde schema/dedup-logica
  *    als scripts/sync_shopify.py.
- * 2. scheduled(): cron-trigger (elke 15 min) die Meta's Marketing API
- *    rechtstreeks aanroept en data/meta.json bijwerkt — poort van
- *    scripts/sync_dashboard_data.py naar de Cloudflare-runtime, zodat Meta-
- *    verversing niet meer afhangt van of de Mac wakker is (die bleek bij lage
- *    accu agressief geplande achtergrond-wakes te onderdrukken).
+ * 2. scheduled(): draait dezelfde runMetaSync() als /run-meta-sync (zie
+ *    fetch() hieronder), maar wordt momenteel NIET getriggerd — de Cron
+ *    Trigger staat sinds 15 sep 2026 bewust uit (crons = [] in wrangler.toml,
+ *    zie de uitleg daar). De 15-minuten-sync zelf loopt via een externe
+ *    cron-job.org-pinger op GET /run-meta-sync?key=..., zodat Meta-verversing
+ *    niet afhangt van of de Mac wakker is (die bleek bij lage accu agressief
+ *    geplande achtergrond-wakes te onderdrukken). scheduled() blijft staan
+ *    als kant-en-klare terugvaloptie, niet als actief pad.
  *
  * Secrets (via `wrangler secret put`, nooit in code/git):
  *   GITHUB_TOKEN            fine-grained PAT, alleen deze repo, Contents: Read/write
