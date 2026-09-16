@@ -1,16 +1,16 @@
 {
  "snap": "2026-09-16",
- "snap_time": "11:00",
+ "snap_time": "11:15",
  "tb": {
   "vandaag": {
    "from": "2026-09-16",
    "to": "2026-09-16",
-   "spend": 191.2,
+   "spend": 198.75,
    "rev7": 336,
    "rev1v": 0,
    "purch": 2,
-   "impr": 21661,
-   "cl": 837
+   "impr": 22534,
+   "cl": 874
   },
   "gisteren": {
    "from": "2026-09-15",
@@ -19,18 +19,18 @@
    "rev7": 628,
    "rev1v": 0,
    "purch": 4,
-   "impr": 82252,
+   "impr": 82253,
    "cl": 2160
   },
   "week": {
    "from": "2026-09-14",
    "to": "2026-09-16",
-   "spend": 1220.35,
+   "spend": 1227.9,
    "rev7": 2067,
    "rev1v": 0,
    "purch": 12,
-   "impr": 144638,
-   "cl": 3856
+   "impr": 145512,
+   "cl": 3893
   },
   "prevweek": {
    "from": "2026-09-07",
@@ -55,12 +55,12 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-09-16",
-   "spend": 16815.11,
+   "spend": 16822.66,
    "rev7": 39033.15,
    "rev1v": 3323.8,
    "purch": 271,
-   "impr": 1858795,
-   "cl": 42540
+   "impr": 1859669,
+   "cl": 42577
   }
  },
  "daily_meta": [
@@ -439,17 +439,17 @@
    "rev7": 628,
    "rev1v": 0,
    "purch": 4,
-   "impr": 82252,
+   "impr": 82253,
    "cl": 2160
   },
   {
    "d": "2026-09-16",
-   "spend": 191.2,
+   "spend": 198.75,
    "rev7": 336,
    "rev1v": 0,
    "purch": 2,
-   "impr": 21661,
-   "cl": 837
+   "impr": 22534,
+   "cl": 874
   }
  ],
  "daily_ads": [
@@ -4829,7 +4829,7 @@
      "ctr": 2.66,
      "cpc": 0.4,
      "atc": 5,
-     "impr": 18902,
+     "impr": 18903,
      "reach": 17410,
      "linkCl": 393
     },
@@ -4931,93 +4931,93 @@
    "ads": [
     {
      "n": "001_002",
-     "spend": 58.78,
+     "spend": 61.19,
      "rev7": 336,
      "rev1v": 0,
      "purch": 2,
-     "ctr": 1.96,
+     "ctr": 1.97,
      "cpc": 0.62,
      "atc": 7,
-     "impr": 4835,
-     "reach": 4352,
-     "linkCl": 83
+     "impr": 5014,
+     "reach": 4519,
+     "linkCl": 88
     },
     {
      "n": "Cycle 6",
-     "spend": 56.61,
+     "spend": 58.42,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 2.17,
-     "cpc": 0.53,
+     "ctr": 2.29,
+     "cpc": 0.5,
      "atc": 0,
-     "impr": 4926,
-     "reach": 4646,
-     "linkCl": 72
+     "impr": 5106,
+     "reach": 4915,
+     "linkCl": 81
     },
     {
      "n": "Cycle 8 - correct time",
-     "spend": 20.02,
+     "spend": 20.79,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 3.79,
+     "ctr": 3.67,
      "cpc": 0.14,
      "atc": 0,
-     "impr": 3904,
-     "reach": 3761,
+     "impr": 4057,
+     "reach": 3919,
      "linkCl": 61
     },
     {
-     "n": "007 BOF statics - 6",
-     "spend": 16.3,
-     "rev7": 0,
-     "rev1v": 0,
-     "purch": 0,
-     "ctr": 1.81,
-     "cpc": 0.45,
-     "atc": 0,
-     "impr": 1993,
-     "reach": 1698,
-     "linkCl": 21
-    },
-    {
      "n": "006_002",
-     "spend": 16.26,
+     "spend": 17.28,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 0.86,
-     "cpc": 1.08,
+     "ctr": 0.81,
+     "cpc": 1.15,
      "atc": 0,
-     "impr": 1745,
-     "reach": 1347,
+     "impr": 1844,
+     "reach": 1468,
      "linkCl": 10
     },
     {
-     "n": "cycle 3 - Native ads",
-     "spend": 15.05,
+     "n": "007 BOF statics - 6",
+     "spend": 16.97,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 17.87,
+     "ctr": 1.83,
+     "cpc": 0.45,
+     "atc": 0,
+     "impr": 2074,
+     "reach": 1777,
+     "linkCl": 21
+    },
+    {
+     "n": "cycle 3 - Native ads",
+     "spend": 15.53,
+     "rev7": 0,
+     "rev1v": 0,
+     "purch": 0,
+     "ctr": 17.97,
      "cpc": 0.04,
      "atc": 0,
-     "impr": 2188,
-     "reach": 1784,
-     "linkCl": 28
+     "impr": 2271,
+     "reach": 1847,
+     "linkCl": 29
     },
     {
      "n": "cycle 3 - Tiktok pov",
-     "spend": 8.18,
+     "spend": 8.57,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 2.17,
+     "ctr": 2.21,
      "cpc": 0.18,
      "atc": 1,
-     "impr": 2070,
-     "reach": 1850,
+     "impr": 2168,
+     "reach": 1922,
      "linkCl": 17
     }
    ]
