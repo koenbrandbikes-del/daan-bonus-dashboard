@@ -1,16 +1,16 @@
 {
  "snap": "2026-09-17",
- "snap_time": "18:00",
+ "snap_time": "18:15",
  "tb": {
   "vandaag": {
    "from": "2026-09-17",
    "to": "2026-09-17",
-   "spend": 210.35,
+   "spend": 214.37,
    "rev7": 298,
    "rev1v": 0,
    "purch": 2,
-   "impr": 19048,
-   "cl": 433
+   "impr": 19484,
+   "cl": 451
   },
   "gisteren": {
    "from": "2026-09-16",
@@ -25,12 +25,12 @@
   "week": {
    "from": "2026-09-14",
    "to": "2026-09-17",
-   "spend": 1712.04,
+   "spend": 1716.06,
    "rev7": 3412.1,
    "rev1v": 0,
    "purch": 21,
-   "impr": 193493,
-   "cl": 5226
+   "impr": 193929,
+   "cl": 5244
   },
   "prevweek": {
    "from": "2026-09-07",
@@ -55,12 +55,12 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-09-17",
-   "spend": 17306.8,
+   "spend": 17310.82,
    "rev7": 40378.25,
    "rev1v": 3323.8,
    "purch": 280,
-   "impr": 1907650,
-   "cl": 43910
+   "impr": 1908086,
+   "cl": 43928
   }
  },
  "daily_meta": [
@@ -453,12 +453,12 @@
   },
   {
    "d": "2026-09-17",
-   "spend": 210.35,
+   "spend": 214.37,
    "rev7": 298,
    "rev1v": 0,
    "purch": 2,
-   "impr": 19048,
-   "cl": 433
+   "impr": 19484,
+   "cl": 451
   }
  ],
  "daily_ads": [
@@ -5036,41 +5036,41 @@
    "ads": [
     {
      "n": "Cycle 6",
-     "spend": 106.52,
+     "spend": 108.98,
      "rev7": 149,
      "rev1v": 0,
      "purch": 1,
-     "ctr": 2.64,
-     "cpc": 0.44,
+     "ctr": 2.71,
+     "cpc": 0.43,
      "atc": 1,
-     "impr": 9113,
-     "reach": 8406,
-     "linkCl": 187
+     "impr": 9351,
+     "reach": 8705,
+     "linkCl": 195
     },
     {
      "n": "001_002",
-     "spend": 80.65,
+     "spend": 81.93,
      "rev7": 149,
      "rev1v": 0,
      "purch": 1,
-     "ctr": 1.87,
-     "cpc": 0.62,
+     "ctr": 1.9,
+     "cpc": 0.61,
      "atc": 1,
-     "impr": 6968,
-     "reach": 6107,
+     "impr": 7120,
+     "reach": 6195,
      "linkCl": 107
     },
     {
      "n": "007 BOF statics - 6",
-     "spend": 23.18,
+     "spend": 23.46,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
      "ctr": 2.09,
      "cpc": 0.37,
      "atc": 1,
-     "impr": 2967,
-     "reach": 2172,
+     "impr": 3013,
+     "reach": 2206,
      "linkCl": 35
     },
     {
@@ -5088,6 +5088,19 @@
     },
     {
      "n": "CYCLE 3 -Relaunch - new LP",
+     "spend": 0,
+     "rev7": 0,
+     "rev1v": 0,
+     "purch": 0,
+     "ctr": 0,
+     "cpc": 0,
+     "atc": 0,
+     "impr": 0,
+     "reach": 0,
+     "linkCl": 0
+    },
+    {
+     "n": "cycle 3 - Native ads",
      "spend": 0,
      "rev7": 0,
      "rev1v": 0,
