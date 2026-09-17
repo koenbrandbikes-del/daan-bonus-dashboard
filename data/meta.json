@@ -1,16 +1,16 @@
 {
  "snap": "2026-09-17",
- "snap_time": "19:45",
+ "snap_time": "19:55",
  "tb": {
   "vandaag": {
    "from": "2026-09-17",
    "to": "2026-09-17",
-   "spend": 237.78,
-   "rev7": 596,
+   "spend": 240.78,
+   "rev7": 764,
    "rev1v": 0,
-   "purch": 4,
-   "impr": 22183,
-   "cl": 500
+   "purch": 5,
+   "impr": 22490,
+   "cl": 502
   },
   "gisteren": {
    "from": "2026-09-16",
@@ -25,12 +25,12 @@
   "week": {
    "from": "2026-09-14",
    "to": "2026-09-17",
-   "spend": 1739.49,
-   "rev7": 3710.1,
+   "spend": 1742.49,
+   "rev7": 3878.1,
    "rev1v": 0,
-   "purch": 23,
-   "impr": 196632,
-   "cl": 5293
+   "purch": 24,
+   "impr": 196939,
+   "cl": 5295
   },
   "prevweek": {
    "from": "2026-09-07",
@@ -55,12 +55,12 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-09-17",
-   "spend": 17334.25,
-   "rev7": 40676.25,
+   "spend": 17337.25,
+   "rev7": 40844.25,
    "rev1v": 3323.8,
-   "purch": 282,
-   "impr": 1910789,
-   "cl": 43977
+   "purch": 283,
+   "impr": 1911096,
+   "cl": 43979
   }
  },
  "daily_meta": [
@@ -453,12 +453,12 @@
   },
   {
    "d": "2026-09-17",
-   "spend": 237.78,
-   "rev7": 596,
+   "spend": 240.78,
+   "rev7": 764,
    "rev1v": 0,
-   "purch": 4,
-   "impr": 22183,
-   "cl": 500
+   "purch": 5,
+   "impr": 22490,
+   "cl": 502
   }
  ],
  "daily_ads": [
@@ -5036,42 +5036,42 @@
    "ads": [
     {
      "n": "Cycle 6",
-     "spend": 122.83,
+     "spend": 124.5,
      "rev7": 149,
      "rev1v": 0,
      "purch": 1,
-     "ctr": 2.54,
-     "cpc": 0.44,
+     "ctr": 2.52,
+     "cpc": 0.45,
      "atc": 1,
-     "impr": 10926,
-     "reach": 9942,
-     "linkCl": 223
+     "impr": 11089,
+     "reach": 10080,
+     "linkCl": 224
     },
     {
      "n": "001_002",
-     "spend": 89.77,
+     "spend": 90.83,
      "rev7": 447,
      "rev1v": 0,
      "purch": 3,
-     "ctr": 1.88,
-     "cpc": 0.6,
+     "ctr": 1.86,
+     "cpc": 0.61,
      "atc": 3,
-     "impr": 7973,
-     "reach": 6864,
-     "linkCl": 121
+     "impr": 8077,
+     "reach": 6963,
+     "linkCl": 123
     },
     {
      "n": "007 BOF statics - 6",
-     "spend": 25.18,
-     "rev7": 0,
+     "spend": 25.45,
+     "rev7": 168,
      "rev1v": 0,
-     "purch": 0,
-     "ctr": 2.22,
-     "cpc": 0.34,
-     "atc": 1,
-     "impr": 3284,
-     "reach": 2352,
-     "linkCl": 41
+     "purch": 1,
+     "ctr": 2.2,
+     "cpc": 0.35,
+     "atc": 3,
+     "impr": 3324,
+     "reach": 2368,
+     "linkCl": 43
     },
     {
      "n": "Cycle 8 - correct time",
