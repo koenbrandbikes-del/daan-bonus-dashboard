@@ -1,15 +1,15 @@
 {
  "snap": "2026-09-23",
- "snap_time": "02:15",
+ "snap_time": "02:30",
  "tb": {
   "vandaag": {
    "from": "2026-09-23",
    "to": "2026-09-23",
-   "spend": 7.32,
+   "spend": 7.75,
    "rev7": 149,
    "rev1v": 0,
    "purch": 1,
-   "impr": 573,
+   "impr": 613,
    "cl": 19
   },
   "gisteren": {
@@ -25,11 +25,11 @@
   "week": {
    "from": "2026-09-21",
    "to": "2026-09-23",
-   "spend": 795.73,
+   "spend": 796.16,
    "rev7": 3373.2,
    "rev1v": 647,
    "purch": 23,
-   "impr": 88354,
+   "impr": 88394,
    "cl": 1714
   },
   "prevweek": {
@@ -55,11 +55,11 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-09-23",
-   "spend": 19344.1,
+   "spend": 19344.53,
    "rev7": 50684.3,
    "rev1v": 5144,
    "purch": 351,
-   "impr": 2114096,
+   "impr": 2114136,
    "cl": 48094
   }
  },
@@ -507,11 +507,11 @@
   },
   {
    "d": "2026-09-23",
-   "spend": 7.32,
+   "spend": 7.75,
    "rev7": 149,
    "rev1v": 0,
    "purch": 1,
-   "impr": 573,
+   "impr": 613,
    "cl": 19
   }
  ],
@@ -5601,42 +5601,42 @@
    "ads": [
     {
      "n": "001_002",
-     "spend": 2.8,
+     "spend": 3,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 3.08,
-     "cpc": 0.47,
+     "ctr": 2.88,
+     "cpc": 0.5,
      "atc": 0,
-     "impr": 195,
-     "reach": 186,
+     "impr": 208,
+     "reach": 196,
      "linkCl": 7
     },
     {
      "n": "Cycle 6",
-     "spend": 2.62,
+     "spend": 2.67,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 4.61,
-     "cpc": 0.26,
+     "ctr": 4.41,
+     "cpc": 0.27,
      "atc": 0,
-     "impr": 217,
-     "reach": 199,
+     "impr": 227,
+     "reach": 208,
      "linkCl": 8
     },
     {
      "n": "Cycle 2 - relaunch",
-     "spend": 1.33,
+     "spend": 1.45,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 2.04,
-     "cpc": 0.67,
+     "ctr": 1.82,
+     "cpc": 0.73,
      "atc": 0,
-     "impr": 98,
-     "reach": 93,
-     "linkCl": 1
+     "impr": 110,
+     "reach": 103,
+     "linkCl": 2
     },
     {
      "n": "007 BOF statics - 6",
@@ -5648,7 +5648,7 @@
      "cpc": 0.63,
      "atc": 1,
      "impr": 68,
-     "reach": 57,
+     "reach": 64,
      "linkCl": 2
     }
    ]
