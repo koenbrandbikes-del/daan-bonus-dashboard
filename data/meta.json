@@ -1,16 +1,16 @@
 {
  "snap": "2026-09-23",
- "snap_time": "17:00",
+ "snap_time": "17:15",
  "tb": {
   "vandaag": {
    "from": "2026-09-23",
    "to": "2026-09-23",
-   "spend": 259.8,
+   "spend": 265.46,
    "rev7": 485,
    "rev1v": 0,
    "purch": 3,
-   "impr": 28652,
-   "cl": 589
+   "impr": 29292,
+   "cl": 599
   },
   "gisteren": {
    "from": "2026-09-22",
@@ -25,12 +25,12 @@
   "week": {
    "from": "2026-09-21",
    "to": "2026-09-23",
-   "spend": 1049.68,
+   "spend": 1055.34,
    "rev7": 3709.2,
    "rev1v": 647,
    "purch": 25,
-   "impr": 116485,
-   "cl": 2286
+   "impr": 117125,
+   "cl": 2296
   },
   "prevweek": {
    "from": "2026-09-14",
@@ -55,12 +55,12 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-09-23",
-   "spend": 19598.05,
+   "spend": 19603.71,
    "rev7": 51020.3,
    "rev1v": 5144,
    "purch": 353,
-   "impr": 2142227,
-   "cl": 48666
+   "impr": 2142867,
+   "cl": 48676
   }
  },
  "daily_meta": [
@@ -507,12 +507,12 @@
   },
   {
    "d": "2026-09-23",
-   "spend": 259.8,
+   "spend": 265.46,
    "rev7": 485,
    "rev1v": 0,
    "purch": 3,
-   "impr": 28652,
-   "cl": 589
+   "impr": 29292,
+   "cl": 599
   }
  ],
  "daily_ads": [
@@ -5601,54 +5601,54 @@
    "ads": [
     {
      "n": "Cycle 6",
-     "spend": 115.55,
+     "spend": 118.29,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
      "ctr": 2.52,
      "cpc": 0.34,
      "atc": 2,
-     "impr": 13427,
-     "reach": 12467,
-     "linkCl": 261
+     "impr": 13731,
+     "reach": 12845,
+     "linkCl": 268
     },
     {
      "n": "001_002",
-     "spend": 73.96,
+     "spend": 74.76,
      "rev7": 336,
      "rev1v": 0,
      "purch": 2,
-     "ctr": 1.9,
-     "cpc": 0.6,
+     "ctr": 1.88,
+     "cpc": 0.61,
      "atc": 4,
-     "impr": 6476,
-     "reach": 5986,
-     "linkCl": 90
+     "impr": 6557,
+     "reach": 6114,
+     "linkCl": 94
     },
     {
      "n": "Cycle 2 - relaunch",
-     "spend": 46.24,
+     "spend": 47.68,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.44,
-     "cpc": 0.62,
+     "ctr": 1.41,
+     "cpc": 0.63,
      "atc": 0,
-     "impr": 5200,
-     "reach": 4755,
-     "linkCl": 51
+     "impr": 5391,
+     "reach": 4915,
+     "linkCl": 54
     },
     {
      "n": "007 BOF statics - 6",
-     "spend": 24.05,
+     "spend": 24.73,
      "rev7": 149,
      "rev1v": 0,
      "purch": 1,
      "ctr": 1.49,
-     "cpc": 0.45,
+     "cpc": 0.46,
      "atc": 5,
-     "impr": 3549,
-     "reach": 2580,
+     "impr": 3613,
+     "reach": 2635,
      "linkCl": 36
     }
    ]
