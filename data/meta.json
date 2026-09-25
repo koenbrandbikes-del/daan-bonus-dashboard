@@ -1,16 +1,16 @@
 {
  "snap": "2026-09-25",
- "snap_time": "14:15",
+ "snap_time": "14:30",
  "tb": {
   "vandaag": {
    "from": "2026-09-25",
    "to": "2026-09-25",
-   "spend": 189.26,
+   "spend": 194.71,
    "rev7": 783,
    "rev1v": 0,
    "purch": 5,
-   "impr": 18762,
-   "cl": 357
+   "impr": 19221,
+   "cl": 366
   },
   "gisteren": {
    "from": "2026-09-24",
@@ -25,12 +25,12 @@
   "week": {
    "from": "2026-09-21",
    "to": "2026-09-25",
-   "spend": 1767.26,
+   "spend": 1772.71,
    "rev7": 5880.2,
    "rev1v": 704,
    "purch": 40,
-   "impr": 196085,
-   "cl": 3864
+   "impr": 196544,
+   "cl": 3873
   },
   "prevweek": {
    "from": "2026-09-14",
@@ -55,12 +55,12 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-09-25",
-   "spend": 20315.63,
+   "spend": 20321.08,
    "rev7": 53191.3,
    "rev1v": 5201,
    "purch": 368,
-   "impr": 2221827,
-   "cl": 50244
+   "impr": 2222286,
+   "cl": 50253
   }
  },
  "daily_meta": [
@@ -525,12 +525,12 @@
   },
   {
    "d": "2026-09-25",
-   "spend": 189.26,
+   "spend": 194.71,
    "rev7": 783,
    "rev1v": 0,
    "purch": 5,
-   "impr": 18762,
-   "cl": 357
+   "impr": 19221,
+   "cl": 366
   }
  ],
  "daily_ads": [
@@ -5733,54 +5733,54 @@
    "ads": [
     {
      "n": "Cycle 6",
-     "spend": 71.73,
+     "spend": 73.65,
      "rev7": 149,
      "rev1v": 0,
      "purch": 1,
-     "ctr": 2.29,
-     "cpc": 0.44,
+     "ctr": 2.35,
+     "cpc": 0.43,
      "atc": 2,
-     "impr": 7120,
-     "reach": 6541,
-     "linkCl": 130
+     "impr": 7271,
+     "reach": 6722,
+     "linkCl": 133
     },
     {
      "n": "001_002",
-     "spend": 55.25,
+     "spend": 56.85,
      "rev7": 168,
      "rev1v": 0,
      "purch": 1,
-     "ctr": 1.88,
-     "cpc": 0.62,
+     "ctr": 1.85,
+     "cpc": 0.63,
      "atc": 2,
-     "impr": 4739,
-     "reach": 4475,
-     "linkCl": 65
+     "impr": 4861,
+     "reach": 4571,
+     "linkCl": 67
     },
     {
      "n": "Cycle 2 - relaunch",
-     "spend": 37.68,
+     "spend": 38.82,
      "rev7": 298,
      "rev1v": 0,
      "purch": 2,
-     "ctr": 1.73,
-     "cpc": 0.55,
+     "ctr": 1.69,
+     "cpc": 0.57,
      "atc": 4,
-     "impr": 3927,
-     "reach": 3633,
-     "linkCl": 51
+     "impr": 4031,
+     "reach": 3682,
+     "linkCl": 52
     },
     {
      "n": "007 BOF statics - 6",
-     "spend": 24.6,
+     "spend": 25.39,
      "rev7": 168,
      "rev1v": 0,
      "purch": 1,
-     "ctr": 1.24,
-     "cpc": 0.66,
+     "ctr": 1.21,
+     "cpc": 0.69,
      "atc": 1,
-     "impr": 2976,
-     "reach": 2305,
+     "impr": 3058,
+     "reach": 2369,
      "linkCl": 23
     }
    ]
@@ -56242,7 +56242,7 @@
      "n": "001_002",
      "platform": "audience_network",
      "placement": "overig",
-     "spend": 0.17,
+     "spend": 0.2,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56260,7 +56260,7 @@
      "n": "001_002",
      "platform": "facebook",
      "placement": "reels",
-     "spend": 5.52,
+     "spend": 6.46,
      "rev7": 168,
      "rev1v": 0,
      "purch": 1
@@ -56278,7 +56278,7 @@
      "n": "001_002",
      "platform": "facebook",
      "placement": "stories",
-     "spend": 0.16,
+     "spend": 0.19,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56287,7 +56287,7 @@
      "n": "001_002",
      "platform": "facebook",
      "placement": "feed",
-     "spend": 3.36,
+     "spend": 3.72,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56314,7 +56314,7 @@
      "n": "001_002",
      "platform": "instagram",
      "placement": "feed",
-     "spend": 25.69,
+     "spend": 28.77,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56332,7 +56332,7 @@
      "n": "001_002",
      "platform": "instagram",
      "placement": "reels",
-     "spend": 13.4,
+     "spend": 14.71,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56341,7 +56341,7 @@
      "n": "001_002",
      "platform": "instagram",
      "placement": "stories",
-     "spend": 2,
+     "spend": 2.41,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56377,7 +56377,7 @@
      "n": "007 BOF statics - 6",
      "platform": "facebook",
      "placement": "reels",
-     "spend": 1.31,
+     "spend": 1.45,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56386,7 +56386,7 @@
      "n": "007 BOF statics - 6",
      "platform": "facebook",
      "placement": "reels",
-     "spend": 0.03,
+     "spend": 0.04,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56395,7 +56395,7 @@
      "n": "007 BOF statics - 6",
      "platform": "facebook",
      "placement": "stories",
-     "spend": 0.21,
+     "spend": 0.23,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56404,7 +56404,7 @@
      "n": "007 BOF statics - 6",
      "platform": "facebook",
      "placement": "feed",
-     "spend": 7.94,
+     "spend": 8.82,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56431,7 +56431,7 @@
      "n": "007 BOF statics - 6",
      "platform": "facebook",
      "placement": "overig",
-     "spend": 0.09,
+     "spend": 0.11,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56449,7 +56449,7 @@
      "n": "007 BOF statics - 6",
      "platform": "instagram",
      "placement": "feed",
-     "spend": 4.91,
+     "spend": 5.61,
      "rev7": 168,
      "rev1v": 0,
      "purch": 1
@@ -56467,7 +56467,7 @@
      "n": "007 BOF statics - 6",
      "platform": "instagram",
      "placement": "reels",
-     "spend": 2.08,
+     "spend": 2.4,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56476,7 +56476,7 @@
      "n": "007 BOF statics - 6",
      "platform": "instagram",
      "placement": "stories",
-     "spend": 6.02,
+     "spend": 6.69,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56503,7 +56503,7 @@
      "n": "Cycle 6",
      "platform": "audience_network",
      "placement": "overig",
-     "spend": 0.37,
+     "spend": 0.36,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56530,7 +56530,7 @@
      "n": "Cycle 6",
      "platform": "facebook",
      "placement": "reels",
-     "spend": 10.58,
+     "spend": 11.58,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56539,7 +56539,7 @@
      "n": "Cycle 6",
      "platform": "facebook",
      "placement": "reels",
-     "spend": 0.06,
+     "spend": 0.07,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56548,7 +56548,7 @@
      "n": "Cycle 6",
      "platform": "facebook",
      "placement": "stories",
-     "spend": 0.42,
+     "spend": 0.54,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56557,7 +56557,7 @@
      "n": "Cycle 6",
      "platform": "facebook",
      "placement": "feed",
-     "spend": 7.54,
+     "spend": 8.4,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56593,7 +56593,7 @@
      "n": "Cycle 6",
      "platform": "instagram",
      "placement": "feed",
-     "spend": 22.88,
+     "spend": 25.92,
      "rev7": 149,
      "rev1v": 0,
      "purch": 1
@@ -56611,7 +56611,7 @@
      "n": "Cycle 6",
      "platform": "instagram",
      "placement": "reels",
-     "spend": 16.33,
+     "spend": 18.22,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56620,7 +56620,7 @@
      "n": "Cycle 6",
      "platform": "instagram",
      "placement": "stories",
-     "spend": 7.72,
+     "spend": 8.36,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56656,7 +56656,7 @@
      "n": "Cycle 2 - relaunch",
      "platform": "facebook",
      "placement": "reels",
-     "spend": 2.64,
+     "spend": 2.89,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56674,7 +56674,7 @@
      "n": "Cycle 2 - relaunch",
      "platform": "facebook",
      "placement": "stories",
-     "spend": 0.19,
+     "spend": 0.21,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56683,7 +56683,7 @@
      "n": "Cycle 2 - relaunch",
      "platform": "facebook",
      "placement": "feed",
-     "spend": 5.57,
+     "spend": 5.95,
      "rev7": 149,
      "rev1v": 0,
      "purch": 1
@@ -56692,16 +56692,7 @@
      "n": "Cycle 2 - relaunch",
      "platform": "facebook",
      "placement": "overig",
-     "spend": 0.11,
-     "rev7": 0,
-     "rev1v": 0,
-     "purch": 0
-    },
-    {
-     "n": "Cycle 2 - relaunch",
-     "platform": "facebook",
-     "placement": "overig",
-     "spend": 0,
+     "spend": 0.13,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56726,9 +56717,18 @@
     },
     {
      "n": "Cycle 2 - relaunch",
+     "platform": "facebook",
+     "placement": "overig",
+     "spend": 0.01,
+     "rev7": 0,
+     "rev1v": 0,
+     "purch": 0
+    },
+    {
+     "n": "Cycle 2 - relaunch",
      "platform": "instagram",
      "placement": "feed",
-     "spend": 10.04,
+     "spend": 11.29,
      "rev7": 149,
      "rev1v": 0,
      "purch": 1
@@ -56746,7 +56746,7 @@
      "n": "Cycle 2 - relaunch",
      "platform": "instagram",
      "placement": "reels",
-     "spend": 3.54,
+     "spend": 3.95,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56755,7 +56755,7 @@
      "n": "Cycle 2 - relaunch",
      "platform": "instagram",
      "placement": "stories",
-     "spend": 12.89,
+     "spend": 14.33,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0
@@ -56772,5 +56772,5 @@
    ]
   }
  ],
- "breakdown_synced_at": "2026-09-25T11:30:28.396Z"
+ "breakdown_synced_at": "2026-09-25T12:30:31.629Z"
 }
