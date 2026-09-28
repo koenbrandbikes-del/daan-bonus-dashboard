@@ -1,15 +1,15 @@
 {
  "snap": "2026-09-28",
- "snap_time": "02:45",
+ "snap_time": "03:00",
  "tb": {
   "vandaag": {
    "from": "2026-09-28",
    "to": "2026-09-28",
-   "spend": 3.68,
+   "spend": 3.96,
    "rev7": 149,
    "rev1v": 0,
    "purch": 1,
-   "impr": 251,
+   "impr": 287,
    "cl": 2
   },
   "gisteren": {
@@ -25,11 +25,11 @@
   "week": {
    "from": "2026-09-28",
    "to": "2026-09-28",
-   "spend": 3.68,
+   "spend": 3.96,
    "rev7": 149,
    "rev1v": 0,
    "purch": 1,
-   "impr": 251,
+   "impr": 287,
    "cl": 2
   },
   "prevweek": {
@@ -55,11 +55,11 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-09-28",
-   "spend": 21187.15,
+   "spend": 21187.43,
    "rev7": 56154.4,
    "rev1v": 5201,
    "purch": 387,
-   "impr": 2304919,
+   "impr": 2304955,
    "cl": 52015
   }
  },
@@ -552,11 +552,11 @@
   },
   {
    "d": "2026-09-28",
-   "spend": 3.68,
+   "spend": 3.96,
    "rev7": 149,
    "rev1v": 0,
    "purch": 1,
-   "impr": 251,
+   "impr": 287,
    "cl": 2
   }
  ],
@@ -5931,15 +5931,15 @@
    "ads": [
     {
      "n": "Cycle 2 - relaunch",
-     "spend": 3.19,
+     "spend": 3.46,
      "rev7": 149,
      "rev1v": 0,
      "purch": 1,
-     "ctr": 0.93,
-     "cpc": 1.6,
+     "ctr": 0.81,
+     "cpc": 1.73,
      "atc": 1,
-     "impr": 216,
-     "reach": 195,
+     "impr": 246,
+     "reach": 229,
      "linkCl": 2
     },
     {
@@ -5951,21 +5951,34 @@
      "ctr": 0,
      "cpc": 0,
      "atc": 0,
-     "impr": 20,
-     "reach": 20,
+     "impr": 21,
+     "reach": 21,
      "linkCl": 0
     },
     {
      "n": "Cycle 6",
-     "spend": 0.11,
+     "spend": 0.16,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
      "ctr": 0,
      "cpc": 0,
      "atc": 0,
-     "impr": 14,
-     "reach": 8,
+     "impr": 21,
+     "reach": 14,
+     "linkCl": 0
+    },
+    {
+     "n": "007 BOF statics - 6",
+     "spend": 0.02,
+     "rev7": 0,
+     "rev1v": 0,
+     "purch": 0,
+     "ctr": 0,
+     "cpc": 0,
+     "atc": 0,
+     "impr": 1,
+     "reach": 1,
      "linkCl": 0
     }
    ]
