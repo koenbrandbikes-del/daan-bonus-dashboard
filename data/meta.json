@@ -1,15 +1,15 @@
 {
  "snap": "2026-09-28",
- "snap_time": "01:45",
+ "snap_time": "02:00",
  "tb": {
   "vandaag": {
    "from": "2026-09-28",
    "to": "2026-09-28",
-   "spend": 2.26,
-   "rev7": 0,
+   "spend": 2.62,
+   "rev7": 149,
    "rev1v": 0,
-   "purch": 0,
-   "impr": 128,
+   "purch": 1,
+   "impr": 158,
    "cl": 1
   },
   "gisteren": {
@@ -25,11 +25,11 @@
   "week": {
    "from": "2026-09-28",
    "to": "2026-09-28",
-   "spend": 2.26,
-   "rev7": 0,
+   "spend": 2.62,
+   "rev7": 149,
    "rev1v": 0,
-   "purch": 0,
-   "impr": 128,
+   "purch": 1,
+   "impr": 158,
    "cl": 1
   },
   "prevweek": {
@@ -55,11 +55,11 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-09-28",
-   "spend": 21185.72,
-   "rev7": 56005.4,
+   "spend": 21186.08,
+   "rev7": 56154.4,
    "rev1v": 5201,
-   "purch": 386,
-   "impr": 2304794,
+   "purch": 387,
+   "impr": 2304824,
    "cl": 52014
   }
  },
@@ -552,11 +552,11 @@
   },
   {
    "d": "2026-09-28",
-   "spend": 2.26,
-   "rev7": 0,
+   "spend": 2.62,
+   "rev7": 149,
    "rev1v": 0,
-   "purch": 0,
-   "impr": 128,
+   "purch": 1,
+   "impr": 158,
    "cl": 1
   }
  ],
@@ -5931,28 +5931,41 @@
    "ads": [
     {
      "n": "Cycle 2 - relaunch",
-     "spend": 2.02,
-     "rev7": 0,
+     "spend": 2.28,
+     "rev7": 149,
      "rev1v": 0,
-     "purch": 0,
-     "ctr": 0.85,
-     "cpc": 2.02,
-     "atc": 0,
-     "impr": 118,
-     "reach": 111,
+     "purch": 1,
+     "ctr": 0.7,
+     "cpc": 2.28,
+     "atc": 1,
+     "impr": 142,
+     "reach": 128,
      "linkCl": 1
     },
     {
      "n": "001_002",
-     "spend": 0.24,
+     "spend": 0.33,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
      "ctr": 0,
      "cpc": 0,
      "atc": 0,
-     "impr": 10,
-     "reach": 10,
+     "impr": 15,
+     "reach": 14,
+     "linkCl": 0
+    },
+    {
+     "n": "Cycle 6",
+     "spend": 0.01,
+     "rev7": 0,
+     "rev1v": 0,
+     "purch": 0,
+     "ctr": 0,
+     "cpc": 0,
+     "atc": 0,
+     "impr": 1,
+     "reach": 0,
      "linkCl": 0
     }
    ]
