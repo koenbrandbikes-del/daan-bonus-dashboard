@@ -563,7 +563,19 @@ async function ghGetFile(token, path) {
     throw new Error(`GET ${path} ${r.status}: ${await r.text()}`);
   }
   const json = await r.json();
-  return { content: decodeBase64(json.content), sha: json.sha };
+  if (json.encoding === "base64" && json.content) {
+    return { content: decodeBase64(json.content), sha: json.sha };
+  }
+  // GitHub's Contents API geeft voor bestanden >1MB geen bruikbare inline
+  // content terug — content:"" met encoding:"none" (dus wél de key, maar
+  // leeg; geen undefined zoals verwacht). data/meta.json kwam op 28 sep
+  // 2026 over die 1MB-grens, wat runMetaSync() liet crashen op
+  // JSON.parse("") ("Unexpected end of JSON input"), 500'end elke 15-min
+  // sync sindsdien. Fallback: de Git Data (blobs) API heeft die grens niet.
+  const blobR = await ghRequest(`/repos/${REPO}/git/blobs/${json.sha}`, token);
+  if (!blobR.ok) throw new Error(`GET blob ${json.sha} (${path}) ${blobR.status}: ${await blobR.text()}`);
+  const blobJson = await blobR.json();
+  return { content: decodeBase64(blobJson.content), sha: json.sha };
 }
 
 async function ghPutFile(token, path, content, sha, message) {
