@@ -259,6 +259,18 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .ga4-role-fill{height:100%;border-radius:2px}
 .ga4-role-sub{font-size:10px;color:#93A2B8}
 
+/* ── Stale-data waarschuwing ── */
+.stale-warning{
+  max-width:1100px;margin:0 auto 14px;padding:11px 18px;
+  background:rgba(229,184,99,.12);border:1px solid rgba(229,184,99,.35);
+  border-radius:10px;color:#E5B863;font-size:12.5px;font-weight:600;
+  text-align:center;line-height:1.5;
+}
+.stale-warning strong{color:#f1f5f9}
+.stale-warning.stale-critical{
+  background:rgba(221,146,128,.12);border-color:rgba(221,146,128,.4);color:#DD9280;
+}
+
 /* ── Footer ── */
 .footer{text-align:center;padding:16px 20px 4px;display:flex;align-items:center;justify-content:center}
 .footer-pill{display:inline-flex;flex-direction:column;align-items:flex-start;gap:4px;font-size:11px;color:#cbd5e1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);padding:9px 16px;border-radius:14px;backdrop-filter:blur(8px);max-width:100%}
@@ -582,6 +594,12 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     </div>
   </div>
 </div>
+
+<!-- Zichtbare waarschuwing als de laatste sync te lang geleden is — zodat
+     een vastgelopen cron (zoals 28 sep 2026, 9u stil zonder dat iemand het
+     zag) niet meer alleen in data/status.json verstopt zit, maar meteen
+     opvalt op het dashboard zelf. -->
+<div id="staleWarning" class="stale-warning" style="display:none"></div>
 
 <!-- Analysefilters: strategie × platform × plaatsing, voor het hele dashboard
      (niet alleen de advertentiegroepentabel) -->
@@ -3147,9 +3165,32 @@ function tog(id){
   el.classList.toggle("open");
 }
 
+/* ═══ STALE-DATA CHECK ═══════════════════════════════════════════
+   De 15-min cron-sync liep op 28 sep 2026 9 uur stil zonder dat iemand
+   het zag — de enige melding zat verstopt in data/status.json en een
+   GitHub-mail die niemand las. Dit zet dezelfde info zichtbaar boven aan
+   het dashboard zelf, waar je toch al kijkt. Amber vanaf 45 min (ruim
+   boven het normale 15-min interval, voorkomt vals alarm bij een
+   incidenteel gemiste cron-tick); rood vanaf 2 uur. */
+function checkStaleness(){
+  const el=document.getElementById("staleWarning");
+  if(!el||!SNAP||!SNAP_TIME)return;
+  const snapDt=new Date(`${SNAP}T${SNAP_TIME}:00`);
+  if(isNaN(snapDt))return;
+  const ageMin=(Date.now()-snapDt.getTime())/60000;
+  if(ageMin<45){el.style.display="none";return;}
+  const h=Math.floor(ageMin/60),m=Math.round(ageMin%60);
+  const ageTxt=h>0?`${h} u ${m} min`:`${m} min`;
+  el.classList.toggle("stale-critical",ageMin>=120);
+  el.innerHTML=`⚠️ Meta-data is <strong>${ageTxt}</strong> niet ververst sinds ${SNAP_TIME} &mdash; de 15-minuten-sync lijkt vast te zitten.`;
+  el.style.display="block";
+}
+
 /* ═══ INIT ═══════════════════════════════════════════════════════ */
 render();
 loadAdTagsRemote();
+checkStaleness();
+setInterval(checkStaleness,60000);
 </script>
 </body>
 </html>
