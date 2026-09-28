@@ -945,7 +945,7 @@ function calcOrder(o){
 }
 
 /* ═══ HELPERS ════════════════════════════════════════════════════ */
-const eur  = v=>"€"+v.toLocaleString("nl-NL",{minimumFractionDigits:2,maximumFractionDigits:2});
+const eur  = v=>"€"+v.toLocaleString("nl-NL",{minimumFractionDigits:0,maximumFractionDigits:0});
 const x2   = v=>v.toFixed(2)+"×";
 const mo   = ["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
 const fmtS = s=>{const[,m,d]=s.split("-");return`${+d} ${mo[+m-1]}`};
