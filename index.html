@@ -100,6 +100,7 @@ body{background:
 .ord-f{background:transparent;border:1px solid #1f3050;color:#94a3b8;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;cursor:pointer;transition:all .15s}
 .ord-f:hover{border-color:#60a5fa;color:#60a5fa}
 .ord-f.active{background:#1d3a5f;border-color:#60a5fa;color:#e2e8f0}
+.ord-btw-toggle{padding-top:6px}
 
 /* ── Tables ── */
 .tscroll{overflow-x:auto;max-height:340px;overflow-y:auto}
@@ -707,6 +708,10 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
         <button class="ord-f" onclick="setOrdFilter('Standaard')">Standaard</button>
         <button class="ord-f" onclick="setOrdFilter('Bundel')">Bundel</button>
       </div>
+      <div class="ord-filters ord-btw-toggle">
+        <button class="ord-f ord-btw-f active" onclick="setOrdBtw('incl')">Omzet incl. BTW</button>
+        <button class="ord-f ord-btw-f" onclick="setOrdBtw('excl')">Omzet excl. BTW</button>
+      </div>
       <div class="tscroll" style="margin-top:10px"><table id="ordTable"></table></div>
     </div>
   </div>
@@ -1076,6 +1081,13 @@ const PERIODS = {
 /* ═══ STATE ══════════════════════════════════════════════════════ */
 let P="aug", CX, CT, CB;
 let ordFilter="alle";
+// Omzetweergave in de orderdetailtabel: incl. of excl. BTW. Default op
+// "incl" — consistent met "META OMZET" bovenaan de pagina (ook incl. BTW),
+// zodat je niet tussen twee btw-grondslagen hoeft te schakelen om de
+// cijfers te vergelijken. Marge/kosten/break-even blijven altijd op de
+// excl.-BTW-grondslag rekenen (dat is de winstgevendheid, BTW is nooit
+// "jouw" geld) — alleen de omzetkolom zelf wisselt mee met deze toggle.
+let ordBtw="incl";
 
 /* ═══ ANALYSEFILTERS (strategie × platform × plaatsing) ═══════════
    Eén centrale filterset die het hele bovenste dashboard bepaalt — niet
@@ -1368,8 +1380,17 @@ function applyCustom(){
 
 function setOrdFilter(v){
   ordFilter=v;
-  document.querySelectorAll(".ord-f").forEach(b=>{
-    b.classList.toggle("active", b.textContent.toLowerCase()===v||b.textContent==="Alle"&&v==="alle");
+  document.querySelectorAll(".ord-filters:not(.ord-btw-toggle) .ord-f").forEach(b=>{
+    b.classList.toggle("active", b.textContent.toLowerCase()===v.toLowerCase());
+  });
+  const pd=PERIODS[P]||PERIODS.aug;
+  renderOrders(pd.from,pd.to);
+}
+
+function setOrdBtw(v){
+  ordBtw=v;
+  document.querySelectorAll(".ord-btw-f").forEach(b=>{
+    b.classList.toggle("active", b.textContent.toLowerCase().includes(v==="incl"?"incl":"excl"));
   });
   const pd=PERIODS[P]||PERIODS.aug;
   renderOrders(pd.from,pd.to);
@@ -1754,11 +1775,14 @@ function renderOrders(from,to){
   const sorted=[...ORDERS]
     .filter(o=>(!from||o.d>=from)&&(!to||o.d<=to)&&matchesOrdFilter(o))
     .sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
-  let html="", totEx=0, totCost=0, totWi=0, totExKnown=0, totInclKnown=0;
+  const showIncl = ordBtw==="incl";
+  let html="", totEx=0, totIncl=0, totCost=0, totWi=0, totExKnown=0, totInclKnown=0;
   for(const o of sorted){
     const p = calcOrder(o);
-    if(!o.test) totEx += p.excl;
+    if(!o.test){ totEx += p.excl; totIncl += o.incl; }
     if(!o.test && p.winst!==null){totExKnown+=p.excl; totInclKnown+=o.incl; totCost+=p.cost; totWi+=p.winst;}
+    // Marge/break-even blijven altijd op excl.-BTW-grondslag — alleen de
+    // getoonde omzet zelf wisselt mee met de incl./excl.-toggle.
     const marg = p.winst!==null ? (p.winst/p.excl*100).toFixed(1)+"%" : "—";
     const be   = p.winst!==null && p.winst>0 ? x2(o.incl/p.winst) : "—";
     const note = o.test ? ' <span style="font-size:10px;color:#7C8CA6">test</span>' : '';
@@ -1766,7 +1790,7 @@ function renderOrders(from,to){
       <td>${o.num}</td><td>${fmtS(o.d)}</td>
       <td>${p.name}${note}</td>
       <td>${o.code||"—"}</td>
-      <td class="r">${eur(p.excl)}</td><td class="r">${p.cost!=null?eur(p.cost):"—"}</td>
+      <td class="r">${eur(showIncl?o.incl:p.excl)}</td><td class="r">${p.cost!=null?eur(p.cost):"—"}</td>
       <td class="r">${marg}</td>
       <td class="r">${be}</td></tr>`;
   }
@@ -1778,13 +1802,13 @@ function renderOrders(from,to){
   document.getElementById("ordTable").innerHTML=`
 <thead><tr>
   <th>Order</th><th>Datum</th><th>Producten</th><th>Kortingscode</th>
-  <th class="r">Omzet excl. BTW</th><th class="r">Kosten excl. ads</th>
+  <th class="r">Omzet ${showIncl?"incl.":"excl."} BTW</th><th class="r">Kosten excl. ads</th>
   <th class="r">Marge</th><th class="r">Break-even ROAS</th>
 </tr></thead>
 <tbody>${html}
 <tr class="tot">
   <td colspan="4">Totaal · ${nOrd} orders</td>
-  <td class="r">${eur(totEx)}</td><td class="r">${totCost>0?eur(totCost):"—"}</td>
+  <td class="r">${eur(showIncl?totIncl:totEx)}</td><td class="r">${totCost>0?eur(totCost):"—"}</td>
   <td class="r">${totMarg}</td>
   <td class="r">${totBe}</td>
 </tr></tbody>`;
