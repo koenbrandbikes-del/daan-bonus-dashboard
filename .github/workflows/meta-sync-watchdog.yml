@@ -12,11 +12,17 @@ name: Meta-sync watchdog
 # ongemerkt TWEE triggers tegelijk draaiden en af en toe met elkaar
 # botsten op data/meta.json — zie een cron-job.org faalmail 15 sep 07:00
 # UTC. Sindsdien staat die Cron Trigger bewust uit, crons = [] in
-# cloudflare-worker/wrangler.toml. Bewust ruim ingesteld hier, elke 2 uur
-# i.p.v. eerder elke 30 min — met meerdere bronnen die alle ~15 min
-# proberen te syncen, veroorzaakte de overlap onnodig veel "some jobs
-# were not successful"-mails van GitHub Pages, oudere deploy wordt
-# geannuleerd zodra een nieuwere binnenkomt tijdens dezelfde build.)
+# cloudflare-worker/wrangler.toml.)
+#
+# Interval: elke 30 min (was elke 2 uur). Op 28 sep bleef cron-job.org
+# zelf ~1u49 stil terwijl de endpoint bij handmatig testen meteen gewoon
+# HTTP 200 gaf — geen codefout, cron-job.org vuurde simpelweg niet. De
+# 2-uur-marge liet zo'n stilstand te lang onopgemerkt (de dashboard-
+# banner in index.html geeft vanaf 45 min al amber aan); 30 min is nog
+# steeds ruim genoeg om niet structureel tegen cron-job.org's eigen
+# ~15-min-tik aan te botsen (dat gaf destijds bij 3 bijna-gelijktijdige
+# bronnen onnodig veel "some jobs were not successful"-mails van GitHub
+# Pages — nu zijn het er nog maar 2, losser getimed).
 #
 # Faalt deze stap (endpoint niet bereikbaar, of ok:false), dan faalt de
 # hele workflow-run — GitHub mailt de repo-eigenaar dan automatisch bij
@@ -24,7 +30,7 @@ name: Meta-sync watchdog
 
 on:
   schedule:
-    - cron: "0 */2 * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
 
 jobs:
