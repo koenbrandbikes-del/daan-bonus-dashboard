@@ -781,21 +781,30 @@ function computePeriod(from,to){
 
   // Affiliate-orders — dit ís het hoofdcijfer, rechtstreeks herleid uit de
   // Creators-sheet (Sales-tab): alleen orders met een affiliate-kortingscode.
+  // Omzet komt bewust NIET uit de sheet's eigen "Grondslag (omzet excl.
+  // BTW)"-kolom: die klopt bij een deel van de orders niet (staat daar
+  // soms gelijk aan het incl.-BTW-bedrag, 2x zelfs op €0 voor een upsell-
+  // regel) — zie "Over deze cijfers". In plaats daarvan wordt het echte
+  // Shopify-orderbedrag (incl. de 10%-klantkorting die bij deze codes
+  // hoort) opgezocht via het ordernummer en zelf door BTW gedeeld. Dat is
+  // ook precies het bedrag waar calcOrder() de kostprijs tegen afzet, dus
+  // omzet en marge komen uit dezelfde, echte orderregel.
   const credP = CREATOR_ORDERS.filter(o=>o.d>=from && o.d<=to);
   const commissie = credP.reduce((s,o)=>s+o.commissie,0);
-  const affOmzetExcl = credP.reduce((s,o)=>s+o.omzet_excl,0);
 
-  let affOmzetIncl=0, cogs=0, unknownCost=0, betaald=0, openstaand=0;
+  let affOmzetIncl=0, affOmzetExcl=0, cogs=0, unknownCost=0, betaald=0, openstaand=0;
   for(const o of credP){
     const match = SHOP_BY_NUM[o.num];
     if(match){
       affOmzetIncl += match.incl;
+      affOmzetExcl += match.incl/BTW;
       const p = calcOrder(match);
       if(p.cost!=null) cogs += p.cost; else unknownCost++;
     } else {
-      // Geen Shopify-orderdata (bv. vóór 1 aug 2026) — omzet incl. schatten
-      // via BTW-factor op de sheet-omzet, kostprijs onbekend.
+      // Geen Shopify-orderdata (bv. vóór 1 aug 2026) — dan als enige
+      // terugval de sheet-Grondslag gebruiken, kostprijs onbekend.
       affOmzetIncl += o.omzet_excl*BTW;
+      affOmzetExcl += o.omzet_excl;
       unknownCost++;
     }
     if(o.status==="Betaald") betaald += o.commissie; else openstaand += o.commissie;
@@ -903,8 +912,8 @@ function renderAbout(){
   document.getElementById("aboutBody").innerHTML = `
     <div class="analysis-row">Deze pagina toont <b>alleen orders die via een affiliate-kortingscode binnenkwamen</b> — niet de hele winkelomzet en niet Meta/Google-advertentiedata. Dat blijft het Meta-dashboard. Herleid rechtstreeks uit de "Sales"-tab van het externe Creators Google Sheet.</div>
     <div class="analysis-row"><b style="color:#E5B863">● Creators/affiliates</b> — momentopname uit het externe Creators Google Sheet (tab "Sales"), opgehaald met <code>scripts/sync_creators.py</code>. Geen cron hierop — herdraai dat script en commit <code>data/creators.json</code> opnieuw om te verversen.</div>
-    <div class="analysis-row"><b style="color:#8FC49B">● Shopify</b> — live, alleen gebruikt om per affiliate-order de kostprijs te matchen (op ordernummer) en om het "aandeel van totale omzet"-percentage te berekenen. data/shopify.json begint 1 aug 2026 — enkele vroege affiliate-orders (medio juli) hebben daardoor geen kostprijs-match.</div>
-    <div class="analysis-row"><b>ROAS affiliates</b> = omzet excl. BTW via affiliates ÷ betaalde commissie. Dat is dus geen advertentie-ROAS (er wordt geen mediabudget aan besteed) maar de "omzet per euro commissie" van dit verkoopkanaal.</div>
+    <div class="analysis-row"><b style="color:#8FC49B">● Shopify</b> — live, gebruikt om per affiliate-order het <b>echte</b> orderbedrag op te zoeken (op ordernummer): dat is het bedrag ná de 10%-klantkorting die bij deze kortingscodes hoort, dus lager dan de normale prijs. Zowel de omzet hierboven als de kostprijs/marge worden tegen dát bedrag afgezet — de korting werkt dus al automatisch door in een lagere marge per order, niet alleen de commissie. De sheet's eigen "Grondslag excl. BTW"-kolom bleek bij 13 van de 75 gematchte orders niet te kloppen (stond gelijk aan het incl.-bedrag, 2x zelfs op €0 voor een upsell-regel) — <code>sync_creators.py</code> corrigeert dat nu automatisch via het Shopify-bedrag. data/shopify.json begint 1 aug 2026 — 4 vroege affiliate-orders (medio juli) hebben daardoor geen match en vallen terug op de sheet-eigen (mogelijk minder nauwkeurige) omzet.</div>
+    <div class="analysis-row"><b>ROAS affiliates</b> = omzet excl. BTW via affiliates (al na klantkorting) ÷ betaalde commissie. Dat is dus geen advertentie-ROAS (er wordt geen mediabudget aan besteed) maar de "omzet per euro commissie" van dit verkoopkanaal, inclusief het effect van de korting op de marge.</div>
     <div class="analysis-row" style="margin-top:10px;padding-top:10px;border-top:1px solid #1f2d45"><b>Geen dubbeltelling:</b> de commissie wordt alleen hier als kostenpost meegenomen. De Orderdetail-marge in het Meta-dashboard blijft precies zoals die was — commissie staat daar niet nogmaals afgetrokken.</div>
   `;
 }

@@ -79,6 +79,22 @@ def fetch_csv(url):
     return raw.decode("utf-8-sig")
 
 
+BTW = 1.21
+
+
+def load_shopify_by_num():
+    """num -> incl-BTW-bedrag uit data/shopify.json, om de sheet's eigen
+    'Grondslag (omzet excl. BTW)'-kolom te verifiëren/corrigeren (zie
+    main() hieronder) — die klopt niet altijd."""
+    try:
+        with open("data/shopify.json", encoding="utf-8") as f:
+            d = json.load(f)
+        return {o["num"]: o["incl"] for o in d["orders"]}
+    except Exception as e:
+        print(f"⚠️  Kon data/shopify.json niet lezen ({e}) — geen kostprijs-check op de sheet-omzet", file=sys.stderr)
+        return {}
+
+
 def main():
     try:
         text = fetch_csv(CSV_URL)
@@ -86,6 +102,8 @@ def main():
         print(f"⚠️  Kon Creators-sheet niet ophalen: {e}", file=sys.stderr)
         sys.exit(1)
 
+    shopify_incl_by_num = load_shopify_by_num()
+    corrected = 0
     reader = csv.DictReader(io.StringIO(text))
     rows = []
     by_creator = defaultdict(lambda: {
@@ -101,7 +119,21 @@ def main():
         if not creator:
             continue
         retour = (row.get("Retour?") or "").strip().lower() == "ja"
+        num = (row.get("Ordernummer") or "").strip()
         omzet_excl = eur_to_float(row.get("Grondslag (omzet excl. BTW)"))
+        # De sheet's "Grondslag"-kolom is niet altijd betrouwbaar: bij een
+        # deel van de orders staat daar het incl.-BTW-bedrag in plaats van
+        # excl. (en bij losse upsell-regels soms €0, terwijl er wel voor
+        # betaald is). Waar het echte Shopify-orderbedrag bekend is
+        # (ordernummer-match), gebruiken we dat i.p.v. de sheet-kolom —
+        # zelfde bedrag waar ook de kostprijs/marge in blended.html tegen
+        # afgezet wordt, dus omzet en marge blijven consistent.
+        real_incl = shopify_incl_by_num.get(num)
+        if real_incl is not None:
+            real_excl = round(real_incl / BTW, 2)
+            if abs(real_excl - omzet_excl) > 1:
+                corrected += 1
+            omzet_excl = real_excl
         commissie = eur_to_float(row.get("Commissie €"))
         status = (row.get("Status uitbetaling") or "").strip()
 
@@ -111,7 +143,7 @@ def main():
             # Geen "code" hier: de kortingscode (bv. "Anniek10", "PAKHUIS")
             # verklapt zelf al de echte naam, dus die hoort niet in de
             # publieke JSON — precies wat anon_id() net vermijdt.
-            "num": (row.get("Ordernummer") or "").strip(),
+            "num": num,
             "product": (row.get("Product") or "").strip(),
             "herkomst": (row.get("Herkomst (eerste bezoek)") or "").strip(),
             "omzet_excl": round(omzet_excl, 2),
@@ -170,6 +202,9 @@ def main():
     print(f"  Totaal omzet (excl BTW, excl retour): €{totals['omzet_excl']:.2f}")
     print(f"  Totaal commissie: €{totals['commissie']:.2f} "
           f"(betaald €{totals['betaald']:.2f}, openstaand €{totals['openstaand']:.2f})")
+    if corrected:
+        print(f"  ⚠️  {corrected} orders hadden een foutieve 'Grondslag excl. BTW' in de sheet "
+              f"(stond gelijk aan incl.-bedrag of €0) — gecorrigeerd via het echte Shopify-orderbedrag.")
 
 
 if __name__ == "__main__":
