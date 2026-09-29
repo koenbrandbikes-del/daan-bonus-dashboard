@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daan · Blended ROAS</title>
+<title>Daan · Creators-dashboard</title>
 <link rel="icon" type="image/png" href="favicon-meta.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -586,7 +586,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
       <div class="avatar-inner"><img src="meta-badge.gif" alt="Blended"></div>
     </div>
     <div class="hd-text">
-      <h1>Blended ROAS</h1>
+      <h1>Creators-dashboard</h1>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -651,7 +651,8 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
         <button class="ord-f ord-btw-f active" onclick="setOrdBtwAff('incl')">Omzet incl. BTW</button>
         <button class="ord-f ord-btw-f" onclick="setOrdBtwAff('excl')">Omzet excl. BTW</button>
       </div>
-      <div class="fc-note" style="padding:8px 16px 0">Volgt de periodekiezer bovenaan de pagina.</div>
+      <div class="ord-filters" id="ordColToggles" style="padding-top:8px"></div>
+      <div class="fc-note" style="padding:8px 16px 0">Volgt de periodekiezer bovenaan de pagina. Marge is al ná de 10%-klantkorting die bij deze kortingscodes hoort; Commissie is de aparte 10% die naar de creator gaat, los van die marge.</div>
       <div class="tscroll" style="margin-top:10px"><table id="ordTableAff"></table></div>
     </div>
   </div>
@@ -959,6 +960,40 @@ function setOrdBtwAff(v){
   renderOrderDetail();
 }
 
+// Welke kolommen tonen is zelf te kiezen (opgeslagen per browser via
+// localStorage, dus per-viewer — nooit gedeeld, kan gerust ontbreken/
+// leeg zijn zonder dat de pagina stukgaat). "num"/"d" staan vast, de rest
+// is aan/uit te klikken.
+const ORD_COLS = [
+  {key:"creator",   label:"Creator",  def:true},
+  {key:"product",   label:"Product",  def:true},
+  {key:"code",      label:"Kortingscode", def:false},
+  {key:"omzet",     label:"Omzet",    def:true,  r:true},
+  {key:"kosten",    label:"Kosten (excl. ads)", def:false, r:true},
+  {key:"marge",     label:"Marge",    def:true,  r:true},
+  {key:"commissie", label:"Commissie", def:true, r:true},
+  {key:"netto",     label:"Netto marge", def:false, r:true},
+];
+function loadOrdCols(){
+  try{
+    const raw = localStorage.getItem("blend_ord_cols");
+    if(raw) return new Set(JSON.parse(raw));
+  }catch(e){}
+  return new Set(ORD_COLS.filter(c=>c.def).map(c=>c.key));
+}
+function saveOrdCols(){
+  try{ localStorage.setItem("blend_ord_cols", JSON.stringify([...ordVisibleCols])); }catch(e){}
+}
+let ordVisibleCols = loadOrdCols();
+
+function toggleOrdCol(key){
+  if(ordVisibleCols.has(key)) ordVisibleCols.delete(key); else ordVisibleCols.add(key);
+  saveOrdCols();
+  document.querySelectorAll("#ordColToggles .ord-f").forEach(b=>
+    b.classList.toggle("active", ordVisibleCols.has(b.dataset.col)));
+  renderOrderDetail();
+}
+
 function renderOrderDetail(){
   const pd = CUR_PD;
   if(!pd) return;
@@ -977,6 +1012,14 @@ function renderOrderDetail(){
       CREATORS.map(c=>`<option value="${c.creator}">${c.creator}</option>`).join("");
     creatorSel.dataset.built = "1";
   }
+  const colBar = document.getElementById("ordColToggles");
+  if(!colBar.dataset.built){
+    colBar.innerHTML = `<span style="font-size:10px;color:#7C8CA6;align-self:center;margin-right:2px">KOLOMMEN:</span>` +
+      ORD_COLS.map(c=>
+        `<button class="ord-f${ordVisibleCols.has(c.key)?" active":""}" data-col="${c.key}" onclick="toggleOrdCol('${c.key}')">${c.label}</button>`
+      ).join("");
+    colBar.dataset.built = "1";
+  }
 
   let credP = CREATOR_ORDERS.filter(o=>o.d>=pd.from && o.d<=pd.to);
   if(ordCreatorFilter!=="alle") credP = credP.filter(o=>o.creator===ordCreatorFilter);
@@ -984,28 +1027,52 @@ function renderOrderDetail(){
   credP = [...credP].sort((a,b)=>a.d<b.d?1:-1);
 
   const showIncl = ordBtwAff==="incl";
-  let total = 0;
+  const cols = ORD_COLS.filter(c=>ordVisibleCols.has(c.key));
+
+  let totOmzetShown=0, totExcl=0, totCost=0, totWinst=0, totCommissie=0, totKnownCost=0;
   const rows = credP.map(o=>{
     const match = SHOP_BY_NUM[o.num];
     const incl = match ? match.incl : o.omzet_excl*BTW;
     const excl = match ? match.incl/BTW : o.omzet_excl;
-    const val = showIncl ? incl : excl;
-    total += val;
-    return `<tr>
-      <td>${o.num}</td>
-      <td>${fmtS(o.d)}</td>
-      <td>${o.creator}</td>
-      <td>${o.product}${o.retour?` <span style="color:#DD9280">(retour)</span>`:""}</td>
-      <td>${o.code||"—"}</td>
-      <td class="r">${eur(val)}</td>
-      <td class="r">${eur(o.commissie)}</td>
-    </tr>`;
+    const cost = match ? calcOrder(match).cost : null;
+    const winst = cost!=null ? excl-cost : null;
+    const margePct = winst!=null ? winst/excl*100 : null;
+    const nettoWinst = winst!=null ? winst-o.commissie : null;
+    const nettoPct = nettoWinst!=null ? nettoWinst/excl*100 : null;
+    const omzetVal = showIncl ? incl : excl;
+
+    totOmzetShown += omzetVal; totExcl += excl; totCommissie += o.commissie;
+    if(cost!=null){ totCost+=cost; totWinst+=winst; totKnownCost+=excl; }
+
+    const cellVals = {
+      creator: o.creator,
+      product: `${o.product}${o.retour?` <span style="color:#DD9280">(retour)</span>`:""}`,
+      code: o.code||"—",
+      omzet: eur(omzetVal),
+      kosten: cost!=null?eur(cost):"—",
+      marge: margePct!=null?margePct.toFixed(1)+"%":"—",
+      commissie: eur(o.commissie),
+      netto: nettoPct!=null?nettoPct.toFixed(1)+"%":"—",
+    };
+    return `<tr><td>${o.num}</td><td>${fmtS(o.d)}</td>` +
+      cols.map(c=>`<td${c.r?' class="r"':''}>${cellVals[c.key]}</td>`).join("") + `</tr>`;
   }).join("");
 
+  const totMargePct = totKnownCost>0 ? (totWinst/totKnownCost*100).toFixed(1)+"%" : "—";
+  const totNettoPct = totKnownCost>0 ? ((totWinst-totCommissie)/totKnownCost*100).toFixed(1)+"%" : "—";
+  const totCellVals = {
+    creator:"", product:"", code:"",
+    omzet: eur(totOmzetShown),
+    kosten: totCost>0?eur(totCost):"—",
+    marge: totMargePct,
+    commissie: eur(totCommissie),
+    netto: totNettoPct,
+  };
+
   document.getElementById("ordTableAff").innerHTML = credP.length ? `
-    <thead><tr><th>Order</th><th>Datum</th><th>Creator</th><th>Product</th><th>Kortingscode</th><th class="r">Omzet ${showIncl?"incl.":"excl."} BTW</th><th class="r">Commissie</th></tr></thead>
+    <thead><tr><th>Order</th><th>Datum</th>${cols.map(c=>`<th${c.r?' class="r"':''}>${c.key==="omzet"?`Omzet ${showIncl?"incl.":"excl."} BTW`:c.label}</th>`).join("")}</tr></thead>
     <tbody>${rows}
-    <tr class="tot"><td colspan="5">Totaal (${credP.length} orders)</td><td class="r">${eur(total)}</td><td class="r">${eur(credP.reduce((s,o)=>s+o.commissie,0))}</td></tr>
+    <tr class="tot"><td colspan="2">Totaal (${credP.length} orders)</td>${cols.map(c=>`<td${c.r?' class="r"':''}>${totCellVals[c.key]}</td>`).join("")}</tr>
     </tbody>` : `<tbody><tr><td style="padding:16px;color:#7C8CA6">Geen affiliate-orders voor dit filter in deze periode.</td></tr></tbody>`;
 
   document.getElementById("ordHdr").textContent =
