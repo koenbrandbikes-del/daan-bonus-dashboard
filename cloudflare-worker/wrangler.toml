@@ -1,6 +1,11 @@
 name = "daan-shopify-webhook"
 main = "src/index.js"
 compatibility_date = "2026-08-15"
+# Vereist door @modelcontextprotocol/sdk (src/mcp.js, sinds 29 sep 2026,
+# read-only MCP-server op /mcp) — de SDK raakt bij het inladen Node-
+# builtins aan; zonder deze flag faalt de Worker met module-resolution-
+# fouten. Geen effect op de bestaande Shopify-webhook/Meta-cron-code.
+compatibility_flags = ["nodejs_compat"]
 
 # Cron Trigger UIT (bewust, sinds 15 sep 2026): de Meta-sync elke 15 min
 # loopt via een externe cron-job.org-pinger (GET /run-meta-sync?key=..., niet

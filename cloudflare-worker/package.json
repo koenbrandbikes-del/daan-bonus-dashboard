@@ -1,0 +1,10 @@
+{
+  "name": "daan-shopify-webhook",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Worker: Shopify-webhook, Meta-sync-cron en een read-only MCP-server voor het Meta-bonusdashboard + Creators-dashboard.",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "zod": "^4.6.5"
+  }
+}

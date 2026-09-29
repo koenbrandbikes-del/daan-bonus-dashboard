@@ -62,6 +62,8 @@ const BREAKDOWN_REFRESH_MIN_MS = 55 * 60 * 1000;
 const BREAKDOWN_POLL_MS = 2000;
 const BREAKDOWN_MAX_POLLS = 15; // 15 × 2s = 30s max wachttijd per dag, dan niet-fataal opgeven
 
+import { handleMcpRequest } from "./mcp.js";
+
 export {
   verifyHmac, mapOrder, timingSafeEqual, orderNumInt, toAmsterdamDate,
   amsterdamTodayStr, addDaysStr, dowMonday0, sumDaily, validateMeta,
@@ -83,6 +85,14 @@ export default {
       } catch (e) {
         return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: { "content-type": "application/json" } });
       }
+    }
+
+    // Read-only MCP-server (Meta-bonusdashboard + Creators-dashboard) voor
+    // externe MCP-clients zoals ChatGPT Developer Mode of Claude — geen
+    // auth nodig, alle onderliggende data (data/*.json) is toch al publiek.
+    // Los pad, raakt de Shopify-webhook/Meta-cron hieronder niet aan.
+    if (url.pathname === "/mcp") {
+      return handleMcpRequest(request);
     }
 
     if (request.method !== "POST") {
