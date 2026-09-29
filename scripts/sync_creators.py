@@ -132,8 +132,7 @@ def main():
         rec = {
             "d": d,
             "creator": creator,
-            # Geen "code" hier: de kortingscode zelf (bv. "Anniek10") is
-            # geen extra info t.o.v. de naam die al in "creator" staat.
+            "code": (row.get("Kortingscode") or "").strip(),
             "num": num,
             "product": (row.get("Product") or "").strip(),
             "herkomst": (row.get("Herkomst (eerste bezoek)") or "").strip(),
