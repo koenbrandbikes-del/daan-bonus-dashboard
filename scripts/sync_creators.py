@@ -13,14 +13,14 @@ niet vanuit de browser (blended.html, GitHub Pages) opgehaald kan worden.
 Herdraaien: python3 scripts/sync_creators.py   (overschrijft data/creators.json)
 
 Privacy: data/creators.json komt op een volledig publieke, niet-afgeschermde
-GitHub Pages-URL terecht (blended.html leest 'm rechtstreeks). Individuele
-creator-namen gekoppeld aan hun persoonlijke omzet/commissie horen daar niet
-onversleuteld in thuis — dit script vervangt de echte voornaam daarom altijd
-door een stabiele, niet-terug te herleiden code (hash van de naam). De echte
-namen blijven alleen in de bron-sheet staan, nooit in deze repo.
+GitHub Pages-URL terecht (blended.html leest 'm rechtstreeks) — dus ook de
+voornamen hieronder zijn voor iedereen met de link zichtbaar. Bewust
+gekozen door Koen (29 sep 2026): eerst geanonimiseerd geweest (hash-codes
+i.p.v. namen), maar op verzoek teruggezet naar de echte voornaam uit de
+sheet, omdat de codes de tabel onbruikbaar maakten. Bij twijfel hierover:
+navragen voordat je dit weer aanpast.
 """
 import csv
-import hashlib
 import io
 import json
 import re
@@ -28,14 +28,6 @@ import sys
 import urllib.request
 from collections import defaultdict
 from datetime import datetime, timezone
-
-
-def anon_id(name):
-    """Stabiele, niet-omkeerbare code per creator-naam — zelfde naam geeft
-    bij elke rerun dezelfde code, zodat trends over tijd volgbaar blijven
-    zonder de echte naam in de publieke JSON te zetten."""
-    h = hashlib.sha256(name.strip().lower().encode()).hexdigest()[:4].upper()
-    return f"Creator-{h}"
 
 SHEET_ID = "1KFqw7ced05h4K2HU60yUAdImPs42Hm8LMfGHaOoRw7Y"
 SALES_GID = "1378460483"
@@ -139,10 +131,9 @@ def main():
 
         rec = {
             "d": d,
-            "creator": anon_id(creator),
-            # Geen "code" hier: de kortingscode (bv. "Anniek10", "PAKHUIS")
-            # verklapt zelf al de echte naam, dus die hoort niet in de
-            # publieke JSON — precies wat anon_id() net vermijdt.
+            "creator": creator,
+            # Geen "code" hier: de kortingscode zelf (bv. "Anniek10") is
+            # geen extra info t.o.v. de naam die al in "creator" staat.
             "num": num,
             "product": (row.get("Product") or "").strip(),
             "herkomst": (row.get("Herkomst (eerste bezoek)") or "").strip(),
@@ -169,7 +160,7 @@ def main():
     creators = []
     for name, c in sorted(by_creator.items(), key=lambda kv: -kv[1]["commissie"]):
         creators.append({
-            "creator": anon_id(name),
+            "creator": name,
             "orders": c["orders"],
             "retouren": c["retouren"],
             "omzet_excl": round(c["omzet_excl"], 2),

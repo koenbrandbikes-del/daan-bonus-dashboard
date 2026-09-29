@@ -642,6 +642,19 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     </div>
   </div>
 
+  <div class="acc-item" id="acc-ord">
+    <div class="acc-hd" onclick="tog('acc-ord')"><span id="ordHdr">Orderdetail (affiliate-orders)</span><span class="acc-chv">›</span></div>
+    <div class="acc-body">
+      <div class="ord-filters" id="ordCreatorFilters"></div>
+      <div class="ord-filters ord-btw-toggle">
+        <button class="ord-f ord-btw-f active" onclick="setOrdBtwAff('incl')">Omzet incl. BTW</button>
+        <button class="ord-f ord-btw-f" onclick="setOrdBtwAff('excl')">Omzet excl. BTW</button>
+      </div>
+      <div class="fc-note" style="padding:8px 16px 0">Volgt de periodekiezer bovenaan de pagina.</div>
+      <div class="tscroll" style="margin-top:10px"><table id="ordTableAff"></table></div>
+    </div>
+  </div>
+
   <div class="acc-item" id="acc-about">
     <div class="acc-hd" onclick="tog('acc-about')"><span>Over deze cijfers</span><span class="acc-chv">›</span></div>
     <div class="acc-body">
@@ -820,11 +833,15 @@ function computePeriod(from,to){
 
 /* ═══ RENDER ═══ */
 let CUR_KEY = "all";
+let ordCreatorFilter = "alle";
+let ordBtwAff = "incl";
+let CUR_PD = null;
 
 function onPeriodChange(key){ CUR_KEY = key; render(); }
 
 function render(){
   const pd = periodRange(CUR_KEY);
+  CUR_PD = pd;
   const cur = computePeriod(pd.from, pd.to);
 
   // Vorige periode van gelijke lengte, voor de trendpijl
@@ -872,6 +889,7 @@ function render(){
   renderMarginFlow(cur);
   renderChart(pd);
   renderCreatorsTable();
+  renderOrderDetail();
   renderAbout();
 
   document.getElementById("footerDate").textContent = `${SNAP_TIME} · ${fmtL(SNAP)}`;
@@ -897,15 +915,73 @@ function renderCreatorsTable(){
     <td class="r">${c.orders}${c.retouren?` <span style="color:#7C8CA6">(${c.retouren} retour)</span>`:""}</td>
     <td class="r">${eur(c.omzet_excl)}</td>
     <td class="r">${eur(c.commissie)}</td>
-    <td class="r">${eur(c.betaald)}</td>
-    <td class="r">${eur(c.openstaand)}</td>
   </tr>`).join("");
   document.getElementById("creatorsTable").innerHTML = `
-    <thead><tr><th>Creator</th><th class="r">Orders</th><th class="r">Omzet excl. BTW</th><th class="r">Commissie</th><th class="r">Betaald</th><th class="r">Openstaand</th></tr></thead>
+    <thead><tr><th>Creator</th><th class="r">Orders</th><th class="r">Omzet excl. BTW</th><th class="r">Commissie</th></tr></thead>
     <tbody>${rows}
-    <tr class="tot"><td>Totaal</td><td class="r">${t.orders}</td><td class="r">${eur(t.omzet_excl)}</td><td class="r">${eur(t.commissie)}</td><td class="r">${eur(t.betaald)}</td><td class="r">${eur(t.openstaand)}</td></tr>
+    <tr class="tot"><td>Totaal</td><td class="r">${t.orders}</td><td class="r">${eur(t.omzet_excl)}</td><td class="r">${eur(t.commissie)}</td></tr>
     </tbody>`;
   document.getElementById("creatorsHdr").textContent = `Creators & affiliates (${CREATORS.length})`;
+}
+
+function setOrdCreatorFilter(name){
+  ordCreatorFilter = name;
+  document.querySelectorAll("#ordCreatorFilters .ord-f").forEach(b=>
+    b.classList.toggle("active", b.dataset.creator===name));
+  renderOrderDetail();
+}
+
+function setOrdBtwAff(v){
+  ordBtwAff = v;
+  document.querySelectorAll(".ord-btw-f").forEach(b=>
+    b.classList.toggle("active", b.textContent.toLowerCase().includes(v)));
+  renderOrderDetail();
+}
+
+function renderOrderDetail(){
+  const pd = CUR_PD;
+  if(!pd) return;
+
+  const filtBar = document.getElementById("ordCreatorFilters");
+  if(!filtBar.dataset.built){
+    const names = ["alle", ...CREATORS.map(c=>c.creator)];
+    filtBar.innerHTML = names.map(n=>
+      `<button class="ord-f${n==="alle"?" active":""}" data-creator="${n}" onclick="setOrdCreatorFilter('${n.replace(/'/g,"\\'")}')">${n==="alle"?"Alle":n}</button>`
+    ).join("");
+    filtBar.dataset.built = "1";
+  }
+
+  let credP = CREATOR_ORDERS.filter(o=>o.d>=pd.from && o.d<=pd.to);
+  if(ordCreatorFilter!=="alle") credP = credP.filter(o=>o.creator===ordCreatorFilter);
+  credP = [...credP].sort((a,b)=>a.d<b.d?1:-1);
+
+  const showIncl = ordBtwAff==="incl";
+  let total = 0;
+  const rows = credP.map(o=>{
+    const match = SHOP_BY_NUM[o.num];
+    const incl = match ? match.incl : o.omzet_excl*BTW;
+    const excl = match ? match.incl/BTW : o.omzet_excl;
+    const val = showIncl ? incl : excl;
+    total += val;
+    return `<tr>
+      <td>${o.num}</td>
+      <td>${fmtS(o.d)}</td>
+      <td>${o.creator}</td>
+      <td>${o.product}${o.retour?` <span style="color:#DD9280">(retour)</span>`:""}</td>
+      <td class="r">${eur(val)}</td>
+      <td class="r">${eur(o.commissie)}</td>
+      <td class="r"><span style="color:${o.status==='Betaald'?'#8FC49B':'#E5B863'}">${o.status}</span></td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("ordTableAff").innerHTML = credP.length ? `
+    <thead><tr><th>Order</th><th>Datum</th><th>Creator</th><th>Product</th><th class="r">Omzet ${showIncl?"incl.":"excl."} BTW</th><th class="r">Commissie</th><th class="r">Status</th></tr></thead>
+    <tbody>${rows}
+    <tr class="tot"><td colspan="4">Totaal (${credP.length} orders)</td><td class="r">${eur(total)}</td><td class="r">${eur(credP.reduce((s,o)=>s+o.commissie,0))}</td><td></td></tr>
+    </tbody>` : `<tbody><tr><td style="padding:16px;color:#7C8CA6">Geen affiliate-orders voor dit filter in deze periode.</td></tr></tbody>`;
+
+  document.getElementById("ordHdr").textContent =
+    `Orderdetail (affiliate-orders) · ${credP.length} orders`;
 }
 
 function renderAbout(){
