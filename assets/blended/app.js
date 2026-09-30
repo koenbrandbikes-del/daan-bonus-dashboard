@@ -374,7 +374,7 @@ function render() {
  <section class="kpis ${state.channel === "all" ? "" : "channel"}" aria-label="Kerncijfers">${metrics
    .map((k) => {
      const m = metricMeta(k);
-     return `<button class="kpi ${state.metrics.includes(k) ? "active" : ""}" data-metric="${k}" aria-pressed="${state.metrics.includes(k)}"><span class="label">${m.label}</span><strong>${m.fmt(cur[k])}</strong><small>${k === "result" && cur.revenue > 0 ? num((cur.result / cur.revenue) * 100) + "% van omzet · voorlopig" : k === "cost" && cur.revenue > 0 ? num((cur.cost / cur.revenue) * 100) + "% van omzet · geraamde basis" : k === "revenue" && state.channel === "all" ? num(cur.count) + " orders · " + euro(cur.incl) + " incl. btw" : m.sub}</small><small class="delta">${esc(delta(k, cur, prev))}</small></button>`;
+     return `<button class="kpi ${state.metrics.includes(k) ? "active" : ""}" data-metric="${k}" aria-pressed="${state.metrics.includes(k)}"><span class="label">${m.label}</span><strong>${m.fmt(cur[k])}</strong><small>${k === "result" && cur.result != null && cur.revenue > 0 ? num((cur.result / cur.revenue) * 100) + "% van omzet · voorlopig" : k === "cost" && cur.cost != null && cur.revenue > 0 ? num((cur.cost / cur.revenue) * 100) + "% van omzet · geraamde basis" : k === "revenue" && state.channel === "all" ? num(cur.count) + " orders · " + euro(cur.incl) + " incl. btw" : m.sub}</small><small class="delta">${esc(delta(k, cur, prev))}</small></button>`;
    })
    .join("")}</section>
  ${
