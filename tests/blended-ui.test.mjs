@@ -84,7 +84,7 @@ test("drilldowns, comparing two metrics, channel switching and Google splits", a
   const totals = [...d.querySelectorAll("#table tfoot td")].map(
     (x) => x.textContent,
   );
-  assert.equal(totals[2], "—");
+  assert.equal(totals[1], "—");
   assert.equal(
     totals[4],
     "—",
