@@ -354,6 +354,18 @@ const googleScopeNames = {
 function analysisData() {
   return state.channel === "google" ? googleScopeData(D, state.googleScope) : D;
 }
+function channelRevenueBar(cur) {
+  if (state.channel !== "all") return "";
+  const google = compute(googleScopeData(D,"nonbrand"),C,state.from,state.to,"google");
+  const channels = [
+    {key:"meta",name:"Meta",color:"#4EA8DE",revenue:cur.channels.meta.revenue},
+    {key:"google",name:"Google Ads",color:"#E5B863",revenue:google.revenue},
+    {key:"infl",name:"Influencers",color:"#B98DE0",revenue:cur.channels.infl.revenue},
+  ];
+  const complete=channels.every(c=>c.revenue!=null && c.revenue>=0);
+  const total=complete ? sum(channels,"revenue") : 0;
+  return `<section class="channel-revenue" aria-label="Omzet per kanaal"><h3>Toegerekende omzet per kanaal</h3><div class="revenue-bar" aria-hidden="true">${total>0 ? channels.map(c=>`<span style="width:${c.revenue/total*100}%;background:${c.color}"></span>`).join("") : ""}</div><div class="revenue-legend">${channels.map(c=>`<button data-channel="${c.key}"><span><i class="channel-dot" style="background:${c.color}" aria-hidden="true"></i>${c.name}</span><strong>${euro(c.revenue)}</strong><small>${total>0 ? num(c.revenue/total*100)+"%" : "—"}${c.key==="google" ? " · non-branded" : ""}</small></button>`).join("")}</div><p class="hint">${complete ? "Aandeel van de toegerekende kanaalomzet. Kanalen kunnen overlappen; dit is geen verdeling van de Shopify-omzet." : "Verdeling niet beschikbaar: een kanaalbron ontbreekt of bevat een negatieve correctie."}</p></section>`;
+}
 function googleFilter() {
   if (state.channel !== "google") return "";
   const unknown = (D.google?.daily_campaigns || []).filter(
@@ -536,6 +548,7 @@ function render() {
         : "";
   $("#content").innerHTML =
     `<div class="view-head"><div><p class="eyebrow">${state.channel === "all" ? "HET TOTAALBEELD" : "KANAALANALYSE"}</p><h2>${names[state.channel]}</h2></div><div class="subtitle">${fmt(state.from)} – ${fmt(state.to)} ${state.to.slice(0, 4)}<br>${comparisonText}${state.to === today ? "<br><small>Vandaag loopt nog · vergeleken met hele dagen</small>" : ""}</div></div>
+ ${channelRevenueBar(cur)}
  ${googleFilter()}
  <section class="kpis ${state.channel === "all" ? "" : "channel"}" aria-label="Kerncijfers">${metrics
    .map((k) => {
@@ -581,6 +594,11 @@ function renderUpdateSummary() {
 }
 function renderStatus() {
   renderUpdateSummary();
+  const statusOk = ["meta","google","shopify","creators"].every(k => D[k] && !E[k] && !stale(k) && coverage(k)) && !!D.shopify_check;
+  $("#statusButton").innerHTML = `Datastatus <span aria-hidden="true">${statusOk ? "✓" : "!"}</span>`;
+  $("#statusButton").classList.toggle("status-ok",statusOk);
+  $("#statusButton").classList.toggle("status-warning",!statusOk);
+  $("#statusButton").setAttribute("aria-label",statusOk ? "Datastatus: broncontroles goed" : "Datastatus: aandacht nodig");
   const stamps = {
     meta: D.meta
       ? `${D.meta.snap} ${D.meta.snap_time} (Amsterdam)`
@@ -597,7 +615,7 @@ function renderStatus() {
   ]
     .map((k) => {
       const old = stale(k);
-      return `<div><h3>${{ shopify: "Shopify", creators: "Influencers", meta: "Meta", google: "Google Ads" }[k]}</h3><p>${esc(stamps[k] || "Niet beschikbaar")}</p>${k === "shopify" && D.shopify_check ? `<p>${D.shopify_check.orders} unieke orders · ${D.shopify_check.test_orders} testorders uitgesloten.<br>Laatste order: ${esc(D.shopify_check.latest_num)} · ${esc(D.shopify_check.latest_date)}.</p>` : ""}<span class="tag ${E[k] || old || !coverage(k) ? "warn" : ""}">${!D[k] ? "Ontbreekt" : E[k] ? "Laatste goede gegevens" : old ? "Verversing vertraagd" : !coverage(k) ? "Dekking onvolledig" : k === "shopify" ? (D.shopify_check ? "Ordergegevens gecontroleerd" : "Controle niet beschikbaar") : "Beschikbaar"}</span></div>`;
+      return `<div><h3>${{ shopify: "Shopify", creators: "Influencers", meta: "Meta", google: "Google Ads" }[k]}</h3><p>${esc(stamps[k] || "Niet beschikbaar")}</p>${k === "shopify" && D.shopify_check ? `<p>${D.shopify_check.orders} unieke orders · ${D.shopify_check.test_orders} testorders uitgesloten.<br>Laatste order: ${esc(D.shopify_check.latest_num)} · ${esc(D.shopify_check.latest_date)}.</p>` : ""}<span class="tag ${E[k] || old || !coverage(k) ? "warn" : ""}">${!D[k] ? "Ontbreekt" : E[k] ? "Laatste goede gegevens" : old ? "Verversing vertraagd" : !coverage(k) ? "Dekking onvolledig" : k === "shopify" ? (D.shopify_check ? "✓ Ordergegevens gecontroleerd" : "Controle niet beschikbaar") : "✓ Beschikbaar"}</span></div>`;
     })
     .join(
       "",

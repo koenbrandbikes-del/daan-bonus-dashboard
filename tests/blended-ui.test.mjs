@@ -334,3 +334,25 @@ test("Shopify status explains validation and opens the matching order list", asy
  assert.match(bad.document.querySelector("#status").textContent,/Ontbreekt/);
  assert.equal(bad.document.querySelector("#viewShopifyOrders"),null);
 });
+
+test("channel revenue bar totals attributed revenue, excludes branded Google and opens channel", async () => {
+  const w = await boot("?from=2026-09-23&to=2026-09-29"), d = w.document;
+  const segments = [...d.querySelectorAll(".revenue-bar > span")];
+  assert.equal(segments.length, 3);
+  assert(Math.abs(segments.reduce((n,s)=>n+parseFloat(s.style.width),0)-100)<0.001);
+  assert(d.querySelector('.revenue-legend [data-channel=google]').textContent.includes('non-branded'));
+  const googleAmount = d.querySelector('.revenue-legend [data-channel=google] strong').textContent;
+  d.querySelector('.revenue-legend [data-channel=google]').click();
+  assert.equal(d.querySelector('.kpi[data-metric=revenue] strong').textContent,googleAmount);
+  assert.equal(d.querySelector('.channel-revenue'),null);
+  w.close();
+});
+
+test("missing source suppresses revenue distribution and healthy status tick", async () => {
+  const w = await boot("?from=2026-09-23&to=2026-09-29", "google.json"), d = w.document;
+  assert.equal(d.querySelectorAll('.revenue-bar > span').length,0);
+  assert(d.querySelector('.channel-revenue').textContent.includes('Verdeling niet beschikbaar'));
+  assert(!d.querySelector('#statusButton').classList.contains('status-ok'));
+  assert(d.querySelector('#statusButton').getAttribute('aria-label').includes('aandacht nodig'));
+  w.close();
+});

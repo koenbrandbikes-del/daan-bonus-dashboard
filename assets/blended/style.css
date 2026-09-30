@@ -46,7 +46,7 @@ body {
   font-variant-numeric: tabular-nums;
 }
 .shell {
-  max-width: 1336px;
+  max-width: 820px;
   padding: 36px 28px;
   margin: auto;
 }
@@ -1206,3 +1206,55 @@ header {
 .period-btn::after { content: ""; width: 7px; height: 7px; flex: 0 0 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; opacity: .65; transform: translateY(-2px) rotate(45deg); transition: transform .16s ease; }
 .period-btn[aria-expanded="true"]::after { transform: translateY(2px) rotate(225deg); }
 @media (prefers-reduced-motion: reduce) { .period-btn::after { transition: none; } }
+
+/* Compact desktop canvas and touch-first layout. */
+.shell { padding-inline:20px; }
+header { position:relative; flex-wrap:wrap; }
+.controls { flex-wrap:wrap; }
+.kpi { min-width:0; overflow-wrap:anywhere; }
+.kpi strong { font-size:clamp(23px,2.4vw,32px); }
+.panel-head > div, .toolbar, .status-grid > div { min-width:0; }
+.status-grid p { overflow-wrap:anywhere; }
+.channel-revenue { margin:0 0 22px; padding:18px; border:1px solid #ffffff20; border-radius:18px; background:#ffffff05; }
+.channel-revenue h3 { font-size:15px; margin-bottom:14px; }
+.revenue-bar { height:12px; display:flex; overflow:hidden; border-radius:999px; background:#ffffff15; }
+.revenue-bar > span { height:100%; }
+.revenue-legend { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:14px; }
+.revenue-legend button { text-align:left; border:0; background:transparent; border-radius:8px; padding:8px; min-height:44px; }
+.revenue-legend strong,.revenue-legend small { display:block; margin-top:5px; }
+.revenue-legend small { color:#93a2b8; }
+.channel-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }
+#statusButton.status-ok { color:#8fc49b; }
+#statusButton.status-warning { color:#e5b863; }
+@media(min-width:700px) { .kpis { grid-template-columns:repeat(5,minmax(0,1fr)); } .kpis.channel { grid-template-columns:repeat(4,minmax(0,1fr)); } .kpi { padding:14px 12px; } .kpi .label { font-size:10px; } .delta-main { flex-wrap:wrap; } }
+@media(max-width:699px) {
+ .shell { padding:20px 12px; }
+ .controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; align-items:end; }
+ .date-picker { min-width:0; }
+ .period-btn { width:100%; min-height:44px; gap:10px; padding:10px 12px; font-size:13px; }
+ #statusButton { grid-column:1/-1; justify-self:start; min-height:44px; }
+ nav button,.toolbar button,.toolbar select,.cal-nb,.cal-apply { min-height:44px; }
+ .period-menu .pm-opt { min-height:44px; }
+ .period-menu .cal-day { min-height:40px; }
+ .period-menu .cal-nb,.period-menu .cal-apply { min-height:44px; }
+ .period-menu { top:80px; max-height:calc(100dvh - 100px); }
+ .view-head { flex-direction:column; }
+ .view-head .subtitle { text-align:left; }
+ .panel { padding:16px 12px; }
+ .kpi strong { font-size:28px; }
+ .toolbar { display:flex; flex-wrap:wrap; gap:8px; }
+ #detail .toolbar { width:100%; flex-wrap:wrap; }
+ #detail .toolbar label { min-width:0; flex:1; }
+ .scope-options { flex-direction:column; }
+ .scope-options button { width:100%; }
+ .revenue-legend { grid-template-columns:1fr; gap:2px; }
+ .revenue-legend button { display:grid; grid-template-columns:1fr auto; align-items:center; gap:4px 12px; }
+ .revenue-legend small { grid-column:2; margin:0; }
+ .table-wrap { max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+ .status-grid { grid-template-columns:1fr; }
+ .update-heading { flex-wrap:wrap; }
+ .search { max-width:100%; }
+}
+@media (max-width:699px) {
+  .revenue-legend strong, .revenue-legend small { justify-self:end; text-align:right; }
+}
