@@ -551,13 +551,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
   .ad-card-kpis,.adkpi-grid,.adkpi-funnel-grid{grid-template-columns:1fr}
 }
 
-/* ── Link naar het blended-ROAS-dashboard (aparte pagina, blended.html) ── */
-.nav-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.09);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border:1px solid rgba(255,255,255,.18);color:#f1f5f9;font-size:12px;font-weight:500;padding:7px 13px;border-radius:999px;text-decoration:none;white-space:nowrap;transition:background .15s ease,border-color .15s ease;flex-shrink:0}
-.nav-pill:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.26)}
-@media(max-width:540px){
-  .nav-pill{padding:7px 10px;font-size:0}
-  .nav-pill::before{content:"↗";font-size:14px}
-}
 </style>
 </head>
 <body>
@@ -573,7 +566,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
       <h1>Meta bonusdashboard</h1>
     </div>
   </div>
-  <a class="nav-pill" href="blended.html" title="Creators-dashboard (affiliate-sales &amp; commissie)">Creators →</a>
   <div class="period-wrap">
     <button class="period-btn" onclick="event.stopPropagation();togglePM()">
       <span id="periodBtnTxt">Augustus (v.a. 5 aug)</span>
