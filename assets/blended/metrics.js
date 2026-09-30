@@ -111,6 +111,15 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
       orders: data.creators ? creators.length : null,
     },
   };
+  const gift=costs.influencer_gifting;
+  const giftTotal=gift && Number.isFinite(costs.items[gift.product]) ? gift.quantity*costs.items[gift.product] : 0;
+  const allCreatorRevenue=sum((data.creators?.orders||[]).filter(o=>!o.retour),o=>Math.max(0,byNum.get(o.num)?.incl ?? o.omzet_excl*(1+costs.assumed_vat)));
+  const giftRate=allCreatorRevenue>0?giftTotal/allCreatorRevenue:0;
+  channels.infl.commission=channels.infl.spend;
+  channels.infl.giftRate=giftRate;
+  channels.infl.giftTotal=giftTotal;
+  channels.infl.giftAllocated=channels.infl.revenue!=null?Math.max(0,channels.infl.revenue)*giftRate:null;
+  channels.infl.spend=channels.infl.commission!=null?channels.infl.commission+channels.infl.giftAllocated:null;
   const management=managementCosts(data,costs,from,to);
   channels.meta.mediaSpend=channels.meta.spend;
   channels.meta.spend=["meta","all"].includes(channel) && options.includeDaan === false ? channels.meta.mediaSpend : channels.meta.spend!=null && management.total!=null ? channels.meta.spend+management.total : null;

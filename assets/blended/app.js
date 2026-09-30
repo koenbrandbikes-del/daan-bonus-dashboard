@@ -1,4 +1,4 @@
-import { creatorSummary } from "./creator-summary.js?v=prime-estimate-1";
+import { creatorSummary } from "./creator-summary.js?v=gift-allocation-1";
 import { createDatePicker } from "./date-picker.js?v=chevron-1";
 import { load } from "./data.js?v=shopify-check-1";
 import {
@@ -13,7 +13,7 @@ import {
   aggregate,
   previous,
   inRange,
-} from "./metrics.js?v=profit-margin-1";
+} from "./metrics.js?v=gift-allocation-1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (s) =>
@@ -266,7 +266,7 @@ function metricMeta(k) {
           : "Marketingkosten",
       sub:
         state.channel === "infl"
-          ? "Commissies · overige kosten onbekend"
+          ? "Commissies + toegerekende beamers"
           : all
             ? (state.daan==="without" ? "Zonder kosten Daan" : "Inclusief kosten Daan")
             : state.channel === "meta" ? (state.daan==="without" ? "Alleen advertenties" : "Ads + kosten Daan") : names[state.channel],
@@ -283,7 +283,7 @@ function metricMeta(k) {
       sub: all
         ? "Omzet incl. btw / bekende marketingkosten"
         : state.channel === "infl"
-          ? "Op bekende commissiekosten"
+          ? "Inclusief toegerekende beamers"
           : "Kanaalomzet / alle kanaalkosten",
       fmt: ratio,
     },
@@ -520,11 +520,11 @@ function marketingMix(cur) {
         rev != null && rate != null && v.spend != null
           ? rev / (1 + C.assumed_vat) - rev * rate - v.spend
           : null;
-      return `<tr><td><button class="link" data-channel="${k}">${names[k]} →</button></td><td>${euro(rev)}${k === "google" ? '<small class="row-description">Non-branded</small>' : ""}</td><td>${euro(v.spend)}${k === "google" ? `<small class="row-description">Waarvan non-branded ${euro(nonbrand.spend)}</small>` : ""}</td><td>${ratio(denominator > 0 && rev != null ? rev / denominator : null)}</td><td>${euro(profit)}</td><td><strong>${profit!=null && rev>0 ? num(profit/(rev/(1+C.assumed_vat))*100)+"%" : "—"}</strong></td></tr>`;
+      return `<tr><td><button class="link" data-channel="${k}">${names[k]} →</button></td><td>${euro(rev)}${k === "google" ? '<small class="row-description">Non-branded</small>' : ""}</td><td>${euro(v.spend)}${k==='infl'?`<small class="row-description">Commissies ${euro(v.commission)} + beamers ${euro(v.giftAllocated)}</small>`:''}${k === "google" ? `<small class="row-description">Waarvan non-branded ${euro(nonbrand.spend)}</small>` : ""}</td><td>${ratio(denominator > 0 && rev != null ? rev / denominator : null)}</td><td>${euro(profit)}</td><td><strong>${profit!=null && rev>0 ? num(profit/(rev/(1+C.assumed_vat))*100)+"%" : "—"}</strong></td></tr>`;
     })
     .join(
       "",
-    )}</tbody></table></div><p class="hint">Google-ROAS: non-branded omzet / non-branded kosten. Resultaat: geschatte marge minus alle kanaalkosten, inclusief branded bij Google. Winstmarge = geschat resultaat / kanaalomzet excl. btw. Gebaseerd op de gemiddelde winkelkosten; kanaalresultaten zijn niet optelbaar.</p></details><details class="panel" id="acquisitionCompare"><summary>Kosten per aankoop & break-even</summary><p class="hint">Vergelijk bekende marketingkosten per toegerekende aankoop. CAC voor uitsluitend nieuwe klanten is nog niet beschikbaar.</p><div class="table-wrap"><table><thead><tr><th>Kanaal</th><th>Aankopen</th><th>Kosten per aankoop</th><th>Break-even · raming</th><th>Ruimte per aankoop</th></tr></thead><tbody>${purchaseRows}</tbody></table></div><p class="hint">Break-even is één winkelbenchmark: (omzet excl. btw − product-, betaal- en bedrijfskosten) / Shopify-orders. Dezelfde grens geldt hier voor elk kanaal; verschillen in klant- en productmix zijn niet bekend. Positieve ruimte is geen bewezen kanaalwinst. Google gebruikt non-branded conversies; overlap tussen aankoopmetingen kan de kosten per aankoop te laag laten lijken. Influencers bevatten alleen bekende commissies.</p></details>`;
+    )}</tbody></table></div><p class="hint">Google-ROAS: non-branded omzet / non-branded kosten. Resultaat: geschatte marge minus alle kanaalkosten, inclusief branded bij Google. Winstmarge = geschat resultaat / kanaalomzet excl. btw. Gebaseerd op de gemiddelde winkelkosten; kanaalresultaten zijn niet optelbaar.</p></details><details class="panel" id="acquisitionCompare"><summary>Kosten per aankoop & break-even</summary><p class="hint">Vergelijk bekende marketingkosten per toegerekende aankoop. CAC voor uitsluitend nieuwe klanten is nog niet beschikbaar.</p><div class="table-wrap"><table><thead><tr><th>Kanaal</th><th>Aankopen</th><th>Kosten per aankoop</th><th>Break-even · raming</th><th>Ruimte per aankoop</th></tr></thead><tbody>${purchaseRows}</tbody></table></div><p class="hint">Break-even is één winkelbenchmark: (omzet excl. btw − product-, betaal- en bedrijfskosten) / Shopify-orders. Dezelfde grens geldt hier voor elk kanaal; verschillen in klant- en productmix zijn niet bekend. Positieve ruimte is geen bewezen kanaalwinst. Google gebruikt non-branded conversies; overlap tussen aankoopmetingen kan de kosten per aankoop te laag laten lijken. Influencers: commissies plus Prime-opstartkosten, verdeeld naar omzetaandeel.</p></details>`;
 }
 let datePickers = [];
 function render() {
@@ -563,7 +563,7 @@ function render() {
 
   if (state.channel === "infl")
     notes.push(
-      "Bekende kosten bestaan uit commissies. De geraamde Prime-investering staat apart; verzenddatums ontbreken voor toerekening aan deze periode. Codeomzet bewijst geen extra omzet.",
+      "Kosten bevatten commissies en de geraamde Prime-investering naar omzetaandeel. Dit is een verdeelsleutel, geen boeking op verzenddatum; nieuwe omzet herverdeelt historische kosten.",
     );
 
   if (cur.unknown)
@@ -918,7 +918,7 @@ function renderDetail() {
         row(
           "− Marketinguitgaven",
           minus(state.daan==="without" ? cur.spend : cur.spend==null||cur.management.total==null?null:cur.spend-cur.management.total),
-          "Meta- en Google-advertenties en influencercommissies",
+          "Meta- en Google-advertenties en influencercommissies plus toegerekende beamers",
         ),
         {...row("− Meta salaris", minus(state.daan==="without"?0:cur.management.total), ""), salary: {fixed:cur.management.fixed,bonus:cur.management.bonus,excluded:state.daan==="without"}},
         row(
@@ -947,7 +947,7 @@ function renderDetail() {
         channel: key,
       }));
       note =
-        "Influencerbedragen omvatten nu alleen commissies. Betaald/openstaand is geen extra kostenpost.";
+        "Influencerbedragen bevatten commissies en opstartkosten naar omzetaandeel. Betaald/openstaand is geen extra kostenpost.";
     } else {
       title = "Producten en kostprijzen";
       const basket = basketMetrics(cur.orderRows);
@@ -1072,22 +1072,22 @@ function renderDetail() {
           ],
         }));
       note =
-        "Vaste vergoedingen en productgiften zijn nog niet vastgelegd. Betaalstatus verandert de verdiende commissie niet.";
+        "Deze ordertabel toont commissies. Toegerekende beamerkosten staan in het creatortotaal. Betaalstatus verandert de verdiende commissie niet.";
     } else {
       title = "Creators";
       cols = [
         col("Creator"),
         col("Influencer-orders", "num"),
         col("Toegerekende omzet incl. btw", "eur"),
-        col("Commissies", "eur"),
-        col("Omzet / commissie", "ratio"),
+        col("Commissies + beamers", "eur"),
+        col("Omzet / kosten", "ratio"),
       ];
       rows = aggregate(
         cur.creatorRows.map((o) => ({
           name: o.creator,
           orders: 1,
           revenue: byNum.get(o.num)?.incl ?? o.omzet_excl * 1.21,
-          spend: o.commissie,
+          spend: o.commissie + Math.max(0,byNum.get(o.num)?.incl ?? o.omzet_excl*1.21)*cur.channels.infl.giftRate,
         })),
         (r) => r.name,
       ).map((r) => ({
@@ -1095,7 +1095,7 @@ function renderDetail() {
         action: action("creator", r.name),
       }));
       note =
-        "Omzet/kosten is gebaseerd op alleen commissies. Overige samenwerkingskosten zijn onbekend.";
+        "Opstartkosten van alle 41 influencers worden verdeeld naar aandeel in alle geregistreerde influenceromzet, ook de kosten van samenwerkingen zonder orders. Nieuwe omzet kan deze verdeling wijzigen.";
     }
   } else {
     const available = analysisData().google?.daily_campaigns || [];

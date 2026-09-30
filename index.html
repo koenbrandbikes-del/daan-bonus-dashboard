@@ -3230,7 +3230,7 @@ checkStaleness();
 setInterval(checkStaleness,60000);
 </script>
 <script type="module">
-import {creatorSummary} from './assets/blended/creator-summary.js?v=prime-estimate-1';
+import {creatorSummary} from './assets/blended/creator-summary.js?v=gift-allocation-1';
 try {
  const responses=await Promise.all(['data/creators.json','assets/blended/costs.json'].map(url=>fetch(url,{cache:'no-cache'})));
  if(responses.some(r=>!r.ok)) throw new Error('Bron niet beschikbaar');
