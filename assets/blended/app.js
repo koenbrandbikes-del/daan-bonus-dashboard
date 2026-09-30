@@ -474,6 +474,13 @@ function orderDate(o) {
     }).format(new Date(o.created_at))
   );
 }
+function overviewOrders(cur) {
+ const rows=[...cur.orderRows].sort((a,b)=>b.d.localeCompare(a.d)||Number(b.num.replace(/\D/g,''))-Number(a.num.replace(/\D/g,'')));
+ return `<details class="panel" id="overviewOrders" open><summary>Alle orders <small>· ${rows.length} in deze periode</small></summary><p class="hint">${fmt(state.from)} – ${fmt(state.to)} · nieuwste eerst. Marge na product- en betaalkosten; marketing en overhead gaan hier nog af.</p><label class="orders-search">Zoek op ordernummer of product<input id="overviewOrderSearch" type="search" placeholder="Zoek een bestelling…"></label><div class="table-wrap"><table><thead><tr><th>Order</th><th>Datum & tijd</th><th>Producten</th><th>Omzet incl. btw</th><th>Product en levering</th><th>Betaalkosten</th><th>Marge excl. btw</th></tr></thead><tbody>${rows.map(o=>{
+ const f=finance([o],C),margin=f.cost!=null&&f.excl>0?(f.excl-f.cost)/f.excl*100:null;
+ return `<tr data-order-search="${esc((o.num+' '+o.items.join(' ')).toLowerCase())}"><td>${esc(o.num)}</td><td>${esc(orderDate(o))}</td><td>${esc(o.items.join(', '))}</td><td>${euro(o.incl)}</td><td>${euro(f.fixed)}</td><td>${euro(f.fees)}</td><td>${margin==null?'—':num(margin)+'%'}</td></tr>`;
+ }).join('')}</tbody></table></div><p id="overviewOrderEmpty" class="hint" ${rows.length?'hidden':''}>Geen orders gevonden in deze selectie.</p></details>`;
+}
 function marketingMix(cur) {
   const nonbrand = compute(
     googleScopeData(D, "nonbrand"),
@@ -590,7 +597,7 @@ function render() {
    )
    .join("")}</details>
  <section class="panel ${analysisCollapsed?'is-collapsed':''}" id="analysis" tabindex="-1"><div class="panel-head"><div><p class="analysis-label">VERDIEP JE IN DE CIJFERS</p><h2><button class="analysis-heading" id="collapseAnalysis" aria-expanded="${!analysisCollapsed}" aria-controls="analysisBody analysisTools">${state.metrics.map((k) => metricMeta(k).label).join(" & ") || "Analyse"}</button></h2><p class="subtitle">Klik bovenaan maximaal twee cijfers aan om ze hier te vergelijken.</p></div><div class="toolbar" id="analysisTools" ${analysisCollapsed?"hidden":""}><div class="gran-buttons" aria-label="Grafiek groeperen">${['day','week','month'].map((g,i)=>`<button data-gran="${g}" aria-pressed="${state.gran===g || state.gran==='auto' && g===((Date.parse(state.to)-Date.parse(state.from))/864e5<=31?'day':(Date.parse(state.to)-Date.parse(state.from))/864e5<=180?'week':'month')}">${['Dag','Week','Maand'][i]}</button>`).join('')}</div><select id="gran" hidden><option value="auto">Automatisch</option><option value="day">Dag</option><option value="week">Week</option><option value="month">Maand</option></select><button id="chartMode">${chartTable ? "Grafiek tonen" : "Tabel tonen"}</button></div></div><div id="analysisBody" ${analysisCollapsed?"hidden":""}><div id="replacement"></div><div id="chart"></div><div id="dayComparison"></div><details class="detail-fold" id="detailFold"><summary>Onderliggende cijfers & uitsplitsing</summary><div id="detail"></div></details></div></section>
- ${state.channel === "all" ? marketingMix(cur) : ""}
+ ${state.channel === "all" ? overviewOrders(cur)+marketingMix(cur) : ""}
  ${['all','meta'].includes(state.channel) ? `<details class="panel management">
  <summary class="management-heading"><span>Meta-beheer<small>Vaste vergoeding en prestatiebonus</small></span><span class="management-heading-total">${euro(cur.management.total)}</span></summary>
  <div class="management-amounts">
@@ -1330,6 +1337,14 @@ function selectMetric(k) {
   });
 }
 function bindContent() {
+ const orderSearch=$('#overviewOrderSearch');
+ if(orderSearch) orderSearch.oninput=()=>{
+  const query=orderSearch.value.trim().toLowerCase();
+  let visible=0;
+  $$('#overviewOrders [data-order-search]').forEach(row=>{row.hidden=!row.dataset.orderSearch.includes(query);if(!row.hidden)visible++;});
+  $('#overviewOrderEmpty').hidden=visible>0;
+ };
+
   const mix=$('.channel-revenue');
   if(mix) {
     const show=e=>{const b=e.target.closest('[data-mix]');if(!b)return;mix.querySelectorAll('[data-mix]').forEach(n=>n.classList.toggle('mix-active',n.dataset.mix===b.dataset.mix));};

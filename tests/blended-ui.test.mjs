@@ -506,3 +506,17 @@ test('overview keeps specialist details folded and collapses chart tools with he
  assert(d.querySelector('#analysis').compareDocumentPosition(d.querySelector('.creator-overview')) & w.Node.DOCUMENT_POSITION_FOLLOWING);
  w.close();
 });
+
+test('overview lists period orders independently from selected metrics and supports search',async()=>{
+ const w=await boot('?from=2026-09-23&to=2026-09-29&metrics=spend');
+ const d=w.document, rows=[...d.querySelectorAll('#overviewOrders tbody tr')];
+ assert(rows.length>0);
+ assert.equal(d.querySelector('#overviewOrders').open,true);
+ const input=d.querySelector('#overviewOrderSearch');
+ input.value=rows[0].querySelector('td').textContent;
+ input.dispatchEvent(new w.Event('input'));
+ assert.equal(rows.filter(r=>!r.hidden).length,1);
+ input.value='not-an-order';input.dispatchEvent(new w.Event('input'));
+ assert.equal(d.querySelector('#overviewOrderEmpty').hidden,false);
+ w.close();
+});
