@@ -125,24 +125,11 @@ header {
   align-items: center;
   gap: 16px;
 }
-.mark {
-  font-size: 24px;
-  letter-spacing: -5px;
-  padding-right: 6px;
-  border: 1px solid #53647c;
-  border-radius: 12px;
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-content: center;
-  position: relative;
-}
-.mark span {
-  color: var(--blue);
-  position: absolute;
-  font-size: 14px;
-  right: 10px;
-  bottom: 6px;
+.brand-logo {
+  display: block;
+  width: 170px;
+  height: auto;
+  margin-bottom: 10px;
 }
 .eyebrow {
   font-size: 10px;
@@ -744,11 +731,6 @@ th {
 }
 .analysis-label {
   color: #93a2b8;
-}
-.mark {
-  border-radius: 50%;
-  border-color: rgba(20, 166, 241, 0.6);
-  background: rgba(42, 49, 160, 0.18);
 }
 @media (max-width: 1099px) {
   .kpi {
