@@ -1319,7 +1319,28 @@ function selectP(v){
   P=v;
   document.querySelectorAll(".pm-opt").forEach(el=>el.classList.toggle("active",el.dataset.p===v));
   document.getElementById("periodMenu").classList.remove("open");
+  saveSharedPeriod(PERIODS[v].from, PERIODS[v].to);
   render();
+}
+
+/* ═══ Periode delen met creators.html ═══
+   Zelfde origin (GitHub Pages), dus localStorage is gedeeld — wie hier
+   een periode kiest, ziet 'm bij de volgende load van creators.html
+   terug (en andersom). Alleen het from/to-bereik wordt gedeeld, niet de
+   preset-naam (de twee pagina's hebben andere periode-definities). Puur
+   load-time, geen live sync tussen twee open tabbladen tegelijk. */
+const SHARED_PERIOD_KEY = "lumeworks_period";
+function saveSharedPeriod(from,to){
+  try{ localStorage.setItem(SHARED_PERIOD_KEY, JSON.stringify({from,to})); }catch(e){}
+}
+function loadSharedPeriod(){
+  try{
+    const raw = localStorage.getItem(SHARED_PERIOD_KEY);
+    if(!raw) return null;
+    const v = JSON.parse(raw);
+    if(v && v.from && v.to) return v;
+  }catch(e){}
+  return null;
 }
 
 function calRender(){
@@ -3229,6 +3250,18 @@ function checkStaleness(){
 }
 
 /* ═══ INIT ═══════════════════════════════════════════════════════ */
+const _shared = loadSharedPeriod();
+if(_shared){
+  const from = _shared.from < CAL_MIN ? CAL_MIN : _shared.from;
+  const to = _shared.to > SNAP ? SNAP : _shared.to;
+  if(from <= to){
+    const days = DAILY_META.filter(d=>d.d>=from && d.d<=to);
+    PERIODS.custom = {label: from===to?fmtS(from):`${fmtS(from)}–${fmtS(to)}`, from, to, tb: days.length?days:null, tg:null, ads:null};
+    P = "custom";
+    document.querySelectorAll(".pm-opt").forEach(el=>el.classList.toggle("active",el.dataset.p==="custom"));
+  }
+}
+
 render();
 loadAdTagsRemote();
 checkStaleness();

@@ -597,7 +597,36 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-    <select class="period-select" id="periodSel" onchange="onPeriodChange(this.value)"></select>
+    <div class="period-wrap">
+      <button class="period-btn" onclick="event.stopPropagation();togglePM()">
+        <span id="periodBtnTxt">…</span>
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#93A2B8" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+      <div class="period-menu" id="periodMenu" onclick="event.stopPropagation()">
+        <div class="pm-grp">Actueel</div>
+        <div class="pm-opt" data-p="vandaag" onclick="selectP('vandaag')">Vandaag (<span id="lbl-vandaag"></span>)</div>
+        <div class="pm-opt" data-p="gisteren" onclick="selectP('gisteren')">Gisteren (<span id="lbl-gisteren"></span>)</div>
+        <div class="pm-opt" data-p="week" onclick="selectP('week')">Deze week (<span id="lbl-week"></span>)</div>
+        <div class="pm-opt" data-p="r7" onclick="selectP('r7')">Afgelopen 7 dagen (<span id="lbl-r7"></span>)</div>
+        <div class="pm-opt" data-p="maand" onclick="selectP('maand')">Deze maand (<span id="lbl-maand"></span>)</div>
+        <div class="pm-div"></div>
+        <div class="pm-grp">Periode</div>
+        <div class="pm-opt" data-p="vorigemaand" onclick="selectP('vorigemaand')">Vorige maand (<span id="lbl-vorigemaand"></span>)</div>
+        <div class="pm-opt active" data-p="alles" onclick="selectP('alles')">Sinds start (<span id="lbl-alles"></span>)</div>
+        <div class="pm-div"></div>
+        <div class="pm-grp">Aangepaste periode</div>
+        <div class="cal-pad">
+          <div class="cal-nav">
+            <button class="cal-nb" onclick="calPrev()">‹</button>
+            <span class="cal-mlbl" id="calMlbl"></span>
+            <button class="cal-nb" onclick="calNext()">›</button>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="cal-hint" id="calHint">Klik een dag</div>
+          <button class="cal-apply" id="calApply" onclick="applyCustom()" disabled>Toepassen</button>
+        </div>
+      </div>
+    </div>
     <a class="nav-pill" href="meta.html"><span class="nav-pill-full">Meta</span> →</a>
   </div>
 </div>
@@ -784,26 +813,36 @@ const _credDates = CREATOR_ORDERS.map(o=>o.d).sort();
 const DATA_MIN = _credDates[0];
 const DATA_MAX = [DAILY_META[DAILY_META.length-1].d, ORDERS[ORDERS.length-1].d, _credDates[_credDates.length-1]].sort().pop();
 
-/* ═══ PERIODES ═══ */
-function periodRange(key){
+/* ═══ PERIODES ═══
+   Zelfde soort periode-kiezer (knop + dropdown-menu + kalender voor een
+   vrije periode) als op meta.html — Koen wil hier hetzelfde interactiepatroon,
+   alleen dan met periodes die passen bij wat déze pagina laat zien
+   (affiliate-orders sinds 16 jul), niet Meta's eigen bonusperiode-indeling. */
+function buildPeriods(){
   const maxD = DATA_MAX;
-  if(key==="d7")  return {from: clampFrom(shiftDays(maxD,-6)),  to: maxD, label:"Laatste 7 dagen"};
-  if(key==="d30") return {from: clampFrom(shiftDays(maxD,-29)), to: maxD, label:"Laatste 30 dagen"};
-  if(key==="month"){
-    const from = clampFrom(maxD.slice(0,8)+"01");
-    return {from, to: maxD, label:"Deze maand"};
-  }
-  if(key==="prevmonth"){
-    const [y,m] = maxD.split("-").map(Number);
-    const pm = m===1?12:m-1, py = m===1?y-1:y;
-    const from = `${py}-${String(pm).padStart(2,"0")}-01`;
-    const lastDay = new Date(py, pm, 0).getDate();
-    const to = `${py}-${String(pm).padStart(2,"0")}-${String(lastDay).padStart(2,"0")}`;
-    if(to < DATA_MIN) return {from:DATA_MIN, to:DATA_MIN, label:"Vorige maand", empty:true};
-    return {from: clampFrom(from), to: to>maxD?maxD:to, label:"Vorige maand"};
-  }
-  return {from: DATA_MIN, to: maxD, label:`Sinds start (${fmtS(DATA_MIN)})`};
+  const yest = shiftDays(maxD,-1);
+  const dow = (new Date(maxD+"T00:00:00").getDay()+6)%7; // 0=maandag
+  const weekFrom = clampFrom(shiftDays(maxD,-dow));
+  const r7From = clampFrom(shiftDays(maxD,-6));
+  const maandFrom = clampFrom(maxD.slice(0,8)+"01");
+  const [y,m] = maxD.split("-").map(Number);
+  const pm = m===1?12:m-1, py = m===1?y-1:y;
+  const pmFromRaw = `${py}-${String(pm).padStart(2,"0")}-01`;
+  const pmLastDay = new Date(py,pm,0).getDate();
+  const pmToRaw = `${py}-${String(pm).padStart(2,"0")}-${String(pmLastDay).padStart(2,"0")}`;
+  const pmEmpty = pmToRaw < DATA_MIN;
+  return {
+    vandaag:     {label:"Vandaag",           from:maxD, to:maxD},
+    gisteren:    {label:"Gisteren",          from:yest, to:yest},
+    week:        {label:"Deze week",         from:weekFrom, to:maxD},
+    r7:          {label:"Afgelopen 7 dagen", from:r7From, to:maxD},
+    maand:       {label:"Deze maand",        from:maandFrom, to:maxD},
+    vorigemaand: {label:"Vorige maand",      from: pmEmpty?DATA_MIN:clampFrom(pmFromRaw), to: pmEmpty?DATA_MIN:(pmToRaw>maxD?maxD:pmToRaw), empty:pmEmpty},
+    alles:       {label:`Sinds start (${fmtS(DATA_MIN)})`, from:DATA_MIN, to:maxD},
+  };
 }
+const PERIODS = buildPeriods();
+let P = "alles";
 
 function computePeriod(from,to){
   // Totale winkelomzet in de periode — alleen als context (aandeel%),
@@ -851,7 +890,6 @@ function computePeriod(from,to){
 }
 
 /* ═══ RENDER ═══ */
-let CUR_KEY = "all";
 let ordCreatorFilter = "alle";
 let ordBtwAff = "incl";
 let ordSortKey = "d", ordSortDir = "desc";
@@ -862,11 +900,10 @@ function setOrdSort(key){
 }
 let CUR_PD = null;
 
-function onPeriodChange(key){ CUR_KEY = key; render(); }
-
 function render(){
-  const pd = periodRange(CUR_KEY);
+  const pd = PERIODS[P];
   CUR_PD = pd;
+  document.getElementById("periodBtnTxt").textContent = pd.label;
   const cur = computePeriod(pd.from, pd.to);
 
   // Vorige periode van gelijke lengte, voor de trendpijl
@@ -1279,16 +1316,125 @@ function checkStaleness(){
   el.style.display="block";
 }
 
+/* ═══ PERIODE-KIEZER: knop + dropdown + kalender (zelfde patroon als meta.html) ═══ */
+function togglePM(){
+  const m=document.getElementById("periodMenu");
+  const opening=!m.classList.contains("open");
+  m.classList.toggle("open");
+  if(opening) calRender();
+}
+document.addEventListener("click",()=>document.getElementById("periodMenu")?.classList.remove("open"));
+
+function selectP(v){
+  if(!PERIODS[v]) return;
+  if(v!=="custom") _cLocked=true;
+  P=v;
+  document.querySelectorAll(".pm-opt").forEach(el=>el.classList.toggle("active",el.dataset.p===v));
+  document.getElementById("periodMenu").classList.remove("open");
+  saveSharedPeriod(PERIODS[v].from, PERIODS[v].to);
+  render();
+}
+
+const CAL_MIN = DATA_MIN;
+let _cY, _cM, _cS=null, _cE=null, _cLocked=false;
+(function(){ const d=new Date(); _cY=d.getFullYear(); _cM=d.getMonth(); })();
+
+function calRender(){
+  const MN=["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
+  document.getElementById("calMlbl").textContent=`${MN[_cM]} ${_cY}`;
+  const fd=new Date(_cY,_cM,1).getDay();
+  const off=(fd+6)%7;
+  const dim=new Date(_cY,_cM+1,0).getDate();
+  const tod=ymd(new Date());
+  let h='<div class="cal-dow">M</div><div class="cal-dow">D</div><div class="cal-dow">W</div><div class="cal-dow">D</div><div class="cal-dow">V</div><div class="cal-dow">Z</div><div class="cal-dow">Z</div>';
+  for(let i=0;i<off;i++)h+='<div></div>';
+  for(let d=1;d<=dim;d++){
+    const ds=`${_cY}-${String(_cM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isOff=ds<CAL_MIN||ds>tod;
+    const iS=ds===_cS,iE=ds===_cE;
+    const iR=_cS&&_cE&&ds>_cS&&ds<_cE;
+    const iT=ds===tod&&!iS&&!iE;
+    const solo=iS&&!_cE;
+    const cls="cal-day"+(isOff?" cd-off":"")+(iS?" cd-s":"")+(iE?" cd-e":"")+(iR?" cd-r":"")+(solo?" cd-solo":"")+(iT?" cd-today":"");
+    h+=`<div class="${cls}"${!isOff?` onclick="calClick('${ds}')"`:""}>${d}</div>`;
+  }
+  document.getElementById("calGrid").innerHTML=h;
+  const hint=document.getElementById("calHint"),apply=document.getElementById("calApply");
+  if(!_cS){
+    hint.textContent="Klik een dag";
+    apply.disabled=true; apply.textContent="Toepassen";
+  } else if(!_cE){
+    hint.innerHTML=`<span class="ch-mode">1 dag</span><b>${fmtS(_cS)}</b> · klik nog een dag voor een bereik`;
+    apply.disabled=false; apply.textContent=`Toepassen · ${fmtS(_cS)}`;
+  } else {
+    const n=Math.round((new Date(_cE)-new Date(_cS))/86400000)+1;
+    hint.innerHTML=`<span class="ch-mode">Bereik</span><b>${fmtS(_cS)} t/m ${fmtS(_cE)}</b> · ${n} dagen`;
+    apply.disabled=false; apply.textContent="Toepassen · bereik";
+  }
+}
+function calClick(ds){
+  if(_cLocked||!_cS||(_cS&&_cE)){
+    _cS=ds; _cE=null;
+    _cLocked=false;
+  } else if(ds===_cS){
+    _cS=null; _cE=null;
+  } else if(ds<_cS){
+    _cE=_cS; _cS=ds;
+  } else {
+    _cE=ds;
+  }
+  calRender();
+}
+function calPrev(){ if(_cY<=+CAL_MIN.slice(0,4) && _cM<=+CAL_MIN.slice(5,7)-1) return; _cM--; if(_cM<0){_cM=11;_cY--;} calRender(); }
+function calNext(){ const n=new Date(); if(_cY>n.getFullYear()||(_cY===n.getFullYear()&&_cM>=n.getMonth())) return; _cM++; if(_cM>11){_cM=0;_cY++;} calRender(); }
+function applyCustom(){
+  if(!_cS) return;
+  const from=_cS, to=_cE||_cS;
+  PERIODS.custom = {label: from===to?fmtS(from):`${fmtS(from)}–${fmtS(to)}`, from, to};
+  _cLocked=true;
+  selectP("custom");
+}
+
+/* ═══ Periode delen tussen meta.html en creators.html ═══
+   Zelfde origin (GitHub Pages), dus localStorage is gedeeld — wie op de
+   ene pagina een periode kiest, ziet 'm bij de volgende load van de
+   andere pagina terug. Alleen het from/to-bereik wordt gedeeld (niet de
+   preset-naam): de twee pagina's hebben andere periode-definities
+   (Meta's bonusperiode vs. affiliate-sales-sinds-16-jul), dus een gedeeld
+   bereik wordt hier altijd als "aangepaste periode" toegepast. Puur
+   load-time — geen live sync tussen twee open tabbladen tegelijk. */
+const SHARED_PERIOD_KEY = "lumeworks_period";
+function saveSharedPeriod(from,to){
+  try{ localStorage.setItem(SHARED_PERIOD_KEY, JSON.stringify({from,to})); }catch(e){}
+}
+function loadSharedPeriod(){
+  try{
+    const raw = localStorage.getItem(SHARED_PERIOD_KEY);
+    if(!raw) return null;
+    const v = JSON.parse(raw);
+    if(v && v.from && v.to) return v;
+  }catch(e){}
+  return null;
+}
+
 /* ═══ INIT ═══ */
-const PERIOD_OPTS = [
-  {k:"d7",label:"Laatste 7 dagen"},
-  {k:"d30",label:"Laatste 30 dagen"},
-  {k:"month",label:"Deze maand"},
-  {k:"prevmonth",label:"Vorige maand"},
-  {k:"all",label:`Sinds start (${fmtS(DATA_MIN)})`},
-];
-document.getElementById("periodSel").innerHTML = PERIOD_OPTS.map(o=>
-  `<option value="${o.k}"${o.k===CUR_KEY?" selected":""}>${o.label}</option>`).join("");
+for(const key of ["vandaag","gisteren","week","r7","maand","vorigemaand"]){
+  const el = document.getElementById("lbl-"+key);
+  const p = PERIODS[key];
+  if(el) el.textContent = p.from===p.to ? fmtS(p.from) : `${fmtS(p.from)}–${fmtS(p.to)}`;
+}
+document.getElementById("lbl-alles").textContent = fmtS(DATA_MIN);
+
+const shared = loadSharedPeriod();
+if(shared){
+  const from = shared.from < DATA_MIN ? DATA_MIN : shared.from;
+  const to = shared.to > DATA_MAX ? DATA_MAX : shared.to;
+  if(from <= to){
+    PERIODS.custom = {label: from===to?fmtS(from):`${fmtS(from)}–${fmtS(to)}`, from, to};
+    P = "custom";
+  }
+}
+document.querySelectorAll(".pm-opt").forEach(el=>el.classList.toggle("active",el.dataset.p===P));
 
 render();
 checkStaleness();
