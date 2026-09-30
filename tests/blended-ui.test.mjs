@@ -356,3 +356,20 @@ test("missing source suppresses revenue distribution and healthy status tick", a
   assert(d.querySelector('#statusButton').getAttribute('aria-label').includes('aandacht nodig'));
   w.close();
 });
+
+test('selected days compare side by side, toggle, clear and follow channel metrics', async () => {
+  const w=await boot('?from=2026-09-23&to=2026-09-29'),d=w.document;
+  d.querySelector('[data-select-day="2026-09-23"]').click();
+  d.querySelector('[data-select-day="2026-09-25"]').click();
+  assert.equal(d.querySelectorAll('#dayComparison thead th').length,3);
+  assert.equal(d.querySelectorAll('#dayComparison tbody tr').length,2);
+  assert(d.querySelector('#dayComparison caption').textContent.includes('23 sep'));
+  assert(d.querySelector('#dayComparison tbody small').textContent.includes('%'));
+  d.querySelector('#tab-google').click();
+  assert.equal(d.querySelectorAll('#dayComparison thead th').length,3);
+  d.querySelector('[data-select-day="2026-09-25"]').click();
+  assert.equal(d.querySelectorAll('#dayComparison thead th').length,2);
+  d.querySelector('#clearDays').click();
+  assert.equal(d.querySelector('#dayComparison table'),null);
+  w.close();
+});

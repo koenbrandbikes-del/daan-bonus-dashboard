@@ -72,7 +72,8 @@ let D,
   search = "",
   compareMode = false,
   pending = null,
-  chartTable = false;
+  chartTable = false,
+  selectedDays = new Set();
 const stale = (k) => {
   if (k === "meta") {
     if (!D.meta) return true;
@@ -563,7 +564,7 @@ function render() {
        `<div class="signal"><span aria-hidden="true">ⓘ</span><span>${esc(n)}</span></div>`,
    )
    .join("")}</div>
- <section class="panel" id="analysis" tabindex="-1"><div class="panel-head"><div><p class="analysis-label">VERDIEP JE IN DE CIJFERS</p><h2>${state.metrics.map((k) => metricMeta(k).label).join(" & ")}</h2><p class="subtitle">${compareMode ? "Kies hieronder de cijfers die je samen wilt zien." : "Klik op een hoofdgetal om de analyse te veranderen."}</p></div><div class="toolbar"><button id="compareMetric" aria-expanded="${compareMode}" class="${compareMode ? "active" : ""}">${compareMode ? "Cijferkeuze sluiten" : "Cijfers vergelijken"}</button><select id="gran" aria-label="Grafiek groeperen"><option value="auto">Automatisch</option><option value="day">Dag</option><option value="week">Week</option><option value="month">Maand</option></select><button id="chartMode">${chartTable ? "Grafiek tonen" : "Tabel tonen"}</button></div></div><div class="metric-picker" ${compareMode ? "" : "hidden"} aria-label="Cijfers voor de grafiek"><span>Kies maximaal twee cijfers:</span>${metrics.map((k) => `<button data-chart-metric="${k}" aria-pressed="${state.metrics.includes(k)}" class="${state.metrics.includes(k) ? "active" : ""}">${metricMeta(k).label}</button>`).join("")}</div><div id="replacement"></div><div id="chart"></div><div id="detail"></div></section>
+ <section class="panel" id="analysis" tabindex="-1"><div class="panel-head"><div><p class="analysis-label">VERDIEP JE IN DE CIJFERS</p><h2>${state.metrics.map((k) => metricMeta(k).label).join(" & ")}</h2><p class="subtitle">${compareMode ? "Kies hieronder de cijfers die je samen wilt zien." : "Klik op een hoofdgetal om de analyse te veranderen."}</p></div><div class="toolbar"><button id="compareMetric" aria-expanded="${compareMode}" class="${compareMode ? "active" : ""}">${compareMode ? "Cijferkeuze sluiten" : "Cijfers vergelijken"}</button><select id="gran" aria-label="Grafiek groeperen"><option value="auto">Automatisch</option><option value="day">Dag</option><option value="week">Week</option><option value="month">Maand</option></select><button id="chartMode">${chartTable ? "Grafiek tonen" : "Tabel tonen"}</button></div></div><div class="metric-picker" ${compareMode ? "" : "hidden"} aria-label="Cijfers voor de grafiek"><span>Kies maximaal twee cijfers:</span>${metrics.map((k) => `<button data-chart-metric="${k}" aria-pressed="${state.metrics.includes(k)}" class="${state.metrics.includes(k) ? "active" : ""}">${metricMeta(k).label}</button>`).join("")}</div><div id="replacement"></div><div id="chart"></div><div id="dayComparison"></div><div id="detail"></div></section>
  ${state.channel === "all" ? marketingMix(cur) : ""}
  <details class="panel" id="definitions"><summary>Definities, berekeningen en bronnen</summary><p>Omzet: de huidige Shopify-orderbedragen, exclusief 21% btw door deling door 1,21. Afzonderlijke retour-, belasting- en verzendcomponenten ontbreken nog. Niet gelijkstellen aan een gecontroleerde financiële rapportage.</p><p>Productkosten: bestaande gebundelde tarieven per product. Betaalkosten: 2% van omzet incl. btw. Resultaat: omzet excl. btw min productkosten, betaalkosten, marketingkosten en 4% overhead over omzet excl. btw. Dit is geen nettowinst.</p><p>Blended ROAS: winkelomzet incl. btw / bekende marketingkosten. Kanaal-ROAS: gerapporteerde kanaalwaarde / kanaalkosten. Bij nuluitgaven is ROAS niet berekenbaar. Week- en maandratio’s worden uit totalen berekend, niet uit het gemiddelde van dagratio’s.</p><p>Google: conversies op datum van advertentie-interactie. Twee primaire aankoopacties zijn actief; de overlap is nog niet vastgesteld. Nieuwe versus terugkerende klanten is nog onbekend. Merkverkeer telt altijd mee in totale marketingkosten.</p><p>Kanaalresultaten zijn schattingen: de gemiddelde product-, betaal- en overheadkosten als percentage van de winkelomzet worden toegepast op de kanaalomzet. Dit is geen winst per gekoppelde order; kanaalomzet kan overlappen en is niet optelbaar. Google gebruikt non-branded omzet en trekt alle Google-kosten af. De opgegeven Meta-filtering van influencercodes is niet onafhankelijk gecontroleerd.</p><p>Bronstatus en dekking staan bovenaan bij Datastatus. Exports bevatten de actieve periode en voorlopige meetbasis. Details bevatten geen klantnamen of e-mailadressen.</p></details>`;
   $("#gran").value = state.gran;
@@ -634,7 +635,22 @@ function chartRows() {
       : state.gran;
   return series(analysisData(), C, state.from, state.to, state.channel, g);
 }
+function renderDayComparison() {
+  selectedDays = new Set([...selectedDays].filter(d => d >= state.from && d <= state.to));
+  const days = series(analysisData(), C, state.from, state.to, state.channel, "day");
+  const chosen = days.filter(r => selectedDays.has(r.from));
+  const keys = state.metrics;
+  $("#dayComparison").innerHTML = `<section class="day-comparison" aria-label="Dagen vergelijken"><div class="panel-head"><div><h3>Dagen vergelijken</h3><p class="subtitle">Klik op dagen in de grafiek of kies hieronder. Klik nogmaals om een dag weg te halen.</p></div>${chosen.length ? '<button id="clearDays">Selectie wissen</button>' : ''}</div><details open><summary>Dagen kiezen · ${chosen.length} geselecteerd</summary><div class="day-options">${days.map(r=>`<button data-select-day="${r.from}" aria-pressed="${selectedDays.has(r.from)}">${fmt(r.from)}</button>`).join('')}</div></details>${chosen.length ? `<div class="selected-days">${chosen.map(r=>`<button data-select-day="${r.from}" aria-label="${fmt(r.from)} verwijderen">${fmt(r.from)} <span aria-hidden="true">×</span></button>`).join('')}</div><div class="table-wrap"><table><caption>De gekozen dagen naast elkaar${chosen.length>1 ? ' · verschil ten opzichte van '+fmt(chosen[0].from) : ''}</caption><thead><tr><th>Cijfer</th>${chosen.map(r=>`<th scope="col">${fmt(r.from)}${r.from===today ? '<small>Lopende dag</small>' : ''}</th>`).join('')}</tr></thead><tbody>${keys.map(k=>`<tr><th scope="row">${metricMeta(k).label}</th>${chosen.map((r,i)=>{const base=chosen[0][k],v=r[k];return `<td><strong>${metricMeta(k).fmt(v)}</strong>${i && v!=null && base!=null ? `<small>${v-base>0?'+':''}${metricMeta(k).fmt(v-base)}${base ? ' · '+(v-base>0?'+':'')+num((v-base)/Math.abs(base)*100)+'%' : ''}</small>` : ''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div>${chosen.length===1 ? '<p class="hint">Kies nog een dag om het verschil te zien.</p>' : ''}` : '<p class="hint">Selecteer twee of meer dagen om de gekozen cijfers direct te vergelijken.</p>'}</section>`;
+}
+function toggleDays(from, to=from) {
+  const dates=[];
+  for(let d=from;d<=to;d=shift(d,1)) dates.push(d);
+  const remove=dates.every(d=>selectedDays.has(d));
+  dates.forEach(d=>remove ? selectedDays.delete(d) : selectedDays.add(d));
+  renderChart();
+}
 function renderChart() {
+  renderDayComparison();
   const rows = chartRows(),
     keys = state.metrics;
   if (chartTable) {
@@ -688,7 +704,7 @@ function renderChart() {
                 .map((r, i) =>
                   r[k] == null
                     ? ""
-                    : `<circle class="point" data-bucket="${r.from}|${r.to}" cx="${x(i)}" cy="${y(r[k])}" r="${rows.length > 90 ? 2 : 4}" fill="${colors[k]}"><title>${fmt(r.from)}: ${metricMeta(k).fmt(r[k])}</title></circle>`,
+                    : `<circle class="point ${selectedDays.has(r.from) ? "selected-point" : ""}" data-bucket="${r.from}|${r.to}" cx="${x(i)}" cy="${y(r[k])}" r="${rows.length > 90 ? 2 : 4}" fill="${colors[k]}"><title>${fmt(r.from)}: ${metricMeta(k).fmt(r[k])}</title></circle>`,
                 )
                 .join("")
             );
@@ -698,7 +714,7 @@ function renderChart() {
           )}${rows.map((r, i) => (i % Math.ceil(rows.length / 7) === 0 || i === rows.length - 1 ? `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${fmt(r.from)}</text>` : "")).join("")}</svg></div>`;
       })
       .join("") +
-    '<p class="chart-help">Klik op een punt voor details van die periode. Gebruik Tabel tonen voor exacte waarden en toetsenbordbediening.</p>';
+    '<p class="chart-help">Klik op punten om dagen te selecteren; vergelijk de cijfers direct hieronder. Bij week- of maandweergave selecteer je alle dagen van dat punt.</p>';
 }
 function col(label, type = "text") {
   return { label, type };
@@ -1289,7 +1305,12 @@ function bindContent() {
   $("#content").onclick = (e) => {
     const b = e.target.closest("button,[data-bucket]");
     if (!b) return;
-    if (b.dataset.chartMetric) {
+    if (b.dataset.selectDay) {
+      toggleDays(b.dataset.selectDay);
+    } else if (b.id === "clearDays") {
+      selectedDays.clear();
+      renderChart();
+    } else if (b.dataset.chartMetric) {
       selectMetric(b.dataset.chartMetric);
     } else if (b.dataset.basket) {
       change(() => (state.detail = { type: "basket", name: b.dataset.basket }));
@@ -1322,9 +1343,7 @@ function bindContent() {
       change(() => (state.detail = JSON.parse(b.dataset.detail)));
     else if (b.dataset.bucket) {
       const [from, to] = b.dataset.bucket.split("|");
-      state.sub = { from, to };
-      page = 0;
-      renderDetail();
+      toggleDays(from, to);
     } else if (b.dataset.sort !== undefined) {
       const i = +b.dataset.sort;
       sortDir = sortKey === i ? -sortDir : 1;

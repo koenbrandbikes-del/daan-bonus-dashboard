@@ -1263,3 +1263,15 @@ header { position:relative; flex-wrap:wrap; }
 @media (min-width:1100px) {
   header .brand { padding-top:20.5px; }
 }
+
+.day-comparison { margin:20px 0 28px; padding:18px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.day-comparison summary { cursor:pointer; padding:12px 0; }
+.day-options { display:flex; flex-wrap:wrap; gap:6px; max-height:220px; overflow:auto; padding:8px 0; }
+.day-options button { min-height:44px; }
+.day-options [aria-pressed="true"], .selected-days button { border-color:var(--blue); background:#4ea8de25; }
+.selected-days { display:flex; flex-wrap:wrap; gap:6px; margin:14px 0; }
+.day-comparison caption { text-align:left; color:var(--muted); padding:12px 0; }
+.day-comparison td, .day-comparison th { min-width:110px; }
+.day-comparison small { display:block; color:var(--muted); margin-top:6px; font-weight:400; white-space:nowrap; }
+.selected-point { stroke:white; stroke-width:3px; }
+.point { cursor:pointer; }
