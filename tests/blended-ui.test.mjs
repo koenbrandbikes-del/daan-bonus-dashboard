@@ -189,3 +189,17 @@ test("products default to best sellers and upsell groups open matching orders", 
   );
   w.close();
 });
+test('calendar survives transient focus loss and clicks on rebuilt day buttons', async()=>{
+ const w=await boot('?from=2026-09-23&to=2026-09-29'),d=w.document;
+ d.querySelector('#periodButton').click();
+ d.activeElement.blur();
+ await Promise.resolve();
+ assert.equal(d.querySelector('#periodMenu').hidden,false);
+ d.querySelector('#periodMenu [data-date="2026-09-10"]').click();
+ assert.equal(d.querySelector('#periodMenu').hidden,false);
+ d.querySelector('#periodMenu [data-date="2026-09-15"]').click();
+ assert.equal(d.querySelector('#periodMenu').hidden,false);
+ d.querySelector('#periodMenu .cal-apply').click();
+ assert.equal(new URL(w.location.href).searchParams.get('to'),'2026-09-15');
+ w.close();
+});

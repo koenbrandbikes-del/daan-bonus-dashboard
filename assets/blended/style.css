@@ -1059,3 +1059,7 @@ header {
     grid-template-columns: 1fr;
   }
 }
+
+/* Keep the range action reachable when the popup needs to scroll. */
+.period-menu .cal-apply { position:sticky; bottom:0; z-index:1; box-shadow:0 -6px 12px #0d122d; }
+.period-menu { background:#0d122d; }

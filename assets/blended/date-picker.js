@@ -140,7 +140,7 @@ export function createDatePicker({
     update();
   };
   document.addEventListener("date-picker-close", () => close());
-  document.addEventListener("click", (e) => {
+  document.addEventListener("pointerdown", (e) => {
     if (!host.contains(e.target)) close();
   });
   host.addEventListener("keydown", (e) => {
@@ -149,11 +149,12 @@ export function createDatePicker({
       close(true);
     }
   });
-  host.addEventListener("focusout", () =>
-    queueMicrotask(() => {
-      if (!host.contains(document.activeElement)) close();
-    }),
-  );
+  // Use the destination of the focus transition. During a native mouse click,
+  // activeElement can temporarily be body before the new button receives focus.
+  // Closing in that gap removes the button before its click event can fire.
+  host.addEventListener("focusout", (event) => {
+    if (event.relatedTarget && !host.contains(event.relatedTarget)) close();
+  });
   update();
   return { update };
 }

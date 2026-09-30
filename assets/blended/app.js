@@ -1,4 +1,4 @@
-import { createDatePicker } from "./date-picker.js";
+import { createDatePicker } from "./date-picker.js?v=click-fix-1";
 import { load } from "./data.js";
 import {
   compute,
