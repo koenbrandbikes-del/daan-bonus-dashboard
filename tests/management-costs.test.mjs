@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import {managementCosts,compute,shift} from '../assets/blended/metrics.js';
+import {managementCosts,compute,shift,series} from '../assets/blended/metrics.js';
 const read=f=>JSON.parse(fs.readFileSync(new URL('../'+f,import.meta.url)));
 const costs=read('assets/blended/costs.json');
 const data={meta:read('data/meta.json'),shopify:read('data/shopify.json'),google:read('data/google.json'),creators:read('data/creators.json')};
@@ -35,4 +35,23 @@ test('company result subtracts fixed and bonus exactly once, overhead remains 4%
 test('missing bonus source stays unknown rather than a zero cost',()=>{
  const m=managementCosts({...data,meta:null},costs,'2026-09-23','2026-09-29');
  assert.equal(m.bonus,null);assert.equal(m.total,null);close(m.fixed,350);
+});
+
+test('Meta Daan switch reconciles profit, costs and chart without changing company totals',()=>{
+ const f='2026-09-01',t='2026-09-30';
+ const withDaan=compute(data,costs,f,t,'meta');
+ const without=compute(data,costs,f,t,'meta',{includeDaan:false});
+ close(without.result-withDaan.result,withDaan.management.total);
+ close(withDaan.spend-without.spend,withDaan.management.total);
+ close(without.spend,without.channels.meta.mediaSpend);
+ close(without.revenue,withDaan.revenue);
+ for(const includeDaan of [true,false]) {
+  const total=compute(data,costs,f,t,'meta',{includeDaan});
+  for(const gran of ['day','week','month']) {
+   const rows=series(data,costs,f,t,'meta',gran,{includeDaan});
+   close(rows.reduce((n,r)=>n+r.result,0),total.result);
+  }
+ }
+ close(compute(data,costs,f,t,'all').result,compute(data,costs,f,t,'all',{includeDaan:false}).result);
+ assert.equal(compute({...data,shopify:null},costs,f,t,'meta',{includeDaan:false}).result,null);
 });

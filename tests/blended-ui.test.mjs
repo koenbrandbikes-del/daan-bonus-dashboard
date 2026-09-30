@@ -408,3 +408,18 @@ test('drag selection supports reverse ranges and metric toggles match Meta', asy
  assert(!d.querySelector('main ~ #updateSummary'));
  w.close();
 });
+
+test('Meta profit and Daan switch are visible, selectable and persist in URL',async()=>{
+ const w=await boot('?channel=meta&from=2026-09-01&to=2026-09-29&metrics=result');
+ const d=w.document;
+ assert.match(d.querySelector('[data-metric="result"]').textContent,/Winst/);
+ const withCost=d.querySelector('[data-metric="spend"] strong').textContent;
+ d.querySelector('[data-daan="without"]').click();
+ assert.equal(d.querySelector('[data-daan="without"]').getAttribute('aria-pressed'),'true');
+ assert.equal(new URL(w.location.href).searchParams.get('daan'),'without');
+ assert.notEqual(d.querySelector('[data-metric="spend"] strong').textContent,withCost);
+ assert.match(d.querySelector('[data-metric="result"]').textContent,/Zonder kosten Daan/);
+ d.querySelector('[data-daan="with"]').click();
+ assert.equal(d.querySelector('[data-metric="spend"] strong').textContent,withCost);
+ w.close();
+});

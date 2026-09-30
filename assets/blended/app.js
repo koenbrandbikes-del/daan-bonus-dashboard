@@ -12,7 +12,7 @@ import {
   aggregate,
   previous,
   inRange,
-} from "./metrics.js?v=video-1909-1";
+} from "./metrics.js?v=meta-profit-1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (s) =>
@@ -113,6 +113,7 @@ const defaults = () => ({
   sub: null,
   group: "campaign",
   googleScope: "nonbrand",
+  daan: "with",
 });
 function readState() {
   const q = new URLSearchParams(location.search),
@@ -120,6 +121,7 @@ function readState() {
   for (const k of [
     "channel",
     "googleScope",
+    "daan",
     "from",
     "to",
     "compare",
@@ -131,6 +133,7 @@ function readState() {
     if (q.has(k)) s[k] = q.get(k);
   if (!["nonbrand", "brand", "all"].includes(s.googleScope))
     s.googleScope = "nonbrand";
+  if (!["with","without"].includes(s.daan)) s.daan="with";
   if (!(s.channel in names)) s.channel = "all";
   if (!["previous", "off", "custom"].includes(s.compare))
     s.compare = "previous";
@@ -153,7 +156,7 @@ function readState() {
   const allowed =
     s.channel === "all"
       ? ["revenue", "cost", "spend", "roas", "result"]
-      : ["revenue", "spend", "count", "roas", "cpa"];
+      : s.channel === "meta" ? ["revenue", "spend", "result", "count", "roas", "cpa"] : ["revenue", "spend", "count", "roas", "cpa"];
   if (q.has("metrics"))
     s.metrics = [
       ...new Set(
@@ -197,6 +200,7 @@ function persist(push = true) {
   for (const k of [
     "channel",
     "googleScope",
+    "daan",
     "from",
     "to",
     "compare",
@@ -224,6 +228,10 @@ function change(fn) {
   pending = null;
   persist();
   render();
+}
+function viewCompute(data,costs,from,to,channel) {
+  const base=compute(data,costs,state.from,state.to,channel,{includeDaan:state.daan!=="without"});
+  return compute(data,costs,from,to,channel,{includeDaan:state.daan!=="without", ...(channel==="meta" && from>=state.from && to<=state.to ? {marginRate:base.marginRate} : {})});
 }
 function metricMeta(k) {
   const all = state.channel === "all";
@@ -257,12 +265,12 @@ function metricMeta(k) {
           ? "Commissies · overige kosten onbekend"
           : all
             ? "Advertenties, commissies + beheer"
-            : state.channel === "meta" ? "Ads + vast + bonus" : names[state.channel],
+            : state.channel === "meta" ? (state.daan==="without" ? "Alleen advertenties" : "Ads + kosten Daan") : names[state.channel],
       fmt: euro,
     },
     result: {
-      label: "Resultaat incl. overhead",
-      sub: "Inclusief 4% overhead",
+      label: state.channel==="meta" ? "Winst · geschat" : "Resultaat incl. overhead",
+      sub: state.channel==="meta" ? (state.daan==="without" ? "Zonder kosten Daan" : "Inclusief kosten Daan") : "Inclusief 4% overhead",
       fmt: euro,
     },
     roas: {
@@ -498,7 +506,7 @@ function marketingMix(cur) {
 let datePickers = [];
 function render() {
   datePickers.forEach((p) => p.update());
-  const cur = compute(analysisData(), C, state.from, state.to, state.channel),
+  const cur = viewCompute(analysisData(), C, state.from, state.to, state.channel),
     p = getPrev();
   const keys =
     state.channel === "all"
@@ -508,7 +516,7 @@ function render() {
         : [state.channel];
   const prev =
     p && keys.every((k) => coverage(k, p.from, p.to))
-      ? compute(analysisData(), C, p.from, p.to, state.channel)
+      ? viewCompute(analysisData(), C, p.from, p.to, state.channel)
       : null;
   $("#comparison").value = state.compare;
   $("#from").value = state.from;
@@ -523,7 +531,7 @@ function render() {
   const metrics =
     state.channel === "all"
       ? ["revenue", "cost", "spend", "roas", "result"]
-      : ["revenue", "spend", "count", "roas", "cpa"];
+      : state.channel === "meta" ? ["revenue", "spend", "result", "count", "roas", "cpa"] : ["revenue", "spend", "count", "roas", "cpa"];
   const notes = [];
   if (keys.some((k) => !D[k] || E[k] || stale(k) || !coverage(k)))
     notes.push(
@@ -561,10 +569,11 @@ function render() {
     `<div class="view-head"><div><p class="eyebrow">${state.channel === "all" ? "HET TOTAALBEELD" : "KANAALANALYSE"}</p><h2>${names[state.channel]}</h2></div><div class="subtitle">${fmt(state.from)} – ${fmt(state.to)} ${state.to.slice(0, 4)}<br>${comparisonText}${state.to === today ? "<br><small>Vandaag loopt nog · vergeleken met hele dagen</small>" : ""}</div></div>
  ${channelRevenueBar(cur)}
  ${googleFilter()}
- <section class="kpis ${state.channel === "all" ? "" : "channel"}" aria-label="Kerncijfers">${metrics
+ ${state.channel==='meta' ? `<section class="daan-choice" aria-label="Kosten Daan"><div><strong>Kosten Daan</strong><span>${euro(cur.management.total)} <small>· vast ${euro(cur.management.fixed)} + bonus ${euro(cur.management.bonus)}</small></span></div><div class="daan-toggle"><button data-daan="with" aria-pressed="${state.daan!=='without'}">Met Daan</button><button data-daan="without" aria-pressed="${state.daan==='without'}">Zonder Daan</button></div><p>${state.daan==='without'?'Kosten Daan uitgesloten van deze Meta-analyse.':'Kosten Daan meegenomen in deze Meta-analyse.'} Winst is een schatting op basis van Meta-omzet en de gemiddelde winkelmarge na product-, betaal- en bedrijfskosten.</p></section>` : ''}
+ <section class="kpis ${state.channel === "all" ? "" : state.channel==="meta" ? "channel meta-kpis" : "channel"}" aria-label="Kerncijfers">${metrics
    .map((k) => {
      const m = metricMeta(k);
-     return `<button class="kpi ${state.metrics.includes(k) ? "active" : ""}" data-metric="${k}" aria-pressed="${state.metrics.includes(k)}"><span class="label">${m.label}</span><strong>${m.fmt(cur[k])}</strong><small>${k === "result" && cur.result != null && cur.revenue > 0 ? num((cur.result / cur.revenue) * 100) + "% van omzet · voorlopig" : k === "cost" && cur.cost != null && cur.revenue > 0 ? num((cur.cost / cur.revenue) * 100) + "% van omzet · geraamde basis" : k === "revenue" && state.channel === "all" ? num(cur.count) + " orders · " + euro(cur.incl) + " incl. btw" : m.sub}</small><small class="delta">${delta(k, cur, prev)}</small></button>`;
+     return `<button class="kpi ${state.metrics.includes(k) ? "active" : ""}" data-metric="${k}" aria-pressed="${state.metrics.includes(k)}"><span class="label">${m.label}</span><strong>${m.fmt(cur[k])}</strong><small>${k === "result" && state.channel === "all" && cur.result != null && cur.revenue > 0 ? num((cur.result / cur.revenue) * 100) + "% van omzet · voorlopig" : k === "cost" && cur.cost != null && cur.revenue > 0 ? num((cur.cost / cur.revenue) * 100) + "% van omzet · geraamde basis" : k === "revenue" && state.channel === "all" ? num(cur.count) + " orders · " + euro(cur.incl) + " incl. btw" : m.sub}</small><small class="delta">${delta(k, cur, prev)}</small></button>`;
    })
    .join("")}</section>
  <details class="signals"><summary>Samenvatting & aandachtspunten</summary>${notes
@@ -590,7 +599,7 @@ function render() {
  <p class="management-method">Rekenregel: 10% × max(0, Meta-omzet − advertentiekosten × break-even-ROAS). Break-even is gebaseerd op de Shopify-marge na productkosten, betaalkosten en 4% overige bedrijfskosten. De contractperiodes starten op 16 juli 2026. De bonus van een lopende periode kan nog veranderen.</p>
  </details></details>` : ''}
  ${state.channel === "all" ? marketingMix(cur) : ""}
- <details class="panel" id="definitions"><summary>Definities, berekeningen en bronnen</summary><p>Omzet: de huidige Shopify-orderbedragen, exclusief 21% btw door deling door 1,21. Afzonderlijke retour-, belasting- en verzendcomponenten ontbreken nog. Niet gelijkstellen aan een gecontroleerde financiële rapportage.</p><p>Productkosten: bestaande gebundelde tarieven per product. Betaalkosten: 2% van omzet incl. btw. Resultaat: omzet excl. btw min productkosten, betaalkosten, marketingkosten en 4% overhead over omzet excl. btw. Marketing bevat Meta-beheer: €1.500 per kalendermaand naar rato van dagen plus de variabele contractbonus. Meta-kanaalrendement en kosten per aankoop bevatten ook dit beheer; campagnekosten blijven uitsluitend advertentiekosten. Dit is geen nettowinst.</p><p>Blended ROAS: winkelomzet incl. btw / bekende marketingkosten. Kanaal-ROAS: gerapporteerde kanaalwaarde / kanaalkosten. Bij nuluitgaven is ROAS niet berekenbaar. Week- en maandratio’s worden uit totalen berekend, niet uit het gemiddelde van dagratio’s.</p><p>Google: conversies op datum van advertentie-interactie. Twee primaire aankoopacties zijn actief; de overlap is nog niet vastgesteld. Nieuwe versus terugkerende klanten is nog onbekend. Merkverkeer telt altijd mee in totale marketingkosten.</p><p>Kanaalresultaten zijn schattingen: de gemiddelde product-, betaal- en overheadkosten als percentage van de winkelomzet worden toegepast op de kanaalomzet. Dit is geen winst per gekoppelde order; kanaalomzet kan overlappen en is niet optelbaar. Google gebruikt non-branded omzet en trekt alle Google-kosten af. De opgegeven Meta-filtering van influencercodes is niet onafhankelijk gecontroleerd.</p><p>Bronstatus en dekking staan bovenaan bij Datastatus. Exports bevatten de actieve periode en voorlopige meetbasis. Details bevatten geen klantnamen of e-mailadressen.</p></details>`;
+ <details class="panel" id="definitions"><summary>Definities, berekeningen en bronnen</summary><p>Omzet: de huidige Shopify-orderbedragen, exclusief 21% btw door deling door 1,21. Afzonderlijke retour-, belasting- en verzendcomponenten ontbreken nog. Niet gelijkstellen aan een gecontroleerde financiële rapportage.</p><p>Productkosten: bestaande gebundelde tarieven per product. Betaalkosten: 2% van omzet incl. btw. Resultaat: omzet excl. btw min productkosten, betaalkosten, marketingkosten en 4% overhead over omzet excl. btw. Marketing bevat Meta-beheer: €1.500 per kalendermaand naar rato van dagen plus de variabele contractbonus. De keuze Met/Zonder Daan bepaalt of dit beheer meetelt in Meta-marketingkosten, geschatte winst, kanaalrendement en kosten per aankoop. Het bedrijfsoverzicht bevat deze kosten altijd. Geschatte Meta-winst gebruikt de gemiddelde winkelmarge van de geselecteerde periode; dezelfde marge wordt toegepast op de grafiekpunten zodat de bedragen optellen. Campagnekosten blijven uitsluitend advertentiekosten. Dit is geen nettowinst.</p><p>Blended ROAS: winkelomzet incl. btw / bekende marketingkosten. Kanaal-ROAS: gerapporteerde kanaalwaarde / kanaalkosten. Bij nuluitgaven is ROAS niet berekenbaar. Week- en maandratio’s worden uit totalen berekend, niet uit het gemiddelde van dagratio’s.</p><p>Google: conversies op datum van advertentie-interactie. Twee primaire aankoopacties zijn actief; de overlap is nog niet vastgesteld. Nieuwe versus terugkerende klanten is nog onbekend. Merkverkeer telt altijd mee in totale marketingkosten.</p><p>Kanaalresultaten zijn schattingen: de gemiddelde product-, betaal- en overheadkosten als percentage van de winkelomzet worden toegepast op de kanaalomzet. Dit is geen winst per gekoppelde order; kanaalomzet kan overlappen en is niet optelbaar. Google gebruikt non-branded omzet en trekt alle Google-kosten af. De opgegeven Meta-filtering van influencercodes is niet onafhankelijk gecontroleerd.</p><p>Bronstatus en dekking staan bovenaan bij Datastatus. Exports bevatten de actieve periode en voorlopige meetbasis. Details bevatten geen klantnamen of e-mailadressen.</p></details>`;
   $("#gran").value = state.gran;
   renderChart();
   renderDetail();
@@ -638,11 +647,11 @@ function chartRows() {
           ? "week"
           : "month"
       : state.gran;
-  return series(analysisData(), C, state.from, state.to, state.channel, g);
+  return series(analysisData(), C, state.from, state.to, state.channel, g, {includeDaan:state.daan!=="without"});
 }
 function renderDayComparison() {
   selectedDays = new Set([...selectedDays].filter(d => d >= state.from && d <= state.to));
-  const days = series(analysisData(), C, state.from, state.to, state.channel, "day");
+  const days = series(analysisData(), C, state.from, state.to, state.channel, "day", {includeDaan:state.daan!=="without"});
   const chosen = days.filter(r => selectedDays.has(r.from));
   const keys = state.metrics;
   $("#dayComparison").innerHTML = `<section class="day-comparison" aria-label="Dagen vergelijken"><div class="panel-head"><div><h3>Dagen vergelijken</h3><p class="subtitle">Sleep in de grafiek om een periode te vergelijken.</p></div>${chosen.length ? '<button id="clearDays">Selectie wissen</button>' : ''}</div><details class="range-access"><summary>Periode met datums kiezen</summary><label>Van<input id="rangeStart" type="date" min="${state.from}" max="${state.to}" value="${chosen[0]?.from || state.from}"></label><label>Tot<input id="rangeEnd" type="date" min="${state.from}" max="${state.to}" value="${chosen.at(-1)?.from || state.to}"></label><button id="applyChartRange">Selecteren</button></details>${chosen.length ? `<div class="selected-days">${chosen.map(r=>`<button data-select-day="${r.from}" aria-label="${fmt(r.from)} verwijderen">${fmt(r.from)} <span aria-hidden="true">×</span></button>`).join('')}</div><div class="table-wrap"><table><caption>De gekozen dagen naast elkaar${chosen.length>1 ? ' · verschil ten opzichte van '+fmt(chosen[0].from) : ''}</caption><thead><tr><th>Cijfer</th>${chosen.map(r=>`<th scope="col">${fmt(r.from)}${r.from===today ? '<small>Lopende dag</small>' : ''}</th>`).join('')}</tr></thead><tbody>${keys.map(k=>`<tr><th scope="row">${metricMeta(k).label}</th>${chosen.map((r,i)=>{const base=chosen[0][k],v=r[k];return `<td><strong>${metricMeta(k).fmt(v)}</strong>${i && v!=null && base!=null ? `<small>${v-base>0?'+':''}${metricMeta(k).fmt(v-base)}${base ? ' · '+(v-base>0?'+':'')+num((v-base)/Math.abs(base)*100)+'%' : ''}</small>` : ''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div>${chosen.length===1 ? '<p class="hint">Kies nog een dag om het verschil te zien.</p>' : ''}` : '<p class="hint">Sleep over de grafiek om meerdere dagen te selecteren.</p>'}</section>`;
@@ -752,7 +761,7 @@ function col(label, type = "text") {
 function renderDetail() {
   const from = state.sub?.from || state.from,
     to = state.sub?.to || state.to,
-    cur = compute(analysisData(), C, from, to, state.channel),
+    cur = viewCompute(analysisData(), C, from, to, state.channel),
     det = state.detail,
     k = state.metrics[0] || "revenue";
   let title = "",
@@ -1350,6 +1359,8 @@ function bindContent() {
         state.detail = null;
         state.sub = null;
       });
+    } else if (b.dataset.daan) {
+      change(()=>{state.daan=b.dataset.daan;});
     } else if (b.dataset.metric) {
       selectMetric(b.dataset.metric);
       document
@@ -1436,7 +1447,7 @@ function bindContent() {
 function switchChannel(ch) {
   change(() => {
     state.channel = ch;
-    state.metrics = ch === "all" ? ["revenue", "spend"] : ["spend", "revenue"];
+    state.metrics = ch === "all" ? ["revenue", "spend"] : ch === "meta" ? ["revenue", "result"] : ["spend", "revenue"];
     state.detail = null;
     state.sub = null;
     compareMode = true;

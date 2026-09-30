@@ -67,7 +67,7 @@ export function managementCosts(data, costs, from, to) {
   }
   return {fixed,bonus,total:bonus==null?null:fixed+bonus,periods:audit};
 }
-export function compute(data, costs, from, to, channel = "all") {
+export function compute(data, costs, from, to, channel = "all", options = {}) {
   const orders = (data.shopify?.orders || []).filter(
     (o) => !o.test && inRange(o, from, to),
   );
@@ -113,7 +113,7 @@ export function compute(data, costs, from, to, channel = "all") {
   };
   const management=managementCosts(data,costs,from,to);
   channels.meta.mediaSpend=channels.meta.spend;
-  channels.meta.spend=channels.meta.spend!=null && management.total!=null ? channels.meta.spend+management.total : null;
+  channels.meta.spend=channel === "meta" && options.includeDaan === false ? channels.meta.mediaSpend : channels.meta.spend!=null && management.total!=null ? channels.meta.spend+management.total : null;
   const complete = Object.values(channels).every((c) => c.spend !== null);
   const spend =
     channel === "all"
@@ -129,6 +129,7 @@ export function compute(data, costs, from, to, channel = "all") {
       : channels[channel].revenue;
   const numerator =
     channel === "all" ? (data.shopify ? f.incl : null) : revenue;
+  const marginRate = options.marginRate !== undefined ? options.marginRate : data.shopify && f.incl>0 && f.cost!=null ? (f.excl-f.cost-f.overhead)/f.incl : null;
   return {
     ...f,
     ...(!data.shopify
@@ -143,7 +144,9 @@ export function compute(data, costs, from, to, channel = "all") {
       : {}),
     revenue,
     spend,
+    marginRate,
     result:
+      channel === "meta" ? (marginRate!=null && revenue!=null && spend!=null ? revenue*marginRate-spend : null) :
       channel === "all" && data.shopify && spend !== null && f.cost !== null
         ? f.excl - f.cost - spend - f.overhead
         : null,
@@ -161,7 +164,8 @@ export function compute(data, costs, from, to, channel = "all") {
     creatorRows: creators,
   };
 }
-export function series(data, costs, from, to, channel, gran = "day") {
+export function series(data, costs, from, to, channel, gran = "day", options = {}) {
+  if(channel === "meta") options = {...options, marginRate:compute(data,costs,from,to,channel,options).marginRate};
   const buckets = new Map();
   for (let d = from; d <= to; d = shift(d, 1)) {
     let key = d;
@@ -173,7 +177,7 @@ export function series(data, costs, from, to, channel, gran = "day") {
   }
   return [...buckets.values()].map((b) => ({
     ...b,
-    ...compute(data, costs, b.from, b.to, channel),
+    ...compute(data, costs, b.from, b.to, channel, options),
   }));
 }
 export function aggregate(rows, key) {
