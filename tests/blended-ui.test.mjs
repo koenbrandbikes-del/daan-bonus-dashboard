@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { JSDOM } from "jsdom";
 const root = new URL("../", import.meta.url);
-async function boot(query = "", failSource = "") {
+async function boot(query = "", failSource = "", transform = (url, data) => data) {
   const dom = new JSDOM(
       fs.readFileSync(new URL("blended.html", root), "utf8"),
       {
@@ -16,7 +16,7 @@ async function boot(query = "", failSource = "") {
     if (url.includes(failSource) && failSource) throw Error("Unavailable");
     return {
       ok: true,
-      json: async () => JSON.parse(fs.readFileSync(new URL(url, root), "utf8")),
+      json: async () => transform(url, JSON.parse(fs.readFileSync(new URL(url, root), "utf8"))),
     };
   };
   w.matchMedia = () => ({ matches: true });
@@ -241,4 +241,23 @@ test("channel table totals never add overlapping attributed revenue", async () =
  const w=await boot("?from=2026-09-23&to=2026-09-29&metrics=spend"), d=w.document;
  const footer=[...d.querySelectorAll("#detail tfoot td")].map(c=>c.textContent);
  assert.equal(footer[1],"—"); assert.match(footer[2],/€/);
+});
+
+test("Google campaign table uses current enabled status, including active campaigns with zero spend", async () => {
+ const query="?channel=google&googleScope=all&from=2026-09-23&to=2026-09-29";
+ const normal=await boot(query);
+ const w=await boot(query,"",(url,data)=> {
+  if(!url.includes("google.json")) return data;
+  return {...data,campaigns:[
+   {id:"23981395562",name:"Active search",status:"ENABLED"},
+   {id:"23985056312",name:"Paused PMAX",status:"PAUSED"},
+   {id:"23981332205",name:"Removed brand",status:"REMOVED"},
+   {id:"new-zero",name:"Active without spend",status:"ENABLED"}
+  ]};
+ });
+ const body=w.document.querySelector("#detail tbody").textContent;
+ assert.match(body,/Active search/); assert.match(body,/Active without spend/);
+ assert.doesNotMatch(body,/Paused PMAX|Removed brand/);
+ assert.equal(w.document.querySelectorAll("#detail tbody tr").length,2);
+ assert.equal(w.document.querySelector(".kpis").textContent,normal.document.querySelector(".kpis").textContent);
 });

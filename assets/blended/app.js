@@ -959,13 +959,14 @@ function renderDetail() {
   } else {
     const available = analysisData().google?.daily_campaigns || [];
     const campaign = available.filter((r) => inRange(r, from, to));
+    const activeCampaigns = (D.google?.campaigns || []).filter(r => r.status === "ENABLED" && (state.googleScope === "all" || googleCampaignGroups[r.id] === state.googleScope));
     groupControl = `<label>Uitsplitsing<select id="googleGroup"><option value="campaign">Campagnes</option><option value="intent">Branded / non-branded</option><option value="actions">Aankoopmetingen</option><option value="customers">Nieuwe / terugkerende klanten</option></select></label>`;
     title =
       "Google Ads · " +
       googleScopeNames[state.googleScope] +
       " · " +
       ({
-        campaign: "campagnes",
+        campaign: "actieve campagnes",
         intent: "campagne-indeling",
         actions: "aankoopmetingen",
         customers: "klantstatus",
@@ -1040,22 +1041,20 @@ function renderDetail() {
           "") +
         " Hieronder staan de resultaten per dag. Zoektermen zijn nog niet per campagne beschikbaar in deze export.";
     } else {
-      rows = aggregate(
-        campaign.map((r) => ({
-          name: r.name,
-          id: r.id,
-          spend: r.spend,
-          revenue: r.rev,
-          orders: r.conv,
-        })),
-        (r) => r.id,
-      ).map((r) => ({
-        cells: [r.rows[0].name, r.spend, r.revenue, r.orders, r.roas],
-        description: campaignDescriptions[r.name],
-        action: { type: "campaign", name: r.rows[0].name, id: r.name },
-      }));
-      note =
-        "Campagnes binnen de geselecteerde groep. Indeling gecontroleerd in Google Ads en SEA-rapportage: Corporate + Branded Shopping zijn branded; generiek, PMAX, B2B en Concurrentie zijn non-branded. B2B kan offerteconversies bevatten; geen bewezen nieuweklantverkoop.";
+      const totals = new Map(aggregate(
+        campaign.map(r => ({ id:r.id, spend:r.spend, revenue:r.rev, orders:r.conv })),
+        r => r.id,
+      ).map(r => [r.name, r]));
+      rows = activeCampaigns.map(c => {
+        const r = totals.get(c.id) || { spend:0, revenue:0, orders:0, roas:null };
+        return {
+          cells: [c.name, r.spend, r.revenue, r.orders, r.roas],
+          description: campaignDescriptions[c.id],
+          action: {type:"campaign",name:c.name,id:c.id},
+        };
+      });
+      note = "Alleen campagnes die nu in Google Ads zijn ingeschakeld, binnen de gekozen branded/non-branded groep. De tabel toont hun cijfers over de geselecteerde periode. Hoofdcijfers blijven alle kosten en resultaten van die periode bevatten, ook van inmiddels gepauzeerde campagnes.";
+      if (!Array.isArray(D.google?.campaigns)) note = "De actuele campagnestatus wordt nog opgehaald. Er worden geen campagnes als actief aangenomen.";
     }
     if (!available.length) note += " Campagnedetails worden nog opgehaald.";
     if (

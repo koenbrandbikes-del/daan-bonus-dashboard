@@ -1,4 +1,36 @@
 {
+ "campaigns": [
+  {
+   "id": "23980131321",
+   "name": "T | Generiek | B2B",
+   "status": "ENABLED"
+  },
+  {
+   "id": "23981332205",
+   "name": "C | Corporate",
+   "status": "ENABLED"
+  },
+  {
+   "id": "23981395562",
+   "name": "T | Generiek | B2C",
+   "status": "ENABLED"
+  },
+  {
+   "id": "23981395565",
+   "name": "T | Concurrentie",
+   "status": "ENABLED"
+  },
+  {
+   "id": "23985056312",
+   "name": "P | Generiek",
+   "status": "ENABLED"
+  },
+  {
+   "id": "23989624267",
+   "name": "S | Branded",
+   "status": "ENABLED"
+  }
+ ],
  "daily_campaigns": [
   {
    "d": "2026-08-03",
@@ -4791,12 +4823,12 @@
    "conv": 0
   }
  ],
- "details_synced_at": "2026-09-30T16:52:38.279Z",
+ "details_synced_at": "2026-09-30T16:54:21.475Z",
  "source": "google_ads_api",
  "customer_id": "7645288282",
  "currency": "EUR",
  "time_zone": "Europe/Amsterdam",
- "synced_at": "2026-09-30T16:52:38.279Z",
+ "synced_at": "2026-09-30T16:54:21.475Z",
  "coverage_from": "2026-08-01",
  "coverage_to": "2026-09-30",
  "attribution": "Primary conversions and conversion value by ad interaction date; may include non-purchase goals and overlap with other channels.",
