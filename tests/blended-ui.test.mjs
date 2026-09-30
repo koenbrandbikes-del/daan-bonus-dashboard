@@ -293,10 +293,10 @@ test("cost story keeps VAT and margin bases explicit and preserves calculation o
     /Nieuwe basis: 100%/,
   );
   const rows = [...d.querySelectorAll("#table tbody tr")];
-  assert.equal(rows.length, 10);
+  assert.equal(rows.length, 9);
   assert.match(rows[0].textContent, /Omzet excl. btw100%/);
   assert.match(rows[2].textContent, /Marge na product en levering/);
-  assert.match(rows[9].textContent, /Resultaat incl. overhead/);
+  assert.match(rows[8].textContent, /Resultaat incl. overhead/);
   assert.equal(d.querySelectorAll("#table [data-sort]").length, 0);
   assert(d.querySelector("#detail .pager").hidden);
   d.querySelector("[data-detail*=products]").click();
@@ -425,7 +425,7 @@ test('Meta profit and Daan switch are visible, selectable and persist in URL',as
  assert.equal(d.querySelector('[data-daan="without"]').getAttribute('aria-pressed'),'true');
  assert.equal(new URL(w.location.href).searchParams.get('daan'),'without');
  assert.notEqual(d.querySelector('[data-metric="spend"] strong').textContent,withCost);
- assert.match(d.querySelector('[data-metric="result"]').textContent,/Zonder kosten Daan/);
+ assert.match(d.querySelector('[data-metric="result"]').textContent,/% van omzet excl. btw/);
  d.querySelector('[data-daan="with"]').click();
  assert.equal(d.querySelector('[data-metric="spend"] strong').textContent,withCost);
  w.close();
@@ -443,4 +443,20 @@ test('compact Daan switch also updates overview and survives switching channels'
  assert.equal(d.querySelector('[data-metric="result"] strong').textContent,before);
  d.querySelector('[data-daan-details]').click();
  assert.equal(d.querySelector('.management').open,true);w.close();
+});
+
+test('analysis collapses and salary breakdown is grouped; every channel exposes margin',async()=>{
+ const w=await boot('?from=2026-09-23&to=2026-09-29&metrics=cost'),d=w.document;
+ const salary=d.querySelector('.salary-breakdown');
+ assert(salary);assert.equal(salary.open,false);
+ assert.match(salary.closest('tr').textContent,/Meta salaris/);
+ salary.querySelector('summary').click();assert.equal(salary.open,true);
+ d.querySelector('#collapseAnalysis').click();assert.equal(d.querySelector('#analysisBody').hidden,true);
+ d.querySelector('#collapseAnalysis').click();assert.equal(d.querySelector('#analysisBody').hidden,false);
+ assert.match(d.querySelector('#marketingMix thead').textContent,/Winstmarge/);
+ for(const channel of ['meta','google','infl']){
+  d.querySelector('#tab-'+channel).click();
+  assert.match(d.querySelector('[data-metric=result]').textContent,/% van omzet excl. btw/);
+ }
+ w.close();
 });

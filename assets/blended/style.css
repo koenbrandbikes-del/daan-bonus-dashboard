@@ -1479,3 +1479,14 @@ header .live-dot.warning { width:10px; height:10px; }
 .selection-totals { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:16px 0; }
 .selection-totals span { display:block; color:var(--muted); font-size:12px; margin-bottom:6px; }
 .selection-totals strong { font-size:24px; font-variant-numeric:tabular-nums; }
+.salary-breakdown summary { cursor:pointer; color:var(--blue); font-size:12px; padding:4px 0; }
+.salary-breakdown dl { margin:10px 0; font-size:12px; }
+.salary-breakdown dl div { display:flex; justify-content:space-between; gap:16px; margin:6px 0; }
+.salary-breakdown dd { margin:0; color:var(--text); font-variant-numeric:tabular-nums; }
+.salary-breakdown small { font-size:11px; }
+#analysis:has(#analysisBody[hidden]) .gran-buttons, #analysis:has(#analysisBody[hidden]) #chartMode { display:none; }
+#marketingMix table { width:100%; font-size:12px; }
+#marketingMix th { font-size:10px; white-space:normal; letter-spacing:0; }
+#marketingMix td, #marketingMix th { padding:10px 8px; }
+#marketingMix .row-description { font-size:10px; white-space:normal; }
+#marketingMix td:last-child { font-weight:600; }

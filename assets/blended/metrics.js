@@ -146,7 +146,7 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
     spend,
     marginRate,
     result:
-      channel === "meta" ? (marginRate!=null && revenue!=null && spend!=null ? revenue*marginRate-spend : null) :
+      channel !== "all" ? (marginRate!=null && revenue!=null && spend!=null ? revenue*marginRate-spend : null) :
       channel === "all" && data.shopify && spend !== null && f.cost !== null
         ? f.excl - f.cost - spend - f.overhead
         : null,
@@ -165,7 +165,7 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
   };
 }
 export function series(data, costs, from, to, channel, gran = "day", options = {}) {
-  if(channel === "meta") options = {...options, marginRate:compute(data,costs,from,to,channel,options).marginRate};
+  if(channel !== "all") options = {...options, marginRate:compute(data,costs,from,to,channel,options).marginRate};
   const buckets = new Map();
   for (let d = from; d <= to; d = shift(d, 1)) {
     let key = d;
