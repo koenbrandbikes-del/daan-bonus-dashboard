@@ -435,10 +435,10 @@ const campaignDescriptions = {
 function orderDate(o) {
   if (!o.created_at || !Number.isFinite(Date.parse(o.created_at)))
     return o.d + " · tijd onbekend";
-  return new Intl.DateTimeFormat("nl-NL", {
+  return o.d + " · " + new Intl.DateTimeFormat("nl-NL", {
     timeZone: "Europe/Amsterdam",
-    dateStyle: "short",
-    timeStyle: "short",
+    hour: "2-digit",
+    minute: "2-digit",
   }).format(new Date(o.created_at));
 }
 function marketingMix(cur) {
@@ -576,7 +576,7 @@ function renderStatus() {
     })
     .join(
       "",
-    )}</div><p class="hint">Datums van orders en advertenties zijn geen bewijs van een volledige financiële aansluiting. Btw, retouren, kostensplitsing en overige influencerkosten moeten nog worden aangevuld. Google-campagnedetails: ${esc(D.google?.details_synced_at || "nog niet beschikbaar")}.</p>`;
+    )}</div><p class="hint">Datums van orders en advertenties zijn geen bewijs van een volledige financiële aansluiting. Retouren, kostensplitsing en overige influencerkosten moeten nog worden aangevuld. Google-campagnedetails: ${esc(D.google?.details_synced_at || "nog niet beschikbaar")}.</p>`;
 }
 function chartRows() {
   const days = (new Date(state.to) - new Date(state.from)) / 864e5;
