@@ -110,3 +110,21 @@ test("previous period spans equal days across year boundary", () =>
     from: "2025-12-25",
     to: "2025-12-31",
   }));
+
+test('historical report audit includes pending refunds once and reconciles all report rows', async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const costs=JSON.parse(await readFile(new URL('../assets/blended/costs.json',import.meta.url)));
+ const data=JSON.parse(await readFile(new URL('../data/shopify.json',import.meta.url)));
+ const audit=costs.returns.orders;
+ assert.equal(audit.length,24);
+ assert.ok(Math.abs(audit.reduce((s,o)=>s+o.sales_reversal_report,0)+3353)<.001);
+ for(const num of ['#1474','#1510']) {
+   const order=data.orders.find(o=>o.num===num);
+   const f=finance([order],costs);
+   assert.equal(f.incl,0);
+   assert.equal(f.refundedOrders,1);
+   assert.equal(f.returnCost,num==='#1474'?20:0);
+ }
+ const oldOrders=data.orders.filter(o=>o.d<'2026-09-01');
+ assert.ok(finance(oldOrders,costs).refundedIncl>0);
+});

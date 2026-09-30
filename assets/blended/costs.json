@@ -43,155 +43,203 @@
         "paid_incl": 149,
         "refunded_incl": 149,
         "kind": "received_return",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -123.14
       },
       {
         "num": "#1499",
         "paid_incl": 13.05,
         "refunded_incl": 13.05,
         "kind": "cancelled",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -6.69
       },
       {
         "num": "#1481",
         "paid_incl": 239,
         "refunded_incl": 239,
         "kind": "cancelled",
-        "store_credit": true
+        "store_credit": true,
+        "sales_reversal_report": -197.52
       },
       {
         "num": "#1358",
         "paid_incl": 168,
         "refunded_incl": 168,
         "kind": "cancelled",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -138.84
       },
       {
         "num": "#1351",
         "paid_incl": 149,
         "refunded_incl": 149,
         "kind": "received_return",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -123.14
       },
       {
         "num": "#1336",
         "paid_incl": 149,
         "refunded_incl": 149,
         "kind": "unknown",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -123.14
       },
       {
         "num": "#1303",
         "paid_incl": 287,
         "refunded_incl": 287,
         "kind": "unknown",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -237.19
       },
       {
         "num": "#1275",
         "paid_incl": 149,
         "refunded_incl": 149,
         "kind": "unknown",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -123.14
       },
       {
         "num": "#1271",
         "paid_incl": 168,
         "refunded_incl": 168,
         "kind": "cancelled",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -138.84
       },
       {
         "num": "#1236",
         "paid_incl": 149,
         "refunded_incl": 149,
         "kind": "received_return",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -149
       },
       {
         "num": "#1227",
         "paid_incl": 149,
         "refunded_incl": 149,
         "kind": "received_return",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -149
       },
       {
         "num": "#1224",
         "paid_incl": 134.1,
         "refunded_incl": 134.1,
         "kind": "unknown",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -134.1
       },
       {
         "num": "#1213",
         "paid_incl": 149,
         "refunded_incl": 149,
         "kind": "unknown",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -149
       },
       {
         "num": "#1185",
         "paid_incl": 149,
         "refunded_incl": 149,
         "kind": "received_return",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -149
       },
       {
         "num": "#1158",
         "paid_incl": 222.55,
         "refunded_incl": 81,
         "kind": "received_return",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -81
       },
       {
         "num": "#1134",
         "paid_incl": 149,
         "refunded_incl": 149,
         "kind": "unknown",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -149
       },
       {
         "num": "#1056",
         "paid_incl": 149,
         "refunded_incl": 149,
         "kind": "unknown",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -149
       },
       {
         "num": "#1055",
         "paid_incl": 239,
         "refunded_incl": 239,
         "kind": "unknown",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -239
       },
       {
         "num": "#1014",
         "paid_incl": 117.3,
         "refunded_incl": 117.3,
         "kind": "unknown",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -117.3
       },
       {
         "num": "#1012",
         "paid_incl": 308.05,
         "refunded_incl": 308.05,
         "kind": "unknown",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -308.05
       },
       {
         "num": "#1005",
         "paid_incl": 134.1,
         "refunded_incl": 134.1,
         "kind": "unknown",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -134.1
       },
       {
         "num": "#1003",
         "paid_incl": 299,
         "refunded_incl": 299,
         "kind": "unknown",
-        "store_credit": false
+        "store_credit": false,
+        "sales_reversal_report": -299
+      },
+      {
+        "num": "#1474",
+        "paid_incl": 339,
+        "refunded_incl": 339,
+        "kind": "received_return",
+        "store_credit": false,
+        "refund_status": "pending",
+        "sales_reversal_report": 58.83
+      },
+      {
+        "num": "#1510",
+        "paid_incl": 13.05,
+        "refunded_incl": 13.05,
+        "kind": "cancelled",
+        "store_credit": false,
+        "refund_status": "pending",
+        "sales_reversal_report": 6.36
       }
-    ]
+    ],
+    "report_audit": {
+      "source": "Shopify · Omzetherroepingen in de loop van de tijd",
+      "from": "2026-01-01",
+      "through": "2026-09-30",
+      "total": 3353,
+      "orders": 24,
+      "basis": "Alle 24 niet-nulregels herleid naar Shopify-orders. Inclusief 2 nog als betaald gemarkeerde orders met terugbetaling in behandeling en ordertotaal nul. Rapportbedragen zijn onderbouwing, geen tweede aftrek."
+    }
   }
 }

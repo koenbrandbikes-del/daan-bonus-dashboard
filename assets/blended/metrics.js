@@ -16,6 +16,7 @@ export function reconciledOrder(order, costs) {
   if (!correction) return order;
   return {...order, incl: correction.paid_incl-correction.refunded_incl,
     paid_incl: correction.paid_incl, refunded_incl: correction.refunded_incl,
+    sales_reversal_report: correction.sales_reversal_report, refund_status: correction.refund_status,
     return_kind: correction.kind, store_credit: correction.store_credit,
     return_cost: correction.kind === 'received_return' ? (costs.returns.cost_per_return ?? 20) : 0};
 }
