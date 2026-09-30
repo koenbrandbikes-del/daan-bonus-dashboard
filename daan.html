@@ -1,0 +1,3230 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daan · Meta Bonusdashboard</title>
+<link rel="icon" type="image/png" href="favicon-meta.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,600..800;1,6..72,600..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,400..700;1,400..700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;overflow-x:hidden}
+body{background:
+    radial-gradient(55% 40% at 12% 8%,rgba(20,166,241,.19) 0%,transparent 60%),
+    radial-gradient(70% 45% at 92% 0%,rgba(42,49,160,.24) 0%,transparent 62%),
+    radial-gradient(60% 45% at 88% 100%,rgba(42,49,160,.28) 0%,transparent 60%),
+    linear-gradient(160deg,#0A0D26 0%,#0D1433 55%,#111640 100%);
+  background-repeat:no-repeat;background-attachment:scroll;background-size:100% 100%;
+  color:#f1f5f9;font-family:'Hanken Grotesk',-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+.page{max-width:820px;margin:0 auto;padding:0 20px 48px}
+
+/* ── Header ── */
+.hd{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:32px 0 20px}
+.hd-left{display:flex;align-items:center;gap:14px;min-width:0;flex:1}
+.hd-text{min-width:0;flex:1;overflow:hidden}
+.hd h1{font-family:'Newsreader',Georgia,serif;font-size:clamp(16px,4vw,23px);font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:clip}
+.period-wrap{flex-shrink:0}
+.avatar-wrap{position:relative;width:38px;height:38px;flex-shrink:0}
+.avatar-ring{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,#2A31A0,#14a6f1,#2A31A0);animation:ring-spin 8s linear infinite;transition:filter .2s ease;opacity:.7}
+.avatar-wrap:hover .avatar-ring{animation-duration:3s;filter:brightness(1.15);opacity:1}
+.avatar-inner{position:absolute;inset:2px;border-radius:50%;overflow:hidden;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.avatar-inner img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s ease}
+.avatar-wrap:hover .avatar-inner img{transform:scale(1.08)}
+@keyframes ring-spin{to{transform:rotate(360deg)}}
+.period-sel{background:#141e33;border:1px solid #1f3050;color:#f1f5f9;font-size:13px;font-weight:500;padding:8px 32px 8px 12px;border-radius:8px;cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+
+/* ── Main card ── */
+.card{background:linear-gradient(160deg,rgba(34,42,96,.58) 0%,rgba(20,26,64,.54) 100%);backdrop-filter:blur(28px) saturate(170%);-webkit-backdrop-filter:blur(28px) saturate(170%);border:1px solid rgba(255,255,255,.16);border-top-color:rgba(255,255,255,.32);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 20px 50px -14px rgba(4,6,20,.55),0 2px 16px rgba(30,40,120,.22),inset 0 1px 0 rgba(255,255,255,.16)}
+.card-meta{font-size:11px;color:#93A2B8;margin-bottom:12px;display:flex;align-items:center;gap:5px}
+.info-i{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;border:1px solid #93A2B8;font-size:8px;color:#93A2B8;cursor:help;flex-shrink:0;position:relative}
+.capi-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;background:#78350f;border:1px solid #92400e;color:#fde68a;font-size:10px;font-weight:600;letter-spacing:.04em;cursor:help;flex-shrink:0;position:relative}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0c1829;border:1px solid #2d4a70;color:#cbd5e1;font-size:11px;font-weight:400;line-height:1.5;padding:7px 11px;border-radius:7px;white-space:normal;width:210px;z-index:999;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+.bonus-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;color:#93A2B8;text-transform:uppercase;margin-bottom:5px}
+.bonus-amt{font-family:'Newsreader',Georgia,serif;font-size:52px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em;margin-bottom:12px}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:10px}
+.badge.up{background:rgba(143,196,155,.12);color:#8FC49B}
+.badge.dn{background:rgba(229,184,99,.12);color:#E5B863}
+.badge.ne{background:rgba(100,116,139,.12);color:#94a3b8}
+.status{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;margin-bottom:6px}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot.g{background:#8FC49B}.dot.a{background:#E5B863}.dot.r{background:#DD9280}
+
+/* ── Metrics row ── */
+.mrow{display:grid;grid-template-columns:1fr 1fr 1fr;background:linear-gradient(160deg,rgba(32,40,92,.48) 0%,rgba(18,24,60,.44) 100%);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);border:1px solid rgba(255,255,255,.15);border-top-color:rgba(255,255,255,.28);border-radius:12px;overflow:hidden;margin-bottom:16px;box-shadow:0 8px 24px rgba(6,8,24,.35),inset 0 1px 0 rgba(255,255,255,.14)}
+.mc{padding:16px 18px;border-right:1px solid rgba(255,255,255,.08);transition:background .15s ease}
+.mc:hover{background:rgba(255,255,255,.05)}
+.mc:last-child{border-right:none}
+.mc-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#93A2B8;margin-bottom:4px}
+.mc-val{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.mc-sub{font-size:11px;color:#93A2B8;margin-top:2px}
+
+/* ── Gauge ── */
+.gauge-outer{position:relative;padding:30px 0 24px}
+.gauge-bar{position:absolute;top:30px;left:0;right:0;height:7px;border-radius:999px;overflow:visible;box-shadow:0 6px 20px -6px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -1px 2px rgba(0,0,0,.3)}
+.g-marker{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translateX(-50%);top:-32px}
+.g-marker-lbl{font-size:11px;font-weight:700;white-space:nowrap;padding:1px 5px;border-radius:3px;border-width:1px;border-style:solid;backdrop-filter:blur(4px)}
+.g-marker-line{width:2px;height:34px;border-radius:1px;margin-top:2px;animation:marker-glow 2.4s ease-in-out infinite}
+@keyframes marker-glow{
+  0%,100%{filter:drop-shadow(0 0 2px currentColor)}
+  50%{filter:drop-shadow(0 0 8px currentColor)}
+}
+.g-tick{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translateX(-50%);top:12px;cursor:default}
+.g-tick-line{width:1px;height:6px;background:rgba(255,255,255,.28);margin-bottom:3px;transition:background .25s ease,box-shadow .25s ease,height .25s ease}
+.g-tick:hover .g-tick-line{background:#fff;height:8px;box-shadow:0 0 8px rgba(255,255,255,.7),0 0 16px rgba(255,255,255,.35)}
+.g-tick-val{font-size:10px;color:#93A2B8;white-space:nowrap;transition:color .25s ease}
+.g-tick:hover .g-tick-val{color:#fff}
+.g-tick-cap{font-size:9px;color:#93A2B8;transition:color .25s ease}
+.g-tick:hover .g-tick-cap{color:rgba(255,255,255,.85)}
+.g-legend{display:flex;flex-wrap:wrap;gap:12px 20px;font-size:11px;color:#93A2B8;position:absolute;bottom:0;left:0}
+.g-legend-item{display:flex;align-items:center;gap:5px}
+.g-legend-swatch{width:14px;height:3px;border-radius:2px;flex-shrink:0}
+
+/* ── Accordion ── */
+.acc{display:flex;flex-direction:column;gap:4px}
+.acc-item{background:linear-gradient(160deg,rgba(32,40,92,.48) 0%,rgba(18,24,60,.44) 100%);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);border:1px solid rgba(255,255,255,.15);border-top-color:rgba(255,255,255,.28);border-radius:14px;overflow:hidden;box-shadow:0 10px 28px rgba(6,8,24,.35),inset 0 1px 0 rgba(255,255,255,.08);transition:border-color .2s ease,box-shadow .2s ease}
+.acc-item:hover{border-color:rgba(255,255,255,.16);box-shadow:0 10px 28px rgba(6,8,24,.35),0 0 0 1px rgba(42,49,160,.25),inset 0 1px 0 rgba(255,255,255,.1)}
+.acc-hd{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;cursor:pointer;user-select:none;font-size:14px;font-weight:500}
+.acc-hd:hover{background:rgba(255,255,255,.03)}
+.acc-chv,.kpi-headline-chev{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.09);color:#dfe6f2;font-size:14px;line-height:1;transition:transform .2s ease,background .15s ease,color .15s ease}
+.acc-item:hover .acc-chv,.kpi-headline-hd:hover .kpi-headline-chev{background:rgba(255,255,255,.16);color:#fff}
+.acc-item.open .acc-chv{transform:rotate(90deg)}
+.acc-body{display:none;border-top:1px solid rgba(255,255,255,.08)}
+.acc-item.open .acc-body{display:block}
+
+/* ── Order filters ── */
+.ord-filters{display:flex;gap:6px;padding:12px 16px 0;flex-wrap:wrap}
+.ord-f{background:transparent;border:1px solid #1f3050;color:#94a3b8;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;cursor:pointer;transition:all .15s}
+.ord-f:hover{border-color:#60a5fa;color:#60a5fa}
+.ord-f.active{background:#1d3a5f;border-color:#60a5fa;color:#e2e8f0}
+.ord-btw-toggle{padding-top:6px}
+
+/* ── Tables ── */
+.tscroll{overflow-x:auto;max-height:340px;overflow-y:auto}
+/* Een opengeklapte advertentiegroep-rij (funnel + 4 blokken) is een stuk
+   hoger dan een gewone rij — bij de vaste 340px zou je dan zowel binnen de
+   tabel als op de pagina moeten scrollen. Zodra er een rij openstaat, geven
+   we de tabel meer ruimte i.p.v. die dubbele scroll. */
+.tscroll.ad-expanded-open{max-height:640px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:9px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#93A2B8;border-bottom:1px solid #1f2d45;white-space:nowrap}
+th.r,td.r{text-align:right}
+td{padding:8px 14px;border-bottom:1px solid rgba(31,45,69,.5);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+.tot td{font-weight:700;background:rgba(96,165,250,.05);border-top:1px solid #1f2d45}
+
+/* ── Advertentiegroep-rij: klikbaar om uit te klappen ── */
+.ad-row{cursor:pointer}
+.ad-row:hover,.ad-row:focus-visible{background:rgba(255,255,255,.03)}
+.ad-row:focus-visible{outline:1px solid rgba(96,165,250,.5);outline-offset:-1px}
+.ad-row-chv{display:inline-block;width:12px;margin-right:7px;vertical-align:middle;color:#7C8CA6;font-size:13px;font-weight:700;transition:transform .15s ease}
+.ad-row-chv.open{transform:rotate(90deg)}
+.ad-detail-row td{background:rgba(255,255,255,.02);border-bottom:1px solid rgba(31,45,69,.5);padding:14px 16px;white-space:normal}
+.ad-funnel-note{font-size:11px;color:#93A2B8;margin-top:6px}
+.ad-funnel-note b{color:#e2e8f0}
+.ad-detail-note{font-size:12px;color:#7C8CA6}
+.ad-detail-block{margin-top:12px;font-size:12px}
+.ad-detail-block-lbl{font-size:9px;color:#7C8CA6;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.ad-detail-block-vals{color:#cbd5e1;font-variant-numeric:tabular-nums}
+.ad-detail-block-vals b{color:#f1f5f9;font-weight:700}
+.ad-platform-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px}
+.ad-platform-table th{padding:4px 8px;text-align:left;font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#7C8CA6;border-bottom:1px solid rgba(31,45,69,.6)}
+.ad-platform-table th.r,.ad-platform-table td.r{text-align:right}
+.ad-platform-table td{padding:5px 8px;border-bottom:1px solid rgba(31,45,69,.35);color:#cbd5e1;font-variant-numeric:tabular-nums}
+.ad-platform-table tr:last-child td{border-bottom:none}
+
+/* ── Advertentiegroep classificatie-badge: altijd zichtbaar, klikbaar ── */
+.ad-tag-badge{display:inline-flex;align-items:center;gap:4px;font-size:8px;font-weight:700;letter-spacing:.04em;padding:2px 5px;border-radius:4px;margin-right:7px;vertical-align:middle;cursor:pointer;transition:filter .15s ease}
+.ad-tag-badge:hover,.ad-tag-badge:focus-visible{filter:brightness(1.3)}
+.ad-tag-badge:focus-visible{outline:1px solid currentColor;outline-offset:1px}
+.ad-tag-badge.test{background:rgba(91,158,232,.18);color:#93C5F5}
+.ad-tag-badge.schaal{background:rgba(74,222,128,.16);color:#8FE0A8}
+.ad-tag-badge.ongeclassificeerd{background:rgba(255,255,255,.08);color:#93A2B8}
+.ad-tag-edit-hint{display:none;font-size:8px}
+.ad-tag-badge:hover .ad-tag-edit-hint,.ad-tag-badge:focus-visible .ad-tag-edit-hint{display:inline;opacity:.8}
+.ad-tag-menu{display:none;position:fixed;background:rgba(13,18,45,.97);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border:1px solid rgba(255,255,255,.14);border-radius:10px;min-width:130px;z-index:300;box-shadow:0 12px 32px rgba(0,0,0,.6);padding:5px 0}
+.ad-tag-menu.open{display:block}
+.ad-tag-menu-opt{width:100%;background:none;border:none;font:inherit;text-align:left;padding:7px 14px;cursor:pointer;font-size:12px;color:#cbd5e1;display:flex;align-items:center;gap:8px}
+.ad-tag-menu-opt::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.5}
+.ad-tag-menu-opt.test{color:#93C5F5}
+.ad-tag-menu-opt.schaal{color:#8FE0A8}
+.ad-tag-menu-opt:hover,.ad-tag-menu-opt:focus-visible{background:rgba(255,255,255,.06);color:#f1f5f9}
+.ad-tag-menu-opt.clear{color:#7C8CA6}
+.ad-tag-menu-div{border-top:1px solid rgba(255,255,255,.08);margin:4px 0}
+.ad-seg-summary{margin-bottom:12px}
+.ad-seg-hint{font-size:12px;color:#93A2B8;padding:10px 4px}
+.ad-seg-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.ad-seg-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px 14px}
+.ad-seg-card-hd{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.ad-seg-card-n{font-size:10px;color:#7C8CA6}
+.ad-seg-card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 6px}
+.ad-seg-lbl{font-size:8px;color:#7C8CA6;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.ad-seg-val{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* ── Advertentiegroepen: mobiele kaartweergave (i.p.v. horizontale tabel) ── */
+.ads-cards{display:none}
+.ad-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.ad-card.tot{background:rgba(96,165,250,.06);border-color:rgba(96,165,250,.25)}
+.ad-card-hd{display:flex;align-items:center;gap:6px;padding:12px;cursor:pointer;user-select:none;min-height:44px}
+.ad-card-name{flex:1;min-width:0;overflow-wrap:anywhere;font-size:13px;font-weight:600}
+.ad-card-kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px 8px;padding:0 12px 12px}
+.ad-card-detail{padding:2px 12px 14px;border-top:1px solid rgba(255,255,255,.07)}
+.adkpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 8px;margin-top:4px}
+.adkpi-item{min-width:0}
+.adkpi-item.full{grid-column:1/-1}
+.adkpi-lbl{font-size:8px;color:#7C8CA6;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.adkpi-val{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.adkpi-funnel-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.adkpi-funnel-item{background:rgba(255,255,255,.05);border-radius:8px;padding:8px 10px;min-width:0}
+.ad-platform-cards{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.ad-platform-card{background:rgba(255,255,255,.04);border-radius:8px;padding:8px 10px}
+.ad-platform-card-name{font-size:11px;font-weight:600;color:#cbd5e1;margin-bottom:6px}
+.ad-platform-showall{background:transparent;border:1px solid #1f3050;color:#93C5F5;font-size:11px;font-weight:600;padding:8px 10px;border-radius:8px;cursor:pointer;width:100%;margin-top:2px;min-height:44px}
+@media(max-width:768px){
+  #adsTscroll{display:none}
+  .ads-cards{display:block}
+}
+
+/* ── Simulator ── */
+.sim-wrap{padding:18px 20px}
+.sim-wrap label{font-size:12px;color:#93A2B8;display:block;margin-bottom:8px}
+.sim-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.sim-row input[type=range]{flex:1;accent-color:#60a5fa;height:4px}
+.sim-rval{font-size:16px;font-weight:700;min-width:44px;text-align:right;font-variant-numeric:tabular-nums}
+.sim-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sim-card{background:rgba(255,255,255,.05);border-radius:8px;padding:12px 14px}
+.sim-card .sl{font-size:10px;color:#93A2B8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.sim-card .sv{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* ── BEROAS summary ── */
+.be-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid #1f2d45}
+.be-stat{padding:14px 16px;border-right:1px solid #1f2d45}
+.be-stat:last-child{border-right:none}
+.be-lbl{font-size:10px;color:#93A2B8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.be-val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.be-filter-note{grid-column:1/-1;padding:10px 16px;font-size:11px;color:#93A2B8;border-top:1px solid #1f2d45;background:rgba(255,255,255,.02)}
+
+/* ── Kerncijfers grid ── */
+.kern-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden}
+.kern-cell{padding:13px 16px;background:rgba(255,255,255,.05)}
+.kern-lbl{font-size:10px;color:#93A2B8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.kern-val{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* ── GA4 Analytics ── */
+.ga4-tabs{display:flex;gap:4px;padding:14px 16px 0;flex-wrap:wrap}
+.ga4-tab{background:transparent;border:1px solid #1f3050;color:#93A2B8;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;cursor:pointer;transition:all .15s}
+.ga4-tab.active{background:#1d3a5f;border-color:#60a5fa;color:#e2e8f0}
+.ga4-body{padding:16px}
+.ga4-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden;margin-bottom:16px}
+.ga4-stat{padding:12px 14px;background:rgba(255,255,255,.05)}
+.ga4-stat-lbl{font-size:9px;color:#93A2B8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.ga4-stat-val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.ga4-stat-sub{font-size:10px;color:#93A2B8;margin-top:2px}
+.ga4-funnel{display:flex;align-items:center;gap:0;margin-bottom:16px;overflow-x:auto}
+.ga4-step{flex:1;min-width:0;background:rgba(255,255,255,.05);border-radius:8px;padding:10px 10px 8px;text-align:center;position:relative}
+.ga4-step-lbl{font-size:9px;color:#93A2B8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ga4-step-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.ga4-step-pct{font-size:10px;color:#E5B863;margin-top:2px;font-weight:600}
+.ga4-arrow{color:#374151;font-size:16px;flex-shrink:0;padding:0 4px;line-height:1}
+.ga4-splits{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.ga4-split{background:rgba(255,255,255,.05);border-radius:8px;padding:12px 14px}
+.ga4-split-title{font-size:10px;color:#93A2B8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;font-weight:600}
+.ga4-bar-row{display:flex;flex-direction:column;gap:5px}
+.ga4-bar-item{display:flex;flex-direction:column;gap:2px}
+.ga4-bar-label{display:flex;justify-content:space-between;font-size:11px}
+.ga4-bar-track{height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.ga4-bar-fill{height:100%;border-radius:3px;transition:width .4s}
+.ga4-insight{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;font-size:12px;color:#94a3b8;line-height:1.5}
+.ga4-insight strong{color:#e2e8f0}
+.ga4-journey-hd{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#93A2B8;margin:18px 0 10px;padding-top:14px;border-top:1px solid #1f2d45}
+.ga4-touch-pills{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.ga4-touch-pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;text-align:center}
+.ga4-paths{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.ga4-path{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border-radius:8px;padding:9px 12px}
+.ga4-path-pct{font-size:13px;font-weight:700;min-width:36px;font-variant-numeric:tabular-nums;color:#e2e8f0}
+.ga4-path-nodes{display:flex;align-items:center;gap:4px;flex:1;flex-wrap:wrap}
+.ga4-node{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.ga4-node.meta{background:rgba(59,130,246,.18);color:#93c5fd}
+.ga4-node.google{background:rgba(34,197,94,.15);color:#86efac}
+.ga4-node.organic{background:rgba(148,163,184,.1);color:#94a3b8}
+.ga4-node.order{background:rgba(143,196,155,.15);color:#8FC49B}
+.ga4-node-arr{color:#374151;font-size:11px}
+.ga4-roles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.ga4-role{background:rgba(255,255,255,.05);border-radius:8px;padding:11px 13px}
+.ga4-role-name{font-size:11px;font-weight:700;margin-bottom:6px}
+.ga4-role-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.08);margin-bottom:4px;overflow:hidden}
+.ga4-role-fill{height:100%;border-radius:2px}
+.ga4-role-sub{font-size:10px;color:#93A2B8}
+
+/* ── Stale-data waarschuwing ── */
+.stale-warning{
+  max-width:1100px;margin:0 auto 14px;padding:11px 18px;
+  background:rgba(229,184,99,.12);border:1px solid rgba(229,184,99,.35);
+  border-radius:10px;color:#E5B863;font-size:12.5px;font-weight:600;
+  text-align:center;line-height:1.5;
+}
+.stale-warning strong{color:#f1f5f9}
+.stale-warning.stale-critical{
+  background:rgba(221,146,128,.12);border-color:rgba(221,146,128,.4);color:#DD9280;
+}
+
+/* ── Footer ── */
+.footer{text-align:center;padding:16px 20px 4px;display:flex;align-items:center;justify-content:center}
+.footer-pill{display:inline-flex;flex-direction:column;align-items:flex-start;gap:4px;font-size:11px;color:#cbd5e1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);padding:9px 16px;border-radius:14px;backdrop-filter:blur(8px);max-width:100%}
+.footer-line{white-space:nowrap;display:flex;align-items:center;gap:6px}
+.footer-line-main{font-weight:700;color:#f1f5f9;font-size:12px}
+.footer-line-sub{color:#93A2B8;padding-left:13px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#8FC49B;box-shadow:0 0 0 rgba(143,196,155,.6);animation:live-pulse 2s ease-out infinite;flex-shrink:0}
+@keyframes live-pulse{
+  0%{box-shadow:0 0 0 0 rgba(143,196,155,.55)}
+  70%{box-shadow:0 0 0 7px rgba(143,196,155,0)}
+  100%{box-shadow:0 0 0 0 rgba(143,196,155,0)}
+}
+.day-sum td{color:#f1f5f9}
+
+/* ── ROAS hero ── */
+.roas-hero{margin-bottom:12px}
+.roas-hero-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;color:#93A2B8;text-transform:uppercase;margin-bottom:6px}
+.roas-hero-val{font-family:'Newsreader',Georgia,serif;font-size:52px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.roas-delta{margin-top:10px}
+.rdelta{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;padding:5px 12px;border-radius:999px}
+.trend-pill{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:999px;font-weight:600;font-size:11px}
+.rdelta.neg{background:rgba(221,146,128,.12);color:#DD9280}
+.rdelta.mid{background:rgba(229,184,99,.12);color:#E5B863}
+.rdelta.pos{background:rgba(143,196,155,.12);color:#8FC49B}
+
+/* ── AI status box ── */
+.ai-box{border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.ai-box.red{background:rgba(221,146,128,.06);border:1px solid rgba(221,146,128,.22)}
+.ai-box.amber{background:rgba(229,184,99,.06);border:1px solid rgba(229,184,99,.22)}
+.ai-box.green{background:rgba(143,196,155,.06);border:1px solid rgba(143,196,155,.22)}
+.ai-box-head{font-size:14px;font-weight:700;margin-bottom:5px}
+.ai-box-body{font-size:13px;color:#94a3b8;line-height:1.55}
+
+/* ── Analysis block ── */
+.analysis-block{margin-top:14px;padding:14px 16px;background:rgba(255,255,255,.04);border-radius:8px;border:1px solid rgba(255,255,255,.08)}
+.analysis-hdr{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#7C8CA6;margin-bottom:10px}
+.analysis-row{font-size:13px;color:#cbd5e1;line-height:1.55;margin-bottom:8px}
+.analysis-row:last-child{margin-bottom:0}
+
+/* ── KPI strip ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(8,1fr);background:linear-gradient(160deg,rgba(32,40,92,.48) 0%,rgba(18,24,60,.44) 100%);border:1px solid rgba(255,255,255,.16);border-top-color:rgba(255,255,255,.3);border-radius:12px;overflow:hidden;margin-bottom:16px;backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);box-shadow:0 8px 24px rgba(6,8,24,.35),inset 0 1px 0 rgba(255,255,255,.14)}
+.kpi-item{padding:14px 12px;background:transparent;min-width:0;border-right:1px solid rgba(255,255,255,.12);transition:background .15s ease;position:relative;z-index:1}
+.kpi-item:last-child{border-right:none}
+.kpi-item:hover{box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);background:rgba(255,255,255,.06);z-index:2}
+.kpi-lbl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#93A2B8;margin-bottom:5px;white-space:normal;line-height:1.3;min-height:2.6em}
+.kpi-val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi-sub{font-size:10px;color:#A6B3C4;margin-top:3px}
+.kpi-delta{font-weight:700}
+.kpi-compare-cap{font-size:10px;color:#7C8CA6;text-align:right;margin:-8px 2px 16px;min-height:14px}
+.kpi-headline{margin:-4px 2px 16px;padding:14px 16px;background:linear-gradient(160deg,rgba(32,40,92,.42) 0%,rgba(18,24,60,.38) 100%);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border:1px solid rgba(255,255,255,.1);border-top-color:rgba(255,255,255,.2);border-radius:12px;box-shadow:0 8px 20px rgba(6,8,24,.3),inset 0 1px 0 rgba(255,255,255,.08)}
+.kpi-headline:empty{display:none}
+.kpi-headline-hd{display:flex;align-items:center;justify-content:space-between;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7C8CA6;margin-bottom:9px;cursor:pointer;user-select:none}
+.kpi-headline-hd:hover{color:#a8b3c5}
+.kpi-headline.collapsed .kpi-headline-hd{margin-bottom:0}
+.kpi-headline.collapsed .kpi-headline-body{display:none}
+.kpi-headline-row{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:#a8b3c5;line-height:1.55;margin-bottom:6px}
+.kpi-headline-row:last-child{margin-bottom:0}
+.kpi-headline-row strong{color:#f1f5f9;font-weight:700}
+.kpi-headline-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6.5px}
+
+/* ── Dashboard-brede test/schaal-segmentbalk ── */
+.dash-seg-split{display:flex;align-items:center;gap:10px;flex:1;min-width:180px}
+.dash-seg-split-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;flex:1;min-width:80px;background:rgba(255,255,255,.06)}
+.dash-seg-split-seg{height:100%}
+.dash-seg-split-seg.test{background:#5B9EE8}
+.dash-seg-split-seg.schaal{background:#4ade80}
+.dash-seg-split-seg.untagged{background:rgba(255,255,255,.14)}
+.dash-seg-split-lbl{display:flex;gap:10px;font-size:11px;color:#93A2B8;white-space:nowrap}
+.dash-seg-split-item.test{color:#93C5F5}
+.dash-seg-split-item.schaal{color:#8FE0A8}
+
+/* ── Analysefilters (strategie × platform × plaatsing) ── */
+.filter-bar{margin-bottom:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px}
+.filter-bar-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-bar-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7C8CA6;flex-shrink:0}
+.filter-strat-group{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap}
+.filter-strat-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#93A2B8;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .15s}
+.filter-strat-btn:hover{color:#f1f5f9;border-color:rgba(255,255,255,.2)}
+.filter-strat-btn.active{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:#f1f5f9}
+.filter-strat-btn.active.test{background:rgba(91,158,232,.18);border-color:rgba(91,158,232,.55);color:#93C5F5}
+.filter-strat-btn.active.schaal{background:rgba(74,222,128,.16);border-color:rgba(74,222,128,.5);color:#8FE0A8}
+.filter-strat-btn.active.ongeclassificeerd{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35);color:#e2e8f0}
+.filter-select-group{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.filter-select{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);color:#cbd5e1;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;cursor:pointer;max-width:100%}
+.filter-select:hover{border-color:rgba(255,255,255,.28)}
+.filter-select:focus-visible{outline:1px solid #60a5fa;outline-offset:1px}
+.filter-select option{background:#0d122d;color:#e2e8f0}
+.filter-reset-btn{background:transparent;border:1px solid rgba(255,255,255,.14);color:#93A2B8;font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;transition:all .15s;flex-shrink:0}
+.filter-reset-btn:hover:not(:disabled){color:#f1f5f9;border-color:rgba(255,255,255,.3)}
+.filter-reset-btn:disabled{opacity:.35;cursor:default}
+.filter-bar .dash-seg-split{margin-top:10px}
+.filter-status{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:8px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.22);border-radius:8px;flex-wrap:wrap}
+.filter-status-txt{font-size:12px;color:#cbd5e1}
+.filter-status-txt strong{color:#93C5F5}
+.filter-status-clear{background:transparent;border:1px solid rgba(255,255,255,.18);color:#93A2B8;font-size:11px;font-weight:600;padding:4px 10px;border-radius:14px;cursor:pointer;flex-shrink:0}
+.filter-status-clear:hover{color:#f1f5f9;border-color:rgba(255,255,255,.35)}
+@media(max-width:640px){
+  .filter-bar-row{flex-direction:column;align-items:stretch}
+  .filter-select-group{margin-left:0}
+  .filter-select{flex:1}
+  .filter-reset-btn{width:100%}
+  .filter-status{flex-direction:column;align-items:stretch}
+}
+.kpi-item{cursor:pointer;transition:background .15s ease,box-shadow .2s ease}
+.kpi-item.chart-active{box-shadow:inset 0 0 0 1.5px rgba(20,166,241,.6);background:rgba(20,166,241,.06)}
+
+/* ── KPI tijdlijn-grafiek ── */
+.kpi-chart-wrap{display:none;background:linear-gradient(160deg,rgba(32,40,92,.58) 0%,rgba(18,24,60,.54) 100%);backdrop-filter:blur(28px) saturate(170%);-webkit-backdrop-filter:blur(28px) saturate(170%);border:1px solid rgba(255,255,255,.16);border-top-color:rgba(255,255,255,.3);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 20px 50px -14px rgba(4,6,20,.55),inset 0 1px 0 rgba(255,255,255,.14)}
+.kpi-chart-wrap.open{display:block}
+.kpi-chart-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.kpi-chart-title{font-size:13px;font-weight:700;color:#f1f5f9}
+.kpi-chart-sub{display:block;background:none;border:none;padding:0;font-size:10px;font-weight:500;color:#93A2B8;margin-top:2px;cursor:pointer;transition:color .15s ease;font-family:inherit}
+.kpi-chart-sub:hover{color:#4EA8DE}
+.kpi-chart-empty{font-size:12px;color:#93A2B8;padding:24px 4px;text-align:center;line-height:1.6}
+.kpi-chart-jump{background:rgba(78,168,222,.14);border:1px solid rgba(78,168,222,.4);color:#4EA8DE;font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;margin-top:6px}
+.kpi-chart-jump:hover{background:rgba(78,168,222,.22)}
+.kpi-chart-gran{display:flex;gap:4px}
+.kpi-chart-gran-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#93A2B8;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;cursor:pointer;transition:all .15s}
+.kpi-chart-gran-btn:hover:not(:disabled){color:#f1f5f9;border-color:rgba(255,255,255,.2)}
+.kpi-chart-gran-btn.active{background:rgba(20,166,241,.16);border-color:rgba(20,166,241,.5);color:#f1f5f9}
+.kpi-chart-gran-btn:disabled{opacity:.35;cursor:default}
+.kpi-chart-legend{display:flex;gap:14px;margin-bottom:8px}
+.kpi-chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#cbd5e1}
+.kpi-chart-legend-toggle{cursor:pointer;user-select:none;transition:opacity .15s,color .15s}
+.kpi-chart-legend-toggle:hover{color:#f1f5f9}
+.kpi-chart-legend-toggle.off{opacity:.35}
+.kpi-chart-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.kpi-chart-legend-line{width:14px;height:3px;border-radius:2px;flex-shrink:0}
+.kpi-chart-legend-bar{width:8px;height:10px;border-radius:1px;flex-shrink:0;background:rgba(255,255,255,.35)}
+.kpi-chart-svgwrap{position:relative;cursor:crosshair;user-select:none;-webkit-user-select:none;touch-action:pan-y}
+.kpi-chart-svg{width:100%;height:auto;display:block;overflow:visible}
+.kpi-chart-selrect{fill:rgba(78,168,222,.14);stroke:rgba(78,168,222,.45);stroke-width:1;pointer-events:none;transition:opacity .1s ease}
+.kpi-chart-selhint{font-size:10px;color:#5A6478;text-align:center;margin-top:6px}
+.kpi-chart-selection-summary{margin-top:10px;padding:12px 14px;background:rgba(78,168,222,.06);border:1px solid rgba(78,168,222,.22);border-radius:10px}
+.kpi-chart-selsum-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.kpi-chart-selsum-title{font-size:11px;font-weight:700;letter-spacing:.04em;color:#93C5F5}
+.kpi-chart-selsum-close{cursor:pointer;color:#7C8CA6;font-size:16px;line-height:1;background:none;border:none;padding:2px 6px;flex-shrink:0}
+.kpi-chart-selsum-close:hover{color:#f1f5f9}
+.kpi-chart-selsum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 8px}
+.kpi-chart-selsum-lbl{font-size:9px;font-weight:700;letter-spacing:.04em;color:#7C8CA6;margin-bottom:2px}
+.kpi-chart-selsum-val{font-size:15px;font-weight:700;color:#f1f5f9}
+@media(max-width:540px){.kpi-chart-selsum-grid{grid-template-columns:repeat(2,1fr)}}
+.kpi-chart-line{stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.kpi-chart-line-thick{stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.kpi-chart-purchbar{fill:rgba(255,255,255,.16)}
+.kpi-chart-dot{transition:r .15s ease}
+.kpi-chart-grid{stroke:rgba(255,255,255,.08);stroke-width:1}
+.kpi-chart-zero{stroke:rgba(255,255,255,.22);stroke-width:1;stroke-dasharray:3 3}
+.kpi-chart-be{stroke:#E5B863;stroke-width:1;stroke-dasharray:4 3;opacity:.7}
+.kpi-chart-be-lbl{fill:#E5B863;font-size:9px;font-weight:700}
+.kpi-chart-doel{stroke:#8FC49B;stroke-width:1;stroke-dasharray:4 3;opacity:.7}
+.kpi-chart-doel-lbl{fill:#8FC49B;font-size:9px;font-weight:700}
+.kpi-chart-comfy{stroke:#6FCFE0;stroke-width:1;stroke-dasharray:4 3;opacity:.7}
+.kpi-chart-comfy-lbl{fill:#6FCFE0;font-size:9px;font-weight:700}
+.kpi-chart-xlbl{fill:#7C8CA6;font-size:9px}
+.kpi-chart-ylbl{fill:#7C8CA6;font-size:9px}
+.kpi-chart-cross{stroke:rgba(255,255,255,.3);stroke-width:1;transition:opacity .15s ease;pointer-events:none}
+.kpi-chart-tooltip{position:absolute;top:8px;background:rgba(10,14,32,.95);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:8px 11px;font-size:11px;color:#cbd5e1;pointer-events:none;transition:opacity .15s ease;box-shadow:0 8px 24px rgba(0,0,0,.5);white-space:nowrap;z-index:5}
+.kpi-chart-tip-date{font-size:10px;color:#7C8CA6;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.kpi-chart-tip-row{display:flex;align-items:center;gap:6px;color:#f1f5f9}
+.kpi-chart-tip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.kpi-item.good .kpi-val{color:#8FC49B}
+.kpi-item.bad .kpi-val{color:#DD9280}
+.kpi-item.warn .kpi-val{color:#E5B863}
+/* ── Period dropdown ── */
+.period-wrap{position:relative}
+.period-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.09);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border:1px solid rgba(255,255,255,.18);border-top-color:rgba(255,255,255,.3);color:#f1f5f9;font-size:13px;font-weight:500;padding:8px 14px;border-radius:999px;cursor:pointer;outline:none;white-space:nowrap;transition:background .15s ease,border-color .15s ease}
+.period-btn:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.26)}
+.period-menu{display:none;position:absolute;right:0;top:calc(100% + 8px);background:rgba(13,18,45,.92);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);border:1px solid rgba(255,255,255,.12);border-radius:14px;min-width:230px;z-index:200;box-shadow:0 16px 40px rgba(2,4,14,.55);padding:6px 0}
+.period-menu.open{display:block}
+.pm-grp{font-size:10px;font-weight:700;letter-spacing:.08em;color:#7C8CA6;text-transform:uppercase;padding:8px 14px 3px}
+.pm-opt{padding:7px 14px;cursor:pointer;font-size:13px;color:#94a3b8}
+.pm-opt:hover{background:#1a2844;color:#f1f5f9}
+.pm-opt.active{color:#f1f5f9;font-weight:600}
+.pm-opt.active::before{content:"✓  ";color:#60a5fa}
+.pm-div{border-top:1px solid #1f2d45;margin:5px 0}
+/* ── Calendar ── */
+.cal-pad{padding:6px 12px 12px}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.cal-nb{background:none;border:none;color:#93A2B8;cursor:pointer;font-size:18px;padding:0 6px;line-height:1}
+.cal-nb:hover{color:#f1f5f9}
+.cal-mlbl{font-size:12px;font-weight:600;color:#cbd5e1}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;text-align:center}
+.cal-dow{color:#7C8CA6;font-weight:700;font-size:9px;letter-spacing:.04em;padding:3px 0}
+.cal-day{padding:5px 2px;cursor:pointer;border-radius:3px;color:#94a3b8;font-size:11px}
+.cal-day:hover:not(.cd-off){background:#1a2844;color:#f1f5f9}
+.cd-off{color:#1f2d45!important;cursor:default}
+.cd-s,.cd-e{background:#2563eb!important;color:#fff!important;font-weight:700;border-radius:4px}
+.cd-r{background:#1e3050;color:#cbd5e1}
+.cd-solo{box-shadow:0 0 0 2px #93C5F5}
+.cd-today{color:#60a5fa}
+.cal-hint{font-size:10px;color:#7C8CA6;text-align:center;margin:5px 0}
+.cal-hint b{color:#cbd5e1;font-weight:700}
+.cal-hint .ch-mode{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#93C5F5;background:rgba(37,99,235,.16);border-radius:3px;padding:1px 5px;margin-right:5px}
+.cal-apply{width:100%;padding:6px;background:#2563eb;border:none;color:#fff;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;margin-top:2px}
+.cal-apply:disabled{background:#1a2844;color:#374151;cursor:default}
+/* ── Google campaign table ── */
+.ch-google-block{border-top:1px solid #1e3050}
+.ch-g-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#86efac;padding:14px 16px 8px}
+.ch-gtable{width:calc(100% - 32px);border-collapse:collapse;font-size:12px;margin:0 16px 14px}
+.ch-gtable th{color:#7C8CA6;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:6px 8px;text-align:left}
+.ch-gtable th.r,.ch-gtable td.r{text-align:right;font-variant-numeric:tabular-nums}
+.ch-gtable td{padding:5px 8px;border-bottom:1px solid #0f1e34;color:#94a3b8}
+.ch-gtable td:first-child{color:#e2e8f0}
+.ch-gtotal td{color:#e2e8f0!important;font-weight:700;border-top:1px solid #1e3050;border-bottom:none}
+
+/* ── Funnel card (always visible) ── */
+.fc{background:linear-gradient(160deg,rgba(32,40,92,.48) 0%,rgba(18,24,60,.44) 100%);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);border:1px solid rgba(255,255,255,.15);border-top-color:rgba(255,255,255,.28);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 10px 28px rgba(6,8,24,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.fc-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.fc-title{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7C8CA6}
+.fc-tabs{display:flex;gap:3px;flex-wrap:wrap}
+.fc-tab{background:transparent;border:1px solid #1f3050;color:#7C8CA6;font-size:10px;font-weight:600;padding:3px 10px;border-radius:12px;cursor:pointer;transition:all .15s}
+.fc-tab.active{background:#1d3a5f;border-color:#60a5fa;color:#e2e8f0}
+.fc-steps{display:flex;align-items:stretch}
+.fc-step{flex:1;min-width:60px}
+.fc-step-in{background:rgba(255,255,255,.05);border-radius:8px;padding:10px 6px;text-align:center;height:100%}
+.fc-lbl{font-size:9px;color:#93A2B8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.fc-drop{font-size:10px;font-weight:600;margin-top:3px;min-height:14px}
+.fc-arr{display:flex;align-items:center;padding:0 2px;color:#374151;font-size:11px;flex-shrink:0;align-self:center}
+.fc-note{font-size:10px;color:#7C8CA6;margin-top:10px;padding-top:8px;border-top:1px solid #1a2844;line-height:1.5}
+
+/* ── Channel roles ── */
+.ch-wrap{padding:14px 16px}
+.ch-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.ch-card{background:rgba(255,255,255,.05);border-radius:8px;padding:12px 14px}
+.ch-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.ch-tag{display:inline-flex;font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 8px;border-radius:10px;margin-bottom:8px}
+.ch-tag.intro{background:rgba(59,130,246,.15);color:#93c5fd}
+.ch-tag.closer{background:rgba(34,197,94,.12);color:#86efac}
+.ch-mets{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.ch-met{background:rgba(255,255,255,.045);border-radius:6px;padding:6px 4px;text-align:center}
+.ch-mv{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.ch-ml{font-size:9px;color:#93A2B8;text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
+.ch-bar-track{height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-top:8px}
+.ch-bar-fill{height:100%;border-radius:2px}
+.ch-overlap{background:rgba(255,255,255,.05);border-radius:8px;padding:10px 14px;font-size:12px;color:#94a3b8;text-align:center}
+
+/* ── Segmentatie ── */
+.seg-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.seg-block{background:rgba(255,255,255,.05);border-radius:8px;padding:12px 14px}
+.seg-title{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7C8CA6;margin-bottom:8px}
+.seg-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:2px}
+.seg-track{height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-top:2px;margin-bottom:6px}
+.seg-fill{height:100%;border-radius:2px}
+
+@media(max-width:540px){
+  .hd{padding:24px 0 16px;gap:8px}
+  .hd h1{font-size:17px}
+  .hd-left{gap:9px}
+  .avatar-wrap{width:30px;height:30px}
+  .period-btn{padding:7px 10px;font-size:12px;gap:5px}
+  .period-btn svg{flex-shrink:0}
+  .pbt-range{display:none}
+  .roas-hero-val{font-size:38px}
+  .mrow{grid-template-columns:1fr}
+  .mc{border-right:none;border-bottom:1px solid rgba(255,255,255,.08)}
+  .mc:last-child{border-bottom:none}
+  .be-sum{grid-template-columns:1fr 1fr}
+  .kpi-strip{grid-template-columns:repeat(3,1fr)}
+  .kpi-item{padding:12px 10px}
+  .kpi-item:nth-child(3n){border-right:none}
+  .kpi-item:last-child{grid-column:span 3;border-top:1px solid rgba(255,255,255,.12)}
+  .kpi-lbl{min-height:0}
+  .kpi-val{font-size:15px}
+  .kpi-sub{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .seg-grid{grid-template-columns:1fr 1fr}
+  .ch-grid{grid-template-columns:1fr}
+  .fc-steps{flex-wrap:nowrap;overflow-x:auto}
+  .card-meta{flex-wrap:wrap;line-height:1.8}
+  .gauge-bar .g-tick:last-child{display:none}
+  .ad-seg-grid{grid-template-columns:1fr}
+  .ad-seg-card-grid{grid-template-columns:repeat(3,1fr);row-gap:8px}
+  .dash-seg-split{min-width:0}
+}
+@media(max-width:360px){
+  .ad-card-kpis,.adkpi-grid,.adkpi-funnel-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="hd">
+  <div class="hd-left">
+    <div class="avatar-wrap">
+      <div class="avatar-ring"></div>
+      <div class="avatar-inner"><img src="meta-badge.gif" alt="Meta"></div>
+    </div>
+    <div class="hd-text">
+      <h1>Meta bonusdashboard</h1>
+    </div>
+  </div>
+  <div class="period-wrap">
+    <button class="period-btn" onclick="event.stopPropagation();togglePM()">
+      <span id="periodBtnTxt">Augustus (v.a. 5 aug)</span>
+      <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#93A2B8" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+    <div class="period-menu" id="periodMenu" onclick="event.stopPropagation()">
+      <div class="pm-grp">Actueel</div>
+      <div class="pm-opt" data-p="vandaag" onclick="selectP('vandaag')">Vandaag (<span id="lbl-vandaag"></span>)</div>
+      <div class="pm-opt" data-p="gisteren" onclick="selectP('gisteren')">Gisteren (<span id="lbl-gisteren"></span>)</div>
+      <div class="pm-opt" data-p="week" onclick="selectP('week')">Deze week (<span id="lbl-week"></span>)</div>
+      <div class="pm-opt" data-p="r7" onclick="selectP('r7')">Afgelopen 7 dagen (<span id="lbl-r7"></span>)</div>
+      <div class="pm-opt" data-p="maand" onclick="selectP('maand')">Deze maand (<span id="lbl-maand"></span>)</div>
+      <div class="pm-div"></div>
+      <div class="pm-grp">Bonusperiode</div>
+      <div class="pm-opt active" data-p="aug" onclick="selectP('aug')">Augustus (v.a. 5 aug)</div>
+      <div class="pm-div"></div>
+      <div class="pm-grp">Aangepaste periode</div>
+      <div class="cal-pad">
+        <div class="cal-nav">
+          <button class="cal-nb" onclick="calPrev()">‹</button>
+          <span class="cal-mlbl" id="calMlbl"></span>
+          <button class="cal-nb" onclick="calNext()">›</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-hint" id="calHint">Klik een dag</div>
+        <button class="cal-apply" id="calApply" onclick="applyCustom()" disabled>Toepassen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Zichtbare waarschuwing als de laatste sync te lang geleden is — zodat
+     een vastgelopen cron (zoals 28 sep 2026, 9u stil zonder dat iemand het
+     zag) niet meer alleen in data/status.json verstopt zit, maar meteen
+     opvalt op het dashboard zelf. -->
+<div id="staleWarning" class="stale-warning" style="display:none"></div>
+
+<!-- Analysefilters: strategie × platform × plaatsing, voor het hele dashboard
+     (niet alleen de advertentiegroepentabel) -->
+<div id="filterBar" class="filter-bar"></div>
+
+<!-- KPI strip -->
+<div id="kpiStrip" class="kpi-strip"></div>
+<div id="kpiCompareCap" class="kpi-compare-cap"></div>
+<div id="kpiHeadline" class="kpi-headline"></div>
+<div id="kpiChartWrap" class="kpi-chart-wrap"></div>
+
+<!-- Main card -->
+<div class="card">
+  <div class="card-meta" id="cardMeta"></div>
+
+  <div class="roas-hero">
+    <div class="roas-hero-lbl" id="roasHeroLbl">META ROAS</div>
+    <div class="roas-hero-val" id="roasHeroVal">—</div>
+    <div class="roas-delta" id="roasDelta"></div>
+  </div>
+
+  <div class="gauge-outer" id="gaugeOuter"></div>
+
+  <div class="mrow">
+    <div class="mc"><div class="mc-lbl">ROAS</div><div class="mc-val" id="mRoas"></div><div class="mc-sub" id="mRoasSub"></div></div>
+    <div class="mc"><div class="mc-lbl">BREAK-EVEN</div><div class="mc-val" id="mBe"></div><div class="mc-sub" id="mBeSub">incl. BTW</div></div>
+    <div class="mc"><div class="mc-lbl" id="mScaleLbl">DOEL ROAS</div><div class="mc-val" id="mScale"></div><div class="mc-sub" id="mScaleSub"></div></div>
+  </div>
+
+  <div class="mrow">
+    <div class="mc"><div class="mc-lbl" id="mSpendLbl">SPEND</div><div class="mc-val" id="mSpend"></div><div class="mc-sub" id="mSpendSub"></div></div>
+    <div class="mc"><div class="mc-lbl" id="mPurchLbl">AANKOPEN</div><div class="mc-val" id="mPurch"></div><div class="mc-sub" id="mPurchSub"></div></div>
+    <div class="mc"><div class="mc-lbl" id="bonusLbl">BONUS</div><div class="mc-val" id="bonusAmt"></div><div id="bonusBadge" style="font-size:11px;margin-top:3px"></div></div>
+  </div>
+</div>
+
+
+<!-- Accordion -->
+<div class="acc">
+
+
+
+  <div class="acc-item" id="acc-ads">
+    <div class="acc-hd" onclick="tog('acc-ads')"><span id="adsHdr">Meta advertentiegroepen</span><span class="acc-chv">›</span></div>
+    <div class="acc-body">
+      <div id="adSegSummary" class="ad-seg-summary"></div>
+      <div class="tscroll" id="adsTscroll"><table id="adsTable"></table></div>
+      <div class="ads-cards" id="adsCards"></div>
+    </div>
+  </div>
+
+  <div id="adTagMenu" class="ad-tag-menu" role="menu" onclick="event.stopPropagation()">
+    <button type="button" class="ad-tag-menu-opt test" role="menuitem" onclick="pickAdTag('test')">Test</button>
+    <button type="button" class="ad-tag-menu-opt schaal" role="menuitem" onclick="pickAdTag('schaal')">Schaal</button>
+    <div class="ad-tag-menu-div"></div>
+    <button type="button" class="ad-tag-menu-opt clear" role="menuitem" onclick="pickAdTag(null)">Ongeclassificeerd</button>
+  </div>
+
+
+
+
+  <div class="acc-item" id="acc-sim">
+    <div class="acc-hd" onclick="tog('acc-sim')"><span>Bonussimulator</span><span class="acc-chv">›</span></div>
+    <div class="acc-body">
+      <div class="sim-wrap">
+        <label>Hypothetische ROAS incl. BTW</label>
+        <div class="sim-row">
+          <input type="range" id="simSlider" min="0.5" max="5" step="0.01" value="2.22" oninput="updateSim()">
+          <div class="sim-rval" id="simRval">2.22×</div>
+        </div>
+        <label style="margin-top:4px">Hypothetisch adspend per dag</label>
+        <div class="sim-row" style="gap:8px">
+          <span style="color:#93A2B8;font-size:14px;flex-shrink:0">€</span>
+          <input type="number" id="simSpend" min="0" step="50"
+            style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#f1f5f9;font-size:14px;font-weight:600;padding:6px 10px;border-radius:6px;outline:none;font-variant-numeric:tabular-nums"
+            oninput="simSpendEdit()">
+          <div style="font-size:12px;color:#7C8CA6;flex-shrink:0" id="simSpendNote"></div>
+        </div>
+        <div style="font-size:12px;color:#93A2B8;margin-top:2px" id="simSpendTotal"></div>
+        <div class="sim-cards">
+          <div class="sim-card"><div class="sl">Bonus</div><div class="sv" id="simBonus">—</div></div>
+          <div class="sim-card"><div class="sl">ROAS – BEROAS</div><div class="sv" id="simDiff">—</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="acc-item" id="acc-be">
+    <div class="acc-hd" onclick="tog('acc-be')"><span>Onderbouwing BEROAS</span><span class="acc-chv">›</span></div>
+    <div class="acc-body">
+      <div class="be-sum" id="beSummary"></div>
+      <div class="tscroll"><table id="beTable"></table></div>
+    </div>
+  </div>
+
+  <div class="acc-item" id="acc-ord">
+    <div class="acc-hd" onclick="tog('acc-ord')"><span id="ordHdr">Orderdetail (alle orders)</span><span class="acc-chv">›</span></div>
+    <div class="acc-body">
+      <div class="ord-filters" id="ordFilters">
+        <button class="ord-f active" onclick="setOrdFilter('alle')">Alle</button>
+        <button class="ord-f" onclick="setOrdFilter('Prime')">Prime</button>
+        <button class="ord-f" onclick="setOrdFilter('Atlas')">Atlas</button>
+        <button class="ord-f" onclick="setOrdFilter('Titan')">Titan</button>
+        <button class="ord-f" onclick="setOrdFilter('Scherm')">Scherm</button>
+        <button class="ord-f" onclick="setOrdFilter('Standaard')">Standaard</button>
+        <button class="ord-f" onclick="setOrdFilter('Bundel')">Bundel</button>
+      </div>
+      <div class="ord-filters ord-btw-toggle">
+        <button class="ord-f ord-btw-f active" onclick="setOrdBtw('incl')">Omzet incl. BTW</button>
+        <button class="ord-f ord-btw-f" onclick="setOrdBtw('excl')">Omzet excl. BTW</button>
+      </div>
+      <div class="tscroll" style="margin-top:10px"><table id="ordTable"></table></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer"><span class="footer-pill">
+  <span class="footer-line footer-line-main"><span class="live-dot"></span>Bijgewerkt: <span id="footerDate"></span></span>
+  <span class="footer-line footer-line-sub">Data: Meta · Shopify · TrackBee</span>
+</span></div>
+<div id="dataCheck" style="display:none;text-align:center;font-size:11px;color:#DD9280;padding:4px 0 8px;font-weight:600"></div>
+</div>
+
+<script>
+/* ═══ DATA LOADER ════════════════════════════════════════════════
+   Meta/Shopify/Google-cijfers leven in data/*.json, buiten dit bestand,
+   zodat normale synchronisaties index.html nooit meer hoeven aan te
+   raken. Synchrone XHR (3 kleine same-origin bestanden, vóór er iets
+   gerenderd wordt) zodat alle code hieronder — die rechtstreeks op
+   deze consts bouwt — ongewijzigd kan blijven werken. ═══ */
+function _loadJSON(url){
+  const xhr = new XMLHttpRequest();
+  xhr.open("GET", url, false);
+  xhr.send(null);
+  if(xhr.status !== 200) throw new Error(url+": HTTP "+xhr.status);
+  return JSON.parse(xhr.responseText);
+}
+let _META, _GOOGLE, _SHOPIFY;
+try{
+  _META = _loadJSON("data/meta.json");
+  _GOOGLE = _loadJSON("data/google.json");
+  _SHOPIFY = _loadJSON("data/shopify.json");
+  if(!_META || !_META.tb || !Array.isArray(_META.daily_meta) || !Array.isArray(_META.daily_ads))
+    throw new Error("data/meta.json heeft een onverwachte vorm");
+  if(!_GOOGLE || !_GOOGLE.vandaag || !_GOOGLE.gisteren)
+    throw new Error("data/google.json heeft een onverwachte vorm");
+  if(!_SHOPIFY || !Array.isArray(_SHOPIFY.orders))
+    throw new Error("data/shopify.json heeft een onverwachte vorm");
+}catch(e){
+  document.body.innerHTML = '<div style="max-width:520px;margin:80px auto;padding:24px;'
+    + 'font:14px/1.6 -apple-system,sans-serif;color:#DD9280;background:#121433;'
+    + 'border-radius:12px;text-align:center"><strong>Dashboarddata kon niet geladen '
+    + 'worden.</strong><br>' + String((e && e.message) || e).replace(/</g,"&lt;") + '</div>';
+  throw e;
+}
+const SNAP = _META.snap;
+const SNAP_TIME = _META.snap_time;
+const TB_VANDAAG = _META.tb.vandaag;
+const TB_GISTEREN = _META.tb.gisteren;
+const TB_WEEK = _META.tb.week;
+const TB_PREVWEEK = _META.tb.prevweek;
+const TB_JUL = _META.tb.jul;
+const TB_AUG_CLEAN = _META.tb.aug_clean;
+const DAILY_META = _META.daily_meta;
+const DAILY_ADS = _META.daily_ads;
+// Platform/plaatsing-uitsplitsing per advertentiegroep, voor het analysefilter
+// (Facebook/Instagram × Feed/Stories/Reels/Overig). Kan ontbreken op oudere
+// data (veld toegevoegd 16 aug 2026) — dan gewoon leeg, filter degradeert
+// netjes naar "geen data" i.p.v. te crashen.
+const DAILY_ADS_BREAKDOWN = _META.daily_ads_breakdown || [];
+const TG_VANDAAG = _GOOGLE.vandaag;
+const TG_GISTEREN = _GOOGLE.gisteren;
+const ORDERS_SHOPIFY = _SHOPIFY.orders;
+
+/* ═══ DATA ═══════════════════════════════════════════════════════ */
+const TB_ONBOARD  = "2026-07-20";
+const BONUS_PCT   = 0.10;
+const BTW         = 1.21;
+const SCALE_T     = 0.12;
+const SCALE_H     = 0.15;
+
+const ROWS = [
+  {d:"2026-07-16",oc:16,rev:1604.10,rex:1325.70,pro:492.41},
+  {d:"2026-07-17",oc:23,rev:2387.05,rex:1972.77,pro:641.33},
+  {d:"2026-07-18",oc:16,rev:1726.00,rex:1426.45,pro:535.39},
+  {d:"2026-07-19",oc:16,rev:1481.25,rex:1226.75,pro:270.82},
+  {d:"2026-07-20",oc:25,rev:2754.90,rex:2276.78,pro:600.06},
+  {d:"2026-07-21",oc:25,rev:2345.80,rex:1938.68,pro:466.56},
+  {d:"2026-07-22",oc:21,rev:2628.20,rex:2172.07,pro:613.14},
+  {d:"2026-07-23",oc:27,rev:2822.05,rex:2332.27,pro:699.67},
+  {d:"2026-07-24",oc:16,rev:1596.35,rex:1319.30,pro:389.96},
+  {d:"2026-07-25",oc:16,rev:1625.35,rex:1343.26,pro:329.81},
+  {d:"2026-07-26",oc:23,rev:2385.05,rex:1971.12,pro:525.30},
+  {d:"2026-07-27",oc:33,rev:3306.20,rex:2732.40,pro:825.01},
+  {d:"2026-07-28",oc:17,rev:2078.45,rex:1717.73,pro:523.65},
+  {d:"2026-07-29",oc:21,rev:2267.55,rex:1874.01,pro:627.33},
+  {d:"2026-07-30",oc:19,rev:1985.25,rex:1640.70,pro:400.69},
+  {d:"2026-07-31",oc:10,rev:1411.60,rex:1166.61,pro:419.52},
+  {d:"2026-08-01",oc:12,rev:1188.60,rex:982.31, pro:209.23},
+  {d:"2026-08-02",oc:24,rev:2729.90,rex:2256.12,pro:452.20},
+  {d:"2026-08-03",oc:16,rev:1492.35,rex:1233.35,pro:256.14},
+  {d:"2026-08-04",oc:20,rev:2222.45,rex:1836.74,pro:210.83},
+  {d:"2026-08-05",oc:24,rev:3302.20,rex:2729.09,pro:1048.37},
+  {d:"2026-08-06",oc:28,rev:3002.05,rex:2481.03,pro:805.17},
+  {d:"2026-08-07",oc:4, rev:446.00, rex:368.60, pro:124.79},
+];
+// Google Ads data — TrackBee Google Campaign Insights (account 7645288282)
+const TG_WEEK = {from:"2026-08-05",to:"2026-08-10",spend:401.3,conv:22.0,rev:4035.7,impr:38929,cl:526};
+const TG_PREVWEEK  = {from:"2026-07-28",to:"2026-08-03",spend:265.81,conv:20.8,rev:3225.25,impr:30782,cl:459};
+const TG_AUG_CLEAN = {from:"2026-08-05",to:"2026-08-10",spend:401.3,conv:22.0,rev:4035.7,impr:38929,cl:526};
+
+/* Kostprijscalculatie — marges per product (bron: KP-sheet v2, winst op werkelijke webshopprijs) */
+const KP = [
+  {name:"Prime",  incl:149, excl:123.14, winst:71.43},
+  {name:"Atlas",  incl:239, excl:197.52, winst:117.10},
+  {name:"Titan",  incl:349, excl:288.43, winst:159.06},
+];
+
+/* Vaste kosten per product (inkoop + shipping naar NL + fulfilment) excl. BTW
+   Bron: Google Sheet "001 HoriVue - LumeWorks" · tab "Kostprijscalculatie" ·
+   rij "Totale directe kostprijs" (bijgehouden door Pim; dit is de live/volledige
+   sheet — de losse LumeWorks_kostprijscalculatie(_v2).xlsx-exports in Downloads
+   zijn een oudere, onvolledige snapshot met alleen Prime/Atlas/Titan).
+   Ontbreekt een SKU hier, dan toont de orderdetail-tabel geen kosten/marge voor
+   die order — check dan eerst deze sheet voor de ontbrekende kostprijs.
+   Variabele kosten (Shopify 2% + overhead 4%) worden per order berekend in calcOrder */
+// Titels 1-op-1 overgenomen uit Shopify (search_products), niet de korte
+// kolomnamen uit de sheet — die verschillen soms net genoeg om de lookup
+// te missen (bv. "Prime travelcase" i.p.v. "Travelcase", "Schoonmaak kit"
+// met spatie i.p.v. "Schoonmaakkit").
+// De "+ Projectiescherm"-upsell-rijen in de sheet ("Upsell geen EAN") staan
+// er niet apart in: Shopify stuurt die als twee losse regelitems, die dan
+// allebei al hun eigen kostprijs hieronder hebben.
+const ITEM_FIXED = {
+  "LumeWorks Prime":                 43.80,
+  "LumeWorks Atlas":                 67.74,
+  "LumeWorks Titan":                 110.85,
+  "Projectiescherm 100 inch":        37.81,
+  "Pro stand":                       20.66,
+  "LumeWorks USB-C naar HDMI-kabel": 6.09,
+  "Mini stand":                      12.68,
+  "Prime travelcase":                10.80,
+  "Schoonmaak kit":                  4.95,
+  "Atlas afstandsbediening":         4.95,
+  "Titan afstandsbediening":         4.95,
+  "De complete Prime setup":         95.26,
+  "De complete Atlas setup":         114.80,
+  "De complete Titan setup":         159.82,
+};
+const SHOPIFY_FEE = 0.02;
+const OVERHEAD_FEE = 0.04;
+
+/* Alle 86 Shopify orders — live via Shopify GraphQL API */
+const ORDERS_STATIC = [
+  {d:"2026-06-24",num:"#1001",items:["LumeWorks Prime"],                                        code:"pim100",        incl:4.95,   test:true},
+  {d:"2026-07-10",num:"#1002",items:["De complete Titan setup"],                                code:"Koen100",       incl:4.95,   test:true},
+  {d:"2026-07-10",num:"#1003",items:["LumeWorks Titan"],                                        code:"",              incl:299},
+  {d:"2026-07-11",num:"#1004",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-13",num:"#1005",items:["LumeWorks Prime"],                                        code:"Tiktok10",      incl:134.10},
+  {d:"2026-07-13",num:"#1006",items:["LumeWorks Prime","Projectiescherm 100 inch"],             code:"",              incl:222.55},
+  {d:"2026-07-13",num:"#1007",items:["Projectiescherm 100 inch","LumeWorks Prime"],             code:"",              incl:239},
+  {d:"2026-07-13",num:"#1008",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-14",num:"#1009",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-14",num:"#1010",items:["LumeWorks Prime","Projectiescherm 100 inch"],             code:"",              incl:222.55},
+  {d:"2026-07-14",num:"#1011",items:["LumeWorks Prime"],                                        code:"Prime25",       incl:111.75},
+  {d:"2026-07-14",num:"#1012",items:["LumeWorks Atlas","Projectiescherm 100 inch"],             code:"",              incl:308.05},
+  {d:"2026-07-14",num:"#1013",items:["Projectiescherm 100 inch","LumeWorks Prime"],             code:"",              incl:239},
+  {d:"2026-07-15",num:"#1014",items:["Projectiescherm 100 inch","Pro stand"],                   code:"JOS15",         incl:117.30},
+  {d:"2026-07-15",num:"#1015",items:["Projectiescherm 100 inch"],                               code:"",              incl:90},
+  {d:"2026-07-16",num:"#1016",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-16",num:"#1017",items:["LumeWorks Prime"],                                        code:"Anniek10",      incl:134.10},
+  {d:"2026-07-16",num:"#1018",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-16",num:"#1019",items:["LumeWorks Prime","Projectiescherm 100 inch"],             code:"",              incl:222.55},
+  {d:"2026-07-16",num:"#1020",items:["Projectiescherm 100 inch"],                               code:"",              incl:90},
+  {d:"2026-07-17",num:"#1021",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-17",num:"#1022",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-17",num:"#1023",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-17",num:"#1024",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-18",num:"#1025",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-18",num:"#1026",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-18",num:"#1027",items:["Pro stand","LumeWorks Prime","Projectiescherm 100 inch"], code:"",              incl:270.55},
+  {d:"2026-07-19",num:"#1028",items:["LumeWorks Prime"],                                        code:"JOB100",        incl:4.95,   test:true},
+  {d:"2026-07-19",num:"#1029",items:["LumeWorks Prime"],                                        code:"JOB100 · FRSHPJOB", incl:0, test:true},
+  {d:"2026-07-19",num:"#1030",items:["LumeWorks Prime"],                                        code:"JOB100 · FRSHPJOB", incl:0, test:true},
+  {d:"2026-07-19",num:"#1031",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-19",num:"#1032",items:["LumeWorks Atlas"],                                        code:"",              incl:239},
+  {d:"2026-07-21",num:"#1033",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-22",num:"#1034",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-22",num:"#1035",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-22",num:"#1036",items:["Pro stand","Projectiescherm 100 inch","LumeWorks Atlas"], code:"",              incl:377},
+  {d:"2026-07-23",num:"#1037",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-23",num:"#1038",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-23",num:"#1039",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-23",num:"#1040",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-24",num:"#1041",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-24",num:"#1042",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-24",num:"#1043",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-25",num:"#1044",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-25",num:"#1045",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-26",num:"#1046",items:["LumeWorks Prime"],                                        code:"Anniek10",      incl:134.10},
+  {d:"2026-07-26",num:"#1047",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-27",num:"#1048",items:["Projectiescherm 100 inch"],                               code:"",              incl:90},
+  {d:"2026-07-27",num:"#1049",items:["LumeWorks Prime","Projectiescherm 100 inch"],             code:"",              incl:222.55},
+  {d:"2026-07-27",num:"#1050",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-28",num:"#1051",items:["LumeWorks Atlas","Projectiescherm 100 inch"],             code:"",              incl:308.05},
+  {d:"2026-07-28",num:"#1052",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-28",num:"#1053",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-28",num:"#1054",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-29",num:"#1055",items:["LumeWorks Atlas"],                                        code:"",              incl:239},
+  {d:"2026-07-29",num:"#1056",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-29",num:"#1057",items:["LumeWorks Prime"],                                        code:"Anniek10",      incl:134.10},
+  {d:"2026-07-29",num:"#1058",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-29",num:"#1059",items:["LumeWorks Prime"],                                        code:"Anniek10",      incl:134.10},
+  {d:"2026-07-29",num:"#1060",items:["LumeWorks Prime"],                                        code:"EX12RP",        incl:144},
+  {d:"2026-07-30",num:"#1061",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-30",num:"#1062",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-31",num:"#1063",items:["LumeWorks Prime"],                                        code:"",              incl:149},
+  {d:"2026-07-31",num:"#1064",items:["LumeWorks Titan"],                                        code:"",              incl:349},
+  {d:"2026-07-31",num:"#1065",items:["Projectiescherm 100 inch"],                               code:"",              incl:90},
+];
+const ORDERS = [...ORDERS_STATIC, ...ORDERS_SHOPIFY];
+
+function prodLabel(t){
+  return t.replace("LumeWorks ","").replace("Projectiescherm 100 inch","Scherm").replace("De complete Titan setup","Titan setup");
+}
+
+function calcOrder(o){
+  const excl = o.incl / BTW;
+  // Vaste kosten: inkoop + shipping + fulfilment (uit KP-sheet rij 19)
+  let fixed = 0, hasUnknown = false;
+  for(const it of o.items){
+    const c = ITEM_FIXED[it];
+    if(c == null) hasUnknown = true;
+    else fixed += c;
+  }
+  // Variabele kosten op werkelijke betaalprijs: Shopify 2% incl. + overhead 4% excl.
+  const variable = o.incl * SHOPIFY_FEE + excl * OVERHEAD_FEE;
+  const cost = hasUnknown ? null : fixed + variable;
+  const winst = cost == null ? null : excl - cost;
+  return {name:o.items.map(prodLabel).join(" · "), excl, winst, cost};
+}
+
+/* ═══ HELPERS ════════════════════════════════════════════════════ */
+const eur  = v=>"€"+v.toLocaleString("nl-NL",{minimumFractionDigits:0,maximumFractionDigits:0});
+const x2   = v=>v.toFixed(2)+"×";
+const mo   = ["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
+const fmtS = s=>{const[,m,d]=s.split("-");return`${+d} ${mo[+m-1]}`};
+const fmtL = s=>{const[y,m,d]=s.split("-");return`${+d} ${mo[+m-1]} ${y}`};
+// Lokale datum -> "YYYY-MM-DD". Nooit toISOString() gebruiken na lokale
+// Date-arithmetiek (setDate e.d.): dat rondt via UTC af en schuift de datum
+// in Amsterdamse tijd (UTC+1/+2) een dag terug.
+const ymd  = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+
+function ordCalc(from,to){
+  let oc=0,rev=0,rex=0,pro=0;
+  for(const o of ORDERS){
+    if(o.test||(from&&o.d<from)||(to&&o.d>to)) continue;
+    const p=calcOrder(o);
+    oc++;
+    rev+=o.incl;
+    rex+=o.incl/BTW;
+    if(p.winst!==null) pro+=p.winst;
+  }
+  return{oc,rev,rex,pro,be:0};
+}
+
+function shopifyBeroas(from,to){
+  let incl=0,winst=0;
+  for(const o of ORDERS){
+    if(o.test||(from&&o.d<from)||(to&&o.d>to)) continue;
+    const p=calcOrder(o);
+    if(p.winst!==null){incl+=o.incl;winst+=p.winst;}
+  }
+  return winst>0?incl/winst:KP[0].incl/KP[0].winst;
+}
+
+function kpBeroas(revInclTotal, purch){
+  if(!purch) return KP[0].incl/KP[0].winst;
+  const avg = revInclTotal / purch;
+  for(let i=0;i<KP.length-1;i++){
+    const lo=KP[i], hi=KP[i+1];
+    if(avg<=hi.incl){
+      const x = Math.max(0,Math.min(1,(hi.incl-avg)/(hi.incl-lo.incl)));
+      return (x*lo.incl+(1-x)*hi.incl)/(x*lo.winst+(1-x)*hi.winst);
+    }
+  }
+  const top=KP[KP.length-1];
+  return top.incl/top.winst;
+}
+
+function tbCalc(tbs){
+  let spend=0,rev7=0,rev1v=0,purch=0,impr=0,cl=0;
+  tbs.forEach(t=>{spend+=t.spend;rev7+=t.rev7;rev1v+=t.rev1v;purch+=t.purch;impr+=t.impr;cl+=t.cl});
+  const ri=rev7+rev1v, re=ri/BTW, roas=spend>0?ri/spend:0, ctr=impr>0?cl/impr*100:0;
+  return{spend,rev7,rev1v,ri,re,roas,purch,impr,cl,ctr};
+}
+
+function tbCalcRange(from,to){
+  const days=DAILY_META.filter(d=>d.d>=from&&d.d<=to);
+  if(!days.length)return null;
+  return tbCalc(days);
+}
+
+function selfCheck(label, CT, from, to){
+  const dm=tbCalcRange(from,to);
+  if(!dm||!CT)return;
+  const diffs=[
+    {k:"spend", a:CT.spend, b:dm.spend},
+    {k:"rev7",  a:CT.rev7,  b:dm.rev7},
+    {k:"rev1v", a:CT.rev1v, b:dm.rev1v},
+  ];
+  const mismatches=diffs.filter(x=>Math.abs(x.a-x.b)>0.5);
+  if(mismatches.length){
+    const msg=mismatches.map(x=>`${x.k}: ${x.a.toFixed(2)} vs ${x.b.toFixed(2)}`).join(", ");
+    console.warn(`[Zelfcheck ${label}] MISMATCH: ${msg}`);
+    const el=document.getElementById("dataCheck");
+    if(el){el.textContent=`⚠ datamismatch ${label}: ${msg}`;el.style.display="block";}
+  }
+}
+
+function bonCalc(fx,tb){
+  const diff=tb.roas-fx.be;
+  return{diff,raw:Math.max(0,tb.spend*diff)*BONUS_PCT};
+}
+
+function maandNr(snap){
+  const days=Math.floor((new Date(snap)-new Date("2026-07-16"))/86400000);
+  return Math.floor(days/30)+1;
+}
+
+/* ═══ ADS DATA (per adset, gesorteerd op spend) ══════════════════ */
+const ADS_JUL = [
+  {n:"001_002",          spend:715.70, rev7:740,   rev1v:432, purch:8,  ctr:1.84, cpc:0.64, atc:17},
+  {n:"006_002",          spend:491.69, rev7:1192,  rev1v:180, purch:10, ctr:1.27, cpc:0.71, atc:24},
+  {n:"006_002 · New Size",spend:422.70,rev7:1341,  rev1v:0,   purch:9,  ctr:1.23, cpc:0.74, atc:18},
+  {n:"007_002",          spend:208.41, rev7:1237,  rev1v:134, purch:5,  ctr:0.78, cpc:1.27, atc:20},
+  {n:"003_001",          spend:73.53,  rev7:0,     rev1v:0,   purch:0,  ctr:2.12, cpc:0.85, atc:2},
+  {n:"000_000 (Ally)",   spend:50.00,  rev7:0,     rev1v:0,   purch:0,  ctr:1.62, cpc:0.28, atc:0},
+  {n:"005_001 · New Size",spend:45.61, rev7:0,     rev1v:0,   purch:0,  ctr:0.53, cpc:2.40, atc:0},
+  {n:"007_002 · New Size",spend:9.65,  rev7:0,     rev1v:0,   purch:0,  ctr:0.73, cpc:1.38, atc:0},
+];
+// Advertentiegroepen-tabel voor elke periode wordt live opgebouwd uit
+// DAILY_ADS (zie adsForRange hieronder). ADS_JUL blijft staan als vaste
+// bron voor de periode vóór de CAPI-fix (16–31 jul), die niet dagelijks
+// wordt bijgewerkt.
+
+/* ═══ PERIODS ════════════════════════════════════════════════════ */
+// Rollend venster "afgelopen 7 dagen", opgebouwd uit DAILY_META (dagcijfers
+// v.a. 5 aug, de CAPI-fix datum) — dus automatisch gekapt op 5 aug zolang
+// dat venster daar overheen zou lopen.
+const R7_FROM_D = new Date(SNAP+"T00:00:00"); R7_FROM_D.setDate(R7_FROM_D.getDate()-6);
+const R7_FROM = ymd(R7_FROM_D) < "2026-08-05" ? "2026-08-05" : ymd(R7_FROM_D);
+const R7_DAYS = DAILY_META.filter(d=>d.d>=R7_FROM && d.d<=SNAP);
+
+// "Deze maand" = de huidige kalendermaand in lokale (Amsterdamse) tijd,
+// zelfde datum/tijdzone-logica als de andere snelkeuzes (kalenderdag-strings,
+// geen toISOString). Ondergrens gekapt op 5 aug (CAPI-fix, net als r7); de
+// bovengrens loopt tot de laatste beschikbare datadag (SNAP), niet verder.
+const _MON_D = new Date();
+const MONTH_FROM_D = new Date(_MON_D.getFullYear(), _MON_D.getMonth(), 1);
+const MONTH_FROM = ymd(MONTH_FROM_D) < "2026-08-05" ? "2026-08-05" : ymd(MONTH_FROM_D);
+const MONTH_TO = SNAP < MONTH_FROM ? MONTH_FROM : SNAP;
+const MONTH_DAYS = DAILY_META.filter(d=>d.d>=MONTH_FROM && d.d<=MONTH_TO);
+
+const PERIODS = {
+  vandaag:  {label:"Vandaag",           from:TB_VANDAAG.from,  to:TB_VANDAAG.to,  tb:[TB_VANDAAG],tg:TG_VANDAAG},
+  gisteren: {label:"Gisteren",          from:TB_GISTEREN.from, to:TB_GISTEREN.to, tb:[TB_GISTEREN],tg:TG_GISTEREN},
+  week:     {label:"Deze week",         from:TB_WEEK.from, to:TB_WEEK.to,  tb:[TB_WEEK],     capiNote: TB_WEEK.from<"2026-08-05", tg:TG_WEEK},
+  prevweek: {label:"Vorige week",       from:"2026-07-28",to:"2026-08-03",tb:[TB_PREVWEEK],tg:TG_PREVWEEK,capiNote:true,adsExtra:ADS_JUL},
+  r7:       {label:"Afgelopen 7 dagen", from:R7_FROM,      to:SNAP,        tb:R7_DAYS.length?R7_DAYS:null},
+  maand:    {label:"Deze maand",        from:MONTH_FROM,   to:MONTH_TO,    tb:MONTH_DAYS.length?MONTH_DAYS:null, capiNote: MONTH_FROM<"2026-08-05"},
+  aug:      {label:"Augustus",          from:"2026-08-05",to:TB_AUG_CLEAN.to,tb:[TB_AUG_CLEAN],tg:TG_AUG_CLEAN,capiNote:true},
+  jul:      {label:"Juli",              from:"2026-07-16",to:"2026-07-31",tb:[TB_JUL],adsExtra:ADS_JUL},
+  contract: {label:"Volledige periode", from:"2026-07-16",to:TB_AUG_CLEAN.to,tb:[TB_JUL,TB_AUG_CLEAN],adsExtra:ADS_JUL},
+};
+
+/* ═══ STATE ══════════════════════════════════════════════════════ */
+let P="aug", CX, CT, CB;
+let ordFilter="alle";
+// Omzetweergave in de orderdetailtabel: incl. of excl. BTW. Default op
+// "incl" — consistent met "META OMZET" bovenaan de pagina (ook incl. BTW),
+// zodat je niet tussen twee btw-grondslagen hoeft te schakelen om de
+// cijfers te vergelijken. Marge/kosten/break-even blijven altijd op de
+// excl.-BTW-grondslag rekenen (dat is de winstgevendheid, BTW is nooit
+// "jouw" geld) — alleen de omzetkolom zelf wisselt mee met deze toggle.
+let ordBtw="incl";
+
+/* ═══ ANALYSEFILTERS (strategie × platform × plaatsing) ═══════════
+   Eén centrale filterset die het hele bovenste dashboard bepaalt — niet
+   alleen de advertentiegroepentabel. Bonus, BEROAS-onderbouwing en Shopify
+   blijven hier expliciet buiten (zie render(): die gebruiken altijd CT_ALL,
+   nooit de gefilterde CT). Bewaard voor de duur van de browsersessie. */
+let filterStrategy="all";  // all | test | schaal | ongeclassificeerd
+let filterPlatform="all";  // all | facebook | instagram
+let filterPlacement="all"; // all | feed | stories | reels | overig
+try{
+  const saved=JSON.parse(sessionStorage.getItem("daan_filters")||"null");
+  if(saved){
+    filterStrategy=saved.strategy||"all";
+    filterPlatform=saved.platform||"all";
+    filterPlacement=saved.placement||"all";
+  }
+}catch(e){}
+function saveFilters(){ try{ sessionStorage.setItem("daan_filters",JSON.stringify({strategy:filterStrategy,platform:filterPlatform,placement:filterPlacement})); }catch(e){} }
+function filtersActive(){ return filterStrategy!=="all"||filterPlatform!=="all"||filterPlacement!=="all"; }
+function setFilterStrategy(s){ filterStrategy=s; saveFilters(); render(); }
+function setFilterPlatform(p){ filterPlatform=p; saveFilters(); render(); }
+function setFilterPlacement(p){ filterPlacement=p; saveFilters(); render(); }
+function resetFilters(){ filterStrategy="all"; filterPlatform="all"; filterPlacement="all"; saveFilters(); render(); }
+
+// Som van spend/aankopen/omzet over een datumrange, met optioneel strategie-
+// EN platform/plaatsing-filter. Bij alle drie op "all" exact hetzelfde
+// resultaat als tbCalcRange(from,to) (getest) — dat pad blijft dan ook
+// ongebruikt zodat bestaande cijfers nooit door dit filter kunnen wijzigen.
+// Retourneert null als er geen enkele match is (periode zonder data voor
+// deze combinatie, of nog niets gelabeld).
+function filteredRangeCT(from,to,strategy,platform,placement){
+  let spend=0,purch=0,rev7=0,rev1v=0,any=false;
+  if(platform==="all" && placement==="all"){
+    if(strategy==="all") return tbCalcRange(from,to);
+    for(const day of DAILY_ADS){
+      if(day.d<from||day.d>to) continue;
+      for(const a of day.ads){
+        const tag=AD_TAGS[a.n]||"ongeclassificeerd";
+        if(tag!==strategy) continue;
+        any=true;
+        spend+=a.spend; purch+=a.purch; rev7+=a.rev7; rev1v+=a.rev1v;
+      }
+    }
+  } else {
+    for(const day of DAILY_ADS_BREAKDOWN){
+      if(day.d<from||day.d>to) continue;
+      for(const r of day.b){
+        if(strategy!=="all" && (AD_TAGS[r.n]||"ongeclassificeerd")!==strategy) continue;
+        if(platform!=="all" && r.platform!==platform) continue;
+        if(placement!=="all" && r.placement!==placement) continue;
+        any=true;
+        spend+=r.spend; purch+=r.purch; rev7+=r.rev7; rev1v+=r.rev1v;
+      }
+    }
+  }
+  if(!any) return null;
+  const ri=rev7+rev1v;
+  return {spend,rev7,rev1v,ri,re:ri/BTW,roas:spend>0?ri/spend:0,purch,impr:0,cl:0,ctr:0};
+}
+
+// Spend-verdeling over Test/Schaal/Ongeclassificeerd binnen een periode —
+// optioneel ook binnen een platform/plaatsing-doorsnede (voor de balk onder
+// de filterbalk, die altijd de HUIDIGE platform/plaatsing-selectie volgt,
+// los van welke strategie-knop actief is — dat is precies het doel van de
+// balk: laten zien hoe die selectie over de 3 strategieën verdeeld is).
+function filteredSpendSplit(from,to,platform,placement){
+  let testSpend=0,schaalSpend=0,totalSpend=0;
+  const useBreakdown = platform!=="all" || placement!=="all";
+  const source = useBreakdown ? DAILY_ADS_BREAKDOWN.map(d=>({d:d.d,ads:d.b})) : DAILY_ADS;
+  for(const day of source){
+    if(day.d<from||day.d>to) continue;
+    for(const a of day.ads){
+      if(useBreakdown){
+        if(platform!=="all" && a.platform!==platform) continue;
+        if(placement!=="all" && a.placement!==placement) continue;
+      }
+      totalSpend+=a.spend;
+      if(AD_TAGS[a.n]==="test") testSpend+=a.spend;
+      else if(AD_TAGS[a.n]==="schaal") schaalSpend+=a.spend;
+    }
+  }
+  return {testSpend,schaalSpend,totalSpend};
+}
+
+const FILTER_PLATFORM_LBL={all:"Alle",facebook:"Facebook",instagram:"Instagram"};
+const FILTER_PLACEMENT_LBL={all:"Alle",feed:"Feed",stories:"Stories",reels:"Reels",overig:"Overig"};
+const FILTER_STRATEGY_LBL={all:"Alle",test:"Test",schaal:"Schaal",ongeclassificeerd:"Ongeclassificeerd"};
+// Compacte "Schaal · Instagram · Feed"-samenvatting van de actieve filters,
+// hergebruikt in de grafiek- en tabeltitels. Leeg als er niets actief is.
+function activeFilterLabel(){
+  const parts=[];
+  if(filterStrategy!=="all") parts.push(FILTER_STRATEGY_LBL[filterStrategy]);
+  if(filterPlatform!=="all") parts.push(FILTER_PLATFORM_LBL[filterPlatform]);
+  if(filterPlacement!=="all") parts.push(FILTER_PLACEMENT_LBL[filterPlacement]);
+  return parts.join(" · ");
+}
+
+// Eén centrale filterbalk bovenaan (vóór de KPI-balk) i.p.v. los boven de
+// advertentiegroepentabel — anders lijkt het ten onrechte alsof het filter
+// alleen die tabel raakt. CT_/CT_ALL_ komen van render(): CT_ is de
+// (mogelijk gefilterde) periode-CT, CT_ALL_ altijd het volledige account,
+// nodig voor het "% van totale spend" in de filterstatusregel.
+function renderFilterBar(CT_,CT_ALL_,fxFrom,fxTo){
+  const el=document.getElementById("filterBar");
+  if(!el) return;
+
+  const stratBtn=(s,l)=>`<button class="filter-strat-btn${filterStrategy===s?" active "+s:""}" onclick="setFilterStrategy('${s}')">${l}</button>`;
+
+  const {testSpend,schaalSpend,totalSpend}=filteredSpendSplit(fxFrom,fxTo,filterPlatform,filterPlacement);
+  let splitHtml="";
+  if(totalSpend>0){
+    const tp=testSpend/totalSpend*100, sp=schaalSpend/totalSpend*100, up=Math.max(0,100-tp-sp);
+    splitHtml=`<div class="dash-seg-split">
+      <div class="dash-seg-split-bar">${sp>0?`<div class="dash-seg-split-seg schaal" style="width:${sp}%"></div>`:""}${tp>0?`<div class="dash-seg-split-seg test" style="width:${tp}%"></div>`:""}${up>0?`<div class="dash-seg-split-seg untagged" style="width:${up}%"></div>`:""}</div>
+      <div class="dash-seg-split-lbl">${sp>0?`<span class="dash-seg-split-item schaal">Schaal ${sp.toFixed(0)}%</span>`:""}${tp>0?`<span class="dash-seg-split-item test">Test ${tp.toFixed(0)}%</span>`:""}${up>0?`<span class="dash-seg-split-item untagged">Ongeclassificeerd ${up.toFixed(0)}%</span>`:""}</div>
+    </div>`;
+  }
+
+  let statusHtml="";
+  if(filtersActive()){
+    const parts=[];
+    if(filterStrategy!=="all") parts.push(FILTER_STRATEGY_LBL[filterStrategy]);
+    if(filterPlatform!=="all") parts.push(FILTER_PLATFORM_LBL[filterPlatform]);
+    if(filterPlacement!=="all") parts.push(FILTER_PLACEMENT_LBL[filterPlacement]);
+    const spendPct = (CT_ALL_ && CT_ALL_.spend>0 && CT_) ? (CT_.spend/CT_ALL_.spend*100) : null;
+    const purch = CT_ ? CT_.purch : 0;
+    statusHtml=`<div class="filter-status">
+      <div class="filter-status-txt">Gefilterd op: <strong>${parts.join(" · ")}</strong>${spendPct!=null?` · ${spendPct.toFixed(0)}% van totale Meta-spend`:""}${CT_?` · ${purch} aankop${purch===1?"":"en"}`:" · geen data"}</div>
+      <button class="filter-status-clear" onclick="resetFilters()">Filters wissen</button>
+    </div>`;
+  }
+
+  el.innerHTML=`
+    <div class="filter-bar-row">
+      <span class="filter-bar-label">Analysefilters</span>
+      <div class="filter-strat-group">${stratBtn("all","Alle")}${stratBtn("test","Test")}${stratBtn("schaal","Schaal")}${stratBtn("ongeclassificeerd","Ongeclassificeerd")}</div>
+      <div class="filter-select-group">
+        <select class="filter-select" onchange="setFilterPlatform(this.value)" aria-label="Platform filteren" title="Platform filteren">${["all","facebook","instagram"].map(v=>`<option value="${v}"${filterPlatform===v?" selected":""}>Platform: ${FILTER_PLATFORM_LBL[v]}</option>`).join("")}</select>
+        <select class="filter-select" onchange="setFilterPlacement(this.value)" aria-label="Plaatsing filteren" title="Plaatsing filteren">${["all","feed","stories","reels","overig"].map(v=>`<option value="${v}"${filterPlacement===v?" selected":""}>Plaatsing: ${FILTER_PLACEMENT_LBL[v]}</option>`).join("")}</select>
+      </div>
+      <button class="filter-reset-btn"${filtersActive()?"":" disabled"} onclick="resetFilters()" title="Alle analysefilters terugzetten naar Alle" aria-label="Alle analysefilters terugzetten naar Alle">Reset</button>
+    </div>
+    ${splitHtml}
+    ${statusHtml}`;
+}
+
+// Automatisch opgebouwde hoofdconclusie — volgt de actieve analysefilters
+// (net als de KPI-balk erboven: CT is al gefilterd door render()). Bonus en
+// BEROAS-onderbouwing gebruiken hier bewust NIET van — die blijven altijd op
+// het volledige account gebaseerd, zie render().
+function renderKpiHeadline(CT_,fxFrom,fxTo){
+  const el=document.getElementById("kpiHeadline");
+  if(!el)return;
+  if(!CT_ || !CX.be || CT_.spend<=0){ el.innerHTML=""; return; }
+
+  const margePct = CX.rev>0 ? CX.pro/CX.rev : 0;
+  const doel=1/(1/CX.be-SCALE_T), comfy=1/(1/CX.be-SCALE_H);
+  const netTotal = margePct*(CT_.rev7+CT_.rev1v) - CT_.spend;
+  const rows=[{dot:netTotal>=0?"good":"bad", html:`Meta draait <strong>${eur(Math.abs(netTotal))}</strong> ${netTotal>=0?"boven":"onder"} break-even.`}];
+
+  const segRow=(label,tag)=>{
+    const s=filteredRangeCT(fxFrom,fxTo,tag,filterPlatform,filterPlacement);
+    if(!s || s.spend<=0) return null;
+    if(s.roas>=comfy) return {dot:"good", html:`${label} presteren boven doel met <strong>${x2(s.roas)}</strong> ROAS.`};
+    if(s.roas>=doel)  return {dot:"good", html:`${label} draaien op doel met <strong>${x2(s.roas)}</strong> ROAS.`};
+    if(s.roas>=CX.be) return {dot:"warn", html:`${label} draaien boven break-even met <strong>${x2(s.roas)}</strong> ROAS.`};
+    return {dot:"bad", html:`${label} zitten met <strong>${x2(s.roas)}</strong> ROAS onder break-even.`};
+  };
+  // Bij een actief strategiefilter alleen dat segment tonen — de andere rij
+  // zou verwarrend zijn naast een verder helemaal gefilterd dashboard.
+  if(filterStrategy!=="test"){ const r=segRow("Schaalcampagnes","schaal"); if(r) rows.push(r); }
+  if(filterStrategy!=="schaal"){ const r=segRow("Testcampagnes","test"); if(r) rows.push(r); }
+
+  const {testSpend,schaalSpend,totalSpend}=filteredSpendSplit(fxFrom,fxTo,filterPlatform,filterPlacement);
+  if(totalSpend>0 && filterStrategy==="all"){
+    const upPct=Math.max(0,100-(testSpend+schaalSpend)/totalSpend*100);
+    if(upPct>=1) rows.push({dot:"neutral", html:`Ongeclassificeerde campagnes vertegenwoordigen <strong>${upPct.toFixed(0)}%</strong> van de totale spend.`});
+  }
+
+  const dotColor={good:"#8FC49B",warn:"#E5B863",bad:"#DD9280",neutral:"#7C8CA6"};
+  el.className = "kpi-headline" + (kpiHeadlineCollapsed ? " collapsed" : "");
+  el.innerHTML=`<div class="kpi-headline-hd" onclick="toggleKpiHeadline()">Samenvatting<span class="kpi-headline-chev">${kpiHeadlineCollapsed?"▸":"▾"}</span></div>`+
+    `<div class="kpi-headline-body">`+rows.map(r=>`<div class="kpi-headline-row"><span class="kpi-headline-dot" style="background:${dotColor[r.dot]}"></span><span>${r.html}</span></div>`).join("")+`</div>`;
+}
+
+function setPeriod(v){P=v;render()}
+
+/* ── Period dropdown & kalender ── */
+let _cY=2026,_cM=7,_cS=null,_cE=null;
+// _cLocked: de huidige selectie is al toegepast (of er staat een snelkeuze
+// actief). De eerstvolgende klik in de kalender begint dan een verse losse-dag-
+// selectie i.p.v. de bestaande te verlengen tot een bereik — zo kan de
+// gebruiker een toegepaste selectie simpelweg vervangen.
+let _cLocked=false;
+const CAL_MIN="2026-08-05";
+
+function togglePM(){
+  const m=document.getElementById("periodMenu");
+  const opening=!m.classList.contains("open");
+  m.classList.toggle("open");
+  if(opening)calRender();
+}
+document.addEventListener("click",()=>document.getElementById("periodMenu")?.classList.remove("open"));
+
+// Scrollt naar de periodekiezer bovenin en opent 'm — gebruikt door de
+// klikbare datumrange-tekst onder de KPI-grafiek, zodat je vanuit de
+// grafiek direct een andere periode kan kiezen i.p.v. te moeten scrollen.
+function jumpToPeriodSelector(){
+  const el=document.querySelector(".period-wrap");
+  if(!el)return;
+  el.scrollIntoView({behavior:"smooth",block:"center"});
+  setTimeout(()=>{
+    const m=document.getElementById("periodMenu");
+    if(m && !m.classList.contains("open")){m.classList.add("open");calRender();}
+  },350);
+}
+
+function selectP(v){
+  if(!PERIODS[v])return;
+  if(v!=="custom") _cLocked=true; // kalender begint vers zodra je 'm weer opent
+  P=v;
+  document.querySelectorAll(".pm-opt").forEach(el=>el.classList.toggle("active",el.dataset.p===v));
+  document.getElementById("periodMenu").classList.remove("open");
+  render();
+}
+
+function calRender(){
+  const MN=["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
+  document.getElementById("calMlbl").textContent=`${MN[_cM]} ${_cY}`;
+  const fd=new Date(_cY,_cM,1).getDay();
+  const off=(fd+6)%7;
+  const dim=new Date(_cY,_cM+1,0).getDate();
+  const tod=ymd(new Date());
+  let h='<div class="cal-dow">M</div><div class="cal-dow">D</div><div class="cal-dow">W</div><div class="cal-dow">D</div><div class="cal-dow">V</div><div class="cal-dow">Z</div><div class="cal-dow">Z</div>';
+  for(let i=0;i<off;i++)h+='<div></div>';
+  for(let d=1;d<=dim;d++){
+    const ds=`${_cY}-${String(_cM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isOff=ds<CAL_MIN||ds>tod;
+    const iS=ds===_cS,iE=ds===_cE;
+    const iR=_cS&&_cE&&ds>_cS&&ds<_cE;
+    const iT=ds===tod&&!iS&&!iE;
+    const solo=iS&&!_cE;
+    const cls="cal-day"+(isOff?" cd-off":"")+(iS?" cd-s":"")+(iE?" cd-e":"")+(iR?" cd-r":"")+(solo?" cd-solo":"")+(iT?" cd-today":"");
+    h+=`<div class="${cls}"${!isOff?` onclick="calClick('${ds}')"`:""}>${d}</div>`;
+  }
+  document.getElementById("calGrid").innerHTML=h;
+  const hint=document.getElementById("calHint"),apply=document.getElementById("calApply");
+  if(!_cS){
+    hint.textContent="Klik een dag";
+    apply.disabled=true; apply.textContent="Toepassen";
+  } else if(!_cE){
+    // Eén klik = één losse dag. Direct toepasbaar; een 2e klik maakt er
+    // een bereik van.
+    hint.innerHTML=`<span class="ch-mode">1 dag</span><b>${fmtS(_cS)}</b> · klik nog een dag voor een bereik`;
+    apply.disabled=false; apply.textContent=`Toepassen · ${fmtS(_cS)}`;
+  } else {
+    const n=Math.round((new Date(_cE)-new Date(_cS))/86400000)+1;
+    hint.innerHTML=`<span class="ch-mode">Bereik</span><b>${fmtS(_cS)} t/m ${fmtS(_cE)}</b> · ${n} dagen`;
+    apply.disabled=false; apply.textContent="Toepassen · bereik";
+  }
+}
+
+function calClick(ds){
+  if(_cLocked||!_cS||(_cS&&_cE)){ // vers begin: toegepast/snelkeuze actief, niets
+    _cS=ds; _cE=null;             // geselecteerd, of een afgerond bereik → losse dag
+    _cLocked=false;
+  } else if(ds===_cS){            // nogmaals dezelfde dag aanklikken → selectie wissen
+    _cS=null; _cE=null;
+  } else if(ds<_cS){              // 2e klik vóór de 1e → bereik
+    _cE=_cS; _cS=ds;
+  } else {                        // 2e klik ná de 1e → bereik
+    _cE=ds;
+  }
+  calRender();
+}
+function calPrev(){if(_cY===2026&&_cM===7)return;_cM--;if(_cM<0){_cM=11;_cY--;}calRender();}
+function calNext(){const n=new Date();if(_cY>n.getFullYear()||(_cY===n.getFullYear()&&_cM>=n.getMonth()))return;_cM++;if(_cM>11){_cM=0;_cY++;}calRender();}
+function applyCustom(){
+  if(!_cS)return;
+  // Eén dag: _cE leeg → van/tot dezelfde datum (volledige kalenderdag,
+  // zelfde inclusieve datumstring-logica als alle andere periodes, dus
+  // geen data van de volgende dag).
+  const from=_cS, to=_cE||_cS;
+  const days=DAILY_META.filter(d=>d.d>=from&&d.d<=to);
+  PERIODS.custom={label: from===to?fmtS(from):`${fmtS(from)}–${fmtS(to)}`,
+    from,to,tb:days.length?days:null,tg:null,ads:null};
+  _cLocked=true;
+  selectP("custom");
+}
+
+function setOrdFilter(v){
+  ordFilter=v;
+  document.querySelectorAll(".ord-filters:not(.ord-btw-toggle) .ord-f").forEach(b=>{
+    b.classList.toggle("active", b.textContent.toLowerCase()===v.toLowerCase());
+  });
+  const pd=PERIODS[P]||PERIODS.aug;
+  renderOrders(pd.from,pd.to);
+}
+
+function setOrdBtw(v){
+  ordBtw=v;
+  document.querySelectorAll(".ord-btw-f").forEach(b=>{
+    b.classList.toggle("active", b.textContent.toLowerCase().includes(v==="incl"?"incl":"excl"));
+  });
+  const pd=PERIODS[P]||PERIODS.aug;
+  renderOrders(pd.from,pd.to);
+}
+
+/* ═══ AI STATUS ══════════════════════════════════════════════════ */
+function renderAiStatus(ct, be, schaal, comfy){
+  const el=document.getElementById("aiStatusBox");
+  if(!ct){el.innerHTML="";return;}
+  const roas=ct.roas;
+  const delta=roas-be;
+  const needForBe=Math.max(0,-delta);
+  const needForSchaal=Math.max(0,schaal-roas);
+  const bePct=(Math.abs(delta)/be*100).toFixed(1);
+  let cls,emoji,head,body;
+  if(roas>=comfy){
+    cls="green";emoji="🟢";
+    head=`Comfortabel boven doel ROAS · ${(SCALE_H*100).toFixed(0)}% nettomarge`;
+    body=`Account draait sterk. Verdere schaalverhogingen zijn mogelijk met beperkt risico.`;
+  } else if(roas>=schaal){
+    cls="green";emoji="🟢";
+    head=`Op doel ROAS · ${(SCALE_T*100).toFixed(0)}% nettomarge op omzet`;
+    body=`Account draait winstgevend op doelrendement. Nog ${needForSchaal===0?"":x2(comfy-roas).replace("×","")} ROAS nodig voor comfortabele ${(SCALE_H*100).toFixed(0)}% marge.`;
+  } else if(roas>=be){
+    cls="amber";emoji="🟡";
+    const needRev=(needForSchaal*ct.spend).toFixed(0);
+    head=`Boven break-even · nog ${x2(needForSchaal).replace("×","")} ROAS nodig voor ${(SCALE_T*100).toFixed(0)}% nettomarge`;
+    body=`Account is winstgevend maar nog niet op doel. Nog ≈€${needRev} extra omzet nodig bij het huidige adspend.`;
+  } else {
+    cls="red";emoji="🔴";
+    const needRev=(needForBe*ct.spend).toFixed(0);
+    head=`Onder break-even · ${bePct}% verbetering nodig`;
+    body=`Account is nog niet winstgevend. Nog ${x2(needForBe).replace("×","")} ROAS (≈€${needRev} extra omzet bij ${eur(ct.spend)} adspend) nodig voor break-even.`;
+  }
+  const col=cls==="red"?"#DD9280":cls==="amber"?"#E5B863":"#8FC49B";
+  el.innerHTML=`<div class="ai-box ${cls}">
+    <div class="ai-box-head" style="color:${col}">${emoji} ${head}</div>
+    <div class="ai-box-body">${body}</div>
+  </div>`;
+}
+
+/* ═══ TRENDS ═════════════════════════════════════════════════════ */
+function renderTrends(ct, prevCt, prevLabel, ctDays, prevDays){
+  // ROAS/Spend/Aankopen zijn altijd zichtbaar, hard onafhankelijk van
+  // periode: zonder vorige periode om mee te vergelijken (bv. "Gisteren"
+  // of een custom range) tonen we de kale cijfers zonder trendpijltje;
+  // verschillen de periodes sterk in lengte (bv. Augustus vs. juli) dan
+  // normaliseren we naar "/ dag" i.p.v. de vergelijking te verbergen.
+  const hasPrev=!!prevCt;
+  const norm=hasPrev&&Math.abs(prevDays-ctDays)>1;
+  const dayNote=norm?" / dag":"";
+  const td=(cur,prev)=>{if(!hasPrev||!prev)return null;const d=(cur-prev)/prev*100;return{pct:Math.abs(d).toFixed(1),up:d>=0};};
+  const tRoas=td(ct.roas,hasPrev?prevCt.roas:null);
+  const curS=norm?ct.spend/ctDays:ct.spend, prevS=hasPrev?(norm?prevCt.spend/prevDays:prevCt.spend):null;
+  const tSpend=td(curS,prevS);
+  const curP=norm?ct.purch/ctDays:ct.purch, prevP=hasPrev?(norm?prevCt.purch/prevDays:prevCt.purch):null;
+  const tPurch=td(curP,prevP);
+  const sub=t=>{
+    if(!t)return "";
+    const col=t.up?"#8FC49B":"#DD9280";
+    return `<span style="color:${col}">${t.up?"▲":"▼"} ${t.pct}% vs. ${prevLabel}</span>`;
+  };
+  document.getElementById("mRoas").textContent=x2(ct.roas);
+  document.getElementById("mRoasSub").innerHTML=sub(tRoas);
+  document.getElementById("mSpendLbl").textContent="SPEND"+dayNote.toUpperCase();
+  document.getElementById("mSpend").textContent=eur(norm?curS:ct.spend);
+  document.getElementById("mSpendSub").innerHTML=sub(tSpend);
+  document.getElementById("mPurchLbl").textContent="AANKOPEN"+dayNote.toUpperCase();
+  document.getElementById("mPurch").textContent=norm?curP.toFixed(1):ct.purch;
+  document.getElementById("mPurchSub").innerHTML=sub(tPurch);
+}
+
+/* ═══ AI ANALYSE ═════════════════════════════════════════════════ */
+function renderAnalysis(adsRaw, beroas, ct){
+  const el=document.getElementById("aiAnalysis");
+  if(!adsRaw||!adsRaw.length||!ct){el.innerHTML="";return;}
+  const map={};
+  for(const a of adsRaw){
+    if(!map[a.n])map[a.n]={n:a.n,spend:0,rev7:0,rev1v:0,purch:0};
+    const m=map[a.n];m.spend+=a.spend;m.rev7+=a.rev7;m.rev1v+=a.rev1v;m.purch+=a.purch;
+  }
+  const rows=Object.values(map);
+  const noConv=rows.filter(r=>r.rev7+r.rev1v===0&&r.spend>20);
+  const wastedSpend=noConv.reduce((s,r)=>s+r.spend,0);
+  const totSpend=rows.reduce((s,r)=>s+r.spend,0);
+  const wastedPct=totSpend>0?(wastedSpend/totSpend*100).toFixed(0):0;
+  const roasRows=rows.filter(r=>r.spend>50).map(r=>({...r,roas:r.spend>0?(r.rev7+r.rev1v)/r.spend:0}));
+  const topAdsets=roasRows.filter(r=>r.roas>=beroas).sort((a,b)=>b.roas-a.roas).slice(0,3);
+  const badAdsets=noConv.filter(r=>r.spend>80).sort((a,b)=>b.spend-a.spend).slice(0,3);
+  let causeHtml="",adviceHtml="";
+  if(noConv.length>0){
+    const bad=badAdsets.length>0?` Grootste: ${badAdsets.map(a=>`${a.n} (${eur(a.spend)})`).join(", ")}.`:"";
+    causeHtml=`<div class="analysis-row">📊 <strong>Oorzaak</strong> · <strong>${noConv.length} van ${rows.length}</strong> groepen genereerden €0 omzet (${eur(wastedSpend)} · ${wastedPct}% van het budget).${bad}</div>`;
+  }
+  if(topAdsets.length>0){
+    adviceHtml=`<div class="analysis-row">💡 <strong>Aanbeveling</strong> · ${topAdsets.map(a=>`<strong>${a.n}</strong> (${x2(a.roas)})`).join(", ")} ${topAdsets.length===1?"draait":"draaien"} boven BEROAS. Extra budget hier verhoogt de totale ROAS direct.</div>`;
+  }
+  el.innerHTML=`<div class="analysis-block"><div class="analysis-hdr">Analyse · Advertentiegroepen</div>${causeHtml}${adviceHtml}</div>`;
+}
+
+/* ═══ RENDER ═════════════════════════════════════════════════════ */
+function render(){
+  const pd=PERIODS[P]||PERIODS.aug;
+  const {from:fxFrom,to:fxTo,tb:tbs}=pd;
+  /* update dropdown labels */
+  {
+    const bt=document.getElementById("periodBtnTxt");
+    if(bt){
+      const m={
+        vandaag:{main:"Vandaag",range:`(${fmtS(pd.from)})`},
+        gisteren:{main:"Gisteren",range:`(${fmtS(pd.from)})`},
+        week:{main:"Deze week",range:`(${fmtS(PERIODS.week?.from)}–${fmtS(PERIODS.week?.to)})`},
+        r7:{main:"Afgelopen 7 dagen",range:`(${fmtS(PERIODS.r7?.from)}–${fmtS(PERIODS.r7?.to)})`},
+        maand:{main:"Deze maand",range:`(${fmtS(PERIODS.maand?.from)}–${fmtS(PERIODS.maand?.to)})`},
+        aug:{main:"Augustus",range:"(v.a. 5 aug)"},
+        jul:{main:"Juli",range:""},
+        contract:{main:"Volledige periode",range:""},
+        custom:{main:pd.label,range:""},
+      };
+      const cur=m[P]||{main:pd.label,range:""};
+      bt.innerHTML=cur.main+(cur.range?` <span class="pbt-range">${cur.range}</span>`:"");
+    }
+    const lv=document.getElementById("lbl-vandaag"),lg=document.getElementById("lbl-gisteren"),lw=document.getElementById("lbl-week"),l7=document.getElementById("lbl-r7");
+    if(lv)lv.textContent=fmtS(PERIODS.vandaag.from);
+    if(lg)lg.textContent=fmtS(PERIODS.gisteren.from);
+    if(lw&&PERIODS.week)lw.textContent=`${fmtS(PERIODS.week.from)}–${fmtS(PERIODS.week.to)}`;
+    if(l7&&PERIODS.r7)l7.textContent=`${fmtS(PERIODS.r7.from)}–${fmtS(PERIODS.r7.to)}`;
+    const lmn=document.getElementById("lbl-maand");
+    if(lmn&&PERIODS.maand)lmn.textContent=`${fmtS(PERIODS.maand.from)}–${fmtS(PERIODS.maand.to)}`;
+    document.querySelectorAll(".pm-opt").forEach(el=>el.classList.toggle("active",el.dataset.p===P));
+  }
+  const TG = pd.tg || null;
+  let hasTB=tbs!==null;
+
+  CX=ordCalc(fxFrom,fxTo);
+  CX.be=shopifyBeroas(fxFrom,fxTo);
+
+  // CT_ALL: altijd het volledige, ongefilterde account — voedt de officiële
+  // bonus en de BEROAS-onderbouwing (CB), die nooit door een analysefilter
+  // mogen veranderen. Exact hetzelfde pad als vóór de analysefilters bestonden.
+  const CT_ALL = tbs ? tbCalc(tbs) : tbCalcRange(fxFrom,fxTo);
+  CB = CT_ALL ? bonCalc(CX,CT_ALL) : null;
+
+  if(filtersActive()){
+    // Analysefilter actief: spend/aankopen/omzet/ROAS/CAC voor de gekozen
+    // strategie/platform/plaatsing-doorsnede. Brutomarge/nettomarge blijven
+    // "geen data" (zie renderKpiBar) — niet te herleiden naar advertentiegroep.
+    CT=filteredRangeCT(fxFrom,fxTo,filterStrategy,filterPlatform,filterPlacement);
+    hasTB=CT!=null;
+  } else {
+    CT=CT_ALL;
+    if(tbs) selfCheck(P, CT, fxFrom, fxTo);
+  }
+  const schaal=1/(1/CX.be-SCALE_T), comfy=1/(1/CX.be-SCALE_H);
+
+  // Prev period voor trends + bonus vergelijking
+  const tbDC=t=>Math.floor((new Date(t.to)-new Date(t.from))/86400000)+1;
+  let prevCT=null, prevCX=null, prevLabel=null, prevDays=0, ctDays=0, prevBon=null, prevFrom=null, prevTo=null;
+  if(P==="vandaag"){
+    prevFrom=TB_GISTEREN.from; prevTo=TB_GISTEREN.to;
+    prevCT=tbCalc([TB_GISTEREN]); prevLabel="gisteren"; ctDays=tbDC(TB_VANDAAG); prevDays=tbDC(TB_GISTEREN);
+    prevCX=ordCalc(TB_GISTEREN.from,TB_GISTEREN.to);
+  } else if(P==="week"){
+    prevFrom=TB_PREVWEEK.from; prevTo=TB_PREVWEEK.to;
+    prevCT=tbCalc([TB_PREVWEEK]); prevLabel="vorige week"; ctDays=tbDC(TB_WEEK); prevDays=tbDC(TB_PREVWEEK);
+    prevCX=ordCalc(TB_PREVWEEK.from,TB_PREVWEEK.to);
+  } else if(P==="aug"){
+    prevFrom="2026-07-16"; prevTo="2026-07-31";
+    prevCT=tbCalc([TB_JUL]); prevLabel="juli"; ctDays=tbDC(TB_AUG_CLEAN); prevDays=tbDC(TB_JUL);
+    prevCX=ordCalc("2026-07-16","2026-07-31");
+    prevCX.be=shopifyBeroas("2026-07-16","2026-07-31");
+    prevBon=bonCalc(prevCX,prevCT).raw;
+  } else {
+    // Generieke vergelijking voor alle overige periodes (Gisteren, Vorige
+    // week, Juli, Volledige periode, custom range): dezelfde periodelengte
+    // direct ervóór, opgebouwd uit DAILY_META — dus alleen beschikbaar
+    // zolang die periode binnen het DAILY_META-bereik (v.a. 5 aug) valt.
+    ctDays=Math.floor((new Date(fxTo)-new Date(fxFrom))/86400000)+1;
+    const pTo=new Date(fxFrom+"T00:00:00"); pTo.setDate(pTo.getDate()-1);
+    const pFrom=new Date(pTo); pFrom.setDate(pFrom.getDate()-(ctDays-1));
+    prevFrom=ymd(pFrom); prevTo=ymd(pTo); prevDays=ctDays;
+    prevLabel=prevFrom===prevTo?fmtS(prevFrom):`${fmtS(prevFrom)}–${fmtS(prevTo)}`;
+    const pc=tbCalcRange(prevFrom,prevTo);
+    if(pc){ prevCT=pc; prevCX=ordCalc(prevFrom,prevTo); }
+  }
+  if(filtersActive() && prevFrom){
+    prevCT=filteredRangeCT(prevFrom,prevTo,filterStrategy,filterPlatform,filterPlacement); // null als er geen data is → geen vs.-vergelijking getoond
+  }
+
+  renderFilterBar(CT,CT_ALL,fxFrom,fxTo);
+  renderKpiHeadline(CT,fxFrom,fxTo);
+
+  /* card meta */
+  const STRAT_STYLE={test:["rgba(91,158,232,.18)","rgba(91,158,232,.5)","#93C5F5"],schaal:["rgba(74,222,128,.16)","rgba(74,222,128,.45)","#8FE0A8"],ongeclassificeerd:["rgba(255,255,255,.08)","rgba(255,255,255,.22)","#93A2B8"]};
+  const STRAT_LBL={test:"Test",schaal:"Schaal",ongeclassificeerd:"Ongeclassificeerd"};
+  const segNote = filterStrategy!=="all" ? (()=>{const[bg,bd,fg]=STRAT_STYLE[filterStrategy];return ` <span class="capi-badge" style="background:${bg};border-color:${bd};color:${fg}">${STRAT_LBL[filterStrategy]}-groepen</span>`;})() : "";
+  if(hasTB){
+    const mn=maandNr(SNAP);
+    const tbFrom=tbs?tbs[0].from:fxFrom, tbTo=tbs?tbs[tbs.length-1].to:fxTo;
+    const capiWarn=pd.capiNote
+      ? ` <span class="capi-badge" data-tip="Vóór 5 aug telde Meta conversies dubbel (CAPI Gateway bug) · Tracking telt daarom pas vanaf 5 aug · ROAS-data: ${fmtS(tbFrom)} t/m ${fmtS(tbTo)}">Tracking v.a. 5 aug ⓘ</span>`
+      : "";
+    document.getElementById("cardMeta").innerHTML=
+      `Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · Maand ${mn}${capiWarn}${segNote} <span class="info-i" data-tip="Maand ${mn} van het contract · start 16 jul 2026 · BEROAS op basis van werkelijke Shopify orders">i</span>`;
+  } else if(filtersActive()){
+    document.getElementById("cardMeta").innerHTML=`Meta · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · geen data voor dit filter in deze periode${segNote}`;
+  } else {
+    const nDays=Math.floor((new Date(fxTo)-new Date(fxFrom))/86400000)+1;
+    document.getElementById("cardMeta").innerHTML=`Shopify · ${fmtS(fxFrom)} t/m ${fmtS(fxTo)} · ${nDays} dag${nDays!==1?"en":""}`;
+  }
+
+  /* ROAS hero (hoofdprestatie) */
+  if(hasTB){
+    document.getElementById("roasHeroLbl").textContent="META ROAS";
+    document.getElementById("roasHeroVal").textContent=x2(CT.roas);
+    const delta=CT.roas-CX.be;
+    const dPct=(Math.abs(delta)/CX.be*100).toFixed(1);
+    const below=delta<0, above=CT.roas>=schaal;
+    const cls=below?"neg":above?"pos":"mid";
+    // Altijd een percentage t.o.v. break-even i.p.v. het rauwe ROAS-verschil
+    // (bv. "+0.18") — dat laatste is niet intuïtief. Consistent voor elke
+    // periode/tijdvenster.
+    const txt=below
+      ?`${dPct}% onder break-even`
+      :above
+        ?`${dPct}% boven break-even · boven doel ROAS`
+        :`${dPct}% boven break-even`;
+    document.getElementById("roasDelta").innerHTML=`<span class="rdelta ${cls}">${txt}</span>`;
+  } else {
+    document.getElementById("roasHeroLbl").textContent="OMZET EXCL. BTW";
+    document.getElementById("roasHeroVal").textContent=eur(CX.rex);
+    document.getElementById("roasDelta").innerHTML="";
+  }
+
+  /* AI status box */
+
+  /* bonus (nu mc-val) */
+  const bonusLabels={vandaag:"BONUS VANDAAG",gisteren:"BONUS GISTEREN",week:"BONUS DEZE WEEK",maand:"BONUS DEZE MAAND",prevweek:"BONUS VORIGE WEEK",aug:"BONUS TOT NU TOE",jul:"BONUS JULI",contract:"BONUS TOTAAL"};
+  document.getElementById("bonusLbl").textContent=bonusLabels[P]||"BONUS";
+  document.getElementById("bonusAmt").textContent=CB?eur(CB.raw):"—";
+
+  /* bonus badge (nu mc-sub) — altijd op CT_ALL gebaseerd, nooit op de
+     gefilterde CT: dit hoort bij het ongefilterde bonusbedrag erboven. */
+  const shortLabel={vandaag:"Vandaag",gisteren:"Gisteren",week:"Deze week",prevweek:"Vorige week"};
+  let bHtml;
+  if(shortLabel[P]){
+    if(CT_ALL && CT_ALL.purch>0){
+      bHtml=`<span style="color:#94a3b8">${CT_ALL.purch} via Meta</span>`;
+    } else {
+      bHtml=`<span style="color:#93A2B8">${CX.oc} ${CX.oc===1?"order":"orders"}</span>`;
+    }
+  } else if(prevBon!==null && CB){
+    const d=CB.raw-prevBon, up=d>=0;
+    bHtml=`<span style="color:${up?"#8FC49B":"#DD9280"}">${up?"▲":"▼"} ${eur(Math.abs(d))} vs. ${prevLabel}</span>`;
+  } else if(!CT_ALL){
+    bHtml=`<span style="color:#93A2B8">geen data voor deze periode</span>`;
+  } else if(P==="jul"){
+    bHtml=`<span style="color:#93A2B8">campagnestart</span>`;
+  } else {
+    bHtml=`<span style="color:#93A2B8">gehele periode</span>`;
+  }
+  document.getElementById("bonusBadge").innerHTML=bHtml;
+
+  /* metrics: BE | Doel ROAS */
+  document.getElementById("mScaleLbl").textContent=hasTB?"DOEL ROAS":"WINST VOOR ADS";
+  if(hasTB){
+    document.getElementById("mScale").textContent=x2(schaal);
+    document.getElementById("mScaleSub").textContent=`${(SCALE_T*100).toFixed(0)}% nettomarge op omzet`;
+    document.getElementById("mBeSub").textContent="incl. BTW";
+  } else {
+    document.getElementById("mScale").textContent=eur(CX.pro);
+    document.getElementById("mScaleSub").textContent=`${(CX.rex>0?CX.pro/CX.rex*100:0).toFixed(1)}% marge`;
+    document.getElementById("mBeSub").textContent="incl. BTW · geschat";
+  }
+  document.getElementById("mBe").textContent=x2(CX.be);
+
+  /* gauge */
+  const go=document.getElementById("gaugeOuter");
+  if(hasTB){ go.style.display=""; renderGauge(CX.be,schaal,comfy,CT.roas,CT.purch); }
+  else go.style.display="none";
+
+  /* trends */
+  if(hasTB) renderTrends(CT,prevCT,prevLabel,ctDays,prevDays);
+  else{
+    for(const id of ["mRoas","mRoasSub","mSpend","mSpendSub","mPurch","mPurchSub"])
+      document.getElementById(id).textContent="";
+    document.getElementById("mSpendLbl").textContent="SPEND";
+    document.getElementById("mPurchLbl").textContent="AANKOPEN";
+  }
+
+  /* tables — BEROAS-onderbouwing blijft altijd op het volledige account
+     gebaseerd (CT_ALL), net als de bonus: geen analysefilter hierop. */
+  renderOrders(fxFrom,fxTo);
+  renderBeroas(CT_ALL,CX.be,CX,fxFrom,fxTo,filtersActive());
+  const adsData = (filterPlatform!=="all"||filterPlacement!=="all")
+    ? adsBreakdownForRange(fxFrom,fxTo,filterPlatform,filterPlacement)
+    : [...(pd.adsExtra||[]), ...adsForRange(fxFrom, fxTo)];
+  renderAds(adsData, CX.be, fxFrom, fxTo);
+
+  /* simulator — ook altijd ongefilterd (bonussimulator, zie renderBeroas) */
+  if(CT_ALL){
+    const sl=document.getElementById("simSlider");
+    sl.min=Math.max(0.5,CX.be*0.5).toFixed(2);
+    sl.max=(Math.max(CT_ALL.roas,comfy)*2).toFixed(2);
+    sl.value=CT_ALL.roas.toFixed(2);
+    const spEl=document.getElementById("simSpend");
+    if(!simSpendLocked) spEl.value=200;
+    document.getElementById("simSpendNote").textContent=simSpendLocked?"aangepast":"standaard";
+    updateSim();
+  }
+
+  document.getElementById("footerDate").textContent=fmtL(SNAP)+(SNAP_TIME&&SNAP_TIME!=="00:00"?" · "+SNAP_TIME:"");
+  renderKpiBar(CX, CT, TG, prevCT, prevCX, prevLabel, ctDays, prevDays);
+  fitTitle();
+}
+
+// Krimpt de header-titel net zo ver dat hij altijd past naast de periodeknop
+// — nooit een afgekapte "…", op elke schermbreedte en bij elke lengte van de
+// geselecteerde periode (die de resterende ruimte voor de titel bepaalt).
+function fitTitle(){
+  const h1=document.querySelector(".hd h1"), wrap=document.querySelector(".hd-text");
+  if(!h1||!wrap)return;
+  h1.style.fontSize="";
+  const maxPx=parseFloat(getComputedStyle(h1).fontSize);
+  const avail=wrap.clientWidth, natural=h1.scrollWidth;
+  if(natural>avail && natural>0){
+    h1.style.fontSize=Math.max(11,Math.floor(maxPx*avail/natural*0.97))+"px";
+  }
+}
+let _fitT;
+window.addEventListener("resize",()=>{clearTimeout(_fitT);_fitT=setTimeout(fitTitle,120)});
+
+/* ═══ GAUGE ══════════════════════════════════════════════════════ */
+function renderGauge(be,schaal,comfy,roas,purch){
+  const gMin=Math.max(0,be*0.5);
+  const gMax=Math.max(roas*1.4,comfy*1.25);
+  const pct=v=>Math.max(1,Math.min(99,(v-gMin)/(gMax-gMin)*100));
+
+  const pBe=pct(be), pSc=pct(schaal), pCo=pct(comfy), pRo=Math.min(97,pct(roas));
+  const mc=roas>=comfy?"#8FC49B":roas>=schaal?"#8FC49B":roas>=be?"#E5B863":"#DD9280";
+  const needForSchaal=schaal-roas;
+  const lowSample=purch!=null&&purch<10;
+  const aboveLabel=lowSample
+    ?`boven doel ROAS · gebaseerd op ${purch} aankoop${purch===1?"":"en"}`
+    :(roas>=comfy?"comfortabel boven doel ROAS ✓":"op of boven doel ROAS ✓");
+  const gapNote=roas>=schaal
+    ?`${x2(roas)} · ${aboveLabel}`
+    :`Nog <strong>${needForSchaal.toFixed(2)}×</strong> ROAS nodig voor doel ROAS (${(SCALE_T*100).toFixed(0)}% nettomarge op omzet)`;
+
+  const blend=Math.max(1,Math.min(4,(pSc-pBe)/3,pBe/2,(100-pSc)/2));
+  const s1=Math.max(0,pBe-blend), s2=Math.min(100,pBe+blend), s3=Math.max(s2,pSc-blend), s4=Math.min(100,pSc+blend);
+  document.getElementById("gaugeOuter").innerHTML=`
+<div class="gauge-bar" style="background:linear-gradient(to right,#DD9280 0%,#DD9280 ${s1}%,#E5B863 ${s2}%,#E5B863 ${s3}%,#8FC49B ${s4}%,#8FC49B 100%)">
+  <div class="g-marker" style="left:${pRo}%">
+    <div class="g-marker-lbl" style="color:${mc};border-color:${mc}33;background:rgba(17,24,39,.85)">${x2(roas)}</div>
+    <div class="g-marker-line" style="background:${mc};color:${mc}"></div>
+  </div>
+  <div class="g-tick" style="left:${pBe}%">
+    <div class="g-tick-line"></div>
+    <div class="g-tick-val">${x2(be)}<br><span class="g-tick-cap">break-even</span></div>
+  </div>
+  <div class="g-tick" style="left:${pSc}%">
+    <div class="g-tick-line"></div>
+    <div class="g-tick-val">${x2(schaal)}<br><span class="g-tick-cap">12% doel</span></div>
+  </div>
+  <div class="g-tick" style="left:${pCo}%">
+    <div class="g-tick-line"></div>
+    <div class="g-tick-val">${x2(comfy)}<br><span class="g-tick-cap">15% doel</span></div>
+  </div>
+</div>
+<div style="position:relative;top:0;margin-top:58px;font-size:12px;color:#93A2B8;text-align:center">${gapNote}</div>`;
+}
+
+/* ═══ TABLES ═════════════════════════════════════════════════════ */
+function matchesOrdFilter(o){
+  if(ordFilter==="alle") return true;
+  if(ordFilter==="Bundel") return o.items.length>1;
+  return o.items.some(it=>it.includes(ordFilter));
+}
+
+function renderOrders(from,to){
+  const sorted=[...ORDERS]
+    .filter(o=>(!from||o.d>=from)&&(!to||o.d<=to)&&matchesOrdFilter(o))
+    .sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
+  const showIncl = ordBtw==="incl";
+  let html="", totEx=0, totIncl=0, totCost=0, totWi=0, totExKnown=0, totInclKnown=0;
+  for(const o of sorted){
+    const p = calcOrder(o);
+    if(!o.test){ totEx += p.excl; totIncl += o.incl; }
+    if(!o.test && p.winst!==null){totExKnown+=p.excl; totInclKnown+=o.incl; totCost+=p.cost; totWi+=p.winst;}
+    // Marge/break-even blijven altijd op excl.-BTW-grondslag — alleen de
+    // getoonde omzet zelf wisselt mee met de incl./excl.-toggle.
+    const marg = p.winst!==null ? (p.winst/p.excl*100).toFixed(1)+"%" : "—";
+    const be   = p.winst!==null && p.winst>0 ? x2(o.incl/p.winst) : "—";
+    const note = o.test ? ' <span style="font-size:10px;color:#7C8CA6">test</span>' : '';
+    html+=`<tr>
+      <td>${o.num}</td><td>${fmtS(o.d)}</td>
+      <td>${p.name}${note}</td>
+      <td>${o.code||"—"}</td>
+      <td class="r">${eur(showIncl?o.incl:p.excl)}</td><td class="r">${p.cost!=null?eur(p.cost):"—"}</td>
+      <td class="r">${marg}</td>
+      <td class="r">${be}</td></tr>`;
+  }
+  const totMarg = totExKnown>0 ? (totWi/totExKnown*100).toFixed(1)+"%" : "—";
+  const totBe   = totWi>0 ? x2(totInclKnown/totWi) : "—";
+  const nOrd=sorted.filter(o=>!o.test).length;
+  const pd=PERIODS[P]||PERIODS.aug;
+  document.getElementById("ordHdr").textContent=`Orderdetail · ${pd.label} · ${nOrd} orders`;
+  document.getElementById("ordTable").innerHTML=`
+<thead><tr>
+  <th>Order</th><th>Datum</th><th>Producten</th><th>Kortingscode</th>
+  <th class="r">Omzet ${showIncl?"incl.":"excl."} BTW</th><th class="r">Kosten excl. ads</th>
+  <th class="r">Marge</th><th class="r">Break-even ROAS</th>
+</tr></thead>
+<tbody>${html}
+<tr class="tot">
+  <td colspan="4">Totaal · ${nOrd} orders</td>
+  <td class="r">${eur(showIncl?totIncl:totEx)}</td><td class="r">${totCost>0?eur(totCost):"—"}</td>
+  <td class="r">${totMarg}</td>
+  <td class="r">${totBe}</td>
+</tr></tbody>`;
+}
+
+function renderBeroas(ct, be, fx, from, to, filterNote){
+  // Werkelijke productmix op basis van Shopify ORDERS (zelfde filter als hoofdkaart)
+  const grps={};
+  let totIncl=0,totWinst=0,totCnt=0;
+  for(const o of ORDERS){
+    if(o.test||(from&&o.d<from)||(to&&o.d>to)) continue;
+    const p=calcOrder(o);
+    if(p.winst===null) continue;
+    const key=p.name;
+    if(!grps[key]) grps[key]={label:key,count:0,inclTotal:0,winstTotal:0,exclTotal:0};
+    grps[key].count++;
+    grps[key].inclTotal+=o.incl;
+    grps[key].winstTotal+=p.winst;
+    grps[key].exclTotal+=p.excl;
+    totIncl+=o.incl; totWinst+=p.winst; totCnt++;
+  }
+  const avgIncl=totCnt>0?totIncl/totCnt:KP[0].incl;
+  const avgExcl=avgIncl/BTW;
+  const wMarg=totIncl>0?(totWinst/(totIncl/BTW)*100).toFixed(1):"—";
+  const sorted=Object.values(grps).sort((a,b)=>b.inclTotal-a.inclTotal);
+
+  const filterNoteHtml = filterNote
+    ? `<div class="be-filter-note">Gebaseerd op het volledige Meta-account; analysefilters zijn hier niet toegepast.</div>` : "";
+  document.getElementById("beSummary").innerHTML=`
+<div class="be-stat"><div class="be-lbl">Gem. orderwaarde (Shopify)</div><div class="be-val">${eur(avgIncl)} incl.</div><div style="font-size:11px;color:#93A2B8;margin-top:2px">${eur(avgExcl)} excl. BTW · ${totCnt} orders</div></div>
+<div class="be-stat"><div class="be-lbl">Gewogen marge</div><div class="be-val">${wMarg}%</div></div>
+<div class="be-stat"><div class="be-lbl">BEROAS (incl. BTW)</div><div class="be-val">${x2(be)}</div></div>${filterNoteHtml}`;
+
+  document.getElementById("beTable").innerHTML=`
+<thead><tr><th>Product(mix)</th><th class="r">Orders</th><th class="r">Volume%</th><th class="r">Gem. incl. BTW</th><th class="r">Gem. winst</th><th class="r">BEROAS</th></tr></thead>
+<tbody>
+${sorted.map(g=>`<tr>
+  <td>${g.label}</td>
+  <td class="r">${g.count}</td>
+  <td class="r">${totCnt>0?(g.count/totCnt*100).toFixed(0):0}%</td>
+  <td class="r">${eur(g.inclTotal/g.count)}</td>
+  <td class="r">${eur(g.winstTotal/g.count)}</td>
+  <td class="r">${g.winstTotal>0?x2(g.inclTotal/g.winstTotal):"—"}</td>
+</tr>`).join("")}
+<tr class="tot">
+  <td>Gewogen totaal · ${totCnt} orders</td>
+  <td class="r">${totCnt}</td><td class="r">100%</td>
+  <td class="r">${eur(avgIncl)}</td>
+  <td class="r">${totCnt>0?eur(totWinst/totCnt):"—"}</td>
+  <td class="r">${x2(be)}</td>
+</tr></tbody>`;
+}
+
+function renderKern(fx,tb){
+  const imprFmt=v=>v>=1000?(v/1000).toFixed(1)+"k":v;
+  const cells=tb?[
+    ["Orders (Shopify)",fx.oc],
+    ["Omzet Shopify",eur(fx.rev)],
+    ["Omzet Meta (TB)",eur(tb.ri)],
+    ["Marge%",(fx.rex>0?fx.pro/fx.rex*100:0).toFixed(1)+"%"],
+    ["Meta spend",eur(tb.spend)],
+    ["ROAS",x2(tb.roas)],
+    ["BEROAS",x2(fx.be)],
+    ["CPO",eur(tb.spend/Math.max(1,tb.purch))],
+    ["Aankopen (TB)",tb.purch],
+    ["CTR",tb.ctr.toFixed(2)+"%"],
+    ["CPC",eur(tb.spend/Math.max(1,tb.cl))],
+    ["Marge",eur(fx.pro)],
+  ]:[
+    ["Orders",fx.oc],
+    ["Revenue incl. BTW",eur(fx.rev)],
+    ["Revenue excl. BTW",eur(fx.rex)],
+    ["Marge (CM)",eur(fx.pro)],
+    ["Marge%",(fx.rex>0?fx.pro/fx.rex*100:0).toFixed(1)+"%"],
+    ["BEROAS",x2(fx.be)],
+    ["Meta spend","niet beschikbaar"],
+    ["ROAS","niet beschikbaar"],
+  ];
+  document.getElementById("kernGrid").innerHTML=cells.map(([l,v])=>
+    `<div class="kern-cell"><div class="kern-lbl">${l}</div><div class="kern-val">${v}</div></div>`).join("");
+}
+
+/* ═══ SIMULATOR ══════════════════════════════════════════════════ */
+// Bonus wordt per contractmaand uitgekeerd (30-dagen blok vanaf 16 jul 2026),
+// dus de simulator rekent altijd over de huidige maand — ongeacht welke
+// periode er bovenin het dashboard geselecteerd is.
+let simSpendLocked=false;
+const SIM_MONTH_DAYS=30;
+function simMonthRange(){
+  const mn=maandNr(SNAP);
+  const start=new Date("2026-07-16T00:00:00");
+  start.setDate(start.getDate()+(mn-1)*SIM_MONTH_DAYS);
+  const end=new Date(start);
+  end.setDate(end.getDate()+SIM_MONTH_DAYS-1);
+  return {mn,from:ymd(start),to:ymd(end)};
+}
+function simSpendEdit(){simSpendLocked=true;updateSim();}
+function updateSim(){
+  const v=parseFloat(document.getElementById("simSlider").value)||2;
+  const spEl=document.getElementById("simSpend");
+  const spVal=parseFloat(spEl.value);
+  const daily=isNaN(spVal)||spVal<=0?200:spVal;
+  const spend=daily*SIM_MONTH_DAYS;
+  document.getElementById("simRval").textContent=x2(v);
+  const diff=v-(CX?CX.be:1.35);
+  const raw=Math.max(0,spend*diff)*BONUS_PCT;
+  document.getElementById("simBonus").textContent=eur(raw);
+  document.getElementById("simDiff").textContent=(diff>=0?"+":"")+diff.toFixed(3)+"×";
+  const mr=simMonthRange();
+  document.getElementById("simSpendTotal").textContent=
+    `→ ${eur(spend)} totaal over ${SIM_MONTH_DAYS} dagen · Maand ${mr.mn} (${fmtS(mr.from)}–${fmtS(mr.to)})`;
+}
+
+/* ═══ ADS BREAKDOWN ══════════════════════════════════════════════ */
+// Verzamelt de per-advertentiegroep dagcijfers (DAILY_ADS) voor een
+// datumrange, zodat de tabel altijd exact de bovenin geselecteerde
+// periode weerspiegelt i.p.v. een vaste snapshot.
+function adsForRange(from,to){
+  const out=[];
+  for(const day of DAILY_ADS){
+    if(day.d<from||day.d>to) continue;
+    out.push(...day.ads);
+  }
+  return out;
+}
+
+// Zelfde als adsForRange, maar dan uit DAILY_ADS_BREAKDOWN en gefilterd op
+// platform/plaatsing — voedt de advertentiegroepentabel zodra dat filter
+// actief is. Levert alleen n/spend/rev7/rev1v/purch (geen ctr/cpc/atc/
+// impr/reach/linkCl — die splitst Meta niet uit naar platform×plaatsing);
+// renderAds() toont die kolommen dan bewust als "—".
+function adsBreakdownForRange(from,to,platform,placement){
+  const out=[];
+  for(const day of DAILY_ADS_BREAKDOWN){
+    if(day.d<from||day.d>to) continue;
+    for(const r of day.b){
+      if(platform!=="all" && r.platform!==platform) continue;
+      if(placement!=="all" && r.placement!==placement) continue;
+      out.push(r);
+    }
+  }
+  return out;
+}
+
+// Sorteerbare kolommen: klik een kolomkop om te sorteren, nogmaals klikken
+// keert de richting om. Bewaart de laatst getoonde ruwe data zodat een
+// her-sortering geen volledige page-render hoeft te triggeren.
+let adsSortCol="spend", adsSortDir=-1; // -1 = aflopend, 1 = oplopend
+let _adsLastRaw=null, _adsLastBeroas=1.35, _adsLastFrom=null, _adsLastTo=null;
+
+// Uitklapbare rij per advertentiegroep — toont metrics die niet in de
+// tabelkolommen passen (CAC, nettoschatting, aandeel in aankopen, ATC→aankoop-
+// conversie, klik/view-omzetverdeling, actieve dagen).
+let adsExpanded=new Set();
+function toggleAdRow(name){
+  if(adsExpanded.has(name)) adsExpanded.delete(name); else adsExpanded.add(name);
+  renderAds(_adsLastRaw,_adsLastBeroas,_adsLastFrom,_adsLastTo);
+}
+// Mobiele kaartweergave: "Toon alle plaatsingen" per advertentiegroep
+// (platform/plaatsing-subtabel toont daar standaard maar de eerste 3).
+let adPlatformShowAll=new Set();
+function toggleAdPlatformShowAll(name){
+  if(adPlatformShowAll.has(name)) adPlatformShowAll.delete(name); else adPlatformShowAll.add(name);
+  renderAds(_adsLastRaw,_adsLastBeroas,_adsLastFrom,_adsLastTo);
+}
+
+// Test/schaal-labels per advertentiegroep — handmatig ingesteld door de
+// gebruiker (klik op een rij). Gedeeld tussen iedereen via een Google Sheet
+// (Apps Script als simpele REST-API); localStorage is alleen een snelle
+// lokale cache zodat het dashboard niet hoeft te wachten op het netwerk om
+// iets te tonen. Alleen spend/aankopen/omzet/ROAS/CAC zijn per label te
+// berekenen; brutomarge/nettomarge niet, want er is geen koppeling tussen
+// een Shopify-order en de advertentiegroep die 'm opleverde.
+const AD_TAGS_API="https://script.google.com/macros/s/AKfycbyBdPRaQldCK4AxaOODysbg76GjbeqAjXhHzI67ZYLTpD2uAYTbIUp9neBzhUJFeR-Rpg/exec";
+let AD_TAGS={};
+try{ AD_TAGS=JSON.parse(localStorage.getItem("daan_ad_tags")||"{}"); }catch(e){ AD_TAGS={}; }
+function saveAdTagsLocal(){ try{ localStorage.setItem("daan_ad_tags",JSON.stringify(AD_TAGS)); }catch(e){} }
+
+// Bij het laden: haal de gedeelde labels op uit het Sheet en herteken zodra
+// ze binnen zijn (de lokale cache heeft tot dan al iets zinnigs getoond).
+function loadAdTagsRemote(){
+  if(typeof fetch!=="function")return; // oude browser zonder fetch → lokale cache blijft leidend
+  try{
+    fetch(AD_TAGS_API).then(r=>r.json()).then(remote=>{
+      AD_TAGS=remote||{};
+      saveAdTagsLocal();
+      clearKpiSegCache();
+      render();
+    }).catch(()=>{}); // geen internet o.i.d. → gewoon de lokale cache laten staan
+  }catch(e){} // defensief: nooit de rest van de opstart blokkeren
+}
+
+function setAdTagValue(name,tag){
+  if(tag) AD_TAGS[name]=tag; else delete AD_TAGS[name];
+  saveAdTagsLocal();
+  clearKpiSegCache();
+  // Volledige render() i.p.v. alleen de tabel/grafiek: als er al op
+  // test/schaal gefilterd is, moeten de KPI-balk/ROAS-hero/segmentbalk
+  // bovenaan ook meteen meebewegen met de nieuwe labeling.
+  render();
+  // Best-effort naar het gedeelde Sheet — text/plain voorkomt een CORS-
+  // preflight die Apps Script niet afhandelt; UI wacht er niet op.
+  if(typeof fetch==="function"){
+    try{ fetch(AD_TAGS_API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({name,tag})}).catch(()=>{}); }catch(e){}
+  }
+}
+
+// Klikbaar badge → duidelijk dropdown-menu (i.p.v. onduidelijk klik-cyclen)
+let _adTagMenuTarget=null;
+function openAdTagMenu(ev,name){
+  ev.stopPropagation();
+  _adTagMenuTarget=name;
+  const menu=document.getElementById("adTagMenu");
+  const r=ev.currentTarget.getBoundingClientRect();
+  menu.style.top=(r.bottom+4)+"px";
+  menu.style.left=r.left+"px";
+  menu.classList.add("open");
+  // Focus meteen naar de eerste menu-optie zodat toetsenbordgebruikers direct
+  // met Tab/Enter verder kunnen zonder eerst zelf naar het menu te navigeren.
+  menu.querySelector(".ad-tag-menu-opt")?.focus();
+}
+function pickAdTag(tag){
+  if(_adTagMenuTarget!=null) setAdTagValue(_adTagMenuTarget,tag);
+  document.getElementById("adTagMenu").classList.remove("open");
+  _adTagMenuTarget=null;
+}
+document.addEventListener("click",()=>document.getElementById("adTagMenu")?.classList.remove("open"));
+
+const ADS_COLS=[
+  {key:"n",    label:"Advertentiegroep", cls:""},
+  {key:"spend",label:"Spend",            cls:"r"},
+  {key:"pct",  label:"% spend",          cls:"r"},
+  {key:"purch",label:"Aankopen",         cls:"r"},
+  {key:"ri",   label:"Revenue",          cls:"r"},
+  {key:"roas", label:"ROAS",             cls:"r"},
+  {key:"ctr",  label:"CTR",              cls:"r"},
+  {key:"cpc",  label:"CPC",              cls:"r"},
+  {key:"atc",  label:"ATC",              cls:"r"},
+];
+
+function sortAds(col){
+  if(adsSortCol===col) adsSortDir=-adsSortDir;
+  else{ adsSortCol=col; adsSortDir=col==="n"?1:-1; }
+  renderAds(_adsLastRaw,_adsLastBeroas,_adsLastFrom,_adsLastTo);
+}
+
+// Vuistregel voor "hoe serieus moet je deze cijfers nemen" — geen statistiek,
+// gewoon een grove indicatie op basis van aantal aankopen en hoe lang de
+// groep al loopt. Bewust NIET op linkkliks gebaseerd: die ontbreken voor de
+// meeste geschiedenis (recent toegevoegd veld) en dat gaf een misleidend
+// "onvoldoende data" bij rijen met prima aankoopaantallen — dat ontbreken
+// van klikdata staat al apart gemeld bij de funnel zelf.
+function adReliability(activeDays,purch){
+  if(activeDays<=1 || purch===0) return "onvoldoende data";
+  if(activeDays<3 || purch<3) return "beperkt";
+  if(activeDays<7 || purch<10) return "redelijk";
+  return "goed";
+}
+
+// Uitgeklapte rij-inhoud: funnel (impressies→linkkliks→ATC→aankopen, elke
+// pijl toont de stap-op-stap conversie) + compacte blokken eronder. Doel is
+// "waar in de funnel gaat het goed/fout" te kunnen beantwoorden, niet alleen
+// het financiële eindresultaat te herhalen dat al in de tabelkolommen staat.
+// Platform×plaatsing-uitsplitsing voor één advertentiegroep, binnen de
+// gekozen periode — en, als er al een platform/plaatsing-filter actief is,
+// alleen binnen die doorsnede (anders zou de subtabel meer laten zien dan
+// de rest van de pagina, verwarrend). Alleen rijen met echte delivery.
+function adPlatformBreakdown(adsetName,from,to){
+  const map={};
+  for(const day of DAILY_ADS_BREAKDOWN){
+    if(day.d<from||day.d>to) continue;
+    for(const b of day.b){
+      if(b.n!==adsetName) continue;
+      if(filterPlatform!=="all" && b.platform!==filterPlatform) continue;
+      if(filterPlacement!=="all" && b.placement!==filterPlacement) continue;
+      const key=b.platform+"|"+b.placement;
+      if(!map[key]) map[key]={platform:b.platform,placement:b.placement,spend:0,purch:0,rev:0};
+      const m=map[key];
+      m.spend+=b.spend; m.purch+=b.purch; m.rev+=b.rev7+b.rev1v;
+    }
+  }
+  return Object.values(map).filter(x=>x.spend>0||x.purch>0).sort((a,b)=>b.spend-a.spend);
+}
+
+function renderAdDetail(r,margePct,beroas,fxFrom,fxTo,mobile){
+  const impr=r.impr||0, reach=r.reach||0, linkCl=r.linkCl||0, atc=r.atc||0, purch=r.purch||0;
+  const ctr        = impr>0   ? linkCl/impr*100 : null;   // Impressies → linkkliks
+  const clickToAtc = linkCl>0 ? atc/linkCl*100   : null;   // Linkkliks → ATC
+  const atcToPurch = atc>0    ? purch/atc*100    : null;   // ATC → aankoop
+  const clickToPurch = linkCl>0 ? purch/linkCl*100 : null; // Klik → aankoop (overslaat ATC)
+  const cpm     = impr>0   ? r.spend/impr*1000 : null;
+  const cpcLink = linkCl>0 ? r.spend/linkCl    : null;
+  const freq    = reach>0  ? impr/reach        : null;
+  const viewSharePct = r.ri>0 ? r.rev1v/r.ri*100 : null;
+  const cac    = r.purch>0 ? r.spend/r.purch : null;
+  const netEst = r.spend>0 ? margePct*r.ri-r.spend : null;
+  const roasDiff = (r.roas>0 && beroas>0) ? r.roas-beroas : null;
+  const hasFunnelData = impr>0 || linkCl>0;
+
+  const nfmt=v=>v.toLocaleString("nl");
+  const pill=(lbl,val)=>val!=null?`${lbl} <b>${val}</b>`:null;
+  const block=(title,items)=>{
+    const f=items.filter(Boolean);
+    return f.length?`<div class="ad-detail-block"><div class="ad-detail-block-lbl">${title}</div><div class="ad-detail-block-vals">${f.join(" · ")}</div></div>`:"";
+  };
+  // Mobiele varianten: dezelfde berekende waarden, maar als los scanbaar
+  // label/waarde-rastertje i.p.v. een doorlopende "·"-zin die op smalle
+  // schermen buiten beeld liep.
+  const pillItem=(lbl,val,color)=>val!=null?{lbl,val,color}:null;
+  const kpiGrid=items=>{
+    const f=items.filter(Boolean);
+    return f.length?`<div class="adkpi-grid">${f.map(it=>`<div class="adkpi-item${it.full?" full":""}"><div class="adkpi-lbl">${it.lbl}</div><div class="adkpi-val"${it.color?` style="color:${it.color}"`:""}>${it.val}</div></div>`).join("")}</div>`:"";
+  };
+  const mblock=(title,items)=>{
+    const g=kpiGrid(items);
+    return g?`<div class="ad-detail-block"><div class="ad-detail-block-lbl">${title}</div>${g}</div>`:"";
+  };
+
+  let funnelHtml;
+  if(hasFunnelData){
+    if(mobile){
+      const stages=[["Impressies",impr],["Linkkliks",linkCl],["ATC",atc],["Aankopen",purch]];
+      const rates=[null,ctr,clickToAtc,atcToPurch];
+      const items=stages.map(([lbl,val],i)=>{
+        const rate=rates[i];
+        const rateHtml=i===0?"":`<div class="fc-drop" style="color:#93C5F5">${rate!=null?rate.toFixed(rate<10?2:1)+"%":"—"}</div>`;
+        return `<div class="adkpi-funnel-item"><div class="fc-lbl" style="color:${FC_COLORS[i]}">${lbl}</div><div class="fc-val">${nfmt(val)}</div>${rateHtml}</div>`;
+      }).join("");
+      const note=clickToPurch!=null?`<div class="ad-funnel-note">Klik → aankoop: <b>${clickToPurch.toFixed(2)}%</b></div>`:"";
+      funnelHtml=`<div class="adkpi-funnel-grid">${items}</div>${note}`;
+    } else {
+      const stages=[["Impressies",impr],["Linkkliks",linkCl],["ATC",atc],["Aankopen",purch]];
+      const rates=[null,ctr,clickToAtc,atcToPurch];
+      const steps=stages.map(([lbl,val],i)=>{
+        const arr=i===0?"":"<span class='fc-arr'>›</span>";
+        const rate=rates[i];
+        const drop=i===0?"":`<div class="fc-drop" style="color:#93C5F5">${rate!=null?rate.toFixed(rate<10?2:1)+"%":"—"}</div>`;
+        return `${arr}<div class="fc-step"><div class="fc-step-in"><div class="fc-lbl" style="color:${FC_COLORS[i]}">${lbl}</div><div class="fc-val">${nfmt(val)}</div>${drop}</div></div>`;
+      }).join("");
+      const note=clickToPurch!=null?`<div class="ad-funnel-note">Klik → aankoop: <b>${clickToPurch.toFixed(2)}%</b></div>`:"";
+      funnelHtml=`<div class="fc-steps">${steps}</div>${note}`;
+    }
+  } else {
+    funnelHtml=`<div class="ad-detail-note">Geen funnel-data (impressies/linkkliks) voor deze periode — dit zijn recent toegevoegde velden, oudere dagen hebben ze nog niet.</div>`;
+  }
+
+  // Alleen op mobiel: omzet en % van totale spend staan niet meer in de
+  // (verborgen) tabelkolommen, dus die komen hier terug als eerste blok.
+  const overzicht = mobile ? mblock("Overzicht",[
+    pillItem("Omzet",r.ri>0?eur(r.ri):"—"),
+    pillItem("% v/d totale spend",r.pct!=null?r.pct.toFixed(1)+"%":null),
+  ]) : "";
+
+  const verkeerskosten = mobile ? mblock("Verkeerskosten",[
+    pillItem("CPM",cpm!=null?eur(cpm):null),
+    pillItem("CPC",cpcLink!=null?eur(cpcLink):null),
+    pillItem("Frequentie",freq!=null?freq.toFixed(2)+"×":null),
+    pillItem("CTR",ctr!=null?ctr.toFixed(2)+"%":null),
+  ]) : block("Verkeerskosten",[
+    pill("CPM",cpm!=null?eur(cpm):null),
+    pill("CPC",cpcLink!=null?eur(cpcLink):null),
+    pill("Frequentie",freq!=null?freq.toFixed(2)+"×":null),
+  ]);
+  const attributie = mobile ? mblock("Attributie",[
+    pillItem("Klikomzet",eur(r.rev7)),
+    pillItem("Viewomzet",eur(r.rev1v)),
+    pillItem("View-aandeel",viewSharePct!=null?viewSharePct.toFixed(1)+"%":null),
+  ]) : block("Attributie",[
+    pill("Klikomzet",eur(r.rev7)),
+    pill("Viewomzet",eur(r.rev1v)),
+    pill("View-aandeel",viewSharePct!=null?viewSharePct.toFixed(1)+"%":null),
+  ]);
+  const resultaat = mobile ? mblock("Resultaat",[
+    pillItem("CAC",cac!=null?eur(cac):null),
+    pillItem("ROAS",r.roas>0?x2(r.roas):null),
+    pillItem("BEROAS",beroas>0?x2(beroas):null),
+    pillItem("Verschil",roasDiff!=null?(roasDiff>=0?"+":"")+roasDiff.toFixed(2)+"×":null,roasDiff!=null?(roasDiff>=0?"#8FC49B":"#DD9280"):null),
+    netEst!=null?{lbl:"Nettoresultaat (schatting)",val:(netEst>=0?"+":"")+eur(netEst),color:netEst>=0?"#8FC49B":"#DD9280",full:true}:null,
+  ]) : block("Resultaat",[
+    pill("CAC",cac!=null?eur(cac):null),
+    pill("ROAS",r.roas>0?x2(r.roas):null),
+    pill("BEROAS",beroas>0?x2(beroas):null),
+    netEst!=null?`Netto <b style="color:${netEst>=0?"#8FC49B":"#DD9280"}">${eur(netEst)}</b>`:null,
+  ]);
+  const context = mobile ? mblock("Context",[
+    pillItem("Aankopen",String(purch)),
+    pillItem("Actieve dagen",String(r._cnt)),
+    pillItem("Betrouwbaarheid",adReliability(r._cnt,purch)),
+  ]) : block("Context",[
+    pill("Aankopen",String(purch)),
+    pill("Actieve dagen",String(r._cnt)),
+    `Betrouwbaarheid <b>${adReliability(r._cnt,purch)}</b>`,
+  ]);
+
+  // Platform/plaatsing-subtabel — alleen als we een periode meekregen (bij
+  // her-sorteren vóór de eerste keer renderen is dat altijd het geval zodra
+  // een rij open kan staan) en er daadwerkelijk breakdown-data is.
+  let platformTable="";
+  if(fxFrom && fxTo){
+    const pbRows=adPlatformBreakdown(r.n,fxFrom,fxTo);
+    if(pbRows.length){
+      const filterNote=(filterPlatform!=="all"||filterPlacement!=="all")
+        ? `<div class="ad-detail-block-lbl" style="margin-top:2px">Details binnen actieve analysefilters</div>` : "";
+      if(mobile){
+        const showAll=adPlatformShowAll.has(r.n);
+        const visRows=showAll?pbRows:pbRows.slice(0,3);
+        const cardsHtml=visRows.map(p=>{
+          const roas=p.spend>0?p.rev/p.spend:null;
+          const cac=p.purch>0?p.spend/p.purch:null;
+          return `<div class="ad-platform-card">
+            <div class="ad-platform-card-name">${FILTER_PLATFORM_LBL[p.platform]||p.platform} ${FILTER_PLACEMENT_LBL[p.placement]||p.placement}</div>
+            ${kpiGrid([
+              pillItem("Spend",eur(p.spend)),
+              pillItem("Aankopen",p.purch||"—"),
+              pillItem("ROAS",roas>0?x2(roas):"—"),
+              pillItem("CAC",cac!=null?eur(cac):"—"),
+            ])}
+          </div>`;
+        }).join("");
+        const escN=r.n.replace(/'/g,"\\'");
+        const toggleBtn=pbRows.length>3?`<button type="button" class="ad-platform-showall" onclick="toggleAdPlatformShowAll('${escN}')">${showAll?"Toon minder":`Toon alle plaatsingen (${pbRows.length})`}</button>`:"";
+        platformTable=`<div class="ad-detail-block">
+          <div class="ad-detail-block-lbl">Platform / plaatsing</div>
+          ${filterNote}
+          <div class="ad-platform-cards">${cardsHtml}</div>
+          ${toggleBtn}
+        </div>`;
+      } else {
+        const rowsHtml=pbRows.map(p=>{
+          const roas=p.spend>0?p.rev/p.spend:null;
+          const cac=p.purch>0?p.spend/p.purch:null;
+          return `<tr>
+            <td>${FILTER_PLATFORM_LBL[p.platform]||p.platform} ${FILTER_PLACEMENT_LBL[p.placement]||p.placement}</td>
+            <td class="r">${eur(p.spend)}</td>
+            <td class="r">${p.purch||"—"}</td>
+            <td class="r">${p.rev>0?eur(p.rev):"—"}</td>
+            <td class="r">${roas>0?x2(roas):"—"}</td>
+            <td class="r">${cac!=null?eur(cac):"—"}</td>
+          </tr>`;
+        }).join("");
+        platformTable=`<div class="ad-detail-block">
+          <div class="ad-detail-block-lbl">Platform / plaatsing</div>
+          ${filterNote}
+          <table class="ad-platform-table">
+            <thead><tr><th>Platform/plaatsing</th><th class="r">Spend</th><th class="r">Aankopen</th><th class="r">Omzet</th><th class="r">ROAS</th><th class="r">CAC</th></tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>`;
+      }
+    }
+  }
+
+  return `${overzicht}${funnelHtml}${verkeerskosten}${attributie}${resultaat}${context}${platformTable}`;
+}
+
+function renderAds(adsRaw, beroas, fxFrom, fxTo){
+  const acc=document.getElementById("acc-ads");
+  if(!adsRaw||!adsRaw.length){acc.style.display="none";return;}
+  acc.style.display="";
+  _adsLastRaw=adsRaw; _adsLastBeroas=beroas; _adsLastFrom=fxFrom; _adsLastTo=fxTo;
+  // Platform/plaatsing-breakdown levert geen CTR/CPC/ATC/funnel-velden per
+  // advertentiegroep — die kolommen tonen dan bewust "—" i.p.v. verzonnen
+  // nullen (renderAdDetail's eigen "geen funnel-data"-melding vangt de
+  // uitgeklapte rij al op dezelfde manier op).
+  const platformFiltered = filterPlatform!=="all" || filterPlacement!=="all";
+
+  // Merge duplicate adset names (meerdere dagen / jul+aug combineren).
+  // impr/linkCl zijn optelbaar (echte tellingen per dag); reach is dat
+  // strikt genomen niet (dezelfde persoon kan op meerdere dagen meetellen),
+  // maar zonder een losse periode-level API-call per advertentiegroep is de
+  // som over dagen de enige haalbare benadering — frequentie hieronder wordt
+  // daarom ook uit de gesómmeerde impr/reach herleid, niet gemiddeld.
+  // impr/reach/linkCl ontbreken op oudere dagen (van vóór deze velden zijn
+  // toegevoegd) — `||0` behandelt die dagen als 0 i.p.v. NaN te produceren.
+  // adsRaw komt óf uit adsForRange() (volledige velden, incl. ctr/cpc/atc/
+  // impr/reach/linkCl) óf, bij een actief platform/plaatsing-filter, uit
+  // adsBreakdownForRange() (alleen n/spend/rev7/rev1v/purch — Meta's
+  // breakdown-endpoint levert geen CTR/CPC/ATC per platform×plaatsing).
+  // `||0` overal nodig zodat het tweede geval geen NaN oplevert.
+  const map={};
+  for(const a of adsRaw){
+    if(!map[a.n]) map[a.n]={n:a.n,spend:0,rev7:0,rev1v:0,purch:0,atc:0,impr:0,reach:0,linkCl:0,_ctr:0,_cpc:0,_cnt:0};
+    const m=map[a.n];
+    m.spend+=(a.spend||0); m.rev7+=(a.rev7||0); m.rev1v+=(a.rev1v||0);
+    m.purch+=(a.purch||0); m.atc+=(a.atc||0);
+    m.impr+=(a.impr||0); m.reach+=(a.reach||0); m.linkCl+=(a.linkCl||0);
+    m._ctr+=(a.ctr||0); m._cpc+=(a.cpc||0); m._cnt++;
+  }
+  const totSpend=Object.values(map).reduce((s,r)=>s+r.spend,0);
+  const totPurchAllRows=Object.values(map).reduce((s,r)=>s+r.purch,0);
+  // Zelfde schattingsmethode als de TEST/SCHAAL/ONGECLASSIFICEERD-kaarten
+  // hierboven: geen exacte order-koppeling per advertentiegroep, dus het
+  // gemiddelde marge% van het hele account toegepast op de omzet van de rij.
+  const margePct=CX.rev>0?CX.pro/CX.rev:0;
+
+  // Afgeleide velden (nodig voor zowel weergave als sortering)
+  let rows=Object.values(map).map(r=>{
+    const ri=r.rev7+r.rev1v;
+    return{
+      ...r, ri,
+      roas: r.spend>0?ri/r.spend:0,
+      pct:  totSpend>0?r.spend/totSpend*100:0,
+      ctr:  r._cnt>0?r._ctr/r._cnt:0,
+      cpc:  r._cnt>0?r._cpc/r._cnt:0,
+    };
+  });
+
+  rows.sort((a,b)=>{
+    const av=a[adsSortCol], bv=b[adsSortCol];
+    const diff=typeof av==="string"?av.localeCompare(bv):av-bv;
+    return adsSortDir*diff;
+  });
+
+  document.getElementById("adsHdr").textContent=`Meta advertentiegroepen · ${rows.length} groepen`;
+
+  // Strategiefilter komt nu van de centrale filterbalk bovenaan (niet meer
+  // een eigen knoppenrij hier — dat gaf ten onrechte de indruk dat het
+  // filter alleen deze tabel raakt).
+  const displayRows = filterStrategy==="all" ? rows : rows.filter(r=>(AD_TAGS[r.n]||"ongeclassificeerd")===filterStrategy);
+
+  // Bij een platform/plaatsing-filter zijn CTR/CPC/ATC structureel niet
+  // beschikbaar (Meta splitst die niet uit) — die kolommen dan helemaal
+  // weglaten i.p.v. vol te zetten met "—", dat oogde rommelig en maakte de
+  // tabel op mobiel onnodig breed.
+  const visibleCols = platformFiltered ? ADS_COLS.filter(c=>!["ctr","cpc","atc"].includes(c.key)) : ADS_COLS;
+  const arrow=dir=>dir===1?"▲":"▼";
+  let html=`<thead><tr>`+visibleCols.map(c=>
+    `<th class="${c.cls}" style="cursor:pointer;user-select:none" onclick="sortAds('${c.key}')">${c.label}${adsSortCol===c.key?` ${arrow(adsSortDir)}`:""}</th>`
+  ).join("")+`</tr></thead><tbody>`;
+
+  const tagLbl={test:"TEST",schaal:"SCHAAL",ongeclassificeerd:"ONGECLASSIFICEERD"};
+  for(const r of displayRows){
+    const roasColor=r.roas===0?"#DD9280":r.roas>=beroas?"#8FC49B":"#E5B863";
+    const tag=AD_TAGS[r.n]||"ongeclassificeerd";
+    const escN=r.n.replace(/'/g,"\\'");
+    const badge=`<span class="ad-tag-badge ${tag}" tabindex="0" role="button" aria-haspopup="true" title="Classificatie wijzigen" aria-label="Classificatie: ${tagLbl[tag]}. Klik om te wijzigen." onclick="openAdTagMenu(event,'${escN}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAdTagMenu(event,'${escN}')}">${tagLbl[tag]}<span class="ad-tag-edit-hint">✎</span></span>`;
+    const expanded=adsExpanded.has(r.n);
+    const chevron=`<span class="ad-row-chv${expanded?" open":""}" title="${expanded?"Details verbergen":"Details tonen"}">›</span>`;
+    const extraCols = platformFiltered ? "" : `
+      <td class="r">${r.ctr.toFixed(2)}%</td>
+      <td class="r">€${r.cpc.toFixed(2)}</td>
+      <td class="r">${r.atc||"—"}</td>`;
+    html+=`<tr class="ad-row" tabindex="0" aria-expanded="${expanded}" onclick="toggleAdRow('${escN}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAdRow('${escN}')}">
+      <td>${chevron}${badge}<span class="ad-row-name">${r.n}</span></td>
+      <td class="r">${eur(r.spend)}</td>
+      <td class="r" style="color:#93A2B8">${r.pct.toFixed(1)}%</td>
+      <td class="r">${r.purch||"—"}</td>
+      <td class="r">${r.ri>0?eur(r.ri):"—"}</td>
+      <td class="r" style="color:${roasColor};font-weight:700">${r.roas>0?x2(r.roas):"—"}</td>${extraCols}
+    </tr>`;
+    if(expanded){
+      html+=`<tr class="ad-detail-row"><td colspan="${visibleCols.length}">${renderAdDetail(r,margePct,beroas,fxFrom,fxTo)}</td></tr>`;
+    }
+  }
+  // Totaalrij — op basis van displayRows, dus volgt het strategiefilter
+  const dispSpend=displayRows.reduce((s,r)=>s+r.spend,0);
+  const totRi=displayRows.reduce((s,r)=>s+r.ri,0);
+  const totRoas=dispSpend>0?totRi/dispSpend:0;
+  const totPurch=displayRows.reduce((s,r)=>s+r.purch,0);
+  const totAtc=displayRows.reduce((s,r)=>s+r.atc,0);
+  const totPctOfAll=totSpend>0?dispSpend/totSpend*100:0;
+  const totExtraCols = platformFiltered ? "" : `<td class="r">—</td><td class="r">—</td><td class="r">${totAtc}</td>`;
+  html+=`</tbody><tfoot><tr class="tot">
+    <td>Totaal · ${displayRows.length} groep${displayRows.length===1?"":"en"}${filterStrategy!=="all"?` (${FILTER_STRATEGY_LBL[filterStrategy]})`:""}</td>
+    <td class="r">${eur(dispSpend)}</td>
+    <td class="r">${totPctOfAll.toFixed(1)}%</td>
+    <td class="r">${totPurch}</td>
+    <td class="r">${totRi>0?eur(totRi):"—"}</td>
+    <td class="r" style="font-weight:700">${totRoas>0?x2(totRoas):"—"}</td>${totExtraCols}
+  </tr></tfoot>`;
+
+  document.getElementById("adsTable").innerHTML=html;
+  document.getElementById("adsTscroll")?.classList.toggle("ad-expanded-open",adsExpanded.size>0);
+
+  // Mobiele kaartweergave — zelfde displayRows/totalen als de tabel
+  // hierboven, alleen anders gepresenteerd (geen horizontale tabel, geen
+  // doorlopende "·"-zinnen in de details). CSS schakelt onder 768px van
+  // tabel naar kaarten (#adsTscroll verborgen, #adsCards zichtbaar).
+  let cardsHtml=displayRows.map(r=>{
+    const roasColor=r.roas===0?"#DD9280":r.roas>=beroas?"#8FC49B":"#E5B863";
+    const tag=AD_TAGS[r.n]||"ongeclassificeerd";
+    const escN=r.n.replace(/'/g,"\\'");
+    const badge=`<span class="ad-tag-badge ${tag}" tabindex="0" role="button" aria-haspopup="true" title="Classificatie wijzigen" aria-label="Classificatie: ${tagLbl[tag]}. Klik om te wijzigen." onclick="openAdTagMenu(event,'${escN}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAdTagMenu(event,'${escN}')}">${tagLbl[tag]}<span class="ad-tag-edit-hint">✎</span></span>`;
+    const expanded=adsExpanded.has(r.n);
+    const chevron=`<span class="ad-row-chv${expanded?" open":""}" title="${expanded?"Details verbergen":"Details tonen"}">›</span>`;
+    const cac=r.purch>0?r.spend/r.purch:null;
+    const kpis=`<div class="ad-card-kpis">
+      <div class="adkpi-item"><div class="adkpi-lbl">Spend</div><div class="adkpi-val">${eur(r.spend)}</div></div>
+      <div class="adkpi-item"><div class="adkpi-lbl">ROAS</div><div class="adkpi-val" style="color:${roasColor}">${r.roas>0?x2(r.roas):"—"}</div></div>
+      <div class="adkpi-item"><div class="adkpi-lbl">Aankopen</div><div class="adkpi-val">${r.purch||"—"}</div></div>
+      <div class="adkpi-item"><div class="adkpi-lbl">CAC</div><div class="adkpi-val">${cac!=null?eur(cac):"—"}</div></div>
+    </div>`;
+    const detail=expanded?`<div class="ad-card-detail">${renderAdDetail(r,margePct,beroas,fxFrom,fxTo,true)}</div>`:"";
+    return `<div class="ad-card">
+      <div class="ad-card-hd" tabindex="0" role="button" aria-expanded="${expanded}" aria-label="${expanded?"Details verbergen":"Details tonen"} voor ${r.n}" onclick="toggleAdRow('${escN}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAdRow('${escN}')}">
+        ${chevron}${badge}<span class="ad-card-name">${r.n}</span>
+      </div>
+      ${kpis}
+      ${detail}
+    </div>`;
+  }).join("");
+  cardsHtml+=`<div class="ad-card tot">
+    <div class="ad-card-hd" style="cursor:default">
+      <span class="ad-card-name">Totaal · ${displayRows.length} groep${displayRows.length===1?"":"en"}${filterStrategy!=="all"?` (${FILTER_STRATEGY_LBL[filterStrategy]})`:""}</span>
+    </div>
+    <div class="ad-card-kpis">
+      <div class="adkpi-item"><div class="adkpi-lbl">Spend</div><div class="adkpi-val">${eur(dispSpend)}</div></div>
+      <div class="adkpi-item"><div class="adkpi-lbl">Aankopen</div><div class="adkpi-val">${totPurch}</div></div>
+      <div class="adkpi-item"><div class="adkpi-lbl">Omzet</div><div class="adkpi-val">${totRi>0?eur(totRi):"—"}</div></div>
+      <div class="adkpi-item"><div class="adkpi-lbl">ROAS</div><div class="adkpi-val" style="font-weight:700">${totRoas>0?x2(totRoas):"—"}</div></div>
+      ${!platformFiltered?`<div class="adkpi-item full"><div class="adkpi-lbl">ATC</div><div class="adkpi-val">${totAtc}</div></div>`:""}
+    </div>
+  </div>`;
+  document.getElementById("adsCards").innerHTML=cardsHtml;
+
+  // Samenvatting per label, incl. Ongeclassificeerd (nog niet gelabeld).
+  // Nettoresultaat is een schatting: gemiddeld marge% van het hele account
+  // toegepast op de omzet van dat segment (geen exacte order-koppeling).
+  const segSum={test:{spend:0,purch:0,ri:0,n:0},schaal:{spend:0,purch:0,ri:0,n:0},ongeclassificeerd:{spend:0,purch:0,ri:0,n:0}};
+  for(const r of rows){
+    const tag=AD_TAGS[r.n]||"ongeclassificeerd";
+    const s=segSum[tag];
+    s.spend+=r.spend; s.purch+=r.purch; s.ri+=r.ri; s.n++;
+  }
+  const segEl=document.getElementById("adSegSummary");
+  if(!rows.length){
+    segEl.innerHTML="";
+  } else {
+    const card=(label,cls,s)=>{
+      const roas=s.spend>0?s.ri/s.spend:0, cac=s.purch>0?s.spend/s.purch:0;
+      const netEst=s.spend>0?margePct*s.ri-s.spend:null;
+      return `<div class="ad-seg-card ${cls}">
+        <div class="ad-seg-card-hd"><span class="ad-tag-badge ${cls}">${label}</span><span class="ad-seg-card-n">${s.n} groep${s.n===1?"":"en"}</span></div>
+        <div class="ad-seg-card-grid">
+          <div><div class="ad-seg-lbl">Spend</div><div class="ad-seg-val">${eur(s.spend)}</div></div>
+          <div><div class="ad-seg-lbl">Aankopen</div><div class="ad-seg-val">${s.purch||"—"}</div></div>
+          <div><div class="ad-seg-lbl">Omzet</div><div class="ad-seg-val">${s.ri>0?eur(s.ri):"—"}</div></div>
+          <div><div class="ad-seg-lbl">ROAS</div><div class="ad-seg-val">${roas>0?x2(roas):"—"}</div></div>
+          <div><div class="ad-seg-lbl">CAC</div><div class="ad-seg-val">${cac>0?eur(cac):"—"}</div></div>
+          <div><div class="ad-seg-lbl">Netto (schatting)</div><div class="ad-seg-val" style="color:${netEst==null?"inherit":netEst>0?"#8FC49B":"#DD9280"}">${netEst!=null?eur(netEst):"—"}</div></div>
+        </div>
+      </div>`;
+    };
+    segEl.innerHTML=`<div class="ad-seg-grid">${card("TEST","test",segSum.test)}${card("SCHAAL","schaal",segSum.schaal)}${card("ONGECLASSIFICEERD","ongeclassificeerd",segSum.ongeclassificeerd)}</div>`;
+  }
+}
+
+/* ═══ KPI STRIP ══════════════════════════════════════════════════════ */
+// Vergelijking t.o.v. vorige periode (prevCT/prevCX), zelfde bron als de
+// "▲ vs. vorige week"-badges in de metric-rij, nu ook op elke KPI-tegel —
+// vergelijkbaar met hoe Google Ads een "vs. vorige periode" op elke metric
+// toont zodra compare actief is.
+function renderKpiBar(cx, ct, tg, prevCt, prevCx, prevLabel, ctDays, prevDays){
+  const metaSpend = ct ? ct.spend : 0;
+  const metaRev   = ct ? ct.rev7 + ct.rev1v : 0;
+  const metaPurch = ct ? ct.purch : 0;
+  const metaRoas  = metaSpend > 0 && metaRev > 0 ? metaRev / metaSpend : null;
+  const roasCls   = metaRoas == null ? "" : metaRoas >= cx.be ? " good" : metaRoas >= 1 ? " warn" : " bad";
+  const cac       = metaSpend > 0 && metaPurch > 0 ? metaSpend / metaPurch : null;
+  // Brutomarge/nettomarge zijn niet exact naar advertentiegroep te herleiden
+  // (geen koppeling tussen een Shopify-order en de ad die 'm opleverde) — bij
+  // een actief test/schaal-filter passen we daarom het gemiddelde marge% van
+  // het hele account toe op de omzet van dat segment: een schatting, geen
+  // exact cijfer, duidelijk gelabeld als zodanig in de subtekst.
+  const margePct  = cx.rev > 0 ? cx.pro / cx.rev : 0;
+  const metaBruto = ct ? margePct * metaRev : null;
+  const netMeta   = metaBruto != null && metaSpend > 0 ? metaBruto - metaSpend : null;
+  const brutoCls  = metaBruto == null ? "" : metaBruto > 0 ? " good" : " warn";
+  const netCls    = netMeta == null ? "" : netMeta > 0 ? " good" : " bad";
+
+  // Welk deel van de werkelijke (Shopify-)omzet Meta aan zichzelf
+  // toerekent via 7d-click + 1d-view — laat in één oogopslag zien of
+  // Meta's eigen cijfers plausibel zijn t.o.v. de daadwerkelijke omzet.
+  const metaAttr  = cx.rev > 0 ? metaRev / cx.rev * 100 : null;
+
+  const pSpend = prevCt ? prevCt.spend : null;
+  const pPurch = prevCt ? prevCt.purch : null;
+  const pRev   = prevCt ? prevCt.rev7 + prevCt.rev1v : null;
+  const pRoas  = prevCt && prevCt.spend > 0 && pRev > 0 ? pRev / prevCt.spend : null;
+  const pCac   = prevCt && prevCt.spend > 0 && prevCt.purch > 0 ? prevCt.spend / prevCt.purch : null;
+  const pMarge = prevCx && prevCx.rev > 0 ? prevCx.pro / prevCx.rev : null;
+  const pBruto = pMarge != null && pRev != null ? pMarge * pRev : null;
+  const pNet   = pBruto != null && pSpend != null ? pBruto - pSpend : null;
+  const pAttr  = prevCx && prevCx.rev > 0 && pRev != null ? pRev / prevCx.rev * 100 : null;
+
+  // Bij duidelijk verschillende periodelengtes (bv. 10 dagen aug vs 16 dagen
+  // juli) normaliseren we totalen naar "/dag" vóór de %-vergelijking — anders
+  // ontstaan tegenstrijdige percentages t.o.v. de al genormaliseerde
+  // metric-rij eronder. ROAS/CAC zijn al ratio's en hoeven niet genormaliseerd.
+  const norm = !!prevCt && ctDays>0 && prevDays>0 && Math.abs(ctDays-prevDays)>1;
+  const nrm=(cur,days)=>norm&&cur!=null?cur/days:cur;
+  const delta=(cur,prev,invert,isRatio)=>{
+    if(!isRatio){ cur=nrm(cur,ctDays); prev=nrm(prev,prevDays); }
+    if(cur==null||prev==null||prev===0)return "";
+    const d=(cur-prev)/prev*100, up=d>=0, good=invert?!up:up;
+    const col=good?"#8FC49B":"#DD9280";
+    return ` <span class="kpi-delta" style="color:${col}">${up?"▲":"▼"}${Math.abs(d).toFixed(0)}%</span>`;
+  };
+
+  const brutoSub = filtersActive()
+    ? (metaBruto!=null?`~${(margePct*100).toFixed(1)}% (gem.)`:"geen data")
+    : (metaBruto!=null?`${(margePct*100).toFixed(1)}% op Meta omzet`:"geen data");
+  const netSub = filtersActive()
+    ? (netMeta!=null?"schatting, gem. marge":"geen spend")
+    : (netMeta!=null?(netMeta>0?"na Meta spend":"verlies na Meta"):"geen spend");
+  // Nettomarge: bij vergelijking met een resultaat dicht bij nul levert een
+  // %-verschil onbruikbare uitschieters op (bv. "▼2460%") — toon in plaats
+  // daarvan altijd het verschil in euro's t.o.v. de vorige periode.
+  const netDelta = (netMeta!=null && pNet!=null)
+    ? ` <span class="kpi-delta" style="color:${netMeta-pNet>=0?"#8FC49B":"#DD9280"}">${netMeta-pNet>=0?"▲":"▼"}${eur(Math.abs(netMeta-pNet))}</span>`
+    : "";
+
+  const items = [
+    {k:"spend", l:"Meta spend",    v:ct?eur(metaSpend):"—",              s:ct?`${metaPurch} aankopen`:"geen data",   c:"",        d:delta(metaSpend,pSpend,true)},
+    {k:"purch", l:"Meta aankopen", v:ct?metaPurch:"—",                   s:"7d click + 1d view",                     c:"",        d:delta(metaPurch,pPurch,false)},
+    {k:"rev",   l:"Meta omzet",    v:ct?eur(metaRev):"—",                s:"7d click + 1d view",                     c:"",        d:delta(metaRev,pRev,false)},
+    {k:"roas",  l:"Meta ROAS",     v:metaRoas!=null?x2(metaRoas):"—",    s:`break-even ${x2(cx.be)}`,               c:roasCls,   d:delta(metaRoas,pRoas,false,true)},
+    {k:"cac",   l:"CAC",           v:cac!=null?eur(cac):"—",             s:"per aankoop",                            c:"",        d:delta(cac,pCac,true,true)},
+    {k:"bruto", l:"Brutomarge",    v:metaBruto!=null?eur(metaBruto):"—", s:brutoSub, c:brutoCls, d:delta(metaBruto,pBruto,false)},
+    {k:"net",   l:"Nettomarge",    v:netMeta!=null?eur(netMeta):"—",     s:netSub,   c:netCls,   d:netDelta},
+    {k:"attr",  l:"Meta-aandeel",  v:metaAttr!=null?metaAttr.toFixed(0)+"%":"—", s:"van omzet zelf toegerekend", c:"", d:delta(metaAttr,pAttr,false,true)},
+  ];
+  document.getElementById("kpiStrip").innerHTML =
+    items.map(it=>`<div class="kpi-item${it.c}${kpiChartSel.includes(it.k)?" chart-active":""}" data-kpi="${it.k}" onclick="toggleKpiChart('${it.k}')"><div class="kpi-lbl">${it.l}</div><div class="kpi-val">${it.v}</div><div class="kpi-sub">${it.s}${it.d}</div></div>`).join("");
+  const cap=document.getElementById("kpiCompareCap");
+  if(cap)cap.textContent=prevCt?`t.o.v. ${prevLabel}${norm?" (per dag)":""}`:"";
+  renderKpiChart();
+}
+
+/* ═══ KPI TIJDLIJN-GRAFIEK ═══════════════════════════════════════════
+   Klik op een KPI-tegel → lijndiagram met de ontwikkeling sinds 5 aug
+   (start clean tracking). Tweede tegel erbij klikken toont een tweede
+   lijn, geïndexeerd op % verandering t.o.v. het startpunt — zo delen
+   twee metrics op compleet verschillende schalen (bv. ROAS × en CAC €)
+   toch één as, zonder een misleidende dubbele-as-grafiek. */
+const KPI_META = {
+  spend: {label:"Meta spend",    fmt:eur},
+  purch: {label:"Meta aankopen", fmt:v=>String(Math.round(v))},
+  rev:   {label:"Meta omzet",    fmt:eur},
+  roas:  {label:"Meta ROAS",     fmt:x2},
+  cac:   {label:"CAC",           fmt:eur},
+  bruto: {label:"Brutomarge",    fmt:eur},
+  net:   {label:"Nettomarge",    fmt:eur},
+  attr:  {label:"Meta-aandeel",  fmt:v=>v.toFixed(0)+"%"},
+};
+const KPI_CHART_COLORS = ["#4EA8DE","#4ECB71"];
+let kpiChartSel = [];
+let kpiChartGran = "day";
+let roasChartVis = {line:true, dot:true, bar:true}; // welke series van de ROAS-grafiek zichtbaar zijn, via legenda toggle
+let kpiHeadlineCollapsed = false;
+try{ kpiHeadlineCollapsed = localStorage.getItem("daan_kh_collapsed")==="1"; }catch(e){}
+function toggleKpiHeadline(){
+  kpiHeadlineCollapsed=!kpiHeadlineCollapsed;
+  try{ localStorage.setItem("daan_kh_collapsed", kpiHeadlineCollapsed?"1":"0"); }catch(e){}
+  const el=document.getElementById("kpiHeadline");
+  if(!el)return;
+  el.classList.toggle("collapsed", kpiHeadlineCollapsed);
+  const chev=el.querySelector(".kpi-headline-chev");
+  if(chev) chev.textContent = kpiHeadlineCollapsed?"▸":"▾";
+}
+function toggleRoasSeries(key){ roasChartVis[key]=!roasChartVis[key]; renderKpiChart(); }
+let _kpiDailyCache = null;
+
+function kpiDailySeries(){
+  if(_kpiDailyCache) return _kpiDailyCache;
+  _kpiDailyCache = DAILY_META.map(d=>{
+    const ox = ordCalc(d.d, d.d);
+    return {d:d.d, spend:d.spend, purch:d.purch, rev:d.rev7+d.rev1v, pro:ox.pro, shopRev:ox.rev};
+  });
+  return _kpiDailyCache;
+}
+
+// Dagreeks voor één label (test/schaal/ongeclassificeerd), opgebouwd uit
+// DAILY_ADS i.p.v. DAILY_META — telt alleen de advertentiegroepen met dat
+// label op. Marge blijft altijd null (pro/shopRev blijven 0): niet te
+// herleiden per groep.
+const _kpiSegCache={};
+function kpiDailySeriesSegment(tag){
+  if(_kpiSegCache[tag]) return _kpiSegCache[tag];
+  _kpiSegCache[tag]=DAILY_ADS.map(day=>{
+    let spend=0,purch=0,rev=0;
+    for(const a of day.ads){
+      if((AD_TAGS[a.n]||"ongeclassificeerd")!==tag) continue;
+      spend+=a.spend; purch+=a.purch; rev+=a.rev7+a.rev1v;
+    }
+    return {d:day.d, spend, purch, rev, pro:0, shopRev:0};
+  });
+  return _kpiSegCache[tag];
+}
+function clearKpiSegCache(){ for(const k in _kpiSegCache) delete _kpiSegCache[k]; }
+
+// Zelfde principe als filteredRangeCT, maar dan als dagreeks (voor de
+// tijdlijngrafiek). Bij platform/plaatsing op "all" identiek aan het
+// bestaande kpiDailySeries()/kpiDailySeriesSegment()-pad.
+function kpiDailySeriesFiltered(strategy,platform,placement){
+  if(platform==="all" && placement==="all"){
+    return strategy==="all" ? kpiDailySeries() : kpiDailySeriesSegment(strategy);
+  }
+  return DAILY_ADS_BREAKDOWN.map(day=>{
+    let spend=0,purch=0,rev=0;
+    for(const r of day.b){
+      if(strategy!=="all" && (AD_TAGS[r.n]||"ongeclassificeerd")!==strategy) continue;
+      if(platform!=="all" && r.platform!==platform) continue;
+      if(placement!=="all" && r.placement!==placement) continue;
+      spend+=r.spend; purch+=r.purch; rev+=r.rev7+r.rev1v;
+    }
+    return {d:day.d, spend, purch, rev, pro:0, shopRev:0};
+  });
+}
+
+function kpiDeriveMetrics(b){
+  const roas = b.spend>0 && b.rev>0 ? b.rev/b.spend : null;
+  const cac  = b.spend>0 && b.purch>0 ? b.spend/b.purch : null;
+  const margePct = b.shopRev>0 ? b.pro/b.shopRev : null;
+  const bruto = margePct!=null ? margePct*b.rev : null;
+  const net = bruto!=null ? bruto-b.spend : null;
+  // Welk deel van de werkelijke (Shopify-)omzet Meta aan zichzelf toerekent.
+  const attr = b.shopRev>0 ? b.rev/b.shopRev*100 : null;
+  return {roas,cac,bruto,net,attr};
+}
+
+function kpiAggregate(gran,from,to,seg,platform,placement){
+  const source = kpiDailySeriesFiltered(seg||"all",platform||"all",placement||"all");
+  const daily = source.filter(x=>(!from||x.d>=from)&&(!to||x.d<=to));
+  if(gran==="day"){
+    return daily.map(x=>({key:x.d,label:fmtS(x.d),spend:x.spend,purch:x.purch,rev:x.rev,...kpiDeriveMetrics(x)}));
+  }
+  const buckets=new Map(), order=[];
+  for(const x of daily){
+    let key;
+    if(gran==="week"){
+      const dt=new Date(x.d+"T00:00:00");
+      dt.setDate(dt.getDate()-((dt.getDay()+6)%7));
+      key=ymd(dt);
+    } else {
+      key=x.d.slice(0,7);
+    }
+    if(!buckets.has(key)){buckets.set(key,{spend:0,purch:0,rev:0,pro:0,shopRev:0});order.push(key);}
+    const b=buckets.get(key);
+    b.spend+=x.spend;b.purch+=x.purch;b.rev+=x.rev;b.pro+=x.pro;b.shopRev+=x.shopRev;
+  }
+  return order.map(key=>{
+    const b=buckets.get(key);
+    const label = gran==="week" ? `wk ${fmtS(key)}` : `${mo[+key.slice(5,7)-1]} ${key.slice(0,4)}`;
+    return {key,label,spend:b.spend,purch:b.purch,rev:b.rev,...kpiDeriveMetrics(b)};
+  });
+}
+
+function toggleKpiChart(key){
+  const idx=kpiChartSel.indexOf(key);
+  if(idx>=0) kpiChartSel.splice(idx,1);
+  else{
+    if(kpiChartSel.length>=2) kpiChartSel.shift();
+    kpiChartSel.push(key);
+  }
+  document.querySelectorAll(".kpi-item").forEach(el=>el.classList.toggle("chart-active",kpiChartSel.includes(el.dataset.kpi)));
+  renderKpiChart();
+}
+
+// Verrijkte ROAS-grafiek: dunne dag-ROAS-lijn + dikkere 3-daagse gewogen
+// ROAS-lijn (som omzet/som spend over 3 dagen, niet het gemiddelde van de
+// dagcijfers — dat vertekent bij dagen met weinig spend), aankoopbalken
+// onderin (context: hoeveel aankopen dragen die ROAS?), en break-even/doel/
+// schaaldoel als stippellijnen. Spend/CAC/marge alleen in de hover-tooltip.
+function renderRatioChart(wrap,metric){
+  const isRoas=metric==="roas";
+  const metricLabel=isRoas?"Meta ROAS":"CAC";
+  const fmtRatio=isRoas?x2:eur;
+  const valOf=x=>isRoas?x.roas:x.cac;
+  const pd=PERIODS[P]||PERIODS.aug;
+  const rangeFrom=pd.from, rangeTo=pd.to;
+  const dailySource = kpiDailySeriesFiltered(filterStrategy,filterPlatform,filterPlacement);
+  const filteredDaily=dailySource.filter(x=>x.d>=rangeFrom && x.d<=rangeTo);
+
+  if(filteredDaily.length===0 || filteredDaily.every(x=>x.spend===0 && x.purch===0 && x.rev===0)){
+    const segNote = filtersActive() ? ` (analysefilter actief)` : "";
+    wrap.innerHTML=`
+      <div class="kpi-chart-hd"><div class="kpi-chart-title">${metricLabel}</div></div>
+      <div class="kpi-chart-empty">Geen dagelijkse data beschikbaar voor de geselecteerde periode (${pd.label})${segNote}. <button class="kpi-chart-jump" onclick="jumpToPeriodSelector()">Kies een andere periode ↑</button></div>`;
+    return;
+  }
+
+  const data=filteredDaily.map(x=>({...x,label:fmtS(x.d),...kpiDeriveMetrics(x)}));
+  const n=data.length;
+  const actualFrom=data[0].d, actualTo=data[n-1].d;
+
+  // Gewogen 3-daags voortschrijdend ROAS/CAC: som omzet/som spend (ROAS) of
+  // som spend/som aankopen (CAC) over het venster [i-2..i], niet het
+  // gemiddelde van de losse dagcijfers — dat vertekent bij dagen met weinig
+  // spend of weinig aankopen.
+  const ratio3=data.map((x,i)=>{
+    let sSpend=0,sRev=0,sPurch=0;
+    for(let j=Math.max(0,i-2);j<=i;j++){ sSpend+=data[j].spend; sRev+=data[j].rev; sPurch+=data[j].purch; }
+    if(isRoas) return sSpend>0?sRev/sSpend:null;
+    return sPurch>0?sSpend/sPurch:null;
+  });
+
+  const W=680,H=270,padL=48,padR=14,padT=16,padBAxis=26,barAreaH=46,gapArea=10;
+  const plotW=W-padL-padR;
+  const roasTop=padT, roasBot=H-padBAxis-barAreaH-gapArea, roasH=roasBot-roasTop;
+  const barTop=roasBot+gapArea, barBot=H-padBAxis;
+  const xAt=i=>n<=1?padL+plotW/2:padL+(i/(n-1))*plotW;
+  const barW=Math.max(3,Math.min(18,(plotW/n)*0.55));
+
+  // Slechts 2 referentiewaarden i.p.v. 3 — break-even + doel — anders staan
+  // de stippellijnen te dicht op elkaar bij een smalle ROAS-marge. Alleen
+  // zinvol bij ROAS zelf, CAC heeft geen break-even-referentie op dezelfde as.
+  const showBeRef=isRoas && CX && CX.be;
+  const doelRoas=showBeRef?1/(1/CX.be-SCALE_T):null;
+  const allRatioVals=[...data.map(valOf),...ratio3].filter(v=>v!=null);
+  let yMin=Math.min(...allRatioVals), yMax=Math.max(...allRatioVals);
+  if(showBeRef){ yMin=Math.min(yMin,CX.be,doelRoas); yMax=Math.max(yMax,CX.be,doelRoas); }
+  if(!isFinite(yMin)||!isFinite(yMax)){yMin=0;yMax=1;}
+  if(yMin===yMax){yMin-=1;yMax+=1;}
+  const ypad=(yMax-yMin)*0.12; yMin-=ypad; yMax+=ypad;
+  const yAt=v=>roasTop+roasH-((v-yMin)/(yMax-yMin))*roasH;
+
+  // Verbindt alleen de dagen mét data rechtstreeks met elkaar — een dag
+  // zonder spend/omzet voor het gekozen segment wordt overgeslagen i.p.v.
+  // een verwarrend "los zwevend" lijnstukje te tekenen.
+  const pathFor=vals=>{
+    const pts=vals.map((v,i)=>v==null?null:[xAt(i),yAt(v)]).filter(Boolean);
+    return pts.map((p,i)=>(i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+  };
+  const dotsFor=(vals,color,r)=>vals.map((v,i)=>v==null?"":
+    `<circle class="kpi-chart-dot" cx="${xAt(i).toFixed(1)}" cy="${yAt(v).toFixed(1)}" r="${r}" fill="${color}" data-i="${i}"></circle>`).join("");
+
+  const step=Math.max(1,Math.ceil(n/6));
+  const xLabels=data.map((d,i)=>i%step===0||i===n-1?`<text class="kpi-chart-xlbl" x="${xAt(i).toFixed(1)}" y="${H-6}" text-anchor="middle">${d.label}</text>`:"").join("");
+
+  const yTicks=[yMin+ypad,(yMin+yMax)/2,yMax-ypad];
+  const yGrid=yTicks.map(v=>`<line class="kpi-chart-grid" x1="${padL}" x2="${W-padR}" y1="${yAt(v).toFixed(1)}" y2="${yAt(v).toFixed(1)}"></line><text class="kpi-chart-ylbl" x="${padL-8}" y="${(yAt(v)+3).toFixed(1)}" text-anchor="end">${fmtRatio(v)}</text>`).join("");
+
+  const refPts=showBeRef?[
+    {v:CX.be,cls:"be",lbl:`break-even ${x2(CX.be)}`},
+    {v:doelRoas,cls:"doel",lbl:`doel ${x2(doelRoas)}`},
+  ].sort((a,b)=>a.v-b.v):[];
+  refPts.forEach((p,i)=>{
+    const y=yAt(p.v);
+    p.labelY=i>0 && (refPts[i-1]._y-y)<14 ? refPts[i-1].labelY-14 : y-4;
+    p._y=y;
+  });
+  const refLines=refPts.map(p=>`<line class="kpi-chart-${p.cls}" x1="${padL}" x2="${W-padR}" y1="${p._y.toFixed(1)}" y2="${p._y.toFixed(1)}"></line><text class="kpi-chart-${p.cls}-lbl" x="${W-padR}" y="${p.labelY.toFixed(1)}" text-anchor="end">${p.lbl}</text>`).join("");
+
+  const maxPurch=Math.max(1,...data.map(x=>x.purch));
+  const bars=data.map((x,i)=>{
+    const h=(x.purch/maxPurch)*barAreaH;
+    return `<rect class="kpi-chart-purchbar" x="${(xAt(i)-barW/2).toFixed(1)}" y="${(barBot-h).toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(1,h).toFixed(1)}" rx="1.5" data-i="${i}"></rect>`;
+  }).join("");
+  const barBg=`<rect x="${padL}" y="${barTop}" width="${plotW}" height="${barAreaH}" fill="rgba(255,255,255,.02)" rx="4"></rect>`;
+  const barAxisLbl=`<text class="kpi-chart-ylbl" x="${padL-8}" y="${(barBot+3).toFixed(1)}" text-anchor="end">0</text><text class="kpi-chart-ylbl" x="${padL-8}" y="${(barTop+8).toFixed(1)}" text-anchor="end">${maxPurch}</text>`;
+
+  // Dag-waarde: alleen stippen (geen verbindende lijn) — de 3-daagse lijn is
+  // de enige doorlopende trendlijn, dat voorkomt twee elkaar overlappende
+  // lijnen die moeilijk uit elkaar te houden zijn.
+  const ratioDots=roasChartVis.dot ? dotsFor(data.map(valOf),"#4EA8DE",2.6) : "";
+  const ratio3Line=roasChartVis.line ? `<path class="kpi-chart-line-thick" d="${pathFor(ratio3)}" stroke="#4EA8DE" fill="none"></path>` : "";
+  const barsOut=roasChartVis.bar ? bars : "";
+  const barBgOut=roasChartVis.bar ? barBg : "";
+  const barAxisLblOut=roasChartVis.bar ? barAxisLbl : "";
+
+  wrap.innerHTML=`
+    <div class="kpi-chart-hd">
+      <div class="kpi-chart-title">${metricLabel}<button class="kpi-chart-sub" onclick="jumpToPeriodSelector()" title="Kies een andere periode">${fmtS(actualFrom)} – ${fmtS(actualTo)}${filtersActive()?` · ${activeFilterLabel()}`:""} ↑</button></div>
+    </div>
+    <div class="kpi-chart-legend">
+      <span class="kpi-chart-legend-item kpi-chart-legend-toggle${roasChartVis.line?"":" off"}" onclick="toggleRoasSeries('line')"><span class="kpi-chart-legend-line" style="background:#4EA8DE"></span>3-daags gewogen ${metricLabel}</span>
+      <span class="kpi-chart-legend-item kpi-chart-legend-toggle${roasChartVis.dot?"":" off"}" onclick="toggleRoasSeries('dot')"><span class="kpi-chart-legend-dot" style="background:#4EA8DE;opacity:.6"></span>Dag-${metricLabel}</span>
+      <span class="kpi-chart-legend-item kpi-chart-legend-toggle${roasChartVis.bar?"":" off"}" onclick="toggleRoasSeries('bar')"><span class="kpi-chart-legend-bar"></span>Aankopen</span>
+    </div>
+    <div class="kpi-chart-svgwrap" id="kpiChartSvgWrap">
+      <svg viewBox="0 0 ${W} ${H}" class="kpi-chart-svg" id="kpiChartSvg">
+        ${yGrid}${refLines}${barBgOut}${barsOut}${barAxisLblOut}${ratio3Line}${ratioDots}${xLabels}
+        <rect class="kpi-chart-selrect" id="kpiChartSelRect" x="0" y="${padT}" width="0" height="${barBot-padT}" style="opacity:0"></rect>
+        <line class="kpi-chart-cross" id="kpiChartCross" x1="0" x2="0" y1="${padT}" y2="${barBot}" style="opacity:0"></line>
+      </svg>
+      <div class="kpi-chart-tooltip" id="kpiChartTooltip" style="opacity:0"></div>
+    </div>
+    <div class="kpi-chart-selection-summary" id="kpiChartSelSummary" style="display:none"></div>
+    <div class="kpi-chart-selhint">Sleep over de grafiek om een periode te selecteren</div>`;
+
+  attachRatioChartHover(data,ratio3,xAt,W,metric);
+}
+
+// Gedeelde samenvattingskaart voor een sleepselectie op een van de
+// KPI-grafieken. `slice` is een deelverzameling van datapunten die elk
+// {label,spend,purch,rev,net} hebben (dag/week/maand-granulariteit maakt
+// niet uit) — ROAS/CAC worden hier herberekend uit de opgetelde spend/omzet,
+// niet als gemiddelde van losse dag-ROAS'en (zelfde principe als de
+// 3-daagse lijn: een dag met weinig spend mag de uitkomst niet vertekenen).
+function buildSelSummaryHtml(slice,unitSingular,unitPlural){
+  const spend=slice.reduce((s,x)=>s+x.spend,0);
+  const purch=slice.reduce((s,x)=>s+x.purch,0);
+  const rev=slice.reduce((s,x)=>s+x.rev,0);
+  const roas=spend>0?rev/spend:null;
+  const cac=purch>0?spend/purch:null;
+  const net=slice.reduce((s,x)=>s+(x.net||0),0);
+  const rangeLbl=slice.length===1?slice[0].label:`${slice[0].label} – ${slice[slice.length-1].label}`;
+  return `
+    <div class="kpi-chart-selsum-hd">
+      <span class="kpi-chart-selsum-title">Selectie · ${rangeLbl} · ${slice.length} ${slice.length===1?unitSingular:unitPlural}</span>
+      <button class="kpi-chart-selsum-close" onclick="document.getElementById('kpiChartSelSummary').style.display='none';document.getElementById('kpiChartSelRect').style.opacity='0'">×</button>
+    </div>
+    <div class="kpi-chart-selsum-grid">
+      <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">SPEND</div><div class="kpi-chart-selsum-val">${eur(spend)}</div></div>
+      <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">AANKOPEN</div><div class="kpi-chart-selsum-val">${purch}</div></div>
+      <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">OMZET</div><div class="kpi-chart-selsum-val">${eur(rev)}</div></div>
+      <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">ROAS</div><div class="kpi-chart-selsum-val">${roas!=null?x2(roas):"—"}</div></div>
+      <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">CAC</div><div class="kpi-chart-selsum-val">${cac!=null?eur(cac):"—"}</div></div>
+      <div class="kpi-chart-selsum-item"><div class="kpi-chart-selsum-lbl">NETTO</div><div class="kpi-chart-selsum-val" style="color:${net>=0?"#8FC49B":"#DD9280"}">${eur(net)}</div></div>
+    </div>`;
+}
+
+function attachRatioChartHover(data,ratio3,xAt,W,metric){
+  const isRoas=metric==="roas";
+  const svgWrap=document.getElementById("kpiChartSvgWrap");
+  const svg=document.getElementById("kpiChartSvg");
+  const cross=document.getElementById("kpiChartCross");
+  const tip=document.getElementById("kpiChartTooltip");
+  const selRect=document.getElementById("kpiChartSelRect");
+  const summary=document.getElementById("kpiChartSelSummary");
+  if(!svgWrap||!svg)return;
+  const n=data.length;
+
+  const idxAt=(clientX)=>{
+    const r=svg.getBoundingClientRect();
+    const xSvg=((clientX-r.left)/r.width)*W;
+    let best=0,bestD=Infinity;
+    for(let i=0;i<n;i++){const dx=Math.abs(xAt(i)-xSvg);if(dx<bestD){bestD=dx;best=i;}}
+    return best;
+  };
+
+  const showHover=(clientX)=>{
+    const best=idxAt(clientX);
+    const px=xAt(best), x=data[best];
+    cross.setAttribute("x1",px);cross.setAttribute("x2",px);cross.style.opacity="1";
+    tip.innerHTML=`
+      <div class="kpi-chart-tip-date">${x.label}${ratio3[best]!=null?` · 3d ${isRoas?"ROAS":"CAC"}: ${isRoas?x2(ratio3[best]):eur(ratio3[best])}`:""}</div>
+      <div class="kpi-chart-tip-row"><span class="kpi-chart-tip-dot" style="background:#4EA8DE"></span>ROAS: <strong>${x.roas!=null?x2(x.roas):"—"}</strong></div>
+      <div class="kpi-chart-tip-row">Aankopen: <strong>${x.purch}</strong></div>
+      <div class="kpi-chart-tip-row">Omzet: <strong>${eur(x.rev)}</strong></div>
+      <div class="kpi-chart-tip-row">Spend: <strong>${eur(x.spend)}</strong></div>
+      <div class="kpi-chart-tip-row">CAC: <strong>${x.cac!=null?eur(x.cac):"—"}</strong></div>
+      <div class="kpi-chart-tip-row">Brutomarge: <strong>${x.bruto!=null?eur(x.bruto):"—"}</strong></div>
+      <div class="kpi-chart-tip-row">Netto na Meta: <strong>${x.net!=null?eur(x.net):"—"}</strong></div>`;
+    tip.style.opacity="1";
+    const wrapR=svgWrap.getBoundingClientRect();
+    const px_screen=(px/W)*wrapR.width;
+    let left=px_screen+10;
+    if(left+170>wrapR.width) left=px_screen-180;
+    tip.style.left=Math.max(0,left)+"px";
+    tip.style.top="8px";
+  };
+  const hideHover=()=>{cross.style.opacity="0";tip.style.opacity="0";};
+
+  // Sleepselectie: klik-en-sleep over de grafiek om een reeks dagen te
+  // selecteren en de opgetelde/gewogen cijfers voor precies die dagen te
+  // zien — dezelfde interactie als het uitsnijden van een segment in
+  // TrainingPeaks. Een gewone klik (geen sleepbeweging) sluit een eventuele
+  // eerdere selectie juist weer.
+  const barW2=n>1?Math.abs(xAt(1)-xAt(0)):20;
+  const drawSel=(i0,i1)=>{
+    const lo=Math.min(i0,i1), hi=Math.max(i0,i1);
+    const x1=xAt(lo)-barW2/2, x2v=xAt(hi)+barW2/2;
+    selRect.setAttribute("x",Math.max(0,x1).toFixed(1));
+    selRect.setAttribute("width",Math.max(1,x2v-x1).toFixed(1));
+    selRect.style.opacity="1";
+  };
+  const clearSel=()=>{
+    selRect.style.opacity="0";
+    summary.style.display="none";
+    summary.innerHTML="";
+  };
+  const showSelSummary=(i0,i1)=>{
+    const lo=Math.min(i0,i1), hi=Math.max(i0,i1);
+    const slice=data.slice(lo,hi+1);
+    summary.innerHTML=buildSelSummaryHtml(slice,"dag","dagen");
+    summary.style.display="block";
+  };
+
+  let dragging=false, startIdx=0, lastIdx=0, moved=false;
+  svgWrap.onmousedown=(e)=>{ dragging=true; moved=false; startIdx=lastIdx=idxAt(e.clientX); e.preventDefault(); };
+  svgWrap.onmousemove=(e)=>{
+    showHover(e.clientX);
+    if(dragging){
+      lastIdx=idxAt(e.clientX);
+      if(lastIdx!==startIdx) moved=true;
+      drawSel(startIdx,lastIdx);
+    }
+  };
+  svgWrap.onmouseup=(e)=>{
+    if(!dragging)return;
+    dragging=false;
+    lastIdx=idxAt(e.clientX);
+    if(moved) showSelSummary(startIdx,lastIdx);
+    else clearSel();
+  };
+  svgWrap.onmouseleave=()=>{
+    hideHover();
+    if(dragging){ dragging=false; if(moved) showSelSummary(startIdx,lastIdx); }
+  };
+  svgWrap.ontouchstart=(e)=>{ dragging=true; moved=false; startIdx=idxAt(e.touches[0].clientX); };
+  svgWrap.ontouchmove=(e)=>{
+    if(!dragging)return;
+    e.preventDefault();
+    const curIdx=idxAt(e.touches[0].clientX);
+    if(curIdx!==startIdx) moved=true;
+    drawSel(startIdx,curIdx);
+  };
+  svgWrap.ontouchend=(e)=>{
+    if(!dragging)return;
+    dragging=false;
+    if(moved) showSelSummary(startIdx,idxAt(e.changedTouches[0].clientX));
+    else clearSel();
+  };
+}
+
+function renderKpiChart(){
+  const wrap=document.getElementById("kpiChartWrap");
+  if(!wrap)return;
+  if(kpiChartSel.length===0){wrap.classList.remove("open");wrap.innerHTML="";return;}
+  wrap.classList.add("open");
+
+  // Meta ROAS of CAC los geselecteerd → verrijkte weergave (aankoopbalken +
+  // dag- en 3-daagse gewogen lijn, zelfde principe voor beide: som/som over
+  // het venster, niet het gemiddelde van losse dagcijfers). Andere metrics
+  // en de 2-lijnen-vergelijking houden de bestaande, eenvoudigere grafiek.
+  if(kpiChartSel.length===1 && (kpiChartSel[0]==="roas"||kpiChartSel[0]==="cac")){ renderRatioChart(wrap,kpiChartSel[0]); return; }
+
+  // Grafiek volgt de bovenin geselecteerde periode (net als de rest van
+  // het dashboard) i.p.v. altijd de volledige geschiedenis te tonen — zo
+  // blijft dit bruikbaar wanneer er straks maanden/jaren aan data staan.
+  const pd=PERIODS[P]||PERIODS.aug;
+  const rangeFrom=pd.from, rangeTo=pd.to;
+
+  const dual=kpiChartSel.length===2;
+  // Brutomarge/nettomarge zijn niet per advertentiegroep te herleiden, dus
+  // die grafiek blijft altijd op het volledige account gebaseerd, ongeacht
+  // een actief analysefilter (zelfde uitzondering als bonus/BEROAS).
+  const segAllowed=!dual && kpiChartSel[0]!=="bruto" && kpiChartSel[0]!=="net";
+  const seg=segAllowed?filterStrategy:"all";
+  const plat=segAllowed?filterPlatform:"all";
+  const place=segAllowed?filterPlacement:"all";
+
+  const dailySource = kpiDailySeriesFiltered(seg,plat,place);
+  const filteredDaily=dailySource.filter(x=>x.d>=rangeFrom && x.d<=rangeTo);
+
+  if(filteredDaily.length===0 || filteredDaily.every(x=>x.spend===0 && x.purch===0 && x.rev===0)){
+    const segNote = segAllowed && filtersActive() ? ` (${activeFilterLabel()})` : "";
+    wrap.innerHTML=`
+      <div class="kpi-chart-hd">
+        <div class="kpi-chart-title">${kpiChartSel.map(k=>KPI_META[k].label).join(" · ")}</div>
+      </div>
+      <div class="kpi-chart-empty">Geen dagelijkse data beschikbaar voor de geselecteerde periode (${pd.label})${segNote}. <button class="kpi-chart-jump" onclick="jumpToPeriodSelector()">Kies een andere periode ↑</button></div>`;
+    return;
+  }
+
+  const data=kpiAggregate(kpiChartGran,rangeFrom,rangeTo,seg,plat,place);
+  const n=data.length;
+  const dayN=kpiAggregate("day",rangeFrom,rangeTo,seg,plat,place).length, weekN=kpiAggregate("week",rangeFrom,rangeTo,seg,plat,place).length, monthN=kpiAggregate("month",rangeFrom,rangeTo,seg,plat,place).length;
+  const actualFrom=filteredDaily[0].d, actualTo=filteredDaily[filteredDaily.length-1].d;
+
+  const series=kpiChartSel.map((key,i)=>({key,meta:KPI_META[key],color:KPI_CHART_COLORS[i],raw:data.map(d=>d[key])}));
+
+  // In dual-modus: indexeren op % verandering t.o.v. het eerste bekende
+  // punt, zodat twee metrics op totaal verschillende schalen (× en €)
+  // toch één gedeelde as kunnen delen — geen dubbele y-as.
+  const plot=series.map(s=>{
+    if(!dual) return {...s, vals:s.raw};
+    const base=s.raw.find(v=>v!=null && v!==0);
+    const vals=s.raw.map(v=>v==null||base==null?null:(v/base-1)*100);
+    return {...s, vals};
+  });
+
+  const W=680,H=220,padL=48,padR=14,padT=16,padB=30;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const xAt=i=>n<=1?padL+plotW/2:padL+(i/(n-1))*plotW;
+
+  // Referentielijnen: nul (winst/verlies-grens) bij nettomarge, break-even
+  // ROAS bij ROAS — alleen relevant/getoond bij één losse metric, niet in
+  // de geïndexeerde dual-modus (die heeft al zijn eigen nullijn).
+  const showZeroRef = !dual && kpiChartSel[0]==="net";
+  const showBeRef = !dual && kpiChartSel[0]==="roas" && CX && CX.be;
+  const doelRoas = showBeRef ? 1/(1/CX.be-SCALE_T) : null;
+  const comfyRoas = showBeRef ? 1/(1/CX.be-SCALE_H) : null;
+
+  const allVals=plot.flatMap(s=>s.vals.filter(v=>v!=null));
+  let yMin=Math.min(...allVals), yMax=Math.max(...allVals);
+  if(dual){ yMin=Math.min(yMin,0); yMax=Math.max(yMax,0); }
+  if(showZeroRef){ yMin=Math.min(yMin,0); yMax=Math.max(yMax,0); }
+  if(showBeRef){ yMin=Math.min(yMin,CX.be,doelRoas,comfyRoas); yMax=Math.max(yMax,CX.be,doelRoas,comfyRoas); }
+  if(!isFinite(yMin)||!isFinite(yMax)){yMin=0;yMax=1;}
+  if(yMin===yMax){yMin-=1;yMax+=1;}
+  const pad=(yMax-yMin)*0.12;
+  yMin-=pad; yMax+=pad;
+  const yAt=v=>padT+plotH-((v-yMin)/(yMax-yMin))*plotH;
+
+  const fmtY = dual ? (v=>(v>=0?"+":"")+v.toFixed(0)+"%") : (series[0].meta.fmt);
+
+  const pathFor=vals=>{
+    let d="", open=false;
+    vals.forEach((v,i)=>{
+      if(v==null){open=false;return;}
+      const x=xAt(i),y=yAt(v);
+      d+=(open?"L":"M")+x.toFixed(1)+","+y.toFixed(1)+" ";
+      open=true;
+    });
+    return d.trim();
+  };
+  const dotsFor=(vals,color)=>vals.map((v,i)=>v==null?"":
+    `<circle class="kpi-chart-dot" cx="${xAt(i).toFixed(1)}" cy="${yAt(v).toFixed(1)}" r="2.6" fill="${color}" data-i="${i}"></circle>`).join("");
+
+  // x-as labels: max ~6, uitgedund bij veel punten
+  const step=Math.max(1,Math.ceil(n/6));
+  const xLabels=data.map((d,i)=>i%step===0||i===n-1?`<text class="kpi-chart-xlbl" x="${xAt(i).toFixed(1)}" y="${H-8}" text-anchor="middle">${d.label}</text>`:"").join("");
+
+  const yTicks=[yMin+pad,(yMin+yMax)/2,yMax-pad];
+  const yGrid=yTicks.map(v=>`<line class="kpi-chart-grid" x1="${padL}" x2="${W-padR}" y1="${yAt(v).toFixed(1)}" y2="${yAt(v).toFixed(1)}"></line><text class="kpi-chart-ylbl" x="${padL-8}" y="${(yAt(v)+3).toFixed(1)}" text-anchor="end">${fmtY(v)}</text>`).join("");
+  const zeroLine = dual ? `<line class="kpi-chart-zero" x1="${padL}" x2="${W-padR}" y1="${yAt(0).toFixed(1)}" y2="${yAt(0).toFixed(1)}"></line>` : "";
+
+  // Winst/verlies-vlak bij nettomarge: het gebied onder de lijn groen boven
+  // nul, rood onder nul — via twee clip-rects i.p.v. handmatige interpolatie
+  // op elk nul-kruispunt.
+  let zeroAreaFill="";
+  if(showZeroRef){
+    const vals=plot[0].vals, yZero=yAt(0);
+    let areaD="", open=false, startX=0;
+    vals.forEach((v,i)=>{
+      if(v==null){ if(open){areaD+=`L${xAt(i-1).toFixed(1)},${yZero.toFixed(1)} L${startX.toFixed(1)},${yZero.toFixed(1)} Z `;} open=false; return; }
+      const x=xAt(i), y=yAt(v);
+      if(!open){ areaD+=`M${x.toFixed(1)},${yZero.toFixed(1)} L${x.toFixed(1)},${y.toFixed(1)} `; startX=x; open=true; }
+      else areaD+=`L${x.toFixed(1)},${y.toFixed(1)} `;
+      if(i===vals.length-1) areaD+=`L${x.toFixed(1)},${yZero.toFixed(1)} L${startX.toFixed(1)},${yZero.toFixed(1)} Z `;
+    });
+    zeroAreaFill=`
+      <clipPath id="kpiClipAbove"><rect x="${padL}" y="${padT}" width="${plotW}" height="${Math.max(0,yZero-padT).toFixed(1)}"></rect></clipPath>
+      <clipPath id="kpiClipBelow"><rect x="${padL}" y="${yZero.toFixed(1)}" width="${plotW}" height="${Math.max(0,(H-padB)-yZero).toFixed(1)}"></rect></clipPath>
+      <path d="${areaD}" fill="#8FC49B" fill-opacity=".32" clip-path="url(#kpiClipAbove)"></path>
+      <path d="${areaD}" fill="#DD9280" fill-opacity=".32" clip-path="url(#kpiClipBelow)"></path>
+      <line class="kpi-chart-zero" x1="${padL}" x2="${W-padR}" y1="${yZero.toFixed(1)}" y2="${yZero.toFixed(1)}"></line>`;
+  }
+  // Labels iets uit elkaar duwen als de referentiewaarden dicht bij elkaar
+  // liggen, anders overlappen de teksten bij een smalle ROAS-marge.
+  const refPts=showBeRef?[
+    {v:CX.be,     cls:"be",    lbl:`break-even ${x2(CX.be)}`},
+    {v:doelRoas,  cls:"doel",  lbl:`doel ${x2(doelRoas)} · ${(SCALE_T*100).toFixed(0)}% nettomarge`},
+    {v:comfyRoas, cls:"comfy", lbl:`schaaldoel ${x2(comfyRoas)} · ${(SCALE_H*100).toFixed(0)}% nettomarge`},
+  ].sort((a,b)=>a.v-b.v):[];
+  refPts.forEach((p,i)=>{
+    const y=yAt(p.v);
+    p.labelY = i>0 && (refPts[i-1]._y-y)<12 ? refPts[i-1].labelY-12 : y-4;
+    p._y=y;
+  });
+  const refLines = refPts.map(p=>`<line class="kpi-chart-${p.cls}" x1="${padL}" x2="${W-padR}" y1="${p._y.toFixed(1)}" y2="${p._y.toFixed(1)}"></line><text class="kpi-chart-${p.cls}-lbl" x="${W-padR}" y="${p.labelY.toFixed(1)}" text-anchor="end">${p.lbl}</text>`).join("");
+
+  const lines=plot.map(s=>`<path class="kpi-chart-line" d="${pathFor(s.vals)}" stroke="${s.color}" fill="none"></path>${dotsFor(s.vals,s.color)}`).join("");
+
+  const legend = dual ? `<div class="kpi-chart-legend">${plot.map(s=>`<span class="kpi-chart-legend-item"><span class="kpi-chart-legend-dot" style="background:${s.color}"></span>${s.meta.label}</span>`).join("")}</div>` : "";
+
+  const granBtn=(g,l)=>{
+    const cnt=g==="day"?dayN:g==="week"?weekN:monthN;
+    const dis=cnt<2;
+    return `<button class="kpi-chart-gran-btn${kpiChartGran===g?" active":""}" ${dis?"disabled":""} onclick="kpiChartGran='${g}';renderKpiChart()">${l}</button>`;
+  };
+  wrap.innerHTML=`
+    <div class="kpi-chart-hd">
+      <div class="kpi-chart-title">${plot.map(s=>s.meta.label).join(" · ")}<button class="kpi-chart-sub" onclick="jumpToPeriodSelector()" title="Kies een andere periode">${fmtS(actualFrom)} – ${fmtS(actualTo)}${dual?" · geïndexeerd op % verandering":""}${segAllowed && filtersActive()?` · ${activeFilterLabel()}`:""} ↑</button></div>
+      <div class="kpi-chart-gran">${granBtn("day","Dag")}${granBtn("week","Week")}${granBtn("month","Maand")}</div>
+    </div>
+    ${legend}
+    <div class="kpi-chart-svgwrap" id="kpiChartSvgWrap">
+      <svg viewBox="0 0 ${W} ${H}" class="kpi-chart-svg" id="kpiChartSvg">
+        ${yGrid}${zeroLine}${zeroAreaFill}${refLines}${lines}${xLabels}
+        <rect class="kpi-chart-selrect" id="kpiChartSelRect" x="0" y="${padT}" width="0" height="${(H-padB)-padT}" style="opacity:0"></rect>
+        <line class="kpi-chart-cross" id="kpiChartCross" x1="0" x2="0" y1="${padT}" y2="${H-padB}" style="opacity:0"></line>
+      </svg>
+      <div class="kpi-chart-tooltip" id="kpiChartTooltip" style="opacity:0"></div>
+    </div>
+    <div class="kpi-chart-selection-summary" id="kpiChartSelSummary" style="display:none"></div>
+    <div class="kpi-chart-selhint">Sleep over de grafiek om een periode te selecteren</div>`;
+
+  attachKpiChartHover(plot,data,xAt,padL,padR,W,H,padT,padB);
+}
+
+function attachKpiChartHover(plot,data,xAt,padL,padR,W,H,padT,padB){
+  const svgWrap=document.getElementById("kpiChartSvgWrap");
+  const svg=document.getElementById("kpiChartSvg");
+  const cross=document.getElementById("kpiChartCross");
+  const tip=document.getElementById("kpiChartTooltip");
+  const selRect=document.getElementById("kpiChartSelRect");
+  const summary=document.getElementById("kpiChartSelSummary");
+  if(!svgWrap||!svg)return;
+  const n=data.length;
+
+  const idxAt=(clientX)=>{
+    const r=svg.getBoundingClientRect();
+    const xSvg=((clientX-r.left)/r.width)*W;
+    let best=0,bestD=Infinity;
+    for(let i=0;i<n;i++){const dx=Math.abs(xAt(i)-xSvg);if(dx<bestD){bestD=dx;best=i;}}
+    return best;
+  };
+
+  const showHover=(clientX)=>{
+    const best=idxAt(clientX);
+    const px=xAt(best);
+    cross.setAttribute("x1",px);cross.setAttribute("x2",px);cross.style.opacity="1";
+    const rows=plot.map(s=>{
+      const raw=s.raw[best];
+      return raw==null?"":`<div class="kpi-chart-tip-row"><span class="kpi-chart-tip-dot" style="background:${s.color}"></span>${s.meta.label}: <strong>${s.meta.fmt(raw)}</strong></div>`;
+    }).join("");
+    tip.innerHTML=`<div class="kpi-chart-tip-date">${data[best].label}</div>${rows}`;
+    tip.style.opacity="1";
+    const wrapR=svgWrap.getBoundingClientRect();
+    const px_screen=(px/W)*wrapR.width;
+    let left=px_screen+10;
+    if(left+150>wrapR.width) left=px_screen-160;
+    tip.style.left=Math.max(0,left)+"px";
+    tip.style.top="8px";
+  };
+  const hideHover=()=>{cross.style.opacity="0";tip.style.opacity="0";};
+
+  const unitS = kpiChartGran==="week"?"week":kpiChartGran==="month"?"maand":"dag";
+  const unitP = kpiChartGran==="week"?"weken":kpiChartGran==="month"?"maanden":"dagen";
+  const barW2=n>1?Math.abs(xAt(1)-xAt(0)):20;
+  const drawSel=(i0,i1)=>{
+    const lo=Math.min(i0,i1), hi=Math.max(i0,i1);
+    const x1=xAt(lo)-barW2/2, x2v=xAt(hi)+barW2/2;
+    selRect.setAttribute("x",Math.max(0,x1).toFixed(1));
+    selRect.setAttribute("width",Math.max(1,x2v-x1).toFixed(1));
+    selRect.style.opacity="1";
+  };
+  const clearSel=()=>{
+    selRect.style.opacity="0";
+    summary.style.display="none";
+    summary.innerHTML="";
+  };
+  const showSelSummary=(i0,i1)=>{
+    const lo=Math.min(i0,i1), hi=Math.max(i0,i1);
+    const slice=data.slice(lo,hi+1);
+    summary.innerHTML=buildSelSummaryHtml(slice,unitS,unitP);
+    summary.style.display="block";
+  };
+
+  let dragging=false, startIdx=0, lastIdx=0, moved=false;
+  svgWrap.onmousedown=(e)=>{ dragging=true; moved=false; startIdx=lastIdx=idxAt(e.clientX); e.preventDefault(); };
+  svgWrap.onmousemove=(e)=>{
+    showHover(e.clientX);
+    if(dragging){
+      lastIdx=idxAt(e.clientX);
+      if(lastIdx!==startIdx) moved=true;
+      drawSel(startIdx,lastIdx);
+    }
+  };
+  svgWrap.onmouseup=(e)=>{
+    if(!dragging)return;
+    dragging=false;
+    lastIdx=idxAt(e.clientX);
+    if(moved) showSelSummary(startIdx,lastIdx);
+    else clearSel();
+  };
+  svgWrap.onmouseleave=()=>{
+    hideHover();
+    if(dragging){ dragging=false; if(moved) showSelSummary(startIdx,lastIdx); }
+  };
+  svgWrap.ontouchstart=(e)=>{ dragging=true; moved=false; startIdx=lastIdx=idxAt(e.touches[0].clientX); };
+  svgWrap.ontouchmove=(e)=>{
+    if(!dragging)return;
+    e.preventDefault();
+    lastIdx=idxAt(e.touches[0].clientX);
+    if(lastIdx!==startIdx) moved=true;
+    drawSel(startIdx,lastIdx);
+  };
+  svgWrap.ontouchend=(e)=>{
+    if(!dragging)return;
+    dragging=false;
+    if(moved) showSelSummary(startIdx,idxAt(e.changedTouches[0].clientX));
+    else clearSel();
+  };
+}
+
+/* ═══ FUNNEL-KLEUREN ════════════════════════════════════════════════
+   (voedt de mini-funnel in de uitgeklapte advertentiegroep-detail) */
+const FC_COLORS = ["#60a5fa","#818cf8","#E5B863","#fb923c","#8FC49B"];
+
+/* ═══ ACCORDION ══════════════════════════════════════════════════ */
+function tog(id){
+  const el = document.getElementById(id);
+  el.classList.toggle("open");
+}
+
+/* ═══ STALE-DATA CHECK ═══════════════════════════════════════════
+   De 15-min cron-sync liep op 28 sep 2026 9 uur stil zonder dat iemand
+   het zag — de enige melding zat verstopt in data/status.json en een
+   GitHub-mail die niemand las. Dit zet dezelfde info zichtbaar boven aan
+   het dashboard zelf, waar je toch al kijkt. Amber vanaf 45 min (ruim
+   boven het normale 15-min interval, voorkomt vals alarm bij een
+   incidenteel gemiste cron-tick); rood vanaf 2 uur. */
+function checkStaleness(){
+  const el=document.getElementById("staleWarning");
+  if(!el||!SNAP||!SNAP_TIME)return;
+  const snapDt=new Date(`${SNAP}T${SNAP_TIME}:00`);
+  if(isNaN(snapDt))return;
+  const ageMin=(Date.now()-snapDt.getTime())/60000;
+  if(ageMin<45){el.style.display="none";return;}
+  const h=Math.floor(ageMin/60),m=Math.round(ageMin%60);
+  const ageTxt=h>0?`${h} u ${m} min`:`${m} min`;
+  el.classList.toggle("stale-critical",ageMin>=120);
+  el.innerHTML=`⚠️ Meta-data is <strong>${ageTxt}</strong> niet ververst sinds ${SNAP_TIME} &mdash; de 15-minuten-sync lijkt vast te zitten.`;
+  el.style.display="block";
+}
+
+/* ═══ INIT ═══════════════════════════════════════════════════════ */
+render();
+loadAdTagsRemote();
+checkStaleness();
+setInterval(checkStaleness,60000);
+</script>
+</body>
+</html>
