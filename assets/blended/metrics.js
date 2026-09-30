@@ -113,7 +113,7 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
   };
   const management=managementCosts(data,costs,from,to);
   channels.meta.mediaSpend=channels.meta.spend;
-  channels.meta.spend=channel === "meta" && options.includeDaan === false ? channels.meta.mediaSpend : channels.meta.spend!=null && management.total!=null ? channels.meta.spend+management.total : null;
+  channels.meta.spend=["meta","all"].includes(channel) && options.includeDaan === false ? channels.meta.mediaSpend : channels.meta.spend!=null && management.total!=null ? channels.meta.spend+management.total : null;
   const complete = Object.values(channels).every((c) => c.spend !== null);
   const spend =
     channel === "all"

@@ -423,3 +423,17 @@ test('Meta profit and Daan switch are visible, selectable and persist in URL',as
  assert.equal(d.querySelector('[data-metric="spend"] strong').textContent,withCost);
  w.close();
 });
+test('compact Daan switch also updates overview and survives switching channels',async()=>{
+ const w=await boot('?from=2026-09-01&to=2026-09-29');const d=w.document;
+ const before=d.querySelector('[data-metric="result"] strong').textContent;
+ d.querySelector('[data-daan="without"]').click();
+ assert.notEqual(d.querySelector('[data-metric="result"] strong').textContent,before);
+ assert.match(d.querySelector('.management-total').textContent,/Uitgesloten/);
+ d.querySelector('#tab-meta').click();
+ assert.equal(d.querySelector('[data-daan="without"]').getAttribute('aria-pressed'),'true');
+ d.querySelector('#tab-all').click();
+ d.querySelector('[data-daan="with"]').click();
+ assert.equal(d.querySelector('[data-metric="result"] strong').textContent,before);
+ d.querySelector('[data-daan-details]').click();
+ assert.equal(d.querySelector('.management').open,true);w.close();
+});

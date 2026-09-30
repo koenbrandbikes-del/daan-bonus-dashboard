@@ -12,7 +12,7 @@ import {
   aggregate,
   previous,
   inRange,
-} from "./metrics.js?v=meta-profit-1";
+} from "./metrics.js?v=daan-compact-1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (s) =>
@@ -264,7 +264,7 @@ function metricMeta(k) {
         state.channel === "infl"
           ? "Commissies · overige kosten onbekend"
           : all
-            ? "Advertenties, commissies + beheer"
+            ? (state.daan==="without" ? "Zonder kosten Daan" : "Inclusief kosten Daan")
             : state.channel === "meta" ? (state.daan==="without" ? "Alleen advertenties" : "Ads + kosten Daan") : names[state.channel],
       fmt: euro,
     },
@@ -569,11 +569,11 @@ function render() {
     `<div class="view-head"><div><p class="eyebrow">${state.channel === "all" ? "HET TOTAALBEELD" : "KANAALANALYSE"}</p><h2>${names[state.channel]}</h2></div><div class="subtitle">${fmt(state.from)} – ${fmt(state.to)} ${state.to.slice(0, 4)}<br>${comparisonText}${state.to === today ? "<br><small>Vandaag loopt nog · vergeleken met hele dagen</small>" : ""}</div></div>
  ${channelRevenueBar(cur)}
  ${googleFilter()}
- ${state.channel==='meta' ? `<section class="daan-choice" aria-label="Kosten Daan"><div><strong>Kosten Daan</strong><span>${euro(cur.management.total)} <small>· vast ${euro(cur.management.fixed)} + bonus ${euro(cur.management.bonus)}</small></span></div><div class="daan-toggle"><button data-daan="with" aria-pressed="${state.daan!=='without'}">Met Daan</button><button data-daan="without" aria-pressed="${state.daan==='without'}">Zonder Daan</button></div><p>${state.daan==='without'?'Kosten Daan uitgesloten van deze Meta-analyse.':'Kosten Daan meegenomen in deze Meta-analyse.'} Winst is een schatting op basis van Meta-omzet en de gemiddelde winkelmarge na product-, betaal- en bedrijfskosten.</p></section>` : ''}
+ ${['all','meta'].includes(state.channel) ? `<section class="daan-choice compact" aria-label="Kosten Daan"><div class="daan-cost"><span>Kosten Daan</span><strong>${euro(cur.management.total)}</strong><button class="link" data-daan-details aria-label="Uitsplitsing kosten Daan bekijken">Details</button></div><div class="daan-toggle" aria-label="Kosten Daan meetellen"><button data-daan="with" aria-pressed="${state.daan!=='without'}">Met Daan</button><button data-daan="without" aria-pressed="${state.daan==='without'}">Zonder Daan</button></div></section>` : ''}
  <section class="kpis ${state.channel === "all" ? "" : state.channel==="meta" ? "channel meta-kpis" : "channel"}" aria-label="Kerncijfers">${metrics
    .map((k) => {
      const m = metricMeta(k);
-     return `<button class="kpi ${state.metrics.includes(k) ? "active" : ""}" data-metric="${k}" aria-pressed="${state.metrics.includes(k)}"><span class="label">${m.label}</span><strong>${m.fmt(cur[k])}</strong><small>${k === "result" && state.channel === "all" && cur.result != null && cur.revenue > 0 ? num((cur.result / cur.revenue) * 100) + "% van omzet · voorlopig" : k === "cost" && cur.cost != null && cur.revenue > 0 ? num((cur.cost / cur.revenue) * 100) + "% van omzet · geraamde basis" : k === "revenue" && state.channel === "all" ? num(cur.count) + " orders · " + euro(cur.incl) + " incl. btw" : m.sub}</small><small class="delta">${delta(k, cur, prev)}</small></button>`;
+     return `<button class="kpi ${state.metrics.includes(k) ? "active" : ""}" data-metric="${k}" aria-pressed="${state.metrics.includes(k)}"><span class="label">${m.label}</span><strong>${m.fmt(cur[k])}</strong><small>${k === "result" && state.channel === "all" && cur.result != null && cur.revenue > 0 ? num((cur.result / cur.revenue) * 100) + "% van omzet · " + (state.daan==="without" ? "zonder Daan" : "met Daan") : k === "cost" && cur.cost != null && cur.revenue > 0 ? num((cur.cost / cur.revenue) * 100) + "% van omzet · geraamde basis" : k === "revenue" && state.channel === "all" ? num(cur.count) + " orders · " + euro(cur.incl) + " incl. btw" : m.sub}</small><small class="delta">${delta(k, cur, prev)}</small></button>`;
    })
    .join("")}</section>
  <details class="signals"><summary>Samenvatting & aandachtspunten</summary>${notes
@@ -589,7 +589,7 @@ function render() {
  <div class="management-amounts">
   <div><span>Vaste vergoeding</span><strong>${euro(cur.management.fixed)}</strong><small>€ 1.500 per maand, verdeeld over de geselecteerde dagen.</small></div>
   <div><span>Prestatiebonus</span><strong>${euro(cur.management.bonus)}</strong><small>Het deel van de bonus dat bij deze periode hoort.</small></div>
-  <div class="management-total"><span>Totaal Meta-beheer</span><strong>${euro(cur.management.total)}</strong><small>Meegenomen in de marketingkosten.</small></div>
+  <div class="management-total"><span>Totaal Meta-beheer</span><strong>${euro(cur.management.total)}</strong><small>${state.daan==='without'?'Uitgesloten van deze analyse.':'Meegenomen in de marketingkosten.'}</small></div>
  </div>
  <p class="management-note">De 4% overige bedrijfskosten wordt apart berekend.</p>
  <details class="management-calculation"><summary>Hoe wordt de bonus berekend?</summary>
@@ -599,7 +599,7 @@ function render() {
  <p class="management-method">Rekenregel: 10% × max(0, Meta-omzet − advertentiekosten × break-even-ROAS). Break-even is gebaseerd op de Shopify-marge na productkosten, betaalkosten en 4% overige bedrijfskosten. De contractperiodes starten op 16 juli 2026. De bonus van een lopende periode kan nog veranderen.</p>
  </details></details>` : ''}
  ${state.channel === "all" ? marketingMix(cur) : ""}
- <details class="panel" id="definitions"><summary>Definities, berekeningen en bronnen</summary><p>Omzet: de huidige Shopify-orderbedragen, exclusief 21% btw door deling door 1,21. Afzonderlijke retour-, belasting- en verzendcomponenten ontbreken nog. Niet gelijkstellen aan een gecontroleerde financiële rapportage.</p><p>Productkosten: bestaande gebundelde tarieven per product. Betaalkosten: 2% van omzet incl. btw. Resultaat: omzet excl. btw min productkosten, betaalkosten, marketingkosten en 4% overhead over omzet excl. btw. Marketing bevat Meta-beheer: €1.500 per kalendermaand naar rato van dagen plus de variabele contractbonus. De keuze Met/Zonder Daan bepaalt of dit beheer meetelt in Meta-marketingkosten, geschatte winst, kanaalrendement en kosten per aankoop. Het bedrijfsoverzicht bevat deze kosten altijd. Geschatte Meta-winst gebruikt de gemiddelde winkelmarge van de geselecteerde periode; dezelfde marge wordt toegepast op de grafiekpunten zodat de bedragen optellen. Campagnekosten blijven uitsluitend advertentiekosten. Dit is geen nettowinst.</p><p>Blended ROAS: winkelomzet incl. btw / bekende marketingkosten. Kanaal-ROAS: gerapporteerde kanaalwaarde / kanaalkosten. Bij nuluitgaven is ROAS niet berekenbaar. Week- en maandratio’s worden uit totalen berekend, niet uit het gemiddelde van dagratio’s.</p><p>Google: conversies op datum van advertentie-interactie. Twee primaire aankoopacties zijn actief; de overlap is nog niet vastgesteld. Nieuwe versus terugkerende klanten is nog onbekend. Merkverkeer telt altijd mee in totale marketingkosten.</p><p>Kanaalresultaten zijn schattingen: de gemiddelde product-, betaal- en overheadkosten als percentage van de winkelomzet worden toegepast op de kanaalomzet. Dit is geen winst per gekoppelde order; kanaalomzet kan overlappen en is niet optelbaar. Google gebruikt non-branded omzet en trekt alle Google-kosten af. De opgegeven Meta-filtering van influencercodes is niet onafhankelijk gecontroleerd.</p><p>Bronstatus en dekking staan bovenaan bij Datastatus. Exports bevatten de actieve periode en voorlopige meetbasis. Details bevatten geen klantnamen of e-mailadressen.</p></details>`;
+ <details class="panel" id="definitions"><summary>Definities, berekeningen en bronnen</summary><p>Omzet: de huidige Shopify-orderbedragen, exclusief 21% btw door deling door 1,21. Afzonderlijke retour-, belasting- en verzendcomponenten ontbreken nog. Niet gelijkstellen aan een gecontroleerde financiële rapportage.</p><p>Productkosten: bestaande gebundelde tarieven per product. Betaalkosten: 2% van omzet incl. btw. Resultaat: omzet excl. btw min productkosten, betaalkosten, marketingkosten en 4% overhead over omzet excl. btw. Marketing bevat Meta-beheer: €1.500 per kalendermaand naar rato van dagen plus de variabele contractbonus. De keuze Met/Zonder Daan bepaalt of dit beheer meetelt in Meta-marketingkosten, geschatte winst, kanaalrendement en kosten per aankoop. Deze keuze geldt ook voor het bedrijfsoverzicht en blijft behouden bij wisselen van tab. Geschatte Meta-winst gebruikt de gemiddelde winkelmarge van de geselecteerde periode; dezelfde marge wordt toegepast op de grafiekpunten zodat de bedragen optellen. Campagnekosten blijven uitsluitend advertentiekosten. Dit is geen nettowinst.</p><p>Blended ROAS: winkelomzet incl. btw / bekende marketingkosten. Kanaal-ROAS: gerapporteerde kanaalwaarde / kanaalkosten. Bij nuluitgaven is ROAS niet berekenbaar. Week- en maandratio’s worden uit totalen berekend, niet uit het gemiddelde van dagratio’s.</p><p>Google: conversies op datum van advertentie-interactie. Twee primaire aankoopacties zijn actief; de overlap is nog niet vastgesteld. Nieuwe versus terugkerende klanten is nog onbekend. Merkverkeer telt altijd mee in totale marketingkosten.</p><p>Kanaalresultaten zijn schattingen: de gemiddelde product-, betaal- en overheadkosten als percentage van de winkelomzet worden toegepast op de kanaalomzet. Dit is geen winst per gekoppelde order; kanaalomzet kan overlappen en is niet optelbaar. Google gebruikt non-branded omzet en trekt alle Google-kosten af. De opgegeven Meta-filtering van influencercodes is niet onafhankelijk gecontroleerd.</p><p>Bronstatus en dekking staan bovenaan bij Datastatus. Exports bevatten de actieve periode en voorlopige meetbasis. Details bevatten geen klantnamen of e-mailadressen.</p></details>`;
   $("#gran").value = state.gran;
   renderChart();
   renderDetail();
@@ -898,11 +898,11 @@ function renderDetail() {
         ),
         row(
           "− Marketinguitgaven",
-          minus(cur.spend==null||cur.management.total==null?null:cur.spend-cur.management.total),
+          minus(state.daan==="without" ? cur.spend : cur.spend==null||cur.management.total==null?null:cur.spend-cur.management.total),
           "Meta- en Google-advertenties en influencercommissies",
         ),
-        row("− Meta-beheer vast", minus(cur.management.fixed), "€1.500 per maand · naar rato van kalenderdagen"),
-        row("− Meta-bonus", minus(cur.management.bonus), "Volgens Meta-bonusberekening · lopend contractblok voorlopig"),
+        row("− Meta-beheer vast", minus(state.daan==="without"?0:cur.management.fixed), state.daan==="without"?"Uitgesloten · werkelijke kosten "+euro(cur.management.fixed):"€1.500 per maand · naar rato van kalenderdagen"),
+        row("− Meta-bonus", minus(state.daan==="without"?0:cur.management.bonus), state.daan==="without"?"Uitgesloten · werkelijke bonus "+euro(cur.management.bonus):"Volgens Meta-bonusberekening · lopend contractblok voorlopig"),
         row(
           "= Resultaat incl. overhead",
           cur.result,
@@ -1359,6 +1359,8 @@ function bindContent() {
         state.detail = null;
         state.sub = null;
       });
+    } else if (b.hasAttribute("data-daan-details")) {
+      $(".management").open=true; $(".management").scrollIntoView({block:"center",behavior:"smooth"});
     } else if (b.dataset.daan) {
       change(()=>{state.daan=b.dataset.daan;});
     } else if (b.dataset.metric) {

@@ -1442,3 +1442,16 @@ header .live-dot.warning { width:10px; height:10px; }
 .daan-toggle [aria-pressed=true] { background:#4ea8de25; box-shadow:inset 0 0 0 1px #4ea8de80; }
 @media(min-width:700px) { .kpis.meta-kpis { grid-template-columns:repeat(6,minmax(0,1fr)); } }
 @media(max-width:499px) { .daan-toggle { width:100%; } .daan-toggle button { flex:1; } .daan-choice small { display:block; margin-top:4px; } }
+/* Compact, shared analysis control; details live in the cost breakdown. */
+.daan-choice.compact { padding:0; border:0; background:none; gap:8px 16px; margin:0 0 12px; }
+.daan-cost { display:flex; align-items:center; gap:8px; }
+.daan-choice.compact .daan-cost span { color:var(--muted); font-size:12px; font-weight:400; }
+.daan-choice.compact .daan-cost strong { display:inline; margin:0; font-size:13px; }
+.daan-cost button.link { font-size:11px; min-height:44px; padding:4px; }
+.daan-choice.compact .daan-toggle { padding:2px; width:auto; border:1px solid var(--line); background:transparent; border-radius:8px; }
+.daan-choice.compact .daan-toggle button { min-height:32px; padding:5px 10px; font-size:11px; border-radius:5px; }
+@media(max-width:699px) { .daan-choice.compact .daan-toggle button { min-height:44px; } }
+@media(max-width:380px) { .daan-choice.compact { gap:0; } .daan-choice.compact .daan-toggle { margin-left:auto; } }
+.daan-cost button.link { border:0; background:transparent; color:var(--blue); box-shadow:none; }
+.daan-choice.compact .daan-toggle { flex-shrink:0; }
+.daan-choice.compact .daan-toggle button { white-space:nowrap; }

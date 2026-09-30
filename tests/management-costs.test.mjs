@@ -37,7 +37,7 @@ test('missing bonus source stays unknown rather than a zero cost',()=>{
  assert.equal(m.bonus,null);assert.equal(m.total,null);close(m.fixed,350);
 });
 
-test('Meta Daan switch reconciles profit, costs and chart without changing company totals',()=>{
+test('Meta Daan switch reconciles profit, costs and chart including company totals',()=>{
  const f='2026-09-01',t='2026-09-30';
  const withDaan=compute(data,costs,f,t,'meta');
  const without=compute(data,costs,f,t,'meta',{includeDaan:false});
@@ -52,6 +52,6 @@ test('Meta Daan switch reconciles profit, costs and chart without changing compa
    close(rows.reduce((n,r)=>n+r.result,0),total.result);
   }
  }
- close(compute(data,costs,f,t,'all').result,compute(data,costs,f,t,'all',{includeDaan:false}).result);
+ close(compute(data,costs,f,t,'all',{includeDaan:false}).result-compute(data,costs,f,t,'all').result,withDaan.management.total);
  assert.equal(compute({...data,shopify:null},costs,f,t,'meta',{includeDaan:false}).result,null);
 });
