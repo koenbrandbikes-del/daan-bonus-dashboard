@@ -562,6 +562,8 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .creator-search{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);color:#f1f5f9;font-size:13px;font-family:inherit;padding:9px 12px;border-radius:8px;outline:none}
 .creator-search::placeholder{color:#7C8CA6}
 .creator-search:focus{border-color:rgba(96,165,250,.5)}
+.kpi-strip-6{grid-template-columns:repeat(6,1fr)}
+@media(max-width:540px){.kpi-strip-6{grid-template-columns:repeat(3,1fr)}}
 .col-details{position:relative}
 .col-details summary{list-style:none;display:inline-flex}
 .col-details summary::-webkit-details-marker{display:none}
@@ -634,6 +636,15 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 <div id="staleWarning" class="stale-warning" style="display:none"></div>
 <div id="commissieWarning" class="stale-warning" style="display:none"></div>
 
+<!-- Zelfde opbouw als het Meta-dashboard, op Koens verzoek — leest rustiger
+     als beide pagina's dezelfde volgorde aanhouden: analysefilters →
+     KPI-strip (6 tegels, één rij) → samenvatting → hero-kaart met detail. -->
+<div id="filterBarC" class="filter-bar"></div>
+
+<div id="kpiStripC" class="kpi-strip kpi-strip-6"></div>
+
+<div id="summaryC" class="kpi-headline"></div>
+
 <div class="card">
   <div class="card-meta"><div class="blend-src-row" id="srcRow"></div></div>
 
@@ -643,11 +654,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     <div class="roas-delta" id="roasDelta"></div>
   </div>
 
-  <div class="mrow">
-    <div class="mc"><div class="mc-lbl">OMZET VIA AFFILIATES</div><div class="mc-val" id="mRev"></div><div class="mc-sub" id="mRevSub"></div></div>
-    <div class="mc"><div class="mc-lbl">COMMISSIE</div><div class="mc-val" id="mComm"></div><div class="mc-sub" id="mCommSub"></div></div>
-    <div class="mc"><div class="mc-lbl">AANDEEL VAN TOTALE OMZET</div><div class="mc-val" id="mShare"></div><div class="mc-sub" id="mShareSub"></div></div>
-  </div>
   <div class="mrow">
     <div class="mc"><div class="mc-lbl">KOSTPRIJS (COGS)</div><div class="mc-val" id="mCogs"></div><div class="mc-sub" id="mCogsSub"></div></div>
     <div class="mc"><div class="mc-lbl">NETTO NA COMMISSIE</div><div class="mc-val" id="mNetto"></div><div class="mc-sub" id="mNettoSub">omzet excl. − kostprijs − commissie</div></div>
@@ -690,8 +696,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     <div class="acc-hd" onclick="tog('acc-ord')"><span id="ordHdr">Orderdetail (affiliate-orders)</span><span class="acc-chv">›</span></div>
     <div class="acc-body">
       <div class="ord-filters" style="align-items:center;gap:8px">
-        <select class="filter-select" id="ordProductSel" onchange="setOrdProductFilter(this.value)"></select>
-        <select class="filter-select" id="ordCreatorSel" onchange="setOrdCreatorFilter(this.value)"></select>
         <button class="ord-f ord-btw-f active" onclick="setOrdBtwAff('incl')">Omzet incl. BTW</button>
         <button class="ord-f ord-btw-f" onclick="setOrdBtwAff('excl')">Omzet excl. BTW</button>
         <details class="col-details">
@@ -699,7 +703,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
           <div class="col-panel" id="ordColToggles"></div>
         </details>
       </div>
-      <div class="fc-note" style="padding:8px 16px 0">Volgt de periodekiezer bovenaan de pagina. Marge is al ná de 10%-klantkorting die bij deze kortingscodes hoort; Commissie is de aparte 10% die naar de creator gaat, los van die marge.</div>
+      <div class="fc-note" style="padding:8px 16px 0">Volgt de periodekiezer en de analysefilters bovenaan de pagina. Marge is al ná de 10%-klantkorting die bij deze kortingscodes hoort; Commissie is de aparte 10% die naar de creator gaat, los van die marge.</div>
       <div class="tscroll" style="margin-top:10px"><table id="ordTableAff"></table></div>
     </div>
   </div>
@@ -877,6 +881,10 @@ function computeCreatorStats(){
   }));
 }
 const CREATOR_STATS = computeCreatorStats();
+// Top 5 op commissie (lifetime) — CREATOR_STATS is niet gesorteerd (Map-
+// volgorde = eerste-order-datum), dus even apart sorteren voor de
+// "Top 5 influencers"-optie in het analysefilter.
+const TOP5_CREATORS = new Set([...CREATOR_STATS].sort((a,b)=>b.commissie-a.commissie).slice(0,5).map(c=>c.creator));
 
 // Periodegrenzen op de affiliate-orders zelf, niet op Meta — dit dashboard
 // draait nu uitsluitend op de Creators-sheet + Shopify-orderdata.
@@ -919,9 +927,19 @@ function buildPeriods(){
 const PERIODS = buildPeriods();
 let P = "alles";
 
+function matchesGlobalFilter(o){
+  if(gProduct!=="alle" && prodCategory(o.product)!==gProduct) return false;
+  if(gCreator==="__top5__") return TOP5_CREATORS.has(o.creator);
+  if(gCreator!=="alle" && o.creator!==gCreator) return false;
+  return true;
+}
+
 function computePeriod(from,to){
   // Totale winkelomzet in de periode — alleen als context (aandeel%),
   // niet als hoofdcijfer: dit dashboard gaat over affiliate-sales specifiek.
+  // Niet onderworpen aan het analysefilter (product/creator) — dat filtert
+  // alleen de affiliate-kant, de winkeltotaal-context blijft het complete
+  // beeld, anders klopt "aandeel van totale omzet" niet meer.
   const ordersP = ORDERS.filter(o=>o.d>=from && o.d<=to);
   const shopIncl = ordersP.reduce((s,o)=>s+o.incl,0);
 
@@ -935,7 +953,7 @@ function computePeriod(from,to){
   // hoort) opgezocht via het ordernummer en zelf door BTW gedeeld. Dat is
   // ook precies het bedrag waar calcOrder() de kostprijs tegen afzet, dus
   // omzet en marge komen uit dezelfde, echte orderregel.
-  const credP = CREATOR_ORDERS.filter(o=>o.d>=from && o.d<=to);
+  const credP = CREATOR_ORDERS.filter(o=>o.d>=from && o.d<=to && matchesGlobalFilter(o));
   const commissie = credP.reduce((s,o)=>s+o.commissie,0);
 
   let affOmzetIncl=0, affOmzetExcl=0, cogs=0, unknownCost=0, betaald=0, openstaand=0;
@@ -961,11 +979,11 @@ function computePeriod(from,to){
   const sharePct = shopIncl>0 ? (affOmzetIncl/shopIncl*100) : null;
 
   return {from,to,shopIncl,affOmzetExcl,affOmzetIncl,cogs,unknownCost,commissie,
-    betaald,openstaand,roasAffiliates,nettoAffiliates,sharePct,credCount:credP.length};
+    betaald,openstaand,roasAffiliates,nettoAffiliates,sharePct,credCount:credP.length,credP};
 }
 
 /* ═══ RENDER ═══ */
-let ordCreatorFilter = "alle";
+let gProduct = "alle", gCreator = "alle";
 let ordBtwAff = "incl";
 let ordSortKey = "d", ordSortDir = "desc";
 function setOrdSort(key){
@@ -974,6 +992,88 @@ function setOrdSort(key){
   renderOrderDetail();
 }
 let CUR_PD = null;
+
+/* ═══ Analysefilters (zelfde plek/patroon als op meta.html) — filtert
+   product + creator globaal: hero/KPI-strip/samenvatting/grafiek/
+   Orderdetail reageren er allemaal op. De Creators & affiliates-tabel
+   niet (die is bewust altijd het complete, all-time overzicht). ═══ */
+function setGProduct(cat){
+  gProduct = cat;
+  document.querySelectorAll("#filterBarC .filter-strat-btn").forEach(b=>
+    b.classList.toggle("active", b.dataset.cat===cat));
+  render();
+}
+function setGCreator(v){
+  gCreator = v;
+  render();
+}
+function resetGlobalFilters(){
+  gProduct = "alle"; gCreator = "alle";
+  document.getElementById("gCreatorSel").value = "alle";
+  document.querySelectorAll("#filterBarC .filter-strat-btn").forEach(b=>
+    b.classList.toggle("active", b.dataset.cat==="alle"));
+  render();
+}
+function renderFilterBar(){
+  const bar = document.getElementById("filterBarC");
+  if(bar.dataset.built){
+    document.getElementById("filterResetBtn").disabled = gProduct==="alle" && gCreator==="alle";
+    return;
+  }
+  const cats = ["alle","Prime","Atlas","Titan","Scherm","Bundel","Accessoires"];
+  const catBtns = cats.map(c=>
+    `<button class="filter-strat-btn${c==="alle"?" active":""}" data-cat="${c}" onclick="setGProduct('${c}')">${c==="alle"?"Alle":c}</button>`
+  ).join("");
+  const creatorOpts = `<option value="alle">Alle creators</option><option value="__top5__">Top 5 influencers</option>` +
+    CREATORS.map(c=>`<option value="${c.creator}">${c.creator}</option>`).join("");
+  bar.innerHTML = `
+    <div class="filter-bar-row">
+      <div class="filter-bar-label">ANALYSEFILTERS</div>
+      <div class="filter-strat-group">${catBtns}</div>
+      <div class="filter-select-group">
+        <select class="filter-select" id="gCreatorSel" onchange="setGCreator(this.value)">${creatorOpts}</select>
+      </div>
+      <button class="filter-reset-btn" id="filterResetBtn" onclick="resetGlobalFilters()" disabled>Reset</button>
+    </div>`;
+  bar.dataset.built = "1";
+}
+
+function renderKpiStrip(cur, roasDeltaHtml){
+  const items = [
+    {l:"OMZET VIA AFFILIATES", v:eur(cur.affOmzetIncl), s:`excl. BTW: ${eur(cur.affOmzetExcl)}`},
+    {l:"AANTAL ORDERS", v:cur.credCount, s:cur.credCount>0?`gem. ${eur(cur.affOmzetIncl/cur.credCount)}/order`:""},
+    {l:"COMMISSIE", v:eur(cur.commissie), s:cur.affOmzetExcl>0?`${(cur.commissie/cur.affOmzetExcl*100).toFixed(1)}% van omzet excl.`:""},
+    {l:"ROAS AFFILIATES", v:cur.roasAffiliates!=null?x2(cur.roasAffiliates):"—", s:roasDeltaHtml.replace(/<[^>]+>/g,"")},
+    {l:"NETTO NA COMMISSIE", v:eur(cur.nettoAffiliates), s:"na kostprijs + commissie", cls:cur.nettoAffiliates>=0?"good":"bad"},
+    {l:"AANDEEL TOTALE OMZET", v:cur.sharePct!=null?cur.sharePct.toFixed(1)+"%":"—", s:`van ${eur(cur.shopIncl)}`},
+  ];
+  document.getElementById("kpiStripC").innerHTML = items.map(it=>
+    `<div class="kpi-item${it.cls?" "+it.cls:""}"><div class="kpi-lbl">${it.l}</div><div class="kpi-val">${it.v}</div><div class="kpi-sub">${it.s}</div></div>`
+  ).join("");
+}
+
+function renderSummary(cur){
+  const rows = [];
+  if(cur.sharePct!=null){
+    rows.push({dot:"g", html:`Affiliates leverden <strong>${eur(cur.affOmzetIncl)}</strong> op, <strong>${cur.sharePct.toFixed(1)}%</strong> van de totale winkelomzet.`});
+  }
+  if(cur.credP.length){
+    const byCreator = {};
+    for(const o of cur.credP) byCreator[o.creator] = (byCreator[o.creator]||0) + o.commissie;
+    const top = Object.entries(byCreator).sort((a,b)=>b[1]-a[1])[0];
+    rows.push({dot:"g", html:`Top creator deze periode: <strong>${top[0]}</strong> met <strong>${eur(top[1])}</strong> commissie.`});
+  } else {
+    rows.push({dot:"a", html:`Geen affiliate-orders in deze periode/dit filter.`});
+  }
+  rows.push({dot: cur.nettoAffiliates>=0?"g":"r", html:`Netto resultaat (na kostprijs + commissie): <strong>${eur(cur.nettoAffiliates)}</strong>.`});
+  if(cur.unknownCost>0){
+    rows.push({dot:"a", html:`<strong>${cur.unknownCost}</strong> orders hebben nog geen bekende kostprijs (vóór 1 aug 2026 of onbekend artikel).`});
+  }
+  const dotColor = {g:"#8FC49B", a:"#E5B863", r:"#DD9280"};
+  document.getElementById("summaryC").innerHTML =
+    `<div class="kpi-headline-hd">Samenvatting</div>` +
+    `<div class="kpi-headline-body">${rows.map(r=>`<div class="kpi-headline-row"><span class="kpi-headline-dot" style="background:${dotColor[r.dot]}"></span><span>${r.html}</span></div>`).join("")}</div>`;
+}
 
 function render(){
   const pd = PERIODS[P];
@@ -990,15 +1090,15 @@ function render(){
   // Hero
   document.getElementById("roasHeroVal").textContent = cur.roasAffiliates!=null ? x2(cur.roasAffiliates) : "—";
   const dEl = document.getElementById("roasDelta");
+  let roasDeltaHtml = "";
   if(prev && prev.roasAffiliates!=null && cur.roasAffiliates!=null){
     const diff = cur.roasAffiliates - prev.roasAffiliates;
     const pct = prev.roasAffiliates>0 ? (diff/prev.roasAffiliates*100) : 0;
     const cls = diff>=0.02?"pos":diff<=-0.02?"neg":"mid";
     const arrow = diff>=0.02?"▲":diff<=-0.02?"▼":"→";
-    dEl.innerHTML = `<span class="rdelta ${cls}">${arrow} ${Math.abs(pct).toFixed(0)}% vs vorige periode (${x2(prev.roasAffiliates)})</span>`;
-  } else {
-    dEl.innerHTML = "";
+    roasDeltaHtml = `<span class="rdelta ${cls}">${arrow} ${Math.abs(pct).toFixed(0)}% vs vorige periode (${x2(prev.roasAffiliates)})</span>`;
   }
+  dEl.innerHTML = roasDeltaHtml;
 
   // Bronnen-rij
   const creatorsSyncDate = _CREATORS.synced_at ? fmtL(_CREATORS.synced_at.slice(0,10)) : "onbekend";
@@ -1006,13 +1106,9 @@ function render(){
     `<span class="src-tag snapshot">● Creators-sheet momentopname ${creatorsSyncDate}</span>` +
     `<span class="src-tag live">● Shopify live (kostprijs-matching)</span>`;
 
-  // mrow 1
-  document.getElementById("mRev").textContent = eur(cur.affOmzetIncl);
-  document.getElementById("mRevSub").textContent = `excl. BTW: ${eur(cur.affOmzetExcl)} · ${cur.credCount} orders`;
-  document.getElementById("mComm").textContent = eur(cur.commissie);
-  document.getElementById("mCommSub").textContent = cur.affOmzetExcl>0 ? `${(cur.commissie/cur.affOmzetExcl*100).toFixed(1)}% van omzet excl. BTW` : "";
-  document.getElementById("mShare").textContent = cur.sharePct!=null ? cur.sharePct.toFixed(1)+"%" : "—";
-  document.getElementById("mShareSub").textContent = `van ${eur(cur.shopIncl)} totale winkelomzet`;
+  renderFilterBar();
+  renderKpiStrip(cur, roasDeltaHtml);
+  renderSummary(cur);
 
   // mrow 2
   document.getElementById("mCogs").textContent = eur(cur.cogs);
@@ -1138,18 +1234,6 @@ function fmtProduct(p){
   const rest = m[2].charAt(0).toUpperCase()+m[2].slice(1);
   return `${m[1]} + ${rest}`;
 }
-let ordProductFilter = "alle";
-
-function setOrdProductFilter(cat){
-  ordProductFilter = cat;
-  renderOrderDetail();
-}
-
-function setOrdCreatorFilter(name){
-  ordCreatorFilter = name;
-  renderOrderDetail();
-}
-
 function setOrdBtwAff(v){
   ordBtwAff = v;
   document.querySelectorAll(".ord-btw-f").forEach(b=>
@@ -1197,20 +1281,6 @@ function renderOrderDetail(){
   const pd = CUR_PD;
   if(!pd) return;
 
-  const prodSel = document.getElementById("ordProductSel");
-  if(!prodSel.dataset.built){
-    const cats = ["alle","Prime","Atlas","Titan","Scherm","Bundel","Accessoires"];
-    prodSel.innerHTML = cats.map(c=>
-      `<option value="${c}">${c==="alle"?"Alle producten":c}</option>`
-    ).join("");
-    prodSel.dataset.built = "1";
-  }
-  const creatorSel = document.getElementById("ordCreatorSel");
-  if(!creatorSel.dataset.built){
-    creatorSel.innerHTML = `<option value="alle">Alle creators</option>` +
-      CREATORS.map(c=>`<option value="${c.creator}">${c.creator}</option>`).join("");
-    creatorSel.dataset.built = "1";
-  }
   const colBar = document.getElementById("ordColToggles");
   if(!colBar.dataset.built){
     colBar.innerHTML = ORD_COLS.map(c=>
@@ -1219,9 +1289,11 @@ function renderOrderDetail(){
     colBar.dataset.built = "1";
   }
 
-  let credP = CREATOR_ORDERS.filter(o=>o.d>=pd.from && o.d<=pd.to);
-  if(ordCreatorFilter!=="alle") credP = credP.filter(o=>o.creator===ordCreatorFilter);
-  if(ordProductFilter!=="alle") credP = credP.filter(o=>prodCategory(o.product)===ordProductFilter);
+  // Product/creator worden nu bovenaan de pagina gekozen (Analysefilters),
+  // niet meer hier lokaal — matchesGlobalFilter() past hetzelfde filter
+  // toe als de KPI-strip/hero/grafiek, dus deze tabel laat precies zien
+  // welke orders in die cijfers zitten.
+  const credP = CREATOR_ORDERS.filter(o=>o.d>=pd.from && o.d<=pd.to && matchesGlobalFilter(o));
 
   const showIncl = ordBtwAff==="incl";
   const cols = ORD_COLS.filter(c=>ordVisibleCols.has(c.key));
