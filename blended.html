@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LumeWorks cijfers</title>
+<title>LumeWorks · Blended overzicht</title>
 <link rel="icon" type="image/png" href="favicon-meta.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -595,7 +595,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
       <div class="avatar-inner"><img src="meta-badge.gif" alt="Blended"></div>
     </div>
     <div class="hd-text">
-      <h1>LumeWorks cijfers</h1>
+      <h1>Blended overzicht</h1>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -630,12 +630,12 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
       </div>
     </div>
     <a class="nav-pill" href="meta.html"><span class="nav-pill-full">Meta</span> →</a>
-    <a class="nav-pill" href="blended.html"><span class="nav-pill-full">Blended</span> →</a>
+    <a class="nav-pill" href="creators.html"><span class="nav-pill-full">Creators</span> →</a>
   </div>
 </div>
 
 <div id="staleWarning" class="stale-warning" style="display:none"></div>
-<div id="commissieWarning" class="stale-warning" style="display:none"></div>
+<div id="googlePlaceholderWarning" class="stale-warning stale-critical"></div>
 
 <!-- Zelfde opbouw als het Meta-dashboard, op Koens verzoek — leest rustiger
      als beide pagina's dezelfde volgorde aanhouden: analysefilters →
@@ -650,51 +650,45 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
   <div class="card-meta"><div class="blend-src-row" id="srcRow"></div></div>
 
   <div class="roas-hero">
-    <div class="roas-hero-lbl">ROAS AFFILIATES</div>
+    <div class="roas-hero-lbl">BLENDED ROAS <span style="font-weight:500;font-size:11px;color:#7C8CA6">(alle kanalen)</span></div>
     <div class="roas-hero-val" id="roasHeroVal">—</div>
     <div class="roas-delta" id="roasDelta"></div>
   </div>
 
   <div class="mrow">
     <div class="mc"><div class="mc-lbl">KOSTPRIJS (COGS)</div><div class="mc-val" id="mCogs"></div><div class="mc-sub" id="mCogsSub"></div></div>
-    <div class="mc"><div class="mc-lbl">NETTO NA COMMISSIE</div><div class="mc-val" id="mNetto"></div><div class="mc-sub" id="mNettoSub">omzet excl. − kostprijs − commissie</div></div>
-    <div class="mc"><div class="mc-lbl">OPENSTAAND</div><div class="mc-val" id="mOpen"></div><div class="mc-sub" id="mOpenSub"></div></div>
+    <div class="mc"><div class="mc-lbl">BRUTOMARGE</div><div class="mc-val" id="mBruto"></div><div class="mc-sub" id="mBrutoSub">omzet excl. − kostprijs</div></div>
+    <div class="mc"><div class="mc-lbl">NETTOMARGE</div><div class="mc-val" id="mNetto"></div><div class="mc-sub" id="mNettoSub">brutomarge − marketing-uitgaven</div></div>
   </div>
 </div>
 
 <div class="kpi-chart-wrap open" id="chartWrap">
   <div class="kpi-chart-hd">
-    <div class="kpi-chart-title">Omzet via affiliates <span style="color:#7C8CA6;font-weight:500">(per week)</span></div>
+    <div class="kpi-chart-title">Omzet vs. marketing-uitgaven <span style="color:#7C8CA6;font-weight:500">(per week)</span></div>
   </div>
   <div class="blend-chart-svgwrap" id="chartSvgWrap"></div>
 </div>
 
 <div class="acc">
   <div class="acc-item open" id="acc-margin">
-    <div class="acc-hd" onclick="tog('acc-margin')"><span>Marge-opbouw (affiliate-orders)</span><span class="acc-chv">›</span></div>
+    <div class="acc-hd" onclick="tog('acc-margin')"><span>Marge-opbouw (alle kanalen)</span><span class="acc-chv">›</span></div>
     <div class="acc-body">
       <div style="padding:16px 20px" id="marginFlow" class="margin-flow"></div>
-      <div class="fc-note" style="padding:0 20px 16px">Kostprijs = inkoop + verzending + fulfilment per product, plus Shopify-fee (2%) en overhead (4%) — zelfde rekenmethode als de Orderdetail-tabel in het Meta-dashboard, hier toegepast op alleen de orders die via een affiliate-kortingscode binnenkwamen. De commissie wordt hier verrekend, maar staat <b>niet nogmaals</b> in de Marge-kolom van het Meta-dashboard — die blijft ongewijzigd.</div>
+      <div class="fc-note" style="padding:0 20px 16px">Kostprijs = inkoop + verzending + fulfilment per product, plus Shopify-fee (2%) en overhead (4%) op <b>alle</b> Shopify-orders (niet alleen affiliate-orders) — zelfde rekenmethode als op de andere twee pagina's. Google Ads-cijfers zijn placeholder, zie de waarschuwing bovenaan.</div>
     </div>
   </div>
 
-  <div class="acc-item" id="acc-creators">
-    <div class="acc-hd" onclick="tog('acc-creators')"><span id="creatorsHdr">Creators &amp; affiliates</span><span class="acc-chv">›</span></div>
+  <div class="acc-item" id="acc-channels">
+    <div class="acc-hd" onclick="tog('acc-channels')"><span id="channelsHdr">Kanalen</span><span class="acc-chv">›</span></div>
     <div class="acc-body">
-      <div style="padding:12px 16px 0">
-        <input type="text" id="creatorSearch" class="creator-search" placeholder="Zoek op creator-naam…" oninput="filterCreatorsSearch(this.value)">
-      </div>
-      <div class="ord-filters" style="padding:8px 16px 0">
-        <button class="ord-f cred-btw-f active" onclick="setCredBtw('incl')">Omzet incl. BTW</button>
-        <button class="ord-f cred-btw-f" onclick="setCredBtw('excl')">Omzet excl. BTW</button>
-      </div>
-      <div class="fc-note" style="padding:8px 16px 0">Alle tijd (sinds start van de creators-sheet), onafhankelijk van de periodekiezer hierboven — commissie-uitbetaling loopt per kalendermaand, niet per willekeurige periode.</div>
-      <div class="tscroll" style="margin-top:6px"><table id="creatorsTable"></table></div>
+      <div class="fc-note" style="padding:12px 16px 0">Attributie-overlap: elk kanaal rekent zichzelf orders toe volgens zijn eigen model — die percentages tellen dus <b>niet</b> op tot 100%, dat is bewust zichtbaar gemaakt, geen rekenfout.</div>
+      <div style="padding:12px 16px" id="attributionBars"></div>
+      <div class="tscroll" style="margin-top:6px"><table id="channelsTable"></table></div>
     </div>
   </div>
 
   <div class="acc-item" id="acc-ord">
-    <div class="acc-hd" onclick="tog('acc-ord')"><span id="ordHdr">Orderdetail (affiliate-orders)</span><span class="acc-chv">›</span></div>
+    <div class="acc-hd" onclick="tog('acc-ord')"><span id="ordHdr">Orderdetail (alle orders)</span><span class="acc-chv">›</span></div>
     <div class="acc-body">
       <div class="ord-filters" style="align-items:center;gap:8px">
         <button class="ord-f ord-btw-f active" onclick="setOrdBtwAff('incl')">Omzet incl. BTW</button>
@@ -704,7 +698,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
           <div class="col-panel" id="ordColToggles"></div>
         </details>
       </div>
-      <div class="fc-note" style="padding:8px 16px 0">Volgt de periodekiezer en de analysefilters bovenaan de pagina. Marge is al ná de 10%-klantkorting die bij deze kortingscodes hoort; Commissie is de aparte 10% die naar de creator gaat, los van die marge.</div>
+      <div class="fc-note" style="padding:8px 16px 0">Alle Shopify-orders (niet alleen affiliate-orders), volgt de periodekiezer bovenaan. Marge is de brutomarge per order (na kostprijs, vóór marketing-uitgaven — die zijn niet per order toe te rekenen).</div>
       <div class="tscroll" style="margin-top:10px"><table id="ordTableAff"></table></div>
     </div>
   </div>
@@ -721,7 +715,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 
 <div class="footer"><span class="footer-pill">
   <span class="footer-line footer-line-main"><span class="live-dot"></span>Bijgewerkt: <span id="footerDate"></span></span>
-  <span class="footer-line footer-line-sub">Creators-sheet momentopname · Shopify live (kostprijs-matching)</span>
+  <span class="footer-line footer-line-sub">Meta live · Shopify live · Creators-sheet momentopname · Google Ads: placeholder</span>
 </span></div>
 </div>
 
@@ -734,11 +728,10 @@ function _loadJSON(url){
   if(xhr.status !== 200) throw new Error(url+": HTTP "+xhr.status);
   return JSON.parse(xhr.responseText);
 }
-let _META, _SHOPIFY, _GOOGLE, _CREATORS;
+let _META, _SHOPIFY, _CREATORS;
 try{
   _META = _loadJSON("data/meta.json");
   _SHOPIFY = _loadJSON("data/shopify.json");
-  _GOOGLE = _loadJSON("data/google.json");
   _CREATORS = _loadJSON("data/creators.json");
 }catch(e){
   document.body.innerHTML = '<div style="max-width:520px;margin:80px auto;padding:24px;'
@@ -799,109 +792,60 @@ const clampFrom = d => d < DAILY_META[0].d ? DAILY_META[0].d : d;
 
 /* ═══ DATA ═══ */
 const ORDERS = _SHOPIFY.orders.filter(o=>!o.test);
-const CREATORS = _CREATORS.creators;
 const CREATOR_ORDERS = _CREATORS.orders.filter(o=>!o.retour && o.d);
+function round2(v){ return Math.round(v*100)/100; }
 
-const SHOP_BY_DAY = {};
 const SHOP_BY_NUM = {};
 for(const o of ORDERS){
-  SHOP_BY_DAY[o.d] = (SHOP_BY_DAY[o.d]||0) + o.incl;
   SHOP_BY_NUM[o.num] = o;
 }
 
-// Data-kwaliteitscheck (29 sep 2026, op Koens verzoek zichtbaar gemaakt):
-// bij een deel van de orders staat in de sheet zelf de Commissie € berekend
-// over het incl.-BTW-bedrag i.p.v. het excl.-BTW-bedrag (Grondslag) —
-// dezelfde onderliggende spreadsheetfout als bij de Grondslag-kolom (zie
-// sync_creators.py), maar dit keer in het daadwerkelijk uit te betalen
-// bedrag, dus geen dashboard-weergavefout maar een echt te veel/te weinig
-// uitbetaald bedrag. Bewust NIET automatisch gecorrigeerd — dat raakt
-// echt geld richting creators, dat vraagt een menselijke beslissing, geen
-// stille "fix". Hier alleen gedetecteerd zodat het zichtbaar gemaakt kan
-// worden (banner + per-order-markering in Orderdetail).
-const COMMISSIE_MISMATCHES = (()=>{
-  const list = [];
-  for(const o of CREATOR_ORDERS){
-    const match = SHOP_BY_NUM[o.num];
-    if(!match) continue; // geen Shopify-bedrag bekend, kan niet checken
-    const excl = match.incl/BTW;
-    const expected = round2(excl * o.commissie_pct/100);
-    const diff = round2(o.commissie - expected);
-    if(Math.abs(diff) > 0.02){
-      list.push({num:o.num, creator:o.creator, actual:o.commissie, expected, diff});
-    }
-  }
-  return list;
-})();
-function round2(v){ return Math.round(v*100)/100; }
-const COMMISSIE_MISMATCH_BY_NUM = new Map(COMMISSIE_MISMATCHES.map(m=>[m.num,m]));
-
-// Klantkorting-% per order — alleen betrouwbaar te herleiden bij een
-// order met precies 1 artikel van een bekende winkelprijs (Prime/Atlas/
-// Titan; voor accessoires hebben we geen catalogusprijs). Bij een order
-// met meerdere artikelen (bv. Prime + Projectiescherm) klopt "betaald ÷
-// winkelprijs van 1 artikel" niet — dan liever eerlijk "—" dan een
-// verzonnen getal (zo ontstond de schijnbare "-44%" bij Romy/Tessa: dat
-// waren gewoon 2-artikel-orders, geen ander kortingsbeleid).
-const LIST_PRICE_INCL = {"LumeWorks Prime":149, "LumeWorks Atlas":239, "LumeWorks Titan":349};
-function discountPct(match){
-  if(!match || !match.items || match.items.length!==1) return null;
-  const list = LIST_PRICE_INCL[match.items[0]];
-  if(!list) return null;
-  return round2((1 - match.incl/list)*100);
+// Commissie per dag (excl. retouren), voor de weekgrafiek en de
+// kanalen-tabel — zelfde bron als op creators.html.
+const COMMISSIE_BY_DAY = {};
+for(const o of CREATOR_ORDERS){
+  COMMISSIE_BY_DAY[o.d] = (COMMISSIE_BY_DAY[o.d]||0) + o.commissie;
 }
 
-// Per-creator totalen incl. kostprijs/winst — zelf berekend uit
-// CREATOR_ORDERS + SHOP_BY_NUM (niet uit data/creators.json's statische
-// creators[]-lijst, die heeft geen kostprijs/winst) zodat het exact
-// dezelfde calcOrder()-rekenmethode gebruikt als de rest van de pagina.
-function computeCreatorStats(){
-  const map = new Map();
-  for(const o of CREATOR_ORDERS){
-    if(!map.has(o.creator)) map.set(o.creator, {
-      creator:o.creator, orders:0, omzet_incl:0, omzet_excl:0, commissie:0,
-      kosten:0, knownExcl:0, pctSet:new Set(),
-    });
-    const s = map.get(o.creator);
-    const match = SHOP_BY_NUM[o.num];
-    const incl = match ? match.incl : o.omzet_excl*BTW;
-    const excl = match ? match.incl/BTW : o.omzet_excl;
-    const cost = match ? calcOrder(match).cost : null;
-    s.orders++;
-    s.omzet_incl += incl; s.omzet_excl += excl; s.commissie += o.commissie;
-    if(cost!=null){ s.kosten += cost; s.knownExcl += excl; }
-    s.pctSet.add(o.commissie_pct);
-  }
-  return [...map.values()].map(s=>({
-    creator: s.creator, orders: s.orders,
-    omzet_incl: round2(s.omzet_incl), omzet_excl: round2(s.omzet_excl),
-    commissie: round2(s.commissie),
-    kosten: s.knownExcl>0 ? round2(s.kosten) : null,
-    winst: s.knownExcl>0 ? round2(s.omzet_excl - s.kosten - s.commissie) : null,
-    commissie_pct: s.pctSet.size===1 ? [...s.pctSet][0] : null, // null = gemengde tarieven
-  }));
-}
-const CREATOR_STATS = computeCreatorStats();
-// Top 5 op commissie (lifetime) — CREATOR_STATS is niet gesorteerd (Map-
-// volgorde = eerste-order-datum), dus even apart sorteren voor de
-// "Top 5 influencers"-optie in het analysefilter.
-const TOP5_CREATORS = new Set([...CREATOR_STATS].sort((a,b)=>b.commissie-a.commissie).slice(0,5).map(c=>c.creator));
-
-// Periodegrenzen op de affiliate-orders zelf, niet op Meta — dit dashboard
-// draait nu uitsluitend op de Creators-sheet + Shopify-orderdata.
-// data/shopify.json begint pas 1 aug 2026; een handjevol vroege
-// affiliate-orders (medio juli) valt daarbuiten en krijgt dan geen
-// kostprijs-match (zelfde "onbekende kostprijs"-behandeling als een
-// product zonder ITEM_FIXED-prijs).
-const _credDates = CREATOR_ORDERS.map(o=>o.d).sort();
-const DATA_MIN = _credDates[0];
-const DATA_MAX = [DAILY_META[DAILY_META.length-1].d, ORDERS[ORDERS.length-1].d, _credDates[_credDates.length-1]].sort().pop();
+// ═══ Google Ads: PLACEHOLDER-cijfers (30 sep 2026, op Koens verzoek) ═══
+// De echte Google Ads-koppeling bestaat nog niet ("die maken we later
+// wel") — Koen wilde nu al wel de bloklende-structuur zien, dus hier
+// bewust duidelijk-fictieve cijfers i.p.v. het stale/bevroren
+// data/google.json (dat stopte op 15 aug en zou als "echt" oogsten).
+// Simpele, deterministische afgeleide van de Meta-uitgave per dag (vaste
+// ratio + vaste kanaal-ROAS) — geen eigen random, dus reproduceerbaar en
+// makkelijk 1-op-1 te vervangen zodra de echte koppeling er is.
+const GOOGLE_PLACEHOLDER_SPEND_RATIO = 0.32; // Google-uitgave ≈ 32% van Meta-uitgave die dag
+const GOOGLE_PLACEHOLDER_ROAS = 3.4;         // vaste, fictieve Google-ROAS
+const GOOGLE_DAILY = new Map(DAILY_META.map(d=>{
+  const spend = round2(d.spend * GOOGLE_PLACEHOLDER_SPEND_RATIO);
+  return [d.d, {d:d.d, spend, rev: round2(spend*GOOGLE_PLACEHOLDER_ROAS)}];
+}));
 
 /* ═══ PERIODES ═══
    Zelfde soort periode-kiezer (knop + dropdown-menu + kalender voor een
-   vrije periode) als op meta.html — Koen wil hier hetzelfde interactiepatroon,
-   alleen dan met periodes die passen bij wat déze pagina laat zien
-   (affiliate-orders sinds 16 jul), niet Meta's eigen bonusperiode-indeling. */
+   vrije periode) als op meta.html/creators.html — alleen dan met
+   periodegrenzen die het volledige Shopify-orderbereik dekken (dit
+   dashboard gaat over ALLE orders, niet alleen affiliate-orders). */
+const _orderDates = ORDERS.map(o=>o.d).sort();
+const DATA_MIN = [DAILY_META[0].d, _orderDates[0]].sort()[0];
+const DATA_MAX = [DAILY_META[DAILY_META.length-1].d, _orderDates[_orderDates.length-1]].sort().pop();
+
+/* ═══ Kanalen aan/uit (i.p.v. product/creator-filter op de andere twee
+   pagina's) — dit is hier de relevante "Analysefilter": welke
+   marketing-kanalen tellen mee in Totale marketing-uitgaven/Nettomarge.
+   Omzet en Brutomarge blijven altijd het complete beeld (alle Shopify-
+   orders) — die zijn niet per-kanaal toe te rekenen. ═══ */
+let gChannels = {meta:true, google:true, infl:true};
+function toggleChannel(ch){
+  gChannels[ch] = !gChannels[ch];
+  render();
+}
+function resetChannels(){
+  gChannels = {meta:true, google:true, infl:true};
+  render();
+}
+
 function buildPeriods(){
   const maxD = DATA_MAX;
   const yest = shiftDays(maxD,-1);
@@ -928,125 +872,101 @@ function buildPeriods(){
 const PERIODS = buildPeriods();
 let P = "alles";
 
-function matchesGlobalFilter(o){
-  if(gProduct!=="alle" && prodCategory(o.product)!==gProduct) return false;
-  if(gCreator==="__top5__") return TOP5_CREATORS.has(o.creator);
-  if(gCreator!=="alle" && o.creator!==gCreator) return false;
-  return true;
-}
-
 function computePeriod(from,to){
-  // Totale winkelomzet in de periode — alleen als context (aandeel%),
-  // niet als hoofdcijfer: dit dashboard gaat over affiliate-sales specifiek.
-  // Niet onderworpen aan het analysefilter (product/creator) — dat filtert
-  // alleen de affiliate-kant, de winkeltotaal-context blijft het complete
-  // beeld, anders klopt "aandeel van totale omzet" niet meer.
+  // Kostprijs-cascade over ALLE Shopify-orders in de periode (niet alleen
+  // affiliate-orders) — dat is precies wat Koen vroeg: "van alle orders
+  // kijk je wat de kosten zijn, dan zie je de brutomarge".
   const ordersP = ORDERS.filter(o=>o.d>=from && o.d<=to);
   const shopIncl = ordersP.reduce((s,o)=>s+o.incl,0);
+  const shopExcl = shopIncl/BTW;
+  let cogs=0, unknownCost=0;
+  for(const o of ordersP){
+    const p = calcOrder(o);
+    if(p.cost!=null) cogs += p.cost; else unknownCost++;
+  }
+  const bruto = shopExcl - cogs;
 
-  // Affiliate-orders — dit ís het hoofdcijfer, rechtstreeks herleid uit de
-  // Creators-sheet (Sales-tab): alleen orders met een affiliate-kortingscode.
-  // Omzet komt bewust NIET uit de sheet's eigen "Grondslag (omzet excl.
-  // BTW)"-kolom: die klopt bij een deel van de orders niet (staat daar
-  // soms gelijk aan het incl.-BTW-bedrag, 2x zelfs op €0 voor een upsell-
-  // regel) — zie "Over deze cijfers". In plaats daarvan wordt het echte
-  // Shopify-orderbedrag (incl. de 10%-klantkorting die bij deze codes
-  // hoort) opgezocht via het ordernummer en zelf door BTW gedeeld. Dat is
-  // ook precies het bedrag waar calcOrder() de kostprijs tegen afzet, dus
-  // omzet en marge komen uit dezelfde, echte orderregel.
-  const credP = CREATOR_ORDERS.filter(o=>o.d>=from && o.d<=to && matchesGlobalFilter(o));
+  // Meta — echte advertentiedata (Insights API, elke 15 min).
+  const metaRows = DAILY_META.filter(x=>x.d>=from && x.d<=to);
+  const metaSpend = metaRows.reduce((s,x)=>s+x.spend,0);
+  const metaRevClaimed = metaRows.reduce((s,x)=>s+(x.rev7||0)+(x.rev1v||0),0);
+
+  // Google Ads — PLACEHOLDER (zie GOOGLE_DAILY hierboven), nog geen echte
+  // koppeling.
+  const googleRows = metaRows.map(x=>GOOGLE_DAILY.get(x.d)).filter(Boolean);
+  const googleSpend = googleRows.reduce((s,g)=>s+g.spend,0);
+  const googleRevClaimed = googleRows.reduce((s,g)=>s+g.rev,0);
+
+  // Influencers/affiliates — echte data uit de Creators-sheet. "Omzet"
+  // hier is de wérkelijke omzet via een kortingscode (geen attributie-
+  // schatting), zodat de attributie-vergelijking verderop eerlijk is:
+  // Meta/Google claimen aan de hand van hun eigen model, influencers is
+  // het enige kanaal waar we het exact weten.
+  const credP = CREATOR_ORDERS.filter(o=>o.d>=from && o.d<=to);
   const commissie = credP.reduce((s,o)=>s+o.commissie,0);
-
-  let affOmzetIncl=0, affOmzetExcl=0, cogs=0, unknownCost=0, betaald=0, openstaand=0;
+  let inflOmzetIncl=0;
   for(const o of credP){
     const match = SHOP_BY_NUM[o.num];
-    if(match){
-      affOmzetIncl += match.incl;
-      affOmzetExcl += match.incl/BTW;
-      const p = calcOrder(match);
-      if(p.cost!=null) cogs += p.cost; else unknownCost++;
-    } else {
-      // Geen Shopify-orderdata (bv. vóór 1 aug 2026) — dan als enige
-      // terugval de sheet-Grondslag gebruiken, kostprijs onbekend.
-      affOmzetIncl += o.omzet_excl*BTW;
-      affOmzetExcl += o.omzet_excl;
-      unknownCost++;
-    }
-    if(o.status==="Betaald") betaald += o.commissie; else openstaand += o.commissie;
+    inflOmzetIncl += match ? match.incl : o.omzet_excl*BTW;
   }
 
-  const roasAffiliates = commissie>0 ? affOmzetExcl/commissie : null;
-  const nettoAffiliates = affOmzetExcl - cogs - commissie;
-  const sharePct = shopIncl>0 ? (affOmzetIncl/shopIncl*100) : null;
+  const totalSpend = (gChannels.meta?metaSpend:0) + (gChannels.google?googleSpend:0) + (gChannels.infl?commissie:0);
+  const netto = bruto - totalSpend;
+  const blendedRoas = totalSpend>0 ? shopIncl/totalSpend : null;
 
-  return {from,to,shopIncl,affOmzetExcl,affOmzetIncl,cogs,unknownCost,commissie,
-    betaald,openstaand,roasAffiliates,nettoAffiliates,sharePct,credCount:credP.length,credP};
+  const metaSharePct = shopIncl>0 ? metaRevClaimed/shopIncl*100 : 0;
+  const googleSharePct = shopIncl>0 ? googleRevClaimed/shopIncl*100 : 0;
+  const inflSharePct = shopIncl>0 ? inflOmzetIncl/shopIncl*100 : 0;
+  const overlapTotal = metaSharePct+googleSharePct+inflSharePct;
+
+  return {from,to,shopIncl,shopExcl,cogs,unknownCost,bruto,
+    metaSpend,metaRevClaimed,googleSpend,googleRevClaimed,commissie,inflOmzetIncl,
+    totalSpend,netto,blendedRoas,metaSharePct,googleSharePct,inflSharePct,overlapTotal,
+    orderCount:ordersP.length,ordersP};
 }
 
 /* ═══ RENDER ═══ */
-let gProduct = "alle", gCreator = "alle";
+function sortArrow(key, curKey, dir){ return curKey===key ? (dir==="asc"?" ▲":" ▼") : ""; }
 let ordBtwAff = "incl";
 let ordSortKey = "d", ordSortDir = "desc";
 function setOrdSort(key){
   if(ordSortKey===key) ordSortDir = ordSortDir==="desc" ? "asc" : "desc";
-  else { ordSortKey = key; ordSortDir = (key==="creator"||key==="product"||key==="code") ? "asc" : "desc"; }
+  else { ordSortKey = key; ordSortDir = key==="product" ? "asc" : "desc"; }
   renderOrderDetail();
 }
 let CUR_PD = null;
 
-/* ═══ Analysefilters (zelfde plek/patroon als op meta.html) — filtert
-   product + creator globaal: hero/KPI-strip/samenvatting/grafiek/
-   Orderdetail reageren er allemaal op. De Creators & affiliates-tabel
-   niet (die is bewust altijd het complete, all-time overzicht). ═══ */
-function setGProduct(cat){
-  gProduct = cat;
-  document.querySelectorAll("#filterBarC .filter-strat-btn").forEach(b=>
-    b.classList.toggle("active", b.dataset.cat===cat));
-  render();
-}
-function setGCreator(v){
-  gCreator = v;
-  render();
-}
-function resetGlobalFilters(){
-  gProduct = "alle"; gCreator = "alle";
-  document.getElementById("gCreatorSel").value = "alle";
-  document.querySelectorAll("#filterBarC .filter-strat-btn").forEach(b=>
-    b.classList.toggle("active", b.dataset.cat==="alle"));
-  render();
-}
+/* ═══ Analysefilters: hier kanaal-aan/uit i.p.v. product/creator (zie
+   gChannels hierboven) — beïnvloedt alleen Totale marketing-uitgaven/
+   Nettomarge/Blended ROAS, niet Omzet/Brutomarge (die zijn altijd het
+   complete, alle-orders-beeld). ═══ */
 function renderFilterBar(){
   const bar = document.getElementById("filterBarC");
-  if(bar.dataset.built){
-    document.getElementById("filterResetBtn").disabled = gProduct==="alle" && gCreator==="alle";
-    return;
-  }
-  const cats = ["alle","Prime","Atlas","Titan","Scherm","Bundel","Accessoires"];
-  const catBtns = cats.map(c=>
-    `<button class="filter-strat-btn${c==="alle"?" active":""}" data-cat="${c}" onclick="setGProduct('${c}')">${c==="alle"?"Alle":c}</button>`
-  ).join("");
-  const creatorOpts = `<option value="alle">Alle creators</option><option value="__top5__">Top 5 influencers</option>` +
-    CREATORS.map(c=>`<option value="${c.creator}">${c.creator}</option>`).join("");
+  const chips = [
+    {k:"meta", l:"Meta"},
+    {k:"google", l:"Google Ads (placeholder)"},
+    {k:"infl", l:"Influencers"},
+  ];
+  const allOn = gChannels.meta && gChannels.google && gChannels.infl;
   bar.innerHTML = `
     <div class="filter-bar-row">
-      <div class="filter-bar-label">ANALYSEFILTERS</div>
-      <div class="filter-strat-group">${catBtns}</div>
-      <div class="filter-select-group">
-        <select class="filter-select" id="gCreatorSel" onchange="setGCreator(this.value)">${creatorOpts}</select>
-      </div>
-      <button class="filter-reset-btn" id="filterResetBtn" onclick="resetGlobalFilters()" disabled>Reset</button>
+      <div class="filter-bar-label">KANALEN</div>
+      <div class="filter-strat-group">${chips.map(c=>
+        `<button class="filter-strat-btn${gChannels[c.k]?" active":""}" onclick="toggleChannel('${c.k}')">${c.l}</button>`
+      ).join("")}</div>
+      <button class="filter-reset-btn" onclick="resetChannels()" ${allOn?"disabled":""}>Reset</button>
     </div>`;
-  bar.dataset.built = "1";
 }
 
 function renderKpiStrip(cur, roasDeltaHtml){
+  const spendSub = `Meta ${eur(cur.metaSpend)} · Google ${eur(cur.googleSpend)} · Infl. ${eur(cur.commissie)}`;
   const items = [
-    {l:"OMZET VIA AFFILIATES", v:eur(cur.affOmzetIncl), s:`excl. BTW: ${eur(cur.affOmzetExcl)}`},
-    {l:"AANTAL ORDERS", v:cur.credCount, s:cur.credCount>0?`gem. ${eur(cur.affOmzetIncl/cur.credCount)}/order`:""},
-    {l:"COMMISSIE", v:eur(cur.commissie), s:cur.affOmzetExcl>0?`${(cur.commissie/cur.affOmzetExcl*100).toFixed(1)}% van omzet excl.`:""},
-    {l:"ROAS AFFILIATES", v:cur.roasAffiliates!=null?x2(cur.roasAffiliates):"—", s:roasDeltaHtml.replace(/<[^>]+>/g,"")},
-    {l:"NETTO NA COMMISSIE", v:eur(cur.nettoAffiliates), s:"na kostprijs + commissie", cls:cur.nettoAffiliates>=0?"good":"bad"},
-    {l:"AANDEEL TOTALE OMZET", v:cur.sharePct!=null?cur.sharePct.toFixed(1)+"%":"—", s:`van ${eur(cur.shopIncl)}`},
+    {l:"TOTALE OMZET", v:eur(cur.shopIncl), s:`${cur.orderCount} orders`},
+    {l:"MARKETING-UITGAVEN", v:eur(cur.totalSpend), s:spendSub},
+    {l:"BLENDED ROAS", v:cur.blendedRoas!=null?x2(cur.blendedRoas):"—", s:roasDeltaHtml.replace(/<[^>]+>/g,"")},
+    {l:"BRUTOMARGE", v:eur(cur.bruto), s:cur.shopExcl>0?`${(cur.bruto/cur.shopExcl*100).toFixed(1)}% van omzet excl.`:""},
+    {l:"NETTOMARGE", v:eur(cur.netto), s:"bruto − marketing-uitgaven", cls:cur.netto>=0?"good":"bad"},
+    {l:"ATTRIBUTIE-OVERLAP", v:cur.overlapTotal.toFixed(0)+"%", s:"Meta+Google+Infl. geclaimd"},
   ];
   document.getElementById("kpiStripC").innerHTML = items.map(it=>
     `<div class="kpi-item${it.cls?" "+it.cls:""}"><div class="kpi-lbl">${it.l}</div><div class="kpi-val">${it.v}</div><div class="kpi-sub">${it.s}</div></div>`
@@ -1055,21 +975,15 @@ function renderKpiStrip(cur, roasDeltaHtml){
 
 function renderSummary(cur){
   const rows = [];
-  if(cur.sharePct!=null){
-    rows.push({dot:"g", html:`Affiliates leverden <strong>${eur(cur.affOmzetIncl)}</strong> op, <strong>${cur.sharePct.toFixed(1)}%</strong> van de totale winkelomzet.`});
+  rows.push({dot: cur.netto>=0?"g":"r", html:`Nettomarge is <strong>${eur(cur.netto)}</strong> (brutomarge ${eur(cur.bruto)} min marketing-uitgaven ${eur(cur.totalSpend)}).`});
+  if(cur.blendedRoas!=null){
+    rows.push({dot:"g", html:`Blended ROAS over de actieve kanalen is <strong>${x2(cur.blendedRoas)}</strong>.`});
   }
-  if(cur.credP.length){
-    const byCreator = {};
-    for(const o of cur.credP) byCreator[o.creator] = (byCreator[o.creator]||0) + o.commissie;
-    const top = Object.entries(byCreator).sort((a,b)=>b[1]-a[1])[0];
-    rows.push({dot:"g", html:`Top creator deze periode: <strong>${top[0]}</strong> met <strong>${eur(top[1])}</strong> commissie.`});
-  } else {
-    rows.push({dot:"a", html:`Geen affiliate-orders in deze periode/dit filter.`});
-  }
-  rows.push({dot: cur.nettoAffiliates>=0?"g":"r", html:`Netto resultaat (na kostprijs + commissie): <strong>${eur(cur.nettoAffiliates)}</strong>.`});
+  rows.push({dot: cur.overlapTotal>110?"a":"g", html:`De kanalen claimen samen <strong>${cur.overlapTotal.toFixed(0)}%</strong> van de omzet via hun eigen attributiemodel — dat overlapt (Meta ${cur.metaSharePct.toFixed(0)}% + Google ${cur.googleSharePct.toFixed(0)}% + Infl. ${cur.inflSharePct.toFixed(0)}%), dus telt bewust niet op tot 100%.`});
   if(cur.unknownCost>0){
-    rows.push({dot:"a", html:`<strong>${cur.unknownCost}</strong> orders hebben nog geen bekende kostprijs (vóór 1 aug 2026 of onbekend artikel).`});
+    rows.push({dot:"a", html:`<strong>${cur.unknownCost}</strong> orders hebben nog geen bekende kostprijs (onbekend artikel).`});
   }
+  rows.push({dot:"a", html:`Google Ads-cijfers zijn nog <strong>placeholder</strong> (geen koppeling) — zie de waarschuwing bovenaan.`});
   const dotColor = {g:"#8FC49B", a:"#E5B863", r:"#DD9280"};
   document.getElementById("summaryC").innerHTML =
     `<div class="kpi-headline-hd">Samenvatting</div>` +
@@ -1089,52 +1003,61 @@ function render(){
   const prev = prevFrom>=DATA_MIN ? computePeriod(prevFrom,prevTo) : null;
 
   // Hero
-  document.getElementById("roasHeroVal").textContent = cur.roasAffiliates!=null ? x2(cur.roasAffiliates) : "—";
+  document.getElementById("roasHeroVal").textContent = cur.blendedRoas!=null ? x2(cur.blendedRoas) : "—";
   const dEl = document.getElementById("roasDelta");
   let roasDeltaHtml = "";
-  if(prev && prev.roasAffiliates!=null && cur.roasAffiliates!=null){
-    const diff = cur.roasAffiliates - prev.roasAffiliates;
-    const pct = prev.roasAffiliates>0 ? (diff/prev.roasAffiliates*100) : 0;
+  if(prev && prev.blendedRoas!=null && cur.blendedRoas!=null){
+    const diff = cur.blendedRoas - prev.blendedRoas;
+    const pct = prev.blendedRoas>0 ? (diff/prev.blendedRoas*100) : 0;
     const cls = diff>=0.02?"pos":diff<=-0.02?"neg":"mid";
     const arrow = diff>=0.02?"▲":diff<=-0.02?"▼":"→";
-    roasDeltaHtml = `<span class="rdelta ${cls}">${arrow} ${Math.abs(pct).toFixed(0)}% vs vorige periode (${x2(prev.roasAffiliates)})</span>`;
+    roasDeltaHtml = `<span class="rdelta ${cls}">${arrow} ${Math.abs(pct).toFixed(0)}% vs vorige periode (${x2(prev.blendedRoas)})</span>`;
   }
   dEl.innerHTML = roasDeltaHtml;
 
   // Bronnen-rij
   const creatorsSyncDate = _CREATORS.synced_at ? fmtL(_CREATORS.synced_at.slice(0,10)) : "onbekend";
   document.getElementById("srcRow").innerHTML =
+    `<span class="src-tag live">● Meta live</span>` +
+    `<span class="src-tag live">● Shopify live</span>` +
     `<span class="src-tag snapshot">● Creators-sheet momentopname ${creatorsSyncDate}</span>` +
-    `<span class="src-tag live">● Shopify live (kostprijs-matching)</span>`;
+    `<span class="src-tag frozen">● Google Ads placeholder</span>`;
 
   renderFilterBar();
   renderKpiStrip(cur, roasDeltaHtml);
   renderSummary(cur);
 
-  // mrow 2
+  // mrow: kostprijs-cascade
   document.getElementById("mCogs").textContent = eur(cur.cogs);
   document.getElementById("mCogsSub").textContent = cur.unknownCost>0 ? `${cur.unknownCost} orders zonder bekende kostprijs` : "incl. Shopify-fee + overhead";
+  document.getElementById("mBruto").textContent = eur(cur.bruto);
   const nettoEl = document.getElementById("mNetto");
-  nettoEl.textContent = eur(cur.nettoAffiliates);
-  nettoEl.style.color = cur.nettoAffiliates>=0 ? "#8FC49B" : "#DD9280";
-  document.getElementById("mOpen").textContent = eur(cur.openstaand);
-  document.getElementById("mOpenSub").textContent = `betaald: ${eur(cur.betaald)}`;
+  nettoEl.textContent = eur(cur.netto);
+  nettoEl.style.color = cur.netto>=0 ? "#8FC49B" : "#DD9280";
 
   renderMarginFlow(cur);
   renderChart(pd);
-  renderCreatorsTable();
+  renderAttributionBars(cur);
+  renderChannelsTable(cur);
   renderOrderDetail();
   renderAbout();
 
   document.getElementById("footerDate").textContent = `${SNAP_TIME} · ${fmtL(SNAP)}`;
+
+  const gw = document.getElementById("googlePlaceholderWarning");
+  gw.innerHTML = `⚠️ <strong>Google Ads-cijfers op deze pagina zijn placeholder-data</strong> (geen koppeling actief) — duidelijk fictief, alleen om de structuur van dit dashboard te tonen. Meta en Shopify zijn wél live, de Creators-sheet is een momentopname.`;
+  gw.style.display = "block";
 }
 
 function renderMarginFlow(cur){
   const rows = [
-    {lbl:"Omzet via affiliates", sub:"excl. BTW", val:cur.affOmzetExcl},
-    {lbl:"− Kostprijs", sub:"inkoop + verzending + fulfilment + fees", val:-cur.cogs},
-    {lbl:"− Commissie", sub:"creators/kortingscodes", val:-cur.commissie},
-    {lbl:"= Netto resultaat (affiliate-orders)", sub:"", val:cur.nettoAffiliates, final:true},
+    {lbl:"Omzet", sub:"excl. BTW, alle Shopify-orders", val:cur.shopExcl},
+    {lbl:"− Kostprijs (COGS)", sub:"inkoop + verzending + fulfilment + fees", val:-cur.cogs},
+    {lbl:"= Brutomarge", sub:"", val:cur.bruto},
+    {lbl:"− Meta-uitgaven", sub:gChannels.meta?"actief":"uitgeschakeld", val:-(gChannels.meta?cur.metaSpend:0)},
+    {lbl:"− Google Ads-uitgaven", sub:(gChannels.google?"actief · ":"uitgeschakeld · ")+"placeholder", val:-(gChannels.google?cur.googleSpend:0)},
+    {lbl:"− Affiliate-commissie", sub:gChannels.infl?"actief":"uitgeschakeld", val:-(gChannels.infl?cur.commissie:0)},
+    {lbl:"= Nettomarge", sub:"", val:cur.netto, final:true},
   ];
   document.getElementById("marginFlow").innerHTML = rows.map(r=>
     `<div class="mf-row"><span class="mf-lbl">${r.lbl}${r.sub?`<span class="mf-sub">${r.sub}</span>`:""}</span>`+
@@ -1142,88 +1065,46 @@ function renderMarginFlow(cur){
   ).join("");
 }
 
-let creatorSearchTerm = "";
-function filterCreatorsSearch(v){
-  creatorSearchTerm = v.trim().toLowerCase();
-  renderCreatorsTable();
+// Attributie-overlap visueel: per kanaal een balkje van zijn aandeel van
+// de totale omzet (kan >100% samen zijn, dat is het hele punt — zie de
+// toelichting boven deze sectie in de HTML). Zelfde .seg-row/.seg-track/
+// .seg-fill-patroon als al in de stylesheet stond.
+function renderAttributionBars(cur){
+  const rows = [
+    {l:"Meta", pct:cur.metaSharePct, col:"#5B9EE8"},
+    {l:"Google Ads (placeholder)", pct:cur.googleSharePct, col:"#B98DE0"},
+    {l:"Influencers (echt, geen schatting)", pct:cur.inflSharePct, col:"#E5B863"},
+  ];
+  document.getElementById("attributionBars").innerHTML = rows.map(r=>
+    `<div class="seg-row"><span>${r.l}</span><span>${r.pct.toFixed(1)}%</span></div>`+
+    `<div class="seg-track"><div class="seg-fill" style="width:${Math.min(100,r.pct).toFixed(1)}%;background:${r.col}"></div></div>`
+  ).join("") + `<div class="seg-row" style="margin-top:8px;color:#7C8CA6"><span>Werkelijke omzet (100%)</span><span>${eur(cur.shopIncl)}</span></div>`;
 }
 
-// Sorteerbare kolomkoppen i.p.v. extra knoppen — zelfde "meest succesvolle
-// creator" vraag beantwoord je door gewoon op Commissie of Omzet te
-// klikken, zonder de tabel vol te zetten met aparte sorteer-UI.
-let credSortKey = "commissie", credSortDir = "desc";
-function setCredSort(key){
-  if(credSortKey===key) credSortDir = credSortDir==="desc" ? "asc" : "desc";
-  else { credSortKey = key; credSortDir = key==="creator" ? "asc" : "desc"; }
-  renderCreatorsTable();
-}
-function sortArrow(key, curKey, dir){ return curKey===key ? (dir==="asc"?" ▲":" ▼") : ""; }
-
-// Incl. BTW is de standaard overal op de site (index/meta.html, Orderdetail
-// hieronder) — deze tabel liet excl. zien, dat voelde inconsequent. Zelfde
-// incl./excl.-toggle als Orderdetail, maar met een eigen class (cred-btw-f
-// i.p.v. ord-btw-f) zodat de twee toggles elkaars actieve knop niet
-// per ongeluk meeveranderen.
-let credBtw = "incl";
-function setCredBtw(v){
-  credBtw = v;
-  document.querySelectorAll(".cred-btw-f").forEach(b=>
-    b.classList.toggle("active", b.textContent.toLowerCase().includes(v)));
-  renderCreatorsTable();
-}
-
-function renderCreatorsTable(){
-  let filtered = creatorSearchTerm
-    ? CREATOR_STATS.filter(c=>c.creator.toLowerCase().includes(creatorSearchTerm))
-    : [...CREATOR_STATS];
-  filtered.sort((a,b)=>{
-    const av=a[credSortKey], bv=b[credSortKey];
-    if(av==null && bv==null) return 0;
-    if(av==null) return 1;
-    if(bv==null) return -1;
-    const cmp = typeof av==="string" ? av.localeCompare(bv) : av-bv;
-    return credSortDir==="asc" ? cmp : -cmp;
-  });
-  const showIncl = credBtw==="incl";
-  const omzetOf = c => showIncl ? c.omzet_incl : c.omzet_excl;
-  const rows = filtered.map(c=>`<tr>
-    <td>${c.creator}</td>
-    <td class="r">${c.orders}</td>
-    <td class="r">${eur(omzetOf(c))}</td>
-    <td class="r">${c.commissie_pct!=null?c.commissie_pct.toFixed(0)+"%":"gemengd"}</td>
-    <td class="r">${eur(c.commissie)}</td>
-    <td class="r">${c.winst!=null?eur(c.winst):"—"}</td>
-  </tr>`).join("");
-  const tot = filtered.reduce((s,c)=>({orders:s.orders+c.orders, omzet:s.omzet+omzetOf(c), commissie:s.commissie+c.commissie,
-    winst:s.winst+(c.winst||0), winstKnown:s.winstKnown||c.winst!=null}),
-    {orders:0, omzet:0, commissie:0, winst:0, winstKnown:false});
-  const th = (key,label,cls)=>`<th${cls?` class="${cls}"`:""} style="cursor:pointer" onclick="setCredSort('${key}')">${label}${sortArrow(key,credSortKey,credSortDir)}</th>`;
-  document.getElementById("creatorsTable").innerHTML = filtered.length ? `
-    <thead><tr>${th("creator","Creator")}${th("orders","Orders","r")}${th("omzet_excl",`Omzet ${showIncl?"incl.":"excl."} BTW`,"r")}<th class="r">Commissie %</th>${th("commissie","Commissie","r")}${th("winst","Winst","r")}</tr></thead>
-    <tbody>${rows}
-    <tr class="tot"><td>Totaal</td><td class="r">${tot.orders}</td><td class="r">${eur(tot.omzet)}</td><td></td><td class="r">${eur(tot.commissie)}</td><td class="r">${tot.winstKnown?eur(tot.winst):"—"}</td></tr>
-    </tbody>` : `<tbody><tr><td style="padding:16px;color:#7C8CA6">Geen creator gevonden voor "${creatorSearchTerm}".</td></tr></tbody>`;
-  document.getElementById("creatorsHdr").textContent = creatorSearchTerm
-    ? `Creators & affiliates (${filtered.length} van ${CREATOR_STATS.length})`
-    : `Creators & affiliates (${CREATOR_STATS.length})`;
+function renderChannelsTable(cur){
+  const rows = [
+    {l:"Meta", spend:cur.metaSpend, claimed:cur.metaRevClaimed, share:cur.metaSharePct, on:gChannels.meta, note:""},
+    {l:"Google Ads", spend:cur.googleSpend, claimed:cur.googleRevClaimed, share:cur.googleSharePct, on:gChannels.google, note:" (placeholder)"},
+    {l:"Influencers", spend:cur.commissie, claimed:cur.inflOmzetIncl, share:cur.inflSharePct, on:gChannels.infl, note:""},
+  ];
+  const trs = rows.map(r=>{
+    const roas = r.spend>0 ? x2(r.claimed/r.spend) : "—";
+    return `<tr${r.on?"":' style="opacity:.5"'}>
+      <td>${r.l}${r.note}${r.on?"":' <span style="color:#7C8CA6;font-size:11px">(uit)</span>'}</td>
+      <td class="r">${eur(r.spend)}</td>
+      <td class="r">${eur(r.claimed)}</td>
+      <td class="r">${roas}</td>
+      <td class="r">${r.share.toFixed(1)}%</td>
+    </tr>`;
+  }).join("");
+  document.getElementById("channelsTable").innerHTML =
+    `<thead><tr><th>Kanaal</th><th class="r">Uitgaven</th><th class="r">Toegerekende omzet</th><th class="r">Kanaal-ROAS</th><th class="r">Aandeel van omzet</th></tr></thead>
+     <tbody>${trs}
+     <tr class="tot"><td>Totaal (actieve kanalen)</td><td class="r">${eur(cur.totalSpend)}</td><td></td><td class="r">${cur.blendedRoas!=null?x2(cur.blendedRoas):"—"}</td><td class="r">${cur.overlapTotal.toFixed(1)}%</td></tr>
+     </tbody>`;
+  document.getElementById("channelsHdr").textContent = `Kanalen (${rows.filter(r=>r.on).length}/3 actief)`;
 }
 
-// Kleine, vaste productset (zie data/creators.json) — dropdown voor
-// creator (~20 waardes, te veel voor pillen) en pillen voor product
-// (5-6 waardes, zelfde soort filter als de Orderdetail-tabel in het
-// Meta-dashboard). Kortingscode staat als kolom in de tabel i.p.v. als
-// filter: bijna 1-op-1 met de creator, dus een aparte filter daarop voegt
-// weinig toe.
-const PROD_CATS = {
-  "LumeWorks Prime": "Prime",
-  "LumeWorks Atlas": "Atlas",
-  "LumeWorks Titan": "Titan",
-  "Projectiescherm 100 inch": "Scherm",
-  "De complete Prime setup": "Bundel",
-  "De complete Atlas setup": "Bundel",
-  "De complete Titan setup": "Bundel",
-};
-function prodCategory(p){ return PROD_CATS[p] || "Accessoires"; }
 // Leesbaarheid: Shopify-titels als "Prime travelcase" tonen we als
 // "Prime + Travelcase" — duidelijker dat het een accessoire bíj Prime is,
 // i.p.v. het te lezen als één productnaam. Alleen voor accessoires die
@@ -1245,18 +1126,14 @@ function setOrdBtwAff(v){
 // Welke kolommen tonen is zelf te kiezen (opgeslagen per browser via
 // localStorage, dus per-viewer — nooit gedeeld, kan gerust ontbreken/
 // leeg zijn zonder dat de pagina stukgaat). "num"/"d" staan vast, de rest
-// is aan/uit te klikken.
+// is aan/uit te klikken. Geen creator/commissie-kolommen hier — dit is
+// alle Shopify-orders, marketing-uitgaven zijn niet per order toe te
+// rekenen (zie de note in de HTML).
 const ORD_COLS = [
-  {key:"creator",   label:"Creator",  def:true},
-  {key:"product",   label:"Product",  def:true},
-  {key:"code",      label:"Kortingscode", def:false},
-  {key:"korting",   label:"Korting %", def:true, r:true},
-  {key:"omzet",     label:"Omzet",    def:true,  r:true},
-  {key:"kosten",    label:"Kosten", def:false, r:true},
-  {key:"marge",     label:"Marge",    def:true,  r:true},
-  {key:"commissie_pct", label:"Commissie %", def:true, r:true},
-  {key:"commissie", label:"Commissie", def:true, r:true},
-  {key:"netto",     label:"Netto marge", def:false, r:true},
+  {key:"product",   label:"Producten", def:true},
+  {key:"omzet",     label:"Omzet",     def:true, r:true},
+  {key:"kosten",    label:"Kostprijs", def:true, r:true},
+  {key:"marge",     label:"Brutomarge", def:true, r:true},
 ];
 function loadOrdCols(){
   try{
@@ -1290,35 +1167,20 @@ function renderOrderDetail(){
     colBar.dataset.built = "1";
   }
 
-  // Product/creator worden nu bovenaan de pagina gekozen (Analysefilters),
-  // niet meer hier lokaal — matchesGlobalFilter() past hetzelfde filter
-  // toe als de KPI-strip/hero/grafiek, dus deze tabel laat precies zien
-  // welke orders in die cijfers zitten.
-  const credP = CREATOR_ORDERS.filter(o=>o.d>=pd.from && o.d<=pd.to && matchesGlobalFilter(o));
-
+  const ordersP = ORDERS.filter(o=>o.d>=pd.from && o.d<=pd.to);
   const showIncl = ordBtwAff==="incl";
   const cols = ORD_COLS.filter(c=>ordVisibleCols.has(c.key));
 
-  // Eerst verrijken (kostprijs/marge berekenen), dán pas sorteren — zo kan
-  // "meest succesvolle" gewoon op Marge/Commissie/Omzet klikken i.p.v. een
-  // aparte "top creators"-weergave die de tabel drukker zou maken.
-  let totOmzetShown=0, totExcl=0, totCost=0, totWinst=0, totCommissie=0, totKnownCost=0;
-  const enriched = credP.map(o=>{
-    const match = SHOP_BY_NUM[o.num];
-    const incl = match ? match.incl : o.omzet_excl*BTW;
-    const excl = match ? match.incl/BTW : o.omzet_excl;
-    const cost = match ? calcOrder(match).cost : null;
-    const winst = cost!=null ? excl-cost : null;
-    const margePct = winst!=null ? winst/excl*100 : null;
-    const nettoWinst = winst!=null ? winst-o.commissie : null;
-    const nettoPct = nettoWinst!=null ? nettoWinst/excl*100 : null;
-    const omzetVal = showIncl ? incl : excl;
-    totOmzetShown += omzetVal; totExcl += excl; totCommissie += o.commissie;
-    if(cost!=null){ totCost+=cost; totWinst+=winst; totKnownCost+=excl; }
+  let totOmzetShown=0, totCost=0, totWinst=0, totKnownExcl=0;
+  const enriched = ordersP.map(o=>{
+    const excl = o.incl/BTW;
+    const p = calcOrder(o);
+    const omzetVal = showIncl ? o.incl : excl;
+    totOmzetShown += omzetVal;
+    if(p.cost!=null){ totCost+=p.cost; totWinst+=p.winst; totKnownExcl+=excl; }
     return {
-      num:o.num, d:o.d, creator:o.creator, product:o.product, retour:o.retour, code:o.code||null,
-      omzet:omzetVal, kosten:cost, marge:margePct, commissie:o.commissie, commissie_pct:o.commissie_pct,
-      korting: discountPct(match), netto:nettoPct,
+      num:o.num, d:o.d, product: o.items.map(fmtProduct).join(", "),
+      omzet:omzetVal, kosten:p.cost, marge: p.winst!=null ? p.winst/excl*100 : null,
     };
   });
 
@@ -1332,36 +1194,22 @@ function renderOrderDetail(){
   });
 
   const rows = enriched.map(o=>{
-    const mm = COMMISSIE_MISMATCH_BY_NUM.get(o.num);
-    const commissieCell = mm
-      ? `${eur(o.commissie)} <span title="Commissie in de sheet is over het incl.-BTW-bedrag berekend i.p.v. excl. — zou €${mm.expected.toFixed(2)} moeten zijn (${mm.diff>=0?"−":"+"}€${Math.abs(mm.diff).toFixed(2)})" style="color:#E5B863;cursor:help">⚠</span>`
-      : eur(o.commissie);
     const cellVals = {
-      creator: o.creator,
-      product: `${fmtProduct(o.product)}${o.retour?` <span style="color:#DD9280">(retour)</span>`:""}`,
-      code: o.code||"—",
-      korting: o.korting!=null?o.korting.toFixed(0)+"%":"—",
+      product: o.product,
       omzet: eur(o.omzet),
       kosten: o.kosten!=null?eur(o.kosten):"—",
       marge: o.marge!=null?o.marge.toFixed(1)+"%":"—",
-      commissie_pct: o.commissie_pct.toFixed(0)+"%",
-      commissie: commissieCell,
-      netto: o.netto!=null?o.netto.toFixed(1)+"%":"—",
     };
     return `<tr><td>${o.num}</td><td>${fmtS(o.d)}</td>` +
       cols.map(c=>`<td${c.r?' class="r"':''}>${cellVals[c.key]}</td>`).join("") + `</tr>`;
   }).join("");
 
-  const totMargePct = totKnownCost>0 ? (totWinst/totKnownCost*100).toFixed(1)+"%" : "—";
-  const totNettoPct = totKnownCost>0 ? ((totWinst-totCommissie)/totKnownCost*100).toFixed(1)+"%" : "—";
+  const totMargePct = totKnownExcl>0 ? (totWinst/totKnownExcl*100).toFixed(1)+"%" : "—";
   const totCellVals = {
-    creator:"", product:"", code:"", korting:"",
+    product:"",
     omzet: eur(totOmzetShown),
     kosten: totCost>0?eur(totCost):"—",
     marge: totMargePct,
-    commissie_pct:"",
-    commissie: eur(totCommissie),
-    netto: totNettoPct,
   };
 
   const ordTh = (key,label,cls)=>`<th${cls?` class="${cls}"`:""} style="cursor:pointer" onclick="setOrdSort('${key}')">${label}${sortArrow(key,ordSortKey,ordSortDir)}</th>`;
@@ -1369,28 +1217,28 @@ function renderOrderDetail(){
     <thead><tr>${ordTh("num","Order")}${ordTh("d","Datum")}${cols.map(c=>ordTh(c.key,c.key==="omzet"?`Omzet ${showIncl?"incl.":"excl."} BTW`:c.label,c.r?"r":"")).join("")}</tr></thead>
     <tbody>${rows}
     <tr class="tot"><td colspan="2">Totaal (${enriched.length} orders)</td>${cols.map(c=>`<td${c.r?' class="r"':''}>${totCellVals[c.key]}</td>`).join("")}</tr>
-    </tbody>` : `<tbody><tr><td style="padding:16px;color:#7C8CA6">Geen affiliate-orders voor dit filter in deze periode.</td></tr></tbody>`;
+    </tbody>` : `<tbody><tr><td style="padding:16px;color:#7C8CA6">Geen orders in deze periode.</td></tr></tbody>`;
 
   document.getElementById("ordHdr").textContent =
-    `Orderdetail (affiliate-orders) · ${enriched.length} orders`;
+    `Orderdetail (alle orders) · ${enriched.length} orders`;
 }
 
 function renderAbout(){
   document.getElementById("aboutBody").innerHTML = `
-    <div class="analysis-row">Affiliate/creator-sales (orders via een kortingscode) — klik "Meta →" rechtsboven voor de advertentiecijfers, dat is een losse pagina (<code>meta.html</code>) met dezelfde inhoud als het Meta-bonusdashboard.</div>
-    <div class="analysis-row"><b style="color:#E5B863">● Creators/affiliates</b> — momentopname uit het externe Creators Google Sheet (tab "Sales"), opgehaald met <code>scripts/sync_creators.py</code>. Geen cron hierop — herdraai dat script en commit <code>data/creators.json</code> opnieuw om te verversen.</div>
-    <div class="analysis-row"><b style="color:#8FC49B">● Shopify</b> — live, gebruikt om per affiliate-order het <b>echte</b> orderbedrag op te zoeken (op ordernummer): dat is het bedrag ná de 10%-klantkorting die bij deze kortingscodes hoort, dus lager dan de normale prijs. Zowel de omzet hierboven als de kostprijs/marge worden tegen dát bedrag afgezet — de korting werkt dus al automatisch door in een lagere marge per order, niet alleen de commissie. De sheet's eigen "Grondslag excl. BTW"-kolom bleek bij 13 van de 75 gematchte orders niet te kloppen (stond gelijk aan het incl.-bedrag, 2x zelfs op €0 voor een upsell-regel) — <code>sync_creators.py</code> corrigeert dat nu automatisch via het Shopify-bedrag. data/shopify.json begint 1 aug 2026 — 4 vroege affiliate-orders (medio juli) hebben daardoor geen match en vallen terug op de sheet-eigen (mogelijk minder nauwkeurige) omzet.</div>
-    <div class="analysis-row"><b>ROAS affiliates</b> = omzet excl. BTW via affiliates (al na klantkorting) ÷ betaalde commissie. Dat is dus geen advertentie-ROAS (er wordt geen mediabudget aan besteed) maar de "omzet per euro commissie" van dit verkoopkanaal, inclusief het effect van de korting op de marge.</div>
-    <div class="analysis-row" style="margin-top:10px;padding-top:10px;border-top:1px solid #1f2d45"><b>Geen dubbeltelling:</b> de commissie wordt alleen hier als kostenpost meegenomen. De Orderdetail-marge in het Meta-dashboard blijft precies zoals die was — commissie staat daar niet nogmaals afgetrokken.</div>
+    <div class="analysis-row">Blended overzicht: alle Shopify-orders + kosten van alle marketing-kanalen (Meta, Google Ads, influencers) op één pagina. Klik "Meta →" of "Creators →" rechtsboven voor de losse, per-kanaal-pagina's.</div>
+    <div class="analysis-row"><b style="color:#8FC49B">● Meta</b> — live advertentiedata (Insights API, elke 15 min), "toegerekende omzet" is Meta's eigen attributie (7-daags klik + 1-daags view).</div>
+    <div class="analysis-row"><b style="color:#B98DE0">● Google Ads</b> — <b>placeholder</b>, er is nog geen echte koppeling. De cijfers zijn een vaste, deterministische afleiding van de Meta-uitgave per dag (32% van Meta's dagbudget, vaste ROAS 3,4×) — puur om de structuur van dit dashboard te laten zien, niet om ergens op te sturen.</div>
+    <div class="analysis-row"><b style="color:#E5B863">● Influencers</b> — momentopname uit het externe Creators Google Sheet (tab "Sales"), opgehaald met <code>scripts/sync_creators.py</code>. Dit is het enige kanaal waar de omzet <b>echt gemeten</b> is (via kortingscode), niet een attributieschatting — daarom is het aandeel% hier het meest betrouwbare cijfer van de drie.</div>
+    <div class="analysis-row"><b style="color:#4EA8DE">● Shopify</b> — live, kostprijs-cascade (Kostprijs → Brutomarge) draait over <b>alle</b> orders, niet alleen orders die aan een kanaal zijn toe te schrijven.</div>
+    <div class="analysis-row"><b>Attributie-overlap:</b> Meta, Google en influencers claimen orders elk via hun eigen model/meting. Diezelfde order kan door meerdere kanalen als "geclaimd" worden meegeteld (bv. iemand ziet een Meta-ad én gebruikt een influencer-kortingscode) — de percentages tellen daarom bewust niet op tot 100%. Dat is geen rekenfout, zie de "Kanalen"-sectie hieronder.</div>
+    <div class="analysis-row"><b>Blended ROAS</b> = totale winkelomzet (incl. BTW) ÷ totale marketing-uitgaven van de actieve kanalen. <b>Nettomarge</b> = brutomarge (omzet excl. BTW − kostprijs) − diezelfde marketing-uitgaven. Kanalen aan/uit zetten (bovenaan) beïnvloedt alleen de uitgaven/nettomarge, nooit de omzet/brutomarge.</div>
   `;
 }
 
-/* ═══ AFFILIATE-OMZET PER WEEK ═══
-   Een ROAS-lijn per dag zou hier weinig zeggen — de commissie is een vast
-   percentage van de omzet, dus die ratio staat structureel bijna stil.
-   Interessanter is de groei van het kanaal zelf: omzet + aantal orders per
-   week. Bar-chart, niet-interactief qua bereik maar met hover-tooltip,
-   zelfde kpi-chart-*-CSS-klassen als het Meta-dashboard voor consistentie. */
+/* ═══ OMZET VS. MARKETING-UITGAVEN PER WEEK ═══
+   Omzet als bar (zelfde patroon als op de andere twee pagina's), totale
+   marketing-uitgaven (van de actieve kanalen) als lijn eroverheen — zo
+   is in één oogopslag te zien of de uitgaven meegroeien met de omzet. */
 function isoWeekStart(dStr){
   const d = new Date(dStr+"T00:00:00");
   const day = (d.getDay()+6)%7; // 0=maandag
@@ -1399,19 +1247,25 @@ function isoWeekStart(dStr){
 }
 
 function renderChart(pd){
-  const credP = CREATOR_ORDERS.filter(o=>o.d>=pd.from && o.d<=pd.to);
+  const ordersP = ORDERS.filter(o=>o.d>=pd.from && o.d<=pd.to);
   const wrap = document.getElementById("chartSvgWrap");
-  if(credP.length===0){
-    wrap.innerHTML = `<div class="kpi-chart-empty">Geen affiliate-orders in deze periode.</div>`;
+  if(ordersP.length===0){
+    wrap.innerHTML = `<div class="kpi-chart-empty">Geen orders in deze periode.</div>`;
     return;
   }
   const byWeek = {};
-  for(const o of credP){
+  for(const o of ordersP){
     const wk = isoWeekStart(o.d);
-    if(!byWeek[wk]) byWeek[wk] = {wk, omzet:0, commissie:0, n:0};
-    byWeek[wk].omzet += o.omzet_excl;
-    byWeek[wk].commissie += o.commissie;
+    if(!byWeek[wk]) byWeek[wk] = {wk, omzet:0, spend:0, n:0};
+    byWeek[wk].omzet += o.incl;
     byWeek[wk].n++;
+  }
+  for(const m of DAILY_META){
+    if(m.d<pd.from || m.d>pd.to) continue;
+    const wk = isoWeekStart(m.d);
+    if(!byWeek[wk]) continue;
+    const g = GOOGLE_DAILY.get(m.d);
+    byWeek[wk].spend += (gChannels.meta?m.spend:0) + (gChannels.google&&g?g.spend:0) + (gChannels.infl?(COMMISSIE_BY_DAY[m.d]||0):0);
   }
   const data = Object.values(byWeek).sort((a,b)=>a.wk<b.wk?-1:1)
     .map(w=>({...w, label:fmtS(w.wk)}));
@@ -1428,6 +1282,10 @@ function renderChart(pd){
     return `<rect class="blend-bar" x="${(xAt(i)-barW/2).toFixed(1)}" y="${(padT+plotH-h).toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(1,h).toFixed(1)}" rx="2" fill="#4EA8DE" data-i="${i}"></rect>`;
   }).join("");
 
+  const spendPts = data.map((d,i)=>`${xAt(i).toFixed(1)},${yAt(d.spend).toFixed(1)}`).join(" ");
+  const spendLine = `<polyline class="kpi-chart-line-thick" points="${spendPts}" fill="none" stroke="#E5B863"></polyline>`+
+    data.map((d,i)=>`<circle cx="${xAt(i).toFixed(1)}" cy="${yAt(d.spend).toFixed(1)}" r="3" fill="#E5B863"></circle>`).join("");
+
   const step = Math.max(1,Math.ceil(n/8));
   const xLabels = data.map((d,i)=>i%step===0||i===n-1?
     `<text class="kpi-chart-xlbl" x="${xAt(i).toFixed(1)}" y="${H-6}" text-anchor="middle">${d.label}</text>`:"").join("");
@@ -1438,9 +1296,14 @@ function renderChart(pd){
     `<text class="kpi-chart-ylbl" x="${padL-8}" y="${(yAt(v)+3).toFixed(1)}" text-anchor="end">${eur(v)}</text>`).join("");
 
   wrap.innerHTML = `
+    <div style="display:flex;gap:14px;font-size:11px;color:#93A2B8;padding:0 4px 8px">
+      <span><span style="display:inline-block;width:9px;height:9px;background:#4EA8DE;border-radius:2px;margin-right:5px;vertical-align:middle"></span>Omzet</span>
+      <span><span style="display:inline-block;width:9px;height:9px;background:#E5B863;border-radius:50%;margin-right:5px;vertical-align:middle"></span>Marketing-uitgaven (actieve kanalen)</span>
+    </div>
     <svg viewBox="0 0 ${W} ${H}" class="kpi-chart-svg" id="blendChartSvg">
       ${yGrid}
       ${bars}
+      ${spendLine}
       ${xLabels}
     </svg>
     <div class="kpi-chart-tooltip" id="blendTooltip" style="opacity:0"></div>`;
@@ -1454,10 +1317,11 @@ function renderChart(pd){
     i = Math.max(0,Math.min(n-1,i));
     const d = data[i];
     tooltip.style.opacity = 1;
-    tooltip.style.left = Math.min(rect.width-150,Math.max(0,(xAt(i)/W*rect.width)-65))+"px";
+    tooltip.style.left = Math.min(rect.width-170,Math.max(0,(xAt(i)/W*rect.width)-70))+"px";
     tooltip.innerHTML = `<div class="kpi-chart-tip-date">Week van ${fmtL(d.wk)}</div>`+
       `<div class="kpi-chart-tip-row"><span class="kpi-chart-tip-dot" style="background:#4EA8DE"></span>Omzet: <b style="margin-left:4px">${eur(d.omzet)}</b></div>`+
-      `<div class="kpi-chart-tip-row">${d.n} orders · commissie ${eur(d.commissie)}</div>`;
+      `<div class="kpi-chart-tip-row"><span class="kpi-chart-tip-dot" style="background:#E5B863"></span>Uitgaven: <b style="margin-left:4px">${eur(d.spend)}</b></div>`+
+      `<div class="kpi-chart-tip-row">${d.n} orders</div>`;
   });
   svg.addEventListener("mouseleave", ()=>{ tooltip.style.opacity=0; });
 }
@@ -1599,13 +1463,6 @@ if(shared){
   }
 }
 document.querySelectorAll(".pm-opt").forEach(el=>el.classList.toggle("active",el.dataset.p===P));
-
-if(COMMISSIE_MISMATCHES.length){
-  const totalDiff = round2(COMMISSIE_MISMATCHES.reduce((s,m)=>s+m.diff,0));
-  const el = document.getElementById("commissieWarning");
-  el.innerHTML = `⚠️ <strong>${COMMISSIE_MISMATCHES.length} orders</strong> hebben een commissiebedrag dat in de bron-sheet zelf over het incl.-BTW-bedrag berekend is i.p.v. excl. (Grondslag) — samen <strong>${totalDiff>=0?"€"+totalDiff.toFixed(2)+" te veel":"€"+Math.abs(totalDiff).toFixed(2)+" te weinig"}</strong> opengezet/uitbetaald. Gemarkeerd (⚠) bij Commissie in Orderdetail hieronder.`;
-  el.style.display = "block";
-}
 
 render();
 checkStaleness();
