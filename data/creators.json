@@ -1,5 +1,5 @@
 {
- "synced_at": "2026-09-30T18:36:39Z",
+ "synced_at": "2026-09-30T21:00:14Z",
  "source": "Creators Google Sheet · tab 'Sales' (ieder uur gesynchroniseerd)",
  "sync_interval_minutes": 60,
  "collaborations": {
@@ -7,15 +7,15 @@
   "with_orders": 20,
   "without_orders": 21,
   "basis": "Instellingen + volledige Sales-tab; bestellingen via kortingscode, inclusief eventuele retouren",
-  "through": "2026-09-29"
+  "through": "2026-09-30"
  },
  "totals": {
-  "orders": 81,
+  "orders": 87,
   "retouren": 0,
-  "omzet_excl": 9430.26,
-  "commissie": 1009.94,
+  "omzet_excl": 10118.38,
+  "commissie": 1078.74,
   "betaald": 53.64,
-  "openstaand": 956.3
+  "openstaand": 1025.1
  },
  "creators": [
   {
@@ -46,6 +46,15 @@
    "openstaand": 125.91
   },
   {
+   "creator": "Rowan",
+   "orders": 10,
+   "retouren": 0,
+   "omzet_excl": 1159.7,
+   "commissie": 115.96,
+   "betaald": 0.0,
+   "openstaand": 115.96
+  },
+  {
    "creator": "Tessa (Pakhuis)",
    "orders": 7,
    "retouren": 0,
@@ -55,13 +64,13 @@
    "openstaand": 93.12
   },
   {
-   "creator": "Rowan",
-   "orders": 8,
+   "creator": "Nickkim",
+   "orders": 5,
    "retouren": 0,
-   "omzet_excl": 914.9,
-   "commissie": 91.48,
+   "omzet_excl": 585.55,
+   "commissie": 58.54,
    "betaald": 0.0,
-   "openstaand": 91.48
+   "openstaand": 58.54
   },
   {
    "creator": "Alice",
@@ -73,13 +82,13 @@
    "openstaand": 56.82
   },
   {
-   "creator": "Nickkim",
+   "creator": "Roxanne",
    "orders": 3,
    "retouren": 0,
-   "omzet_excl": 363.89,
-   "commissie": 36.38,
+   "omzet_excl": 346.62,
+   "commissie": 34.66,
    "betaald": 0.0,
-   "openstaand": 36.38
+   "openstaand": 34.66
   },
   {
    "creator": "Marianne",
@@ -109,15 +118,6 @@
    "openstaand": 23.58
   },
   {
-   "creator": "Roxanne",
-   "orders": 2,
-   "retouren": 0,
-   "omzet_excl": 235.79,
-   "commissie": 23.58,
-   "betaald": 0.0,
-   "openstaand": 23.58
-  },
-  {
    "creator": "Michelle",
    "orders": 2,
    "retouren": 0,
@@ -128,6 +128,15 @@
   },
   {
    "creator": "Priscilla",
+   "orders": 2,
+   "retouren": 0,
+   "omzet_excl": 221.66,
+   "commissie": 22.16,
+   "betaald": 0.0,
+   "openstaand": 22.16
+  },
+  {
+   "creator": "Lisanne",
    "orders": 2,
    "retouren": 0,
    "omzet_excl": 221.66,
@@ -155,15 +164,6 @@
   },
   {
    "creator": "Connie",
-   "orders": 1,
-   "retouren": 0,
-   "omzet_excl": 110.83,
-   "commissie": 11.08,
-   "betaald": 0.0,
-   "openstaand": 11.08
-  },
-  {
-   "creator": "Lisanne",
    "orders": 1,
    "retouren": 0,
    "omzet_excl": 110.83,
@@ -1250,6 +1250,84 @@
    "omzet_excl": 126.53,
    "commissie_pct": 10.0,
    "commissie": 12.65,
+   "status": "Openstaand",
+   "retour": false
+  },
+  {
+   "d": "2026-09-30",
+   "creator": "Rowan",
+   "code": "rowan10",
+   "num": "#1618",
+   "product": "LumeWorks Prime",
+   "herkomst": "Direct",
+   "omzet_excl": 110.83,
+   "commissie_pct": 10.0,
+   "commissie": 11.08,
+   "status": "Openstaand",
+   "retour": false
+  },
+  {
+   "d": "2026-09-30",
+   "creator": "Nickkim",
+   "code": "NICKKIDS",
+   "num": "#1620",
+   "product": "LumeWorks Prime",
+   "herkomst": "Facebook",
+   "omzet_excl": 110.83,
+   "commissie_pct": 10.0,
+   "commissie": 11.08,
+   "status": "Openstaand",
+   "retour": false
+  },
+  {
+   "d": "2026-09-30",
+   "creator": "Nickkim",
+   "code": "NICKKIDS",
+   "num": "#1623",
+   "product": "LumeWorks Prime",
+   "herkomst": "Direct",
+   "omzet_excl": 110.83,
+   "commissie_pct": 10.0,
+   "commissie": 11.08,
+   "status": "Openstaand",
+   "retour": false
+  },
+  {
+   "d": "2026-09-30",
+   "creator": "Lisanne",
+   "code": "HEERENWEGHUIS10",
+   "num": "#1627",
+   "product": "LumeWorks Prime",
+   "herkomst": "Onbekend",
+   "omzet_excl": 110.83,
+   "commissie_pct": 10.0,
+   "commissie": 11.08,
+   "status": "Openstaand",
+   "retour": false
+  },
+  {
+   "d": "2026-09-30",
+   "creator": "Roxanne",
+   "code": "Roxanne10",
+   "num": "#1628",
+   "product": "LumeWorks Prime",
+   "herkomst": "Instagram",
+   "omzet_excl": 110.83,
+   "commissie_pct": 10.0,
+   "commissie": 11.08,
+   "status": "Openstaand",
+   "retour": false
+  },
+  {
+   "d": "2026-09-30",
+   "creator": "Rowan",
+   "code": "rowan10",
+   "num": "#1633",
+   "product": "Schoonmaak kit",
+   "herkomst": "Google",
+   "omzet_excl": 133.97,
+   "commissie_pct": 10.0,
+   "commissie": 13.4,
    "status": "Openstaand",
    "retour": false
   }
