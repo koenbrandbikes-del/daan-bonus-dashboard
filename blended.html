@@ -635,7 +635,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 </div>
 
 <div id="staleWarning" class="stale-warning" style="display:none"></div>
-<div id="googlePlaceholderWarning" class="stale-warning stale-critical"></div>
+<div id="googleSyncWarning" class="stale-warning stale-critical"></div>
 
 <!-- Zelfde opbouw als het Meta-dashboard, op Koens verzoek — leest rustiger
      als beide pagina's dezelfde volgorde aanhouden: analysefilters →
@@ -674,7 +674,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     <div class="acc-hd" onclick="tog('acc-margin')"><span>Marge-opbouw (alle kanalen)</span><span class="acc-chv">›</span></div>
     <div class="acc-body">
       <div style="padding:16px 20px" id="marginFlow" class="margin-flow"></div>
-      <div class="fc-note" style="padding:0 20px 16px">Kostprijs = inkoop + verzending + fulfilment per product, plus Shopify-fee (2%) en overhead (4%) op <b>alle</b> Shopify-orders (niet alleen affiliate-orders) — zelfde rekenmethode als op de andere twee pagina's. Google Ads-cijfers zijn placeholder, zie de waarschuwing bovenaan.</div>
+      <div class="fc-note" style="padding:0 20px 16px">Kostprijs = inkoop + verzending + fulfilment per product, plus Shopify-fee (2%) en overhead (4%) op <b>alle</b> Shopify-orders (niet alleen affiliate-orders) — zelfde rekenmethode als op de andere twee pagina's. Google Ads toont de kosten en conversiewaarde uit het advertentieaccount.</div>
     </div>
   </div>
 
@@ -715,7 +715,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 
 <div class="footer"><span class="footer-pill">
   <span class="footer-line footer-line-main"><span class="live-dot"></span>Bijgewerkt: <span id="footerDate"></span></span>
-  <span class="footer-line footer-line-sub">Meta live · Shopify live · Creators-sheet momentopname · Google Ads: placeholder</span>
+  <span class="footer-line footer-line-sub">Meta live · Shopify live · Creators-sheet momentopname · Google Ads live</span>
 </span></div>
 </div>
 
@@ -728,11 +728,13 @@ function _loadJSON(url){
   if(xhr.status !== 200) throw new Error(url+": HTTP "+xhr.status);
   return JSON.parse(xhr.responseText);
 }
-let _META, _SHOPIFY, _CREATORS;
+let _META, _SHOPIFY, _CREATORS, _GOOGLE;
 try{
   _META = _loadJSON("data/meta.json");
   _SHOPIFY = _loadJSON("data/shopify.json");
   _CREATORS = _loadJSON("data/creators.json");
+  _GOOGLE = _loadJSON("data/google.json");
+  if(_GOOGLE.source!=="google_ads_api" || !Array.isArray(_GOOGLE.daily_google) || !_GOOGLE.daily_google.length || !Number.isFinite(Date.parse(_GOOGLE.synced_at))) throw new Error("Google Ads-data ontbreekt of is ongeldig");
 }catch(e){
   document.body.innerHTML = '<div style="max-width:520px;margin:80px auto;padding:24px;'
     + 'font:14px/1.6 -apple-system,sans-serif;color:#DD9280;background:#121433;'
@@ -807,20 +809,8 @@ for(const o of CREATOR_ORDERS){
   COMMISSIE_BY_DAY[o.d] = (COMMISSIE_BY_DAY[o.d]||0) + o.commissie;
 }
 
-// ═══ Google Ads: PLACEHOLDER-cijfers (30 sep 2026, op Koens verzoek) ═══
-// De echte Google Ads-koppeling bestaat nog niet ("die maken we later
-// wel") — Koen wilde nu al wel de bloklende-structuur zien, dus hier
-// bewust duidelijk-fictieve cijfers i.p.v. het stale/bevroren
-// data/google.json (dat stopte op 15 aug en zou als "echt" oogsten).
-// Simpele, deterministische afgeleide van de Meta-uitgave per dag (vaste
-// ratio + vaste kanaal-ROAS) — geen eigen random, dus reproduceerbaar en
-// makkelijk 1-op-1 te vervangen zodra de echte koppeling er is.
-const GOOGLE_PLACEHOLDER_SPEND_RATIO = 0.32; // Google-uitgave ≈ 32% van Meta-uitgave die dag
-const GOOGLE_PLACEHOLDER_ROAS = 3.4;         // vaste, fictieve Google-ROAS
-const GOOGLE_DAILY = new Map(DAILY_META.map(d=>{
-  const spend = round2(d.spend * GOOGLE_PLACEHOLDER_SPEND_RATIO);
-  return [d.d, {d:d.d, spend, rev: round2(spend*GOOGLE_PLACEHOLDER_ROAS)}];
-}));
+// Google Ads: account totals from the API, including fractional conversions.
+const GOOGLE_DAILY = new Map(_GOOGLE.daily_google.map(d=>[d.d,d]));
 
 /* ═══ PERIODES ═══
    Zelfde soort periode-kiezer (knop + dropdown-menu + kalender voor een
@@ -891,9 +881,8 @@ function computePeriod(from,to){
   const metaSpend = metaRows.reduce((s,x)=>s+x.spend,0);
   const metaRevClaimed = metaRows.reduce((s,x)=>s+(x.rev7||0)+(x.rev1v||0),0);
 
-  // Google Ads — PLACEHOLDER (zie GOOGLE_DAILY hierboven), nog geen echte
-  // koppeling.
-  const googleRows = metaRows.map(x=>GOOGLE_DAILY.get(x.d)).filter(Boolean);
+  // Google Ads is independent of the Meta date range.
+  const googleRows = _GOOGLE.daily_google.filter(x=>x.d>=from && x.d<=to);
   const googleSpend = googleRows.reduce((s,g)=>s+g.spend,0);
   const googleRevClaimed = googleRows.reduce((s,g)=>s+g.rev,0);
 
@@ -944,7 +933,7 @@ function renderFilterBar(){
   const bar = document.getElementById("filterBarC");
   const chips = [
     {k:"meta", l:"Meta"},
-    {k:"google", l:"Google Ads (placeholder)"},
+    {k:"google", l:"Google Ads"},
     {k:"infl", l:"Influencers"},
   ];
   const allOn = gChannels.meta && gChannels.google && gChannels.infl;
@@ -983,7 +972,7 @@ function renderSummary(cur){
   if(cur.unknownCost>0){
     rows.push({dot:"a", html:`<strong>${cur.unknownCost}</strong> orders hebben nog geen bekende kostprijs (onbekend artikel).`});
   }
-  rows.push({dot:"a", html:`Google Ads-cijfers zijn nog <strong>placeholder</strong> (geen koppeling) — zie de waarschuwing bovenaan.`});
+  rows.push({dot:"g", html:`Google Ads is gekoppeld. De geclaimde waarde volgt de primaire conversiedoelen in Google Ads en kan overlappen met andere kanalen.`});
   const dotColor = {g:"#8FC49B", a:"#E5B863", r:"#DD9280"};
   document.getElementById("summaryC").innerHTML =
     `<div class="kpi-headline-hd">Samenvatting</div>` +
@@ -1021,7 +1010,7 @@ function render(){
     `<span class="src-tag live">● Meta live</span>` +
     `<span class="src-tag live">● Shopify live</span>` +
     `<span class="src-tag snapshot">● Creators-sheet momentopname ${creatorsSyncDate}</span>` +
-    `<span class="src-tag frozen">● Google Ads placeholder</span>`;
+    `<span class="src-tag ${Date.now()-Date.parse(_GOOGLE.synced_at)<45*60000?"live":"frozen"}">● Google Ads · ${new Date(_GOOGLE.synced_at).toLocaleString("nl-NL",{timeZone:"Europe/Amsterdam"})}</span>`;
 
   renderFilterBar();
   renderKpiStrip(cur, roasDeltaHtml);
@@ -1044,9 +1033,7 @@ function render(){
 
   document.getElementById("footerDate").textContent = `${SNAP_TIME} · ${fmtL(SNAP)}`;
 
-  const gw = document.getElementById("googlePlaceholderWarning");
-  gw.innerHTML = `⚠️ <strong>Google Ads-cijfers op deze pagina zijn placeholder-data</strong> (geen koppeling actief) — duidelijk fictief, alleen om de structuur van dit dashboard te tonen. Meta en Shopify zijn wél live, de Creators-sheet is een momentopname.`;
-  gw.style.display = "block";
+  checkGoogleStaleness();
 }
 
 function renderMarginFlow(cur){
@@ -1055,7 +1042,7 @@ function renderMarginFlow(cur){
     {lbl:"− Kostprijs (COGS)", sub:"inkoop + verzending + fulfilment + fees", val:-cur.cogs},
     {lbl:"= Brutomarge", sub:"", val:cur.bruto},
     {lbl:"− Meta-uitgaven", sub:gChannels.meta?"actief":"uitgeschakeld", val:-(gChannels.meta?cur.metaSpend:0)},
-    {lbl:"− Google Ads-uitgaven", sub:(gChannels.google?"actief · ":"uitgeschakeld · ")+"placeholder", val:-(gChannels.google?cur.googleSpend:0)},
+    {lbl:"− Google Ads-uitgaven", sub:gChannels.google?"actief":"uitgeschakeld", val:-(gChannels.google?cur.googleSpend:0)},
     {lbl:"− Affiliate-commissie", sub:gChannels.infl?"actief":"uitgeschakeld", val:-(gChannels.infl?cur.commissie:0)},
     {lbl:"= Nettomarge", sub:"", val:cur.netto, final:true},
   ];
@@ -1072,7 +1059,7 @@ function renderMarginFlow(cur){
 function renderAttributionBars(cur){
   const rows = [
     {l:"Meta", pct:cur.metaSharePct, col:"#5B9EE8"},
-    {l:"Google Ads (placeholder)", pct:cur.googleSharePct, col:"#B98DE0"},
+    {l:"Google Ads", pct:cur.googleSharePct, col:"#B98DE0"},
     {l:"Influencers (echt, geen schatting)", pct:cur.inflSharePct, col:"#E5B863"},
   ];
   document.getElementById("attributionBars").innerHTML = rows.map(r=>
@@ -1084,7 +1071,7 @@ function renderAttributionBars(cur){
 function renderChannelsTable(cur){
   const rows = [
     {l:"Meta", spend:cur.metaSpend, claimed:cur.metaRevClaimed, share:cur.metaSharePct, on:gChannels.meta, note:""},
-    {l:"Google Ads", spend:cur.googleSpend, claimed:cur.googleRevClaimed, share:cur.googleSharePct, on:gChannels.google, note:" (placeholder)"},
+    {l:"Google Ads", spend:cur.googleSpend, claimed:cur.googleRevClaimed, share:cur.googleSharePct, on:gChannels.google, note:" (conversiewaarde)"},
     {l:"Influencers", spend:cur.commissie, claimed:cur.inflOmzetIncl, share:cur.inflSharePct, on:gChannels.infl, note:""},
   ];
   const trs = rows.map(r=>{
@@ -1227,7 +1214,7 @@ function renderAbout(){
   document.getElementById("aboutBody").innerHTML = `
     <div class="analysis-row">Blended overzicht: alle Shopify-orders + kosten van alle marketing-kanalen (Meta, Google Ads, influencers) op één pagina. Klik "Meta →" of "Creators →" rechtsboven voor de losse, per-kanaal-pagina's.</div>
     <div class="analysis-row"><b style="color:#8FC49B">● Meta</b> — live advertentiedata (Insights API, elke 15 min), "toegerekende omzet" is Meta's eigen attributie (7-daags klik + 1-daags view).</div>
-    <div class="analysis-row"><b style="color:#B98DE0">● Google Ads</b> — <b>placeholder</b>, er is nog geen echte koppeling. De cijfers zijn een vaste, deterministische afleiding van de Meta-uitgave per dag (32% van Meta's dagbudget, vaste ROAS 3,4×) — puur om de structuur van dit dashboard te laten zien, niet om ergens op te sturen.</div>
+    <div class="analysis-row"><b style="color:#B98DE0">● Google Ads</b> — kosten, primaire conversies en conversiewaarde uit account 764-528-8282, elke 15 minuten opgehaald. Conversiewaarde wordt toegerekend aan de datum van de advertentie-interactie en kan ook andere doelen dan aankopen bevatten. Late conversies kunnen eerdere dagen wijzigen. Dit is de door Google geclaimde waarde; Shopify blijft de bron voor werkelijke omzet.</div>
     <div class="analysis-row"><b style="color:#E5B863">● Influencers</b> — momentopname uit het externe Creators Google Sheet (tab "Sales"), opgehaald met <code>scripts/sync_creators.py</code>. Dit is het enige kanaal waar de omzet <b>echt gemeten</b> is (via kortingscode), niet een attributieschatting — daarom is het aandeel% hier het meest betrouwbare cijfer van de drie.</div>
     <div class="analysis-row"><b style="color:#4EA8DE">● Shopify</b> — live, kostprijs-cascade (Kostprijs → Brutomarge) draait over <b>alle</b> orders, niet alleen orders die aan een kanaal zijn toe te schrijven.</div>
     <div class="analysis-row"><b>Attributie-overlap:</b> Meta, Google en influencers claimen orders elk via hun eigen model/meting. Diezelfde order kan door meerdere kanalen als "geclaimd" worden meegeteld (bv. iemand ziet een Meta-ad én gebruikt een influencer-kortingscode) — de percentages tellen daarom bewust niet op tot 100%. Dat is geen rekenfout, zie de "Kanalen"-sectie hieronder.</div>
@@ -1260,12 +1247,13 @@ function renderChart(pd){
     byWeek[wk].omzet += o.incl;
     byWeek[wk].n++;
   }
-  for(const m of DAILY_META){
-    if(m.d<pd.from || m.d>pd.to) continue;
-    const wk = isoWeekStart(m.d);
-    if(!byWeek[wk]) continue;
-    const g = GOOGLE_DAILY.get(m.d);
-    byWeek[wk].spend += (gChannels.meta?m.spend:0) + (gChannels.google&&g?g.spend:0) + (gChannels.infl?(COMMISSIE_BY_DAY[m.d]||0):0);
+  const metaByDay=new Map(DAILY_META.map(m=>[m.d,m]));
+  const dates=new Set([...metaByDay.keys(),...GOOGLE_DAILY.keys(),...Object.keys(COMMISSIE_BY_DAY)]);
+  for(const d of dates){
+    if(d<pd.from || d>pd.to) continue;
+    const wk=isoWeekStart(d);
+    if(!byWeek[wk]) byWeek[wk]={wk,omzet:0,spend:0,n:0};
+    byWeek[wk].spend += (gChannels.meta?(metaByDay.get(d)?.spend||0):0) + (gChannels.google?(GOOGLE_DAILY.get(d)?.spend||0):0) + (gChannels.infl?(COMMISSIE_BY_DAY[d]||0):0);
   }
   const data = Object.values(byWeek).sort((a,b)=>a.wk<b.wk?-1:1)
     .map(w=>({...w, label:fmtS(w.wk)}));
@@ -1330,7 +1318,16 @@ function tog(id){
   document.getElementById(id).classList.toggle("open");
 }
 
+function checkGoogleStaleness(){
+  const el=document.getElementById("googleSyncWarning");
+  const age=(Date.now()-Date.parse(_GOOGLE.synced_at))/60000;
+  const pd=PERIODS[P];
+  const missing=pd.from<_GOOGLE.coverage_from || pd.to>_GOOGLE.coverage_to;
+  el.style.display=age>=45||missing?"block":"none";
+  el.textContent=missing?"⚠️ Google Ads-data dekt niet de volledige gekozen periode. Totalen kunnen onvolledig zijn.":`⚠️ Google Ads-data is ${Math.floor(age)} minuten niet ververst. De getoonde cijfers zijn de laatst opgehaalde gegevens.`;
+}
 function checkStaleness(){
+  checkGoogleStaleness();
   const el=document.getElementById("staleWarning");
   if(!el||!SNAP||!SNAP_TIME)return;
   const snapDt=new Date(`${SNAP}T${SNAP_TIME}:00`);

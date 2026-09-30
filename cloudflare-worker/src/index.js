@@ -4,14 +4,8 @@
  * 1. fetch(): vangt Shopify's "Orderaanmaak"-webhook op (real-time, gratis)
  *    en zet nieuwe orders in data/shopify.json — zelfde schema/dedup-logica
  *    als scripts/sync_shopify.py.
- * 2. scheduled(): draait dezelfde runMetaSync() als /run-meta-sync (zie
- *    fetch() hieronder), maar wordt momenteel NIET getriggerd — de Cron
- *    Trigger staat sinds 15 sep 2026 bewust uit (crons = [] in wrangler.toml,
- *    zie de uitleg daar). De 15-minuten-sync zelf loopt via een externe
- *    cron-job.org-pinger op GET /run-meta-sync?key=..., zodat Meta-verversing
- *    niet afhangt van of de Mac wakker is (die bleek bij lage accu agressief
- *    geplande achtergrond-wakes te onderdrukken). scheduled() blijft staan
- *    als kant-en-klare terugvaloptie, niet als actief pad.
+ * 2. scheduled(): Google Ads reporting every 15 minutes.
+ *    Meta continues through the external /run-meta-sync cron-job.org pinger.
  *
  * Secrets (via `wrangler secret put`, nooit in code/git):
  *   GITHUB_TOKEN            fine-grained PAT, alleen deze repo, Contents: Read/write
@@ -61,6 +55,8 @@ const FILTERABLE_PLATFORMS = new Set(["facebook", "instagram"]);
 const BREAKDOWN_REFRESH_MIN_MS = 55 * 60 * 1000;
 const BREAKDOWN_POLL_MS = 2000;
 const BREAKDOWN_MAX_POLLS = 15; // 15 × 2s = 30s max wachttijd per dag, dan niet-fataal opgeven
+
+import { fetchGoogleData } from "./googleAds.js";
 
 import { handleMcpRequest, handleInternalMcpRequest } from "./mcp.js";
 
@@ -140,11 +136,28 @@ export default {
   },
 
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(
-      runMetaSync(env).catch((e) => console.error("meta cron-sync mislukt:", e.message))
-    );
+    // Google only. Meta retains its existing external cron-job.org trigger.
+    ctx.waitUntil(runGoogleSync(env));
   },
 };
+
+export async function runGoogleSync(env) {
+  try {
+    const file = await ghGetFile(env.GITHUB_TOKEN, "data/google.json");
+    const data = await fetchGoogleData(env.GOOGLE_ADS_SERVICE_ACCOUNT, file ? JSON.parse(file.content) : {});
+    for (let attempt=1; attempt<=3; attempt++) {
+      const latest = attempt===1 ? file : await ghGetFile(env.GITHUB_TOKEN, "data/google.json");
+      if (latest && JSON.parse(latest.content).synced_at > data.synced_at) return {ok:true,skipped:true};
+      const put=await ghPutFile(env.GITHUB_TOKEN,"data/google.json",JSON.stringify(data,null,1)+"\n",latest?.sha,`Google Ads sync ${data.coverage_to}`);
+      if(put.ok) { await updateStatus(env.GITHUB_TOKEN,"google",true,null); return {ok:true,days:data.daily_google.length}; }
+      if(put.status!==409 || attempt===3) throw new Error(`Google data write HTTP ${put.status}`);
+      await sleep(300*attempt);
+    }
+  } catch(e) {
+    await updateStatus(env.GITHUB_TOKEN,"google",false,e.message);
+    throw e;
+  }
+}
 
 /* ═══ Shopify (webhook) ══════════════════════════════════════════════ */
 
