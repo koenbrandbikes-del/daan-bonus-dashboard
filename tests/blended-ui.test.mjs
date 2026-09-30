@@ -339,8 +339,10 @@ test("channel revenue bar totals attributed revenue, excludes branded Google and
   const segments = [...d.querySelectorAll(".revenue-bar > button")];
   assert.equal(segments.length, 3);
   assert(Math.abs(segments.reduce((n,s)=>n+parseFloat(s.style.flexGrow),0)-1)<0.001);
-  assert(d.querySelector('.revenue-legend [data-channel=google]').title.includes('non-branded'));
-  const googleAmount = d.querySelector('.revenue-legend [data-channel=google]').title.split(' · ')[0];
+  assert(d.querySelector('.revenue-legend [data-channel=google]').getAttribute('aria-label').includes('non-branded'));
+  assert.equal(d.querySelector('.mix-tooltip'),null);
+  assert(d.querySelector('.revenue-legend b').textContent.includes('%'));
+  const googleAmount = d.querySelector('.revenue-legend [data-channel=google] small').textContent;
   d.querySelector('.revenue-legend [data-channel=google]').click();
   assert.equal(d.querySelector('.kpi[data-metric=revenue] strong').textContent,googleAmount);
   assert.equal(d.querySelector('.channel-revenue'),null);

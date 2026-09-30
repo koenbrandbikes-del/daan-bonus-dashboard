@@ -375,7 +375,7 @@ function channelRevenueBar(cur) {
   ];
   const complete=channels.every(c=>c.revenue!=null && c.revenue>=0);
   const total=complete ? sum(channels,"revenue") : 0;
-  return `<section class="channel-revenue" aria-label="Omzet per kanaal"><span class="mix-label" title="100% is de som van kanaalclaims, niet de Shopify-omzet. Claims overlappen; overig is niet betrouwbaar af te leiden.">Kanaalclaims ⓘ</span><div class="revenue-bar">${total>0 ? channels.map((c,i)=>`<button class="mix-segment mix-${i}" data-mix="${c.key}" style="flex:${c.revenue/total};--mix-color:${c.color}" aria-label="${c.name}: ${euro(c.revenue)}, ${num(c.revenue/total*100)} procent" title="${c.name}: ${euro(c.revenue)} · ${num(c.revenue/total*100)}%${c.key==='google'?' · non-branded':''}"></button>`).join('') : '<span class="hint">Verdeling niet beschikbaar</span>'}</div><div class="revenue-legend">${channels.map((c,i)=>`<button data-mix="${c.key}" data-channel="${c.key}" title="${euro(c.revenue)} · ${total>0?num(c.revenue/total*100)+'%':'onbekend'}${c.key==='google'?' · non-branded':''}"><i class="channel-dot mix-${i}" style="background-color:${c.color}"></i>${c.name}</button>`).join('')}</div><output class="mix-tooltip" hidden></output></section>`;
+  return `<section class="channel-revenue" aria-label="Omzet per kanaal"><span class="mix-label">Verdeling toegerekende omzet</span><div class="revenue-bar">${total>0 ? channels.map((c,i)=>`<button class="mix-segment mix-${i}" data-mix="${c.key}" data-channel="${c.key}" style="flex:${c.revenue/total};--mix-color:${c.color}" aria-label="${c.name}: ${euro(c.revenue)}, ${num(c.revenue/total*100)} procent van toegerekende omzet"></button>`).join('') : '<span class="hint">Verdeling niet beschikbaar</span>'}</div><div class="revenue-legend">${channels.map((c,i)=>`<button data-mix="${c.key}" data-channel="${c.key}" aria-label="${c.name}${c.key==='google'?' non-branded':''}: ${euro(c.revenue)}, ${total>0?num(c.revenue/total*100)+' procent van toegerekende omzet':'aandeel onbekend'}"><i class="channel-dot mix-${i}" style="background-color:${c.color}"></i><span>${c.name}</span><b>${total>0?num(c.revenue/total*100)+'%':'—'}</b><small>${euro(c.revenue)}</small></button>`).join('')}</div><p class="mix-explanation">100% = alle toegerekende kanaalomzet samen. Kanalen kunnen dezelfde order meetellen. Google Ads: zonder branded.</p></section>`;
 }
 function googleFilter() {
   if (state.channel !== "google") return "";
@@ -1331,9 +1331,9 @@ function selectMetric(k) {
 function bindContent() {
   const mix=$('.channel-revenue');
   if(mix) {
-    const show=e=>{const b=e.target.closest('[data-mix]');if(!b)return;mix.querySelectorAll('[data-mix]').forEach(n=>n.classList.toggle('mix-active',n.dataset.mix===b.dataset.mix));const out=mix.querySelector('output');out.hidden=false;out.textContent=b.getAttribute('aria-label')||b.getAttribute('title');};
+    const show=e=>{const b=e.target.closest('[data-mix]');if(!b)return;mix.querySelectorAll('[data-mix]').forEach(n=>n.classList.toggle('mix-active',n.dataset.mix===b.dataset.mix));};
     mix.onpointerover=show;mix.onfocusin=show;
-    const hide=()=>{mix.querySelectorAll('.mix-active').forEach(n=>n.classList.remove('mix-active'));mix.querySelector('output').hidden=true;};
+    const hide=()=>{mix.querySelectorAll('.mix-active').forEach(n=>n.classList.remove('mix-active'));};
     mix.onpointerleave=hide;mix.onfocusout=hide;
   }
 

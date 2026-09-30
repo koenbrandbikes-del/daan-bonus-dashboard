@@ -1455,3 +1455,21 @@ header .live-dot.warning { width:10px; height:10px; }
 .daan-cost button.link { border:0; background:transparent; color:var(--blue); box-shadow:none; }
 .daan-choice.compact .daan-toggle { flex-shrink:0; }
 .daan-choice.compact .daan-toggle button { white-space:nowrap; }
+/* Read the share and amount in place, without floating tooltips. */
+.channel-revenue { gap:10px 14px; }
+.channel-revenue .mix-label { font-size:11px; flex-basis:auto; }
+.channel-revenue .revenue-legend { flex-basis:100%; display:flex; justify-content:space-between; gap:8px; }
+.channel-revenue .revenue-legend button { gap:6px; min-height:32px; font-size:11px; border-radius:5px; padding:4px; }
+.revenue-legend b { font-weight:600; font-variant-numeric:tabular-nums; }
+.revenue-legend small { color:var(--muted); font-size:10px; font-variant-numeric:tabular-nums; margin-left:2px; }
+.mix-explanation { flex-basis:100%; color:var(--muted); font-size:10px; line-height:1.5; margin:0; }
+.channel-revenue .mix-active { outline:1px solid #ffffff90!important; outline-offset:1px; }
+@media(max-width:699px) {
+ .channel-revenue .mix-label { flex-basis:100%; }
+ .channel-revenue .revenue-bar { flex-basis:100%; }
+ .channel-revenue .revenue-legend { display:grid; grid-template-columns:1fr; gap:0; }
+ .channel-revenue .revenue-legend button { display:grid; grid-template-columns:10px 1fr auto 66px; width:100%; text-align:left; min-height:36px; }
+ .revenue-legend small { text-align:right; }
+}
+.channel-revenue .revenue-legend small { margin-top:0; }
+@media(max-width:699px) { .channel-revenue .revenue-legend small { grid-column:4; grid-row:1; } }
