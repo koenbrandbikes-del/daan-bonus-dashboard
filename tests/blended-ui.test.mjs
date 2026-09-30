@@ -26,7 +26,7 @@ async function boot(
   };
   w.matchMedia = () => ({ matches: true });
   w.HTMLElement.prototype.scrollIntoView = () => {};
-  const scripts = ["metrics.js", "data.js", "date-picker.js", "app.js"]
+  const scripts = ["metrics.js", "data.js", "date-picker.js", "creator-summary.js", "app.js"]
     .map((f) =>
       fs
         .readFileSync(new URL("assets/blended/" + f, root), "utf8")

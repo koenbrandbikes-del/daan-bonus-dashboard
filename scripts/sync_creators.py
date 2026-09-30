@@ -33,6 +33,7 @@ SHEET_ID = "1KFqw7ced05h4K2HU60yUAdImPs42Hm8LMfGHaOoRw7Y"
 SALES_GID = "1378460483"
 CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={SALES_GID}"
 
+SETTINGS_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=1008701550"
 OUT_PATH = "data/creators.json"
 
 
@@ -94,6 +95,10 @@ def main():
         print(f"⚠️  Kon Creators-sheet niet ophalen: {e}", file=sys.stderr)
         sys.exit(1)
 
+    settings = list(csv.DictReader(io.StringIO(fetch_csv(SETTINGS_URL))))
+    roster = {r.get("Kortingscode", "").strip().casefold() for r in settings if r.get("Creator", "").strip() and r.get("Kortingscode", "").strip()}
+    if not roster:
+        raise ValueError("Geen creators in Instellingen; bestaande dataset blijft behouden")
     shopify_incl_by_num = load_shopify_by_num()
     corrected = 0
     reader = csv.DictReader(io.StringIO(text))
@@ -181,6 +186,13 @@ def main():
         "synced_at": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
         "source": "Creators Google Sheet · tab 'Sales' (ieder uur gesynchroniseerd)",
         "sync_interval_minutes": 60,
+        "collaborations": {
+            "total": len(roster),
+            "with_orders": len(roster & {r["code"].casefold() for r in rows}),
+            "without_orders": len(roster - {r["code"].casefold() for r in rows}),
+            "basis": "Instellingen + volledige Sales-tab; bestellingen via kortingscode, inclusief eventuele retouren",
+            "through": max(r["d"] for r in rows if r["d"]),
+        },
         "totals": totals,
         "creators": creators,
         "orders": rows,

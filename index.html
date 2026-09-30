@@ -552,6 +552,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 }
 
 </style>
+<link rel="stylesheet" href="assets/blended/creator-summary.css?v=1" />
 </head>
 <body>
 <div class="page">
@@ -611,6 +612,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 <div id="kpiStrip" class="kpi-strip"></div>
 <div id="kpiCompareCap" class="kpi-compare-cap"></div>
 <div id="kpiHeadline" class="kpi-headline"></div>
+<div id="creatorInvestment"></div>
 <div id="kpiChartWrap" class="kpi-chart-wrap"></div>
 
 <!-- Main card -->
@@ -3226,6 +3228,15 @@ render();
 loadAdTagsRemote();
 checkStaleness();
 setInterval(checkStaleness,60000);
+</script>
+<script type="module">
+import {creatorSummary} from './assets/blended/creator-summary.js?v=creator-investment-1';
+try {
+ const responses=await Promise.all(['data/creators.json','assets/blended/costs.json'].map(url=>fetch(url,{cache:'no-cache'})));
+ if(responses.some(r=>!r.ok)) throw new Error('Bron niet beschikbaar');
+ const [creators,costs]=await Promise.all(responses.map(r=>r.json()));
+ document.querySelector('#creatorInvestment').innerHTML=creatorSummary(creators,costs);
+} catch { document.querySelector('#creatorInvestment').textContent='Influencerinvestering tijdelijk niet beschikbaar.'; }
 </script>
 </body>
 </html>
