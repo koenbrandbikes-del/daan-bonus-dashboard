@@ -93,7 +93,7 @@ export function createDatePicker({
   }
   function update() {
     const r = getRange();
-    trigger.textContent = `${r.label || `${format(r.from)} – ${format(r.to)}`}  ⌄`;
+    trigger.textContent = `${r.label || `${format(r.from)} – ${format(r.to)}`}`;
     trigger.setAttribute(
       "aria-label",
       `${label}: ${r.label || `${format(r.from)} – ${format(r.to)}`}`,

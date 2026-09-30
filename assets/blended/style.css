@@ -1201,3 +1201,8 @@ header {
 .update-summary .hint { margin-bottom:0; }
 @media(max-width:900px) { .update-sources { grid-template-columns:repeat(2,1fr); } }
 @media(max-width:500px) { .update-sources { grid-template-columns:1fr; } .update-summary { padding:20px; } }
+
+.period-btn { justify-content: space-between; gap: 18px; }
+.period-btn::after { content: ""; width: 7px; height: 7px; flex: 0 0 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; opacity: .65; transform: translateY(-2px) rotate(45deg); transition: transform .16s ease; }
+.period-btn[aria-expanded="true"]::after { transform: translateY(2px) rotate(225deg); }
+@media (prefers-reduced-motion: reduce) { .period-btn::after { transition: none; } }
