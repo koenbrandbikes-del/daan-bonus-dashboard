@@ -823,18 +823,20 @@ const DATA_MAX = [DAILY_META[DAILY_META.length-1].d, _orderDates[_orderDates.len
 
 /* ═══ Kanalen aan/uit (i.p.v. product/creator-filter op de andere twee
    pagina's) — dit is hier de relevante "Analysefilter": welke
-   marketing-kanalen tellen mee in Totale marketing-uitgaven/Nettomarge.
-   Omzet en Brutomarge blijven altijd het complete beeld (alle Shopify-
-   orders) — die zijn niet per-kanaal toe te rekenen. ═══ */
+   kanaal toont zijn eigen omzet en uitgaven. Alle kanalen toont Shopify-
+   omzet en de winkelbrede marges. ═══ */
 let gChannels = {meta:true, google:true, infl:true};
 function toggleChannel(ch){
-  gChannels[ch] = !gChannels[ch];
+  gChannels = {meta:ch==="meta", google:ch==="google", infl:ch==="infl"};
   render();
 }
 function resetChannels(){
   gChannels = {meta:true, google:true, infl:true};
   render();
 }
+
+function allChannels(){ return gChannels.meta && gChannels.google && gChannels.infl; }
+function channelName(){ return allChannels()?"Alle kanalen":gChannels.meta?"Meta":gChannels.google?"Google Ads":"Influencers"; }
 
 function buildPeriods(){
   const maxD = DATA_MAX;
@@ -901,14 +903,15 @@ function computePeriod(from,to){
 
   const totalSpend = (gChannels.meta?metaSpend:0) + (gChannels.google?googleSpend:0) + (gChannels.infl?commissie:0);
   const netto = bruto - totalSpend;
-  const blendedRoas = totalSpend>0 ? shopIncl/totalSpend : null;
+  const revenue = allChannels()?shopIncl:gChannels.meta?metaRevClaimed:gChannels.google?googleRevClaimed:inflOmzetIncl;
+  const blendedRoas = totalSpend>0 ? revenue/totalSpend : null;
 
   const metaSharePct = shopIncl>0 ? metaRevClaimed/shopIncl*100 : 0;
   const googleSharePct = shopIncl>0 ? googleRevClaimed/shopIncl*100 : 0;
   const inflSharePct = shopIncl>0 ? inflOmzetIncl/shopIncl*100 : 0;
   const overlapTotal = metaSharePct+googleSharePct+inflSharePct;
 
-  return {from,to,shopIncl,shopExcl,cogs,unknownCost,bruto,
+  return {from,to,revenue,shopIncl,shopExcl,cogs,unknownCost,bruto,
     metaSpend,metaRevClaimed,googleSpend,googleRevClaimed,commissie,inflOmzetIncl,
     totalSpend,netto,blendedRoas,metaSharePct,googleSharePct,inflSharePct,overlapTotal,
     orderCount:ordersP.length,ordersP};
@@ -925,10 +928,7 @@ function setOrdSort(key){
 }
 let CUR_PD = null;
 
-/* ═══ Analysefilters: hier kanaal-aan/uit i.p.v. product/creator (zie
-   gChannels hierboven) — beïnvloedt alleen Totale marketing-uitgaven/
-   Nettomarge/Blended ROAS, niet Omzet/Brutomarge (die zijn altijd het
-   complete, alle-orders-beeld). ═══ */
+// Eén kanaal of het complete winkeloverzicht.
 function renderFilterBar(){
   const bar = document.getElementById("filterBarC");
   const chips = [
@@ -941,22 +941,28 @@ function renderFilterBar(){
     <div class="filter-bar-row">
       <div class="filter-bar-label">KANALEN</div>
       <div class="filter-strat-group">${chips.map(c=>
-        `<button class="filter-strat-btn${gChannels[c.k]?" active":""}" onclick="toggleChannel('${c.k}')">${c.l}</button>`
+        `<button class="filter-strat-btn${!allOn && gChannels[c.k]?" active":""}" aria-pressed="${!allOn && gChannels[c.k]}" onclick="toggleChannel('${c.k}')">${c.l}</button>`
       ).join("")}</div>
-      <button class="filter-reset-btn" onclick="resetChannels()" ${allOn?"disabled":""}>Reset</button>
+      <button class="filter-strat-btn${allOn?" active":""}" aria-pressed="${allOn}" onclick="resetChannels()">Alle kanalen</button>
     </div>`;
 }
 
 function renderKpiStrip(cur, roasDeltaHtml){
   const spendSub = `Meta ${eur(cur.metaSpend)} · Google ${eur(cur.googleSpend)} · Infl. ${eur(cur.commissie)}`;
-  const items = [
-    {l:"TOTALE OMZET", v:eur(cur.shopIncl), s:`${cur.orderCount} orders`},
+  let items = [
+    {l:"TOTALE OMZET", v:eur(cur.revenue), s:`${cur.orderCount} orders`},
     {l:"MARKETING-UITGAVEN", v:eur(cur.totalSpend), s:spendSub},
     {l:"BLENDED ROAS", v:cur.blendedRoas!=null?x2(cur.blendedRoas):"—", s:roasDeltaHtml.replace(/<[^>]+>/g,"")},
     {l:"BRUTOMARGE", v:eur(cur.bruto), s:cur.shopExcl>0?`${(cur.bruto/cur.shopExcl*100).toFixed(1)}% van omzet excl.`:""},
     {l:"NETTOMARGE", v:eur(cur.netto), s:"bruto − marketing-uitgaven", cls:cur.netto>=0?"good":"bad"},
     {l:"ATTRIBUTIE-OVERLAP", v:cur.overlapTotal.toFixed(0)+"%", s:"Meta+Google+Infl. geclaimd"},
   ];
+  if(!allChannels()) items = [
+    {l:gChannels.google?"CONVERSIEWAARDE":"TOEGEREKENDE OMZET", v:eur(cur.revenue), s:channelName()+(gChannels.infl?" · via kortingscode":" · volgens kanaalattributie")},
+    {l:"MARKETING-UITGAVEN", v:eur(cur.totalSpend), s:channelName()},
+    {l:"KANAAL-ROAS", v:cur.blendedRoas!=null?x2(cur.blendedRoas):"—", s:roasDeltaHtml.replace(/<[^>]+>/g,"")},
+  ];
+  document.getElementById("kpiStripC").style.gridTemplateColumns = allChannels()?"":"repeat(3,minmax(0,1fr))";
   document.getElementById("kpiStripC").innerHTML = items.map(it=>
     `<div class="kpi-item${it.cls?" "+it.cls:""}"><div class="kpi-lbl">${it.l}</div><div class="kpi-val">${it.v}</div><div class="kpi-sub">${it.s}</div></div>`
   ).join("");
@@ -973,6 +979,12 @@ function renderSummary(cur){
     rows.push({dot:"a", html:`<strong>${cur.unknownCost}</strong> orders hebben nog geen bekende kostprijs (onbekend artikel).`});
   }
   rows.push({dot:"g", html:`Google Ads is gekoppeld. De geclaimde waarde volgt de primaire conversiedoelen in Google Ads en kan overlappen met andere kanalen.`});
+  if(!allChannels()){
+    rows.length=0;
+    rows.push({dot:"g",html:`<strong>${channelName()}</strong>: ${eur(cur.revenue)} ${gChannels.google?"conversiewaarde":"toegerekende omzet"} bij ${eur(cur.totalSpend)} aan uitgaven. Kanaal-ROAS: <strong>${cur.blendedRoas!=null?x2(cur.blendedRoas):"—"}</strong>.`});
+    rows.push({dot:"a",html:gChannels.infl?"Omzet via influencer-kortingscodes, op basis van de Creators-sheet.":gChannels.meta?"Omzet volgens Meta-attributie (7-daags klik + 1-daags view). Deze kan overlappen met andere kanalen.":"Conversiewaarde volgens de primaire Google Ads-doelen, toegerekend aan de advertentie-interactie. Dit kan ook andere doelen dan aankopen bevatten en overlappen met andere kanalen."});
+    rows.push({dot:"a",html:"Winkelbrede kostprijzen, marges en orderdetails vind je onder ‘Alle kanalen’."});
+  }
   const dotColor = {g:"#8FC49B", a:"#E5B863", r:"#DD9280"};
   document.getElementById("summaryC").innerHTML =
     `<div class="kpi-headline-hd">Samenvatting</div>` +
@@ -991,6 +1003,9 @@ function render(){
   const prevFrom = shiftDays(prevTo, -(lenDays-1));
   const prev = prevFrom>=DATA_MIN ? computePeriod(prevFrom,prevTo) : null;
 
+  document.querySelector(".roas-hero-lbl").textContent = allChannels()?"BLENDED ROAS (alle kanalen)":`ROAS · ${channelName()}`;
+  document.querySelector(".mrow").style.display = allChannels()?"":"none";
+  for(const id of ["acc-margin","acc-ord","attributionBars"]) document.getElementById(id).style.display=allChannels()?"":"none";
   // Hero
   document.getElementById("roasHeroVal").textContent = cur.blendedRoas!=null ? x2(cur.blendedRoas) : "—";
   const dEl = document.getElementById("roasDelta");
@@ -1007,10 +1022,10 @@ function render(){
   // Bronnen-rij
   const creatorsSyncDate = _CREATORS.synced_at ? fmtL(_CREATORS.synced_at.slice(0,10)) : "onbekend";
   document.getElementById("srcRow").innerHTML =
-    `<span class="src-tag live">● Meta live</span>` +
-    `<span class="src-tag live">● Shopify live</span>` +
-    `<span class="src-tag snapshot">● Creators-sheet momentopname ${creatorsSyncDate}</span>` +
-    `<span class="src-tag ${Date.now()-Date.parse(_GOOGLE.synced_at)<45*60000?"live":"frozen"}">● Google Ads · ${new Date(_GOOGLE.synced_at).toLocaleString("nl-NL",{timeZone:"Europe/Amsterdam"})}</span>`;
+    (gChannels.meta?`<span class="src-tag live">● Meta live</span>`:"") +
+    (allChannels()||gChannels.infl?`<span class="src-tag live">● Shopify live</span>`:"") +
+    (gChannels.infl?`<span class="src-tag snapshot">● Creators-sheet momentopname ${creatorsSyncDate}</span>`:"") +
+    (gChannels.google?`<span class="src-tag ${Date.now()-Date.parse(_GOOGLE.synced_at)<45*60000?"live":"frozen"}">● Google Ads · ${new Date(_GOOGLE.synced_at).toLocaleString("nl-NL",{timeZone:"Europe/Amsterdam"})}</span>`:"");
 
   renderFilterBar();
   renderKpiStrip(cur, roasDeltaHtml);
@@ -1033,7 +1048,7 @@ function render(){
 
   document.getElementById("footerDate").textContent = `${SNAP_TIME} · ${fmtL(SNAP)}`;
 
-  checkGoogleStaleness();
+  checkStaleness();
 }
 
 function renderMarginFlow(cur){
@@ -1074,7 +1089,7 @@ function renderChannelsTable(cur){
     {l:"Google Ads", spend:cur.googleSpend, claimed:cur.googleRevClaimed, share:cur.googleSharePct, on:gChannels.google, note:" (conversiewaarde)"},
     {l:"Influencers", spend:cur.commissie, claimed:cur.inflOmzetIncl, share:cur.inflSharePct, on:gChannels.infl, note:""},
   ];
-  const trs = rows.map(r=>{
+  const trs = rows.filter(r=>r.on).map(r=>{
     const roas = r.spend>0 ? x2(r.claimed/r.spend) : "—";
     return `<tr${r.on?"":' style="opacity:.5"'}>
       <td>${r.l}${r.note}${r.on?"":' <span style="color:#7C8CA6;font-size:11px">(uit)</span>'}</td>
@@ -1087,7 +1102,7 @@ function renderChannelsTable(cur){
   document.getElementById("channelsTable").innerHTML =
     `<thead><tr><th>Kanaal</th><th class="r">Uitgaven</th><th class="r">Toegerekende omzet</th><th class="r">Kanaal-ROAS</th><th class="r">Aandeel van omzet</th></tr></thead>
      <tbody>${trs}
-     <tr class="tot"><td>Totaal (actieve kanalen)</td><td class="r">${eur(cur.totalSpend)}</td><td></td><td class="r">${cur.blendedRoas!=null?x2(cur.blendedRoas):"—"}</td><td class="r">${cur.overlapTotal.toFixed(1)}%</td></tr>
+     <tr class="tot"><td>${channelName()}</td><td class="r">${eur(cur.totalSpend)}</td><td></td><td class="r">${cur.blendedRoas!=null?x2(cur.blendedRoas):"—"}</td><td class="r">${(allChannels()?cur.overlapTotal:gChannels.meta?cur.metaSharePct:gChannels.google?cur.googleSharePct:cur.inflSharePct).toFixed(1)}%</td></tr>
      </tbody>`;
   document.getElementById("channelsHdr").textContent = `Kanalen (${rows.filter(r=>r.on).length}/3 actief)`;
 }
@@ -1218,7 +1233,7 @@ function renderAbout(){
     <div class="analysis-row"><b style="color:#E5B863">● Influencers</b> — momentopname uit het externe Creators Google Sheet (tab "Sales"), opgehaald met <code>scripts/sync_creators.py</code>. Dit is het enige kanaal waar de omzet <b>echt gemeten</b> is (via kortingscode), niet een attributieschatting — daarom is het aandeel% hier het meest betrouwbare cijfer van de drie.</div>
     <div class="analysis-row"><b style="color:#4EA8DE">● Shopify</b> — live, kostprijs-cascade (Kostprijs → Brutomarge) draait over <b>alle</b> orders, niet alleen orders die aan een kanaal zijn toe te schrijven.</div>
     <div class="analysis-row"><b>Attributie-overlap:</b> Meta, Google en influencers claimen orders elk via hun eigen model/meting. Diezelfde order kan door meerdere kanalen als "geclaimd" worden meegeteld (bv. iemand ziet een Meta-ad én gebruikt een influencer-kortingscode) — de percentages tellen daarom bewust niet op tot 100%. Dat is geen rekenfout, zie de "Kanalen"-sectie hieronder.</div>
-    <div class="analysis-row"><b>Blended ROAS</b> = totale winkelomzet (incl. BTW) ÷ totale marketing-uitgaven van de actieve kanalen. <b>Nettomarge</b> = brutomarge (omzet excl. BTW − kostprijs) − diezelfde marketing-uitgaven. Kanalen aan/uit zetten (bovenaan) beïnvloedt alleen de uitgaven/nettomarge, nooit de omzet/brutomarge.</div>
+    <div class="analysis-row"><b>Blended ROAS</b> = totale winkelomzet (incl. BTW) ÷ totale marketing-uitgaven van de actieve kanalen. <b>Nettomarge</b> = brutomarge (omzet excl. BTW − kostprijs) − diezelfde marketing-uitgaven. Klik op een kanaal om alleen de bijbehorende toegerekende omzet, uitgaven en kanaal-ROAS te zien. ‘Alle kanalen’ toont de werkelijke Shopify-omzet, totale uitgaven en winkelbrede marges.</div>
   `;
 }
 
@@ -1234,21 +1249,21 @@ function isoWeekStart(dStr){
 }
 
 function renderChart(pd){
-  const ordersP = ORDERS.filter(o=>o.d>=pd.from && o.d<=pd.to);
   const wrap = document.getElementById("chartSvgWrap");
-  if(ordersP.length===0){
-    wrap.innerHTML = `<div class="kpi-chart-empty">Geen orders in deze periode.</div>`;
-    return;
-  }
   const byWeek = {};
-  for(const o of ordersP){
+  const revenueRows = allChannels()?ORDERS.map(o=>({d:o.d,rev:o.incl})):
+    gChannels.meta?DAILY_META.map(o=>({d:o.d,rev:(o.rev7||0)+(o.rev1v||0)})):
+    gChannels.google?_GOOGLE.daily_google:
+    CREATOR_ORDERS.map(o=>({d:o.d,rev:SHOP_BY_NUM[o.num]?.incl ?? o.omzet_excl*BTW}));
+  for(const o of revenueRows){
+    if(o.d<pd.from || o.d>pd.to) continue;
     const wk = isoWeekStart(o.d);
     if(!byWeek[wk]) byWeek[wk] = {wk, omzet:0, spend:0, n:0};
-    byWeek[wk].omzet += o.incl;
+    byWeek[wk].omzet += o.rev;
     byWeek[wk].n++;
   }
   const metaByDay=new Map(DAILY_META.map(m=>[m.d,m]));
-  const dates=new Set([...metaByDay.keys(),...GOOGLE_DAILY.keys(),...Object.keys(COMMISSIE_BY_DAY)]);
+  const dates=new Set([...(gChannels.meta?metaByDay.keys():[]),...(gChannels.google?GOOGLE_DAILY.keys():[]),...(gChannels.infl?Object.keys(COMMISSIE_BY_DAY):[])]);
   for(const d of dates){
     if(d<pd.from || d>pd.to) continue;
     const wk=isoWeekStart(d);
@@ -1258,10 +1273,11 @@ function renderChart(pd){
   const data = Object.values(byWeek).sort((a,b)=>a.wk<b.wk?-1:1)
     .map(w=>({...w, label:fmtS(w.wk)}));
   const n = data.length;
+  if(!n){ wrap.innerHTML = `<div class="kpi-chart-empty">Geen gegevens in deze periode.</div>`; return; }
   const W=680,H=230,padL=44,padR=12,padT=16,padB=26;
   const plotW=W-padL-padR, plotH=H-padT-padB;
   const xAt = i => n<=1 ? padL+plotW/2 : padL+(i/(n-1))*plotW;
-  const maxOmzet = Math.max(1,...data.map(d=>d.omzet));
+  const maxOmzet = Math.max(1,...data.map(d=>Math.max(d.omzet,d.spend)));
   const yAt = v => padT+plotH-(v/maxOmzet)*plotH;
   const barW = Math.max(6,Math.min(34,(plotW/n)*0.55));
 
@@ -1285,8 +1301,8 @@ function renderChart(pd){
 
   wrap.innerHTML = `
     <div style="display:flex;gap:14px;font-size:11px;color:#93A2B8;padding:0 4px 8px">
-      <span><span style="display:inline-block;width:9px;height:9px;background:#4EA8DE;border-radius:2px;margin-right:5px;vertical-align:middle"></span>Omzet</span>
-      <span><span style="display:inline-block;width:9px;height:9px;background:#E5B863;border-radius:50%;margin-right:5px;vertical-align:middle"></span>Marketing-uitgaven (actieve kanalen)</span>
+      <span><span style="display:inline-block;width:9px;height:9px;background:#4EA8DE;border-radius:2px;margin-right:5px;vertical-align:middle"></span>${allChannels()?"Omzet":"Toegerekende omzet · "+channelName()}</span>
+      <span><span style="display:inline-block;width:9px;height:9px;background:#E5B863;border-radius:50%;margin-right:5px;vertical-align:middle"></span>Marketing-uitgaven · ${channelName()}</span>
     </div>
     <svg viewBox="0 0 ${W} ${H}" class="kpi-chart-svg" id="blendChartSvg">
       ${yGrid}
@@ -1309,7 +1325,7 @@ function renderChart(pd){
     tooltip.innerHTML = `<div class="kpi-chart-tip-date">Week van ${fmtL(d.wk)}</div>`+
       `<div class="kpi-chart-tip-row"><span class="kpi-chart-tip-dot" style="background:#4EA8DE"></span>Omzet: <b style="margin-left:4px">${eur(d.omzet)}</b></div>`+
       `<div class="kpi-chart-tip-row"><span class="kpi-chart-tip-dot" style="background:#E5B863"></span>Uitgaven: <b style="margin-left:4px">${eur(d.spend)}</b></div>`+
-      `<div class="kpi-chart-tip-row">${d.n} orders</div>`;
+      (allChannels()?`<div class="kpi-chart-tip-row">${d.n} orders</div>`:"");
   });
   svg.addEventListener("mouseleave", ()=>{ tooltip.style.opacity=0; });
 }
@@ -1323,7 +1339,7 @@ function checkGoogleStaleness(){
   const age=(Date.now()-Date.parse(_GOOGLE.synced_at))/60000;
   const pd=PERIODS[P];
   const missing=pd.from<_GOOGLE.coverage_from || pd.to>_GOOGLE.coverage_to;
-  el.style.display=age>=45||missing?"block":"none";
+  el.style.display=gChannels.google && (age>=45||missing)?"block":"none";
   el.textContent=missing?"⚠️ Google Ads-data dekt niet de volledige gekozen periode. Totalen kunnen onvolledig zijn.":`⚠️ Google Ads-data is ${Math.floor(age)} minuten niet ververst. De getoonde cijfers zijn de laatst opgehaalde gegevens.`;
 }
 function checkStaleness(){
@@ -1333,7 +1349,7 @@ function checkStaleness(){
   const snapDt=new Date(`${SNAP}T${SNAP_TIME}:00`);
   if(isNaN(snapDt))return;
   const ageMin=(Date.now()-snapDt.getTime())/60000;
-  if(ageMin<45){el.style.display="none";return;}
+  if(!gChannels.meta || ageMin<45){el.style.display="none";return;}
   const h=Math.floor(ageMin/60),m=Math.round(ageMin%60);
   const ageTxt=h>0?`${h} u ${m} min`:`${m} min`;
   el.classList.toggle("stale-critical",ageMin>=120);
