@@ -1490,3 +1490,6 @@ header .live-dot.warning { width:10px; height:10px; }
 #marketingMix td, #marketingMix th { padding:10px 8px; }
 #marketingMix .row-description { font-size:10px; white-space:normal; }
 #marketingMix td:last-child { font-weight:600; }
+
+/* Keep channel profitability readable without squeezing seven cards into one row. */
+@media(min-width:700px) { .kpis.meta-kpis { grid-template-columns:repeat(4,minmax(0,1fr)); } }

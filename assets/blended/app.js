@@ -12,7 +12,7 @@ import {
   aggregate,
   previous,
   inRange,
-} from "./metrics.js?v=folds-margin-1";
+} from "./metrics.js?v=profit-margin-1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (s) =>
@@ -52,6 +52,7 @@ const colors = {
   spend: "#E5B863",
   cost: "#B98DE0",
   result: "#8FC49B",
+  profitMargin: "#B99CDE",
   roas: "#B98DE0",
   count: "#86d9d2",
   cpa: "#86d9d2",
@@ -157,7 +158,7 @@ function readState() {
   const allowed =
     s.channel === "all"
       ? ["revenue", "cost", "spend", "roas", "result"]
-      : s.channel === "meta" ? ["revenue", "spend", "result", "count", "roas", "cpa"] : ["revenue", "spend", "result", "count", "roas", "cpa"];
+      : s.channel === "meta" ? ["revenue", "spend", "result", "profitMargin", "count", "roas", "cpa"] : ["revenue", "spend", "result", "profitMargin", "count", "roas", "cpa"];
   if (q.has("metrics"))
     s.metrics = [
       ...new Set(
@@ -167,6 +168,7 @@ function readState() {
           .filter((k) => allowed.includes(k)),
       ),
     ].slice(0, 2);
+  if (!q.has("metrics") && s.channel !== "all") s.metrics = ["result", "profitMargin"];
   if (!s.metrics.length) s.metrics = ["revenue"];
   if (q.has("detail")) {
     try {
@@ -270,10 +272,11 @@ function metricMeta(k) {
       fmt: euro,
     },
     result: {
-      label: state.channel!=="all" ? "Winst · geschat" : "Resultaat incl. overhead",
+      label: state.channel!=="all" ? "Nettowinst · geschat" : "Resultaat incl. overhead",
       sub: state.channel==="meta" ? (state.daan==="without" ? "Zonder kosten Daan" : "Inclusief kosten Daan") : "Inclusief 4% overhead",
       fmt: euro,
     },
+    profitMargin: { label: "Winstmarge", sub: "Van kanaalomzet excl. btw · geschat", fmt: v => v == null ? "—" : num(v) + "%" },
     roas: {
       label: all ? "Blended ROAS" : "Kanaalrendement",
       sub: all
@@ -312,6 +315,7 @@ function delta(k, cur, prev) {
       : d > 0
         ? "positive"
         : "negative";
+  if (k === "profitMargin") return `<span class="delta-main ${tone}"><span class="delta-badge">${d>0?"+":d<0?"−":""}${num(Math.abs(d))} procentpunt</span></span><span class="delta-base">Vorige periode: ${f(prev[k])}</span>`;
   const amount = (d > 0 ? "+" : d < 0 ? "−" : "") + f(Math.abs(d));
   const pct =
     prev[k] !== 0
@@ -532,7 +536,7 @@ function render() {
   const metrics =
     state.channel === "all"
       ? ["revenue", "cost", "spend", "roas", "result"]
-      : state.channel === "meta" ? ["revenue", "spend", "result", "count", "roas", "cpa"] : ["revenue", "spend", "result", "count", "roas", "cpa"];
+      : state.channel === "meta" ? ["revenue", "spend", "result", "profitMargin", "count", "roas", "cpa"] : ["revenue", "spend", "result", "profitMargin", "count", "roas", "cpa"];
   const notes = [];
   if (keys.some((k) => !D[k] || E[k] || stale(k) || !coverage(k)))
     notes.push(
@@ -1445,7 +1449,7 @@ function bindContent() {
 function switchChannel(ch) {
   change(() => {
     state.channel = ch;
-    state.metrics = ch === "all" ? ["revenue", "spend"] : ch === "meta" ? ["revenue", "result"] : ["spend", "revenue"];
+    state.metrics = ch === "all" ? ["revenue", "spend"] : ["result", "profitMargin"];
     state.detail = null;
     state.sub = null;
     compareMode = true;

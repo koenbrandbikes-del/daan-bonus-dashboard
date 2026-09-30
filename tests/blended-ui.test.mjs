@@ -419,7 +419,7 @@ test('drag selection supports reverse ranges and metric toggles match Meta', asy
 test('Meta profit and Daan switch are visible, selectable and persist in URL',async()=>{
  const w=await boot('?channel=meta&from=2026-09-01&to=2026-09-29&metrics=result');
  const d=w.document;
- assert.match(d.querySelector('[data-metric="result"]').textContent,/Winst/);
+ assert.match(d.querySelector('[data-metric="result"]').textContent,/Nettowinst/);
  const withCost=d.querySelector('[data-metric="spend"] strong').textContent;
  d.querySelector('[data-daan="without"]').click();
  assert.equal(d.querySelector('[data-daan="without"]').getAttribute('aria-pressed'),'true');
@@ -457,6 +457,25 @@ test('analysis collapses and salary breakdown is grouped; every channel exposes 
  for(const channel of ['meta','google','infl']){
   d.querySelector('#tab-'+channel).click();
   assert.match(d.querySelector('[data-metric=result]').textContent,/% van omzet excl. btw/);
+ }
+ w.close();
+});
+
+test("channel profit margin is selectable, charted and responds to Daan costs", async () => {
+ const w=await boot('?channel=meta&from=2026-09-23&to=2026-09-29&metrics=profitMargin');
+ const d=w.document;
+ const value=()=>d.querySelector('[data-metric=profitMargin] strong').textContent;
+ const before=value();
+ assert.match(before,/%/);
+ assert.match(d.querySelector('#chart').textContent,/Winstmarge/);
+ assert.match(d.querySelector('[data-metric=profitMargin] .delta').textContent,/procentpunt/);
+ d.querySelector('[data-daan=without]').click();
+ assert.notEqual(value(),before);
+ for(const channel of ['google','infl']) {
+  d.querySelector('#tab-'+channel).click();
+  assert(d.querySelector('[data-metric=result]').classList.contains('active'));
+  assert(d.querySelector('[data-metric=profitMargin]').classList.contains('active'));
+  assert.match(d.querySelector('#chart').textContent,/Winstmarge/);
  }
  w.close();
 });

@@ -130,6 +130,9 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
   const numerator =
     channel === "all" ? (data.shopify ? f.incl : null) : revenue;
   const marginRate = options.marginRate !== undefined ? options.marginRate : data.shopify && f.incl>0 && f.cost!=null ? (f.excl-f.cost-f.overhead)/f.incl : null;
+  const result = channel !== "all" ? (marginRate!=null && revenue!=null && spend!=null ? revenue*marginRate-spend : null) :
+      data.shopify && spend !== null && f.cost !== null ? f.excl-f.cost-spend-f.overhead : null;
+  const netRevenue = channel === "all" ? revenue : revenue / (1 + costs.assumed_vat);
   return {
     ...f,
     ...(!data.shopify
@@ -145,11 +148,8 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
     revenue,
     spend,
     marginRate,
-    result:
-      channel !== "all" ? (marginRate!=null && revenue!=null && spend!=null ? revenue*marginRate-spend : null) :
-      channel === "all" && data.shopify && spend !== null && f.cost !== null
-        ? f.excl - f.cost - spend - f.overhead
-        : null,
+    result,
+    profitMargin: result != null && netRevenue > 0 ? result / netRevenue * 100 : null,
     roas: spend > 0 && numerator !== null ? numerator / spend : null,
     count:
       channel === "all"
