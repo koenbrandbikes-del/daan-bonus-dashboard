@@ -280,13 +280,28 @@ function metricMeta(k) {
   }[k];
 }
 function delta(k, cur, prev) {
+  if (state.compare === "off") return "";
   if (!prev || cur[k] == null || prev[k] == null)
-    return "Geen vergelijkbare vorige periode";
+    return `<span class="delta-note">${state.to === today ? "Lopende dag · geen vergelijking" : "Geen vergelijkbare vorige periode"}</span>`;
   const d = cur[k] - prev[k],
     f = metricMeta(k).fmt;
+  const direction = d > 0 ? "▲" : d < 0 ? "▼" : "→";
+  const tone =
+    d === 0 || ["cost", "spend"].includes(k)
+      ? "neutral"
+      : d > 0
+        ? "positive"
+        : "negative";
+  const amount = (d > 0 ? "+" : d < 0 ? "−" : "") + f(Math.abs(d));
   const pct =
-    prev[k] > 0 ? ` · ${d >= 0 ? "+" : ""}${num((d / prev[k]) * 100)}%` : "";
-  return `${d >= 0 ? "+" : ""}${f(d)}${pct}`;
+    prev[k] !== 0
+      ? (d > 0 ? "+" : d < 0 ? "−" : "") +
+        num(Math.abs((d / prev[k]) * 100)) +
+        "%"
+      : null;
+  const label =
+    state.compare === "custom" ? "Vergelijkingsperiode" : "Vorige periode";
+  return `<span class="delta-main ${tone}"><span class="delta-badge">${direction} ${esc(pct || amount)}</span>${pct ? `<span class="delta-amount">${esc(amount)}</span>` : ""}</span><span class="delta-base">${label}: ${esc(f(prev[k]))}</span>`;
 }
 function getPrev() {
   if (state.compare === "off" || state.to === today) return null;
@@ -412,7 +427,7 @@ function render() {
  <section class="kpis ${state.channel === "all" ? "" : "channel"}" aria-label="Kerncijfers">${metrics
    .map((k) => {
      const m = metricMeta(k);
-     return `<button class="kpi ${state.metrics.includes(k) ? "active" : ""}" data-metric="${k}" aria-pressed="${state.metrics.includes(k)}"><span class="label">${m.label}</span><strong>${m.fmt(cur[k])}</strong><small>${k === "result" && cur.result != null && cur.revenue > 0 ? num((cur.result / cur.revenue) * 100) + "% van omzet · voorlopig" : k === "cost" && cur.cost != null && cur.revenue > 0 ? num((cur.cost / cur.revenue) * 100) + "% van omzet · geraamde basis" : k === "revenue" && state.channel === "all" ? num(cur.count) + " orders · " + euro(cur.incl) + " incl. btw" : m.sub}</small><small class="delta">${esc(delta(k, cur, prev))}</small></button>`;
+     return `<button class="kpi ${state.metrics.includes(k) ? "active" : ""}" data-metric="${k}" aria-pressed="${state.metrics.includes(k)}"><span class="label">${m.label}</span><strong>${m.fmt(cur[k])}</strong><small>${k === "result" && cur.result != null && cur.revenue > 0 ? num((cur.result / cur.revenue) * 100) + "% van omzet · voorlopig" : k === "cost" && cur.cost != null && cur.revenue > 0 ? num((cur.cost / cur.revenue) * 100) + "% van omzet · geraamde basis" : k === "revenue" && state.channel === "all" ? num(cur.count) + " orders · " + euro(cur.incl) + " incl. btw" : m.sub}</small><small class="delta">${delta(k, cur, prev)}</small></button>`;
    })
    .join("")}</section>
  ${
