@@ -39,14 +39,14 @@ async function boot(
   return w;
 }
 test("drilldowns, comparing two metrics, channel switching and Google splits", async () => {
-  const w = await boot("?from=2026-09-23&to=2026-09-29&googleScope=all"),
+  const w = await boot("?from=2026-09-23&to=2026-09-29&googleScope=all&metrics=cost"),
     d = w.document;
   const click = (s) => {
     assert(d.querySelector(s), s);
     d.querySelector(s).click();
   };
   assert.equal(d.querySelectorAll(".kpi").length, 5);
-  click("[data-metric=cost]");
+
   assert(
     d
       .querySelector("#detail")
@@ -60,7 +60,7 @@ test("drilldowns, comparing two metrics, channel switching and Google splits", a
   assert(d.querySelector("#detail").textContent.includes("Volledige orders"));
   click("#detailBack");
   click("[data-metric=revenue]");
-  click("#compareMetric");
+  click("[data-metric=cost]");
   click("[data-metric=spend]");
   assert.equal(d.querySelectorAll(".kpi.active").length, 2);
   click("[data-metric=result]");
@@ -85,11 +85,12 @@ test("drilldowns, comparing two metrics, channel switching and Google splits", a
   assert(d.querySelector("#detail th").textContent.includes("Dag"));
   click("[data-channel=all]");
   click("[data-metric=result]");
+  click("[data-replace=revenue]");
   click("[data-detail*=products]");
   assert(
     d.querySelector("#detail").textContent.includes("Producten en kostprijzen"),
   );
-  click("[data-metric=spend]");
+  click("[data-metric=result]");
   const totals = [...d.querySelectorAll("#table tfoot td")].map(
     (x) => x.textContent,
   );
@@ -228,9 +229,8 @@ test("video feedback: today comparison, direct metric chooser, channel columns a
     /Vorige periode/,
   );
   assert(!d.querySelector("[data-flow]"));
-  d.querySelector("#compareMetric").click();
-  assert.equal(d.querySelector(".metric-picker").hidden, false);
-  d.querySelector("[data-chart-metric=cost]").click();
+  assert.equal(d.querySelector("#compareMetric"), null);
+  d.querySelector("[data-metric=cost]").click();
   assert(d.querySelector(".replacement"));
   d.querySelector("[data-replace=revenue]").click();
   assert(d.querySelector("[data-metric=cost]").classList.contains("active"));
@@ -372,4 +372,18 @@ test('selected days compare side by side, toggle, clear and follow channel metri
   d.querySelector('#clearDays').click();
   assert.equal(d.querySelector('#dayComparison table'),null);
   w.close();
+});
+
+test('acquisition comparison uses a common store benchmark and channel CPA is selectable', async () => {
+ const w=await boot('?from=2026-09-23&to=2026-09-29'),d=w.document;
+ assert.equal(d.querySelector('#compareMetric'),null);
+ const limits=[...d.querySelectorAll('#acquisitionCompare tbody tr')].map(r=>r.children[3].textContent);
+ assert.equal(limits.length,3); assert.equal(new Set(limits).size,1);
+ assert(!limits.includes('—'));
+ d.querySelector('#tab-google').click();
+ assert(d.querySelector('[data-metric=cpa] strong').textContent.includes('€'));
+ d.querySelector('[data-metric=cpa]').click();
+ d.querySelector('[data-replace=spend]').click();
+ assert(d.querySelector('#analysis h2').textContent.includes('Kosten per aankoop'));
+ w.close();
 });

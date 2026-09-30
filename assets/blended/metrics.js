@@ -116,6 +116,7 @@ export function compute(data, costs, from, to, channel = "all") {
           ? f.orders
           : null
         : channels[channel].orders,
+    cpa: spend != null && (channel === "all" ? f.orders : channels[channel].orders) > 0 ? spend / (channel === "all" ? f.orders : channels[channel].orders) : null,
     channels,
     orderRows: orders,
     creatorRows: creators,

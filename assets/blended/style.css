@@ -1284,3 +1284,5 @@ header { position:relative; flex-wrap:wrap; }
 #table .cost-breakdown th:first-child, #table .cost-breakdown td:first-child { min-width:180px; white-space:normal; }
 .cost-story .vat-bridge span, .cost-story .margin-cards span, .cost-story small, .cost-reading { font-size:13px; line-height:1.55; }
 .cost-story .margin-cards b { font-size:28px; }
+
+@media(min-width:700px) { .kpis.channel { grid-template-columns:repeat(5,minmax(0,1fr)); } }
