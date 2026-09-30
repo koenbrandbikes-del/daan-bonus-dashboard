@@ -600,16 +600,11 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
      KP, ITEM_FIXED, bonusformule, ...) een 2e keer over te typen — dit is
      letterlijk index.html, zelfde origin dus de iframe-hoogte kan gewoon
      meegroeien met de echte inhoud (geen dubbele scrollbalk). Blijft een
-     apart, onafhankelijk bestand; hier alleen weergegeven. -->
-<div class="acc" style="margin-bottom:14px">
-  <div class="acc-item open" id="acc-metaframe">
-    <div class="acc-hd" onclick="tog('acc-metaframe')"><span>Meta bonusdashboard</span><span class="acc-chv">›</span></div>
-    <div class="acc-body">
-      <iframe id="metaFrame" src="index.html" title="Meta bonusdashboard" loading="lazy"
-        style="width:100%;height:900px;border:0;display:block;background:#0A0D26"></iframe>
-    </div>
-  </div>
-</div>
+     apart, onafhankelijk bestand; hier alleen weergegeven. Bewust géén
+     kaart/accordion eromheen (geen dubbele header, geen "doos-in-doos"-
+     effect) — moet er precies zo uitzien als index.html zelf. -->
+<iframe id="metaFrame" src="index.html" title="Meta bonusdashboard" loading="lazy"
+  style="width:100%;height:900px;border:0;display:block;background:transparent;margin-bottom:14px"></iframe>
 
 <div class="card">
   <div class="card-meta"><div class="blend-src-row" id="srcRow"></div></div>
