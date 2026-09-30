@@ -652,6 +652,7 @@ function chartRows() {
 function renderDayComparison() {
   const dates=[...selectedDays].filter(d=>d>=state.from && d<=state.to).sort();
   selectedDays=new Set(dates);
+  $("#dayComparison").hidden=!dates.length;
   const from=dates[0],to=dates.at(-1);
   const totals=dates.length ? viewCompute(analysisData(),C,from,to,state.channel) : null;
   $("#dayComparison").innerHTML=`<section class="selection-overview" aria-label="Geselecteerde periode">${totals ? `<div class="panel-head"><div><h3>Geselecteerde periode</h3><p class="subtitle">${fmt(from)} – ${fmt(to)} ${to.slice(0,4)} · ${dates.length} ${dates.length===1?'dag':'dagen'}</p></div><button id="clearDays">Selectie wissen</button></div><div class="selection-totals">${state.metrics.map(k=>`<div><span>${metricMeta(k).label}</span><strong data-selection-metric="${k}">${metricMeta(k).fmt(totals[k])}</strong></div>`).join('')}</div>` : ''}<details class="range-access"><summary>${totals?'Selectie aanpassen':'Periode met datums kiezen'}</summary><label>Van<input id="rangeStart" type="date" min="${state.from}" max="${state.to}" value="${from||state.from}"></label><label>Tot<input id="rangeEnd" type="date" min="${state.from}" max="${state.to}" value="${to||state.to}"></label><button id="applyChartRange">Selecteren</button></details></section>`;

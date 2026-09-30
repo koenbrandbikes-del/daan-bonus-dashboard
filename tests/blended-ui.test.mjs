@@ -360,9 +360,11 @@ test("missing source suppresses revenue distribution and healthy status tick", a
 
 test('selected period shows totals without daily chips and follows channel metrics', async () => {
   const w=await boot('?from=2026-09-23&to=2026-09-29'),d=w.document;
+  assert.equal(d.querySelector("#dayComparison").hidden,true);
   d.querySelector("#rangeStart").value="2026-09-23";
   d.querySelector("#rangeEnd").value="2026-09-25";
   d.querySelector("#applyChartRange").click();
+  assert.equal(d.querySelector("#dayComparison").hidden,false);
   assert.equal(d.querySelectorAll('[data-selection-metric]').length,2);
   assert.equal(d.querySelector('[data-select-day]'),null);
   assert.equal(d.querySelector('#dayComparison table'),null);
@@ -375,6 +377,7 @@ test('selected period shows totals without daily chips and follows channel metri
   assert.equal(d.querySelectorAll('[data-selection-metric]').length,2);
   d.querySelector('#clearDays').click();
   assert.equal(d.querySelector('.selection-totals'),null);
+  assert.equal(d.querySelector("#dayComparison").hidden,true);
   w.close();
 });
 
