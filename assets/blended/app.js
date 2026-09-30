@@ -559,6 +559,7 @@ function render() {
       ? ["revenue", "cost", "spend", "roas", "result", "profitMargin"]
       : state.channel === "meta" ? ["revenue", "spend", "result", "profitMargin", "count", "roas", "cpa"] : ["revenue", "spend", "result", "profitMargin", "count", "roas", "cpa"];
   const notes = [];
+  if(state.channel === "all") notes.push("Retouren en terugbetalingen zijn nog niet verwerkt; de nettowinst is vóór deze correcties. Potloodtarief: €20 per retourpakket.");
   if (keys.some((k) => !D[k] || E[k] || stale(k) || !coverage(k)))
     notes.push(
       "Een bron is niet beschikbaar, verouderd of dekt niet de volledige periode. Bekijk de datastatus; totalen kunnen onvolledig zijn.",
@@ -610,7 +611,7 @@ function render() {
    )
    .join("")}</details>
  <section class="panel ${analysisCollapsed?'is-collapsed':''}" id="analysis" tabindex="-1"><div class="panel-head"><div><p class="analysis-label">VERDIEP JE IN DE CIJFERS</p><h2><button class="analysis-heading" id="collapseAnalysis" aria-expanded="${!analysisCollapsed}" aria-controls="analysisBody analysisTools">${state.metrics.map((k) => metricMeta(k).label).join(" & ") || "Analyse"}</button></h2><p class="subtitle">Klik bovenaan maximaal twee cijfers aan om ze hier te vergelijken.</p></div><div class="toolbar" id="analysisTools" ${analysisCollapsed?"hidden":""}><div class="gran-buttons" aria-label="Grafiek groeperen">${['day','week','month'].map((g,i)=>`<button data-gran="${g}" aria-pressed="${state.gran===g || state.gran==='auto' && g===((Date.parse(state.to)-Date.parse(state.from))/864e5<=31?'day':(Date.parse(state.to)-Date.parse(state.from))/864e5<=180?'week':'month')}">${['Dag','Week','Maand'][i]}</button>`).join('')}</div><select id="gran" hidden><option value="auto">Automatisch</option><option value="day">Dag</option><option value="week">Week</option><option value="month">Maand</option></select><button id="chartMode">${chartTable ? "Grafiek tonen" : "Tabel tonen"}</button></div></div><div id="analysisBody" ${analysisCollapsed?"hidden":""}><div id="replacement"></div><div id="chart"></div><div id="dayComparison"></div><details class="detail-fold" id="detailFold"><summary>Onderliggende cijfers & uitsplitsing</summary><div id="detail"></div></details></div></section>
- ${state.channel === "all" ? overviewOrders(cur)+marketingMix(cur) : ""}
+ ${state.channel === "all" ? `<details class="panel" id="returnEstimate"><summary>Retouren · nog niet verwerkt</summary><p class="hint">Shopify-retouren en terugbetalingen ontbreken in de huidige koppeling. De nettowinst hierboven is vóór deze correcties.</p><p>Potloodaanname: <strong>${euro(C.returns?.cost_per_return??20)} extra afhandeling per retourpakket</strong>, los van terugbetaalde omzet.</p><label>Aantal retourpakketten · alleen scenario<input id="returnScenarioCount" type="number" min="0" step="1" placeholder="Nog onbekend"></label><p id="returnScenarioResult" aria-live="polite">Vul een aantal in om de extra kosten te berekenen.</p><small>Dit scenario wijzigt je hoofdcijfers niet. Terugbetalingen en eventuele voorraadcorrecties moeten apart uit Shopify komen.</small></details>`+overviewOrders(cur)+marketingMix(cur) : ""}
  ${['all','meta'].includes(state.channel) ? `<details class="panel management">
  <summary class="management-heading"><span>Meta-beheer<small>Vaste vergoeding en prestatiebonus</small></span><span class="management-heading-total">${euro(cur.management.total)}</span></summary>
  <div class="management-amounts">
@@ -1351,6 +1352,12 @@ function selectMetric(k) {
   });
 }
 function bindContent() {
+ const returnInput=$('#returnScenarioCount');
+ if(returnInput) returnInput.oninput=()=>{
+  const count=Number(returnInput.value),rate=C.returns?.cost_per_return??20;
+  $('#returnScenarioResult').textContent=returnInput.value!==''&&Number.isInteger(count)&&count>=0?`${count} retourpakketten × ${euro(rate)} = ${euro(count*rate)} extra kosten. Terugbetalingen komen hier apart bij.`:'Vul een geldig aantal retourpakketten in.';
+ };
+
  $$('#overviewOrders [data-resize-column]').forEach(handle=>{
   const index=Number(handle.dataset.resizeColumn);
   const resize=width=>{
