@@ -562,6 +562,10 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .creator-search{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);color:#f1f5f9;font-size:13px;font-family:inherit;padding:9px 12px;border-radius:8px;outline:none}
 .creator-search::placeholder{color:#7C8CA6}
 .creator-search:focus{border-color:rgba(96,165,250,.5)}
+.col-details{position:relative}
+.col-details summary{list-style:none;display:inline-flex}
+.col-details summary::-webkit-details-marker{display:none}
+.col-panel{position:absolute;top:calc(100% + 6px);left:0;background:rgba(13,18,45,.95);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px;min-width:240px;z-index:50;display:flex;flex-wrap:wrap;gap:6px;box-shadow:0 12px 32px rgba(0,0,0,.5)}
 .blend-chart-svgwrap{position:relative}
 .blend-src-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
 .margin-flow{display:flex;flex-direction:column}
@@ -651,13 +655,16 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
   <div class="acc-item" id="acc-ord">
     <div class="acc-hd" onclick="tog('acc-ord')"><span id="ordHdr">Orderdetail (affiliate-orders)</span><span class="acc-chv">›</span></div>
     <div class="acc-body">
-      <div class="ord-filters" id="ordProductFilters"></div>
-      <div class="ord-filters ord-btw-toggle" style="align-items:center;gap:10px">
+      <div class="ord-filters" style="align-items:center;gap:8px">
+        <select class="filter-select" id="ordProductSel" onchange="setOrdProductFilter(this.value)"></select>
         <select class="filter-select" id="ordCreatorSel" onchange="setOrdCreatorFilter(this.value)"></select>
         <button class="ord-f ord-btw-f active" onclick="setOrdBtwAff('incl')">Omzet incl. BTW</button>
         <button class="ord-f ord-btw-f" onclick="setOrdBtwAff('excl')">Omzet excl. BTW</button>
+        <details class="col-details">
+          <summary class="ord-f">Kolommen ▾</summary>
+          <div class="col-panel" id="ordColToggles"></div>
+        </details>
       </div>
-      <div class="ord-filters" id="ordColToggles" style="padding-top:8px"></div>
       <div class="fc-note" style="padding:8px 16px 0">Volgt de periodekiezer bovenaan de pagina. Marge is al ná de 10%-klantkorting die bij deze kortingscodes hoort; Commissie is de aparte 10% die naar de creator gaat, los van die marge.</div>
       <div class="tscroll" style="margin-top:10px"><table id="ordTableAff"></table></div>
     </div>
@@ -984,8 +991,6 @@ let ordProductFilter = "alle";
 
 function setOrdProductFilter(cat){
   ordProductFilter = cat;
-  document.querySelectorAll("#ordProductFilters .ord-f").forEach(b=>
-    b.classList.toggle("active", b.dataset.cat===cat));
   renderOrderDetail();
 }
 
@@ -1010,7 +1015,7 @@ const ORD_COLS = [
   {key:"product",   label:"Product",  def:true},
   {key:"code",      label:"Kortingscode", def:false},
   {key:"omzet",     label:"Omzet",    def:true,  r:true},
-  {key:"kosten",    label:"Kosten (excl. ads)", def:false, r:true},
+  {key:"kosten",    label:"Kosten", def:false, r:true},
   {key:"marge",     label:"Marge",    def:true,  r:true},
   {key:"commissie", label:"Commissie", def:true, r:true},
   {key:"netto",     label:"Netto marge", def:false, r:true},
@@ -1039,13 +1044,13 @@ function renderOrderDetail(){
   const pd = CUR_PD;
   if(!pd) return;
 
-  const prodBar = document.getElementById("ordProductFilters");
-  if(!prodBar.dataset.built){
+  const prodSel = document.getElementById("ordProductSel");
+  if(!prodSel.dataset.built){
     const cats = ["alle","Prime","Atlas","Titan","Scherm","Accessoires"];
-    prodBar.innerHTML = cats.map(c=>
-      `<button class="ord-f${c==="alle"?" active":""}" data-cat="${c}" onclick="setOrdProductFilter('${c}')">${c==="alle"?"Alle":c}</button>`
+    prodSel.innerHTML = cats.map(c=>
+      `<option value="${c}">${c==="alle"?"Alle producten":c}</option>`
     ).join("");
-    prodBar.dataset.built = "1";
+    prodSel.dataset.built = "1";
   }
   const creatorSel = document.getElementById("ordCreatorSel");
   if(!creatorSel.dataset.built){
@@ -1055,10 +1060,9 @@ function renderOrderDetail(){
   }
   const colBar = document.getElementById("ordColToggles");
   if(!colBar.dataset.built){
-    colBar.innerHTML = `<span style="font-size:10px;color:#7C8CA6;align-self:center;margin-right:2px">KOLOMMEN:</span>` +
-      ORD_COLS.map(c=>
-        `<button class="ord-f${ordVisibleCols.has(c.key)?" active":""}" data-col="${c.key}" onclick="toggleOrdCol('${c.key}')">${c.label}</button>`
-      ).join("");
+    colBar.innerHTML = ORD_COLS.map(c=>
+      `<button class="ord-f${ordVisibleCols.has(c.key)?" active":""}" data-col="${c.key}" onclick="toggleOrdCol('${c.key}')">${c.label}</button>`
+    ).join("");
     colBar.dataset.built = "1";
   }
 
