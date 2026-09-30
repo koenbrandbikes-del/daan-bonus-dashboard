@@ -1,4 +1,4 @@
-import { creatorSummary } from "./creator-summary.js?v=creator-investment-1";
+import { creatorSummary } from "./creator-summary.js?v=prime-estimate-1";
 import { createDatePicker } from "./date-picker.js?v=chevron-1";
 import { load } from "./data.js?v=shopify-check-1";
 import {
@@ -546,7 +546,7 @@ function render() {
 
   if (state.channel === "infl")
     notes.push(
-      "Bekende kosten bestaan uit commissies. Vaste vergoedingen en productgiften zijn nog niet vastgelegd; codeomzet bewijst geen extra omzet.",
+      "Bekende kosten bestaan uit commissies. De geraamde Prime-investering staat apart; verzenddatums ontbreken voor toerekening aan deze periode. Codeomzet bewijst geen extra omzet.",
     );
 
   if (cur.unknown)
