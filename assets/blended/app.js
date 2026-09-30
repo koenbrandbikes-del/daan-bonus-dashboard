@@ -44,11 +44,11 @@ const names = {
   infl: "Influencers",
 };
 const colors = {
-  revenue: "#72b7fa",
-  spend: "#e9c583",
-  cost: "#bc9de8",
-  result: "#99d3b0",
-  roas: "#c3abea",
+  revenue: "#4EA8DE",
+  spend: "#E5B863",
+  cost: "#B98DE0",
+  result: "#8FC49B",
+  roas: "#B98DE0",
   count: "#86d9d2",
 };
 const today = new Intl.DateTimeFormat("en-CA", {
