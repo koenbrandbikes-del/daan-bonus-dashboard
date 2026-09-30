@@ -43,8 +43,8 @@ def eur_to_float(s):
     s = s.replace("€", "").replace(".", "").replace(",", ".").strip()
     try:
         return float(s)
-    except ValueError:
-        return 0.0
+    except ValueError as e:
+        raise ValueError(f"Ongeldig bedrag in Creators-sheet: {s!r}") from e
 
 
 def pct_to_float(s):
@@ -179,12 +179,22 @@ def main():
 
     out = {
         "synced_at": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
-        "source": "Creators Google Sheet · tab 'Sales' (momentopname, geen live sync)",
+        "source": "Creators Google Sheet · tab 'Sales' (ieder uur gesynchroniseerd)",
+        "sync_interval_minutes": 60,
         "totals": totals,
         "creators": creators,
         "orders": rows,
     }
 
+    if len({o["num"] for o in rows}) != len(rows):
+        raise ValueError("Dubbele ordernummers in Creators-sheet; bestaande dataset blijft behouden")
+    if any(not o["d"] for o in rows):
+        raise ValueError("Ontbrekende orderdatum; bestaande dataset blijft behouden")
+    if not rows:
+        raise ValueError("Geen creatororders gevonden; bestaande dataset blijft behouden")
+    import math
+    if any(not math.isfinite(o["commissie"]) or not math.isfinite(o["omzet_excl"]) for o in rows):
+        raise ValueError("Ongeldige bedragen; bestaande dataset blijft behouden")
     with open(OUT_PATH, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=1)
 

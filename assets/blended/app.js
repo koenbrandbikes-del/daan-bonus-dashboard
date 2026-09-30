@@ -1,0 +1,1227 @@
+import { load } from "./data.js";
+import {
+  compute,
+  finance,
+  sum,
+  shift,
+  series,
+  aggregate,
+  previous,
+  inRange,
+} from "./metrics.js";
+const $ = (s) => document.querySelector(s),
+  $$ = (s) => [...document.querySelectorAll(s)];
+const esc = (s) =>
+  String(s ?? "").replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
+const euro = (v) =>
+  v == null
+    ? "—"
+    : new Intl.NumberFormat("nl-NL", {
+        style: "currency",
+        currency: "EUR",
+        maximumFractionDigits: 0,
+      }).format(v);
+const num = (v) =>
+  v == null
+    ? "—"
+    : new Intl.NumberFormat("nl-NL", { maximumFractionDigits: 2 }).format(v);
+const ratio = (v) => (v == null ? "—" : num(v) + "×");
+const fmt = (d) =>
+  new Date(d + "T12:00:00Z").toLocaleDateString("nl-NL", {
+    day: "numeric",
+    month: "short",
+  });
+const names = {
+  all: "Overzicht",
+  meta: "Meta",
+  google: "Google Ads",
+  infl: "Influencers",
+};
+const colors = {
+  revenue: "#72b7fa",
+  spend: "#e9c583",
+  cost: "#bc9de8",
+  result: "#99d3b0",
+  roas: "#c3abea",
+  count: "#86d9d2",
+};
+const today = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Europe/Amsterdam",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+}).format(new Date());
+let D,
+  C,
+  E,
+  state,
+  tableModel,
+  sortKey = 0,
+  sortDir = 1,
+  page = 0,
+  search = "",
+  compareMode = false,
+  pending = null,
+  chartTable = false;
+const stale = (k) => {
+  if (k === "meta") {
+    if (!D.meta) return true;
+    const wall = new Intl.DateTimeFormat("sv-SE", {
+      timeZone: "Europe/Amsterdam",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    })
+      .format(new Date())
+      .replace(" ", "T");
+    return (
+      Date.parse(wall + "Z") -
+        Date.parse(D.meta.snap + "T" + D.meta.snap_time + ":00Z") >
+      45 * 60000
+    );
+  }
+  return (
+    ["google", "creators"].includes(k) &&
+    (!D[k]?.synced_at ||
+      Date.now() - Date.parse(D[k].synced_at) >
+        (k === "google" ? 45 : 180) * 60000)
+  );
+};
+const defaults = () => ({
+  channel: "all",
+  from: shift(today, -7),
+  to: shift(today, -1),
+  metrics: ["revenue", "spend"],
+  compare: "previous",
+  gran: "auto",
+  detail: null,
+  sub: null,
+  group: "campaign",
+});
+function readState() {
+  const q = new URLSearchParams(location.search),
+    s = defaults();
+  for (const k of [
+    "channel",
+    "from",
+    "to",
+    "compare",
+    "gran",
+    "group",
+    "pfrom",
+    "pto",
+  ])
+    if (q.has(k)) s[k] = q.get(k);
+  if (!(s.channel in names)) s.channel = "all";
+  if (!["previous", "off", "custom"].includes(s.compare))
+    s.compare = "previous";
+  if (!["auto", "day", "week", "month"].includes(s.gran)) s.gran = "auto";
+  if (
+    !validDate(s.from) ||
+    !validDate(s.to) ||
+    s.from > s.to ||
+    s.to > today ||
+    new Date(s.to) - new Date(s.from) > 3 * 366 * 864e5
+  ) {
+    s.from = defaults().from;
+    s.to = defaults().to;
+  }
+  if (
+    s.compare === "custom" &&
+    (!validDate(s.pfrom) || !validDate(s.pto) || s.pfrom > s.pto)
+  )
+    s.compare = "previous";
+  const allowed =
+    s.channel === "all"
+      ? ["revenue", "cost", "spend", "roas", "result"]
+      : ["revenue", "spend", "count", "roas"];
+  if (q.has("metrics"))
+    s.metrics = [
+      ...new Set(
+        q
+          .get("metrics")
+          .split(",")
+          .filter((k) => allowed.includes(k)),
+      ),
+    ].slice(0, 2);
+  if (!s.metrics.length) s.metrics = ["revenue"];
+  if (q.has("detail")) {
+    try {
+      const d = JSON.parse(q.get("detail"));
+      if (
+        [
+          "product",
+          "creator",
+          "ad",
+          "campaign",
+          "orders",
+          "products",
+          "costs",
+        ].includes(d.type) &&
+        typeof d.name === "string"
+      )
+        s.detail = d;
+    } catch {}
+  }
+  return s;
+}
+function validDate(s) {
+  return (
+    /^\d{4}-\d{2}-\d{2}$/.test(s || "") &&
+    Number.isFinite(Date.parse(s + "T12:00Z")) &&
+    new Date(s + "T12:00Z").toISOString().slice(0, 10) === s
+  );
+}
+function persist(push = true) {
+  const q = new URLSearchParams();
+  for (const k of [
+    "channel",
+    "from",
+    "to",
+    "compare",
+    "gran",
+    "group",
+    "pfrom",
+    "pto",
+  ])
+    if (state[k]) q.set(k, state[k]);
+  q.set("metrics", state.metrics.join(","));
+  if (state.detail) q.set("detail", JSON.stringify(state.detail));
+  history[push ? "pushState" : "replaceState"](null, "", "?" + q);
+  try {
+    localStorage.setItem(
+      "lumeworks_period",
+      JSON.stringify({ from: state.from, to: state.to }),
+    );
+  } catch {}
+}
+function change(fn) {
+  fn();
+  page = 0;
+  search = "";
+  sortKey = 0;
+  pending = null;
+  persist();
+  render();
+}
+function metricMeta(k) {
+  const all = state.channel === "all";
+  return {
+    revenue: {
+      label: all
+        ? "Omzet"
+        : state.channel === "google"
+          ? "Conversiewaarde"
+          : "Toegerekende omzet",
+      sub: all
+        ? "Excl. btw · btw geraamd"
+        : state.channel === "infl"
+          ? "Via kortingscodes"
+          : "Volgens kanaalattributie",
+      fmt: euro,
+    },
+    cost: {
+      label: "Product- en orderkosten",
+      sub: "Bestaande tarieven + geraamde fees",
+      fmt: euro,
+    },
+    spend: {
+      label: all
+        ? "Bekende marketinguitgaven"
+        : state.channel === "infl"
+          ? "Bekende samenwerkingskosten"
+          : "Marketinguitgaven",
+      sub:
+        state.channel === "infl"
+          ? "Commissies · overige kosten onbekend"
+          : all
+            ? "Meta + Google + commissies"
+            : names[state.channel],
+      fmt: euro,
+    },
+    result: {
+      label: "Resultaat na marketing",
+      sub: "Voorlopig · vóór overige kosten",
+      fmt: euro,
+    },
+    roas: {
+      label: all ? "Blended ROAS" : "Kanaal-ROAS",
+      sub: all
+        ? "Omzet incl. btw / bekende marketingkosten"
+        : state.channel === "infl"
+          ? "Op bekende commissiekosten"
+          : "Gerapporteerde waarde / uitgaven",
+      fmt: ratio,
+    },
+    count: {
+      label: state.channel === "infl" ? "Codeorders" : "Toegerekende aankopen",
+      sub:
+        state.channel === "google"
+          ? "Meetbasis nog controleren"
+          : "Geen nieuweklant-CAC",
+      fmt: num,
+    },
+  }[k];
+}
+function delta(k, cur, prev) {
+  if (!prev || cur[k] == null || prev[k] == null)
+    return "Geen vergelijkbare vorige periode";
+  const d = cur[k] - prev[k],
+    f = metricMeta(k).fmt;
+  const pct =
+    prev[k] > 0 ? ` · ${d >= 0 ? "+" : ""}${num((d / prev[k]) * 100)}%` : "";
+  return `${d >= 0 ? "+" : ""}${f(d)}${pct}`;
+}
+function getPrev() {
+  if (state.compare === "off" || state.to === today) return null;
+  const p =
+    state.compare === "custom"
+      ? { from: state.pfrom, to: state.pto }
+      : previous(state.from, state.to);
+  return p;
+}
+function coverage(key, from = state.from, to = state.to) {
+  const d = D[key];
+  if (!d) return false;
+  if (key === "google") return from >= d.coverage_from && to <= d.coverage_to;
+  if (key === "meta") return from >= d.daily_meta[0].d && to <= d.snap;
+  if (key === "creators")
+    return to <= d.synced_at?.slice(0, 10) && from >= "2026-07-16";
+  return from >= "2026-08-01";
+}
+function render() {
+  const cur = compute(D, C, state.from, state.to, state.channel),
+    p = getPrev();
+  const keys =
+    state.channel === "all"
+      ? ["meta", "google", "shopify", "creators"]
+      : state.channel === "infl"
+        ? ["creators"]
+        : [state.channel];
+  const prev =
+    p && keys.every((k) => coverage(k, p.from, p.to))
+      ? compute(D, C, p.from, p.to, state.channel)
+      : null;
+  $("#comparison").value = state.compare;
+  $("#from").value = state.from;
+  $("#to").value = state.to;
+  $("#tabs").innerHTML = Object.entries(names)
+    .map(
+      ([k, n]) =>
+        `<button role="tab" id="tab-${k}" aria-controls="content" aria-selected="${state.channel === k}" tabindex="${state.channel === k ? 0 : -1}" data-channel="${k}">${n}</button>`,
+    )
+    .join("");
+  $("#content").setAttribute("aria-labelledby", "tab-" + state.channel);
+  const metrics =
+    state.channel === "all"
+      ? ["revenue", "cost", "spend", "roas", "result"]
+      : ["spend", "revenue", "count", "roas"];
+  const notes = [];
+  if (keys.some((k) => !D[k] || E[k] || stale(k) || !coverage(k)))
+    notes.push(
+      "Een bron is niet beschikbaar, verouderd of dekt niet de volledige periode. Bekijk de datastatus; totalen kunnen onvolledig zijn.",
+    );
+  if (state.channel === "all")
+    notes.push(
+      "Voorlopige resultaatberekening: btw en betaalfees zijn geraamd. Retourcorrecties zijn niet afzonderlijk beschikbaar; extra influencerkosten zijn nog niet vastgelegd.",
+    );
+  if (state.channel === "google" || state.channel === "all")
+    notes.push(
+      "Google telt twee aankoopmetingen mee: GTM en TrackBee. De conversiewaarde en Google-ROAS zijn nog niet gecontroleerd op overlap.",
+    );
+  if (state.channel === "infl")
+    notes.push(
+      "Bekende kosten bestaan uit commissies. Vaste vergoedingen en productgiften zijn nog niet vastgelegd; codeomzet bewijst geen extra omzet.",
+    );
+  if (state.channel === "meta")
+    notes.push(
+      "Meta-attributie: 7-daags klik + 1-daags view. Omzet kan overlappen met Google en kortingscodes; marges zijn niet betrouwbaar aan Meta toe te rekenen.",
+    );
+  if (cur.unknown)
+    notes.unshift(
+      `${cur.unknown} productregels zonder kostprijs. Resultaat is niet berekenbaar.`,
+    );
+  if (
+    state.channel === "all" &&
+    prev &&
+    cur.result != null &&
+    prev.result != null &&
+    cur.result < prev.result &&
+    cur.revenue > prev.revenue
+  )
+    notes.push(
+      "Omzet stijgt, maar het voorlopige resultaat daalt. Vergelijk omzet en resultaat voor de onderliggende ontwikkeling.",
+    );
+  const comparisonText =
+    state.compare === "off"
+      ? "Zonder vergelijking"
+      : state.to === today
+        ? "Lopende dag · vergelijking uit"
+        : p
+          ? `vs. ${fmt(p.from)} – ${fmt(p.to)}`
+          : "";
+  $("#content").innerHTML =
+    `<div class="view-head"><div><p class="eyebrow">${state.channel === "all" ? "HET TOTAALBEELD" : "KANAALANALYSE"}</p><h2>${names[state.channel]}</h2></div><div class="subtitle">${fmt(state.from)} – ${fmt(state.to)} ${state.to.slice(0, 4)}<br>${comparisonText}</div></div>
+ <section class="kpis ${state.channel === "all" ? "" : "channel"}" aria-label="Kerncijfers">${metrics
+   .map((k) => {
+     const m = metricMeta(k);
+     return `<button class="kpi ${state.metrics.includes(k) ? "active" : ""}" data-metric="${k}" aria-pressed="${state.metrics.includes(k)}"><span class="label">${m.label}</span><strong>${m.fmt(cur[k])}</strong><small>${k === "result" && cur.revenue > 0 ? num((cur.result / cur.revenue) * 100) + "% van omzet · voorlopig" : k === "cost" && cur.revenue > 0 ? num((cur.cost / cur.revenue) * 100) + "% van omzet · geraamde basis" : k === "revenue" && state.channel === "all" ? num(cur.count) + " orders · " + euro(cur.incl) + " incl. btw" : m.sub}</small><small class="delta">${esc(delta(k, cur, prev))}</small></button>`;
+   })
+   .join("")}</section>
+ ${
+   state.channel === "all"
+     ? `<section class="panel"><h3>Van omzet naar resultaat <span class="tag warn">Voorlopig</span></h3><div class="flow">${[
+         ["revenue", "Omzet excl. btw", cur.revenue],
+         ["cost", "− Gebundelde productkosten", cur.fixed],
+         ["cost", "− Betaalfees · 2% geraamd", cur.fees],
+         ["spend", "− Bekende marketingkosten", cur.spend],
+         ["result", "= Resultaat vóór overhead", cur.result],
+       ]
+         .map(
+           ([k, n, v]) =>
+             `<button data-flow="${k}"><span>${n}</span><strong>${euro(v)}</strong></button>`,
+         )
+         .join(
+           "",
+         )}</div><p class="flow-note">Producttarieven bevatten inkoop, verzending en fulfilment. Brutomarge op alleen inkoop is nog niet apart beschikbaar. Geschatte overhead (4%): ${euro(cur.overhead)} · na deze schatting: ${euro(cur.result == null ? null : cur.result - cur.overhead)}.</p></section>`
+     : ""
+ }
+ <div class="signals">${notes
+   .slice(0, 3)
+   .map(
+     (n) =>
+       `<div class="signal"><span aria-hidden="true">ⓘ</span><span>${esc(n)}</span></div>`,
+   )
+   .join("")}</div>
+ <section class="panel" id="analysis" tabindex="-1"><div class="panel-head"><div><p class="analysis-label">VERDIEP JE IN DE CIJFERS</p><h2>${state.metrics.map((k) => metricMeta(k).label).join(" & ")}</h2><p class="subtitle">${compareMode ? "Kies een tweede cijfer bovenaan." : "Klik op een hoofdgetal om de analyse te veranderen."}</p></div><div class="toolbar"><button id="compareMetric" class="${compareMode ? "active" : ""}">${compareMode ? "Vergelijking stoppen" : "Vergelijken"}</button><select id="gran" aria-label="Grafiek groeperen"><option value="auto">Automatisch</option><option value="day">Dag</option><option value="week">Week</option><option value="month">Maand</option></select><button id="chartMode">${chartTable ? "Grafiek tonen" : "Tabel tonen"}</button></div></div><div id="replacement"></div><div id="chart"></div><div id="detail"></div></section>
+ ${
+   state.channel === "all"
+     ? `<section class="panel"><div class="panel-head"><div><p class="analysis-label">MARKETINGMIX</p><h2>Kanalen naast elkaar</h2></div><span class="tag">Omzetclaims kunnen overlappen</span></div><div class="table-wrap"><table><thead><tr><th>Kanaal</th><th>Bekende uitgaven</th><th>Toegerekende waarde</th><th>ROAS</th></tr></thead><tbody>${Object.entries(
+         cur.channels,
+       )
+         .map(
+           ([k, v]) =>
+             `<tr><td><button class="link" data-channel="${k}">${names[k]} ↗</button></td><td>${euro(v.spend)}</td><td>${euro(v.revenue)}</td><td>${ratio(v.spend > 0 ? v.revenue / v.spend : null)}${k === "google" ? " *" : ""}</td></tr>`,
+         )
+         .join(
+           "",
+         )}</tbody></table></div><p class="hint">* Google-meetbasis nog controleren. Influencers: alleen bekende commissiekosten. Kanaalwaarden niet optellen tot Shopify-omzet.</p></section>`
+     : ""
+ }
+ <details class="panel" id="definitions"><summary>Definities, berekeningen en bronnen</summary><p>Omzet: de huidige Shopify-orderbedragen, exclusief btw geraamd door deling door 1,21. Afzonderlijke retour-, belasting- en verzendcomponenten ontbreken nog. Niet gelijkstellen aan een gecontroleerde financiële rapportage.</p><p>Productkosten: bestaande gebundelde tarieven per product. Betaalfees: 2% van omzet incl. btw. Resultaat: geraamde omzet excl. btw min deze kosten en bekende marketingkosten. Overhead van 4% staat afzonderlijk. Dit is geen nettowinst.</p><p>Blended ROAS: winkelomzet incl. btw / bekende marketingkosten. Kanaal-ROAS: gerapporteerde kanaalwaarde / kanaalkosten. Bij nuluitgaven is ROAS niet berekenbaar. Week- en maandratio’s worden uit totalen berekend, niet uit het gemiddelde van dagratio’s.</p><p>Google: conversies op datum van advertentie-interactie. Twee primaire aankoopacties zijn actief; de overlap is nog niet vastgesteld. Nieuwe versus terugkerende klanten is nog onbekend. Merkverkeer telt altijd mee in totale marketingkosten.</p><p>De resultaatdefinitie is gewijzigd: de vroegere overheadschatting zit niet meer in het hoofdresultaat. Bestaande oude dashboards behouden hun oude definitie.</p><p>Bronstatus en dekking staan bovenaan bij Datastatus. Exports bevatten de actieve periode en voorlopige meetbasis. Details bevatten geen klantnamen of e-mailadressen.</p></details>`;
+  $("#gran").value = state.gran;
+  renderChart();
+  renderDetail();
+  renderStatus();
+  bindContent();
+}
+function renderStatus() {
+  const stamps = {
+    meta: D.meta
+      ? `${D.meta.snap} ${D.meta.snap_time} (Amsterdam)`
+      : "Niet beschikbaar",
+    google: D.google?.synced_at,
+    creators: D.creators?.synced_at,
+    shopify: "Orderwebhooks · laatste controle onbekend",
+  };
+  $("#status").innerHTML = `<h2>Datastatus</h2><div class="status-grid">${[
+    "meta",
+    "google",
+    "shopify",
+    "creators",
+  ]
+    .map((k) => {
+      const old = stale(k);
+      return `<div><h3>${{ shopify: "Shopify", creators: "Influencers", meta: "Meta", google: "Google Ads" }[k]}</h3><p>${esc(stamps[k] || "Niet beschikbaar")}</p><span class="tag ${E[k] || old || !coverage(k) ? "warn" : ""}">${!D[k] ? "Ontbreekt" : E[k] ? "Laatste goede gegevens" : old ? "Verversing vertraagd" : !coverage(k) ? "Dekking onvolledig" : k === "shopify" ? "Controle nog nodig" : "Beschikbaar"}</span></div>`;
+    })
+    .join(
+      "",
+    )}</div><p class="hint">Datums van orders en advertenties zijn geen bewijs van een volledige financiële aansluiting. Btw, retouren, kostensplitsing en overige influencerkosten moeten nog worden aangevuld. Google-campagnedetails: ${esc(D.google?.details_synced_at || "nog niet beschikbaar")}.</p>`;
+}
+function chartRows() {
+  const days = (new Date(state.to) - new Date(state.from)) / 864e5;
+  const g =
+    state.gran === "auto"
+      ? days <= 31
+        ? "day"
+        : days <= 180
+          ? "week"
+          : "month"
+      : state.gran;
+  return series(D, C, state.from, state.to, state.channel, g);
+}
+function renderChart() {
+  const rows = chartRows(),
+    keys = state.metrics;
+  if (chartTable) {
+    $("#chart").innerHTML =
+      `<div class="table-wrap"><table><thead><tr><th>Periode</th>${keys.map((k) => `<th>${metricMeta(k).label}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr><td><button class="link" data-bucket="${r.from}|${r.to}">${fmt(r.from)} – ${fmt(r.to)}</button></td>${keys.map((k) => `<td>${metricMeta(k).fmt(r[k])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+    return;
+  }
+  const same = keys.every((k) =>
+    ["revenue", "cost", "spend", "result"].includes(k),
+  );
+  const groups = same ? [keys] : keys.map((k) => [k]);
+  $("#chart").innerHTML =
+    groups
+      .map((group) => {
+        const vals = rows.flatMap((r) =>
+          group.map((k) => r[k]).filter((v) => v !== null),
+        );
+        if (!vals.length)
+          return '<div class="empty">Geen betrouwbare gegevens voor deze selectie.</div>';
+        const min = Math.min(0, ...vals),
+          max = Math.max(1, ...vals),
+          W = 960,
+          H = 230,
+          L = 72,
+          R = 20,
+          T = 18,
+          B = 34,
+          ph = H - T - B,
+          pw = W - L - R;
+        const y = (v) => T + ((max - v) / (max - min)) * ph,
+          x = (i) => L + ((i + 0.5) / rows.length) * pw;
+        return `<div class="chart"><div class="legend">${group.map((k) => `<span><i class="dot" style="background:${colors[k]}"></i>${metricMeta(k).label}</span>`).join("")}</div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(group.map((k) => metricMeta(k).label).join(" en "))} per periode. Exacte waarden via Tabel tonen.">${[min, (min + max) / 2, max].map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 10}" y="${y(v) + 4}" text-anchor="end">${esc(metricMeta(group[0]).fmt(v))}</text>`).join("")}${group
+          .map((k) => {
+            const chunks = [];
+            let points = [];
+            for (let i = 0; i < rows.length; i++) {
+              if (rows[i][k] == null) {
+                if (points.length) chunks.push(points);
+                points = [];
+              } else points.push(`${x(i)},${y(rows[i][k])}`);
+            }
+            if (points.length) chunks.push(points);
+            return (
+              chunks
+                .map(
+                  (p) =>
+                    `<polyline points="${p.join(" ")}" stroke="${colors[k]}" stroke-width="2.5" fill="none"/>`,
+                )
+                .join("") +
+              rows
+                .map((r, i) =>
+                  r[k] == null
+                    ? ""
+                    : `<circle class="point" data-bucket="${r.from}|${r.to}" cx="${x(i)}" cy="${y(r[k])}" r="${rows.length > 90 ? 2 : 4}" fill="${colors[k]}"><title>${fmt(r.from)}: ${metricMeta(k).fmt(r[k])}</title></circle>`,
+                )
+                .join("")
+            );
+          })
+          .join(
+            "",
+          )}${rows.map((r, i) => (i % Math.ceil(rows.length / 7) === 0 || i === rows.length - 1 ? `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${fmt(r.from)}</text>` : "")).join("")}</svg></div>`;
+      })
+      .join("") +
+    '<p class="chart-help">Klik op een punt voor details van die periode. Gebruik Tabel tonen voor exacte waarden en toetsenbordbediening.</p>';
+}
+function col(label, type = "text") {
+  return { label, type };
+}
+function renderDetail() {
+  const from = state.sub?.from || state.from,
+    to = state.sub?.to || state.to,
+    cur = compute(D, C, from, to, state.channel),
+    det = state.detail,
+    k = state.metrics[0];
+  let title = "",
+    note = "",
+    cols = [],
+    rows = [],
+    groupControl = "";
+  const action = (type, name) => ({ type, name });
+  const standard = [
+    col("Naam"),
+    col("Uitgaven", "eur"),
+    col("Toegerekende waarde", "eur"),
+    col("Aankopen", "num"),
+    col("ROAS", "ratio"),
+  ];
+  if (state.channel === "all") {
+    if (det?.type === "product" || det?.type === "orders") {
+      title = det.type === "product" ? det.name : "Alle orders";
+      cols = [
+        col("Order"),
+        col("Datum"),
+        col("Producten"),
+        col("Omzet incl. btw", "eur"),
+        col("Gebundelde kosten", "eur"),
+        col("Fees geraamd", "eur"),
+      ];
+      rows = cur.orderRows
+        .filter((o) => det.type !== "product" || o.items.includes(det.name))
+        .map((o) => {
+          const f = finance([o], C);
+          return {
+            cells: [o.num, o.d, o.items.join(", "), o.incl, f.fixed, f.fees],
+          };
+        });
+      note =
+        "Volledige orders met dit product. Orderomzet wordt niet fictief verdeeld over producten; regels kunnen meerdere producten bevatten.";
+    } else if (k === "cost" && det?.type !== "products") {
+      title = "Kostenopbouw";
+      cols = [col("Kostensoort"), col("Bedrag", "eur"), col("Meetbasis")];
+      rows = [
+        {
+          cells: [
+            "Gebundelde productkosten",
+            cur.fixed,
+            "Inkoop + verzending + fulfilment",
+          ],
+          action: action("products", "Productkosten"),
+        },
+        { cells: ["Betaalfees", cur.fees, "Schatting: 2% incl. btw"] },
+        {
+          cells: [
+            "Overhead (apart)",
+            cur.overhead,
+            "Schatting: 4% excl. btw; buiten hoofdresultaat",
+          ],
+        },
+      ];
+      note =
+        "Een splitsing van de gebundelde tarieven in inkoop/verzending/fulfilment is nog niet vastgelegd.";
+    } else if (k === "spend") {
+      title = "Marketingkosten per kanaal";
+      cols = standard;
+      rows = Object.entries(cur.channels).map(([key, v]) => ({
+        cells: [
+          names[key],
+          v.spend,
+          v.revenue,
+          v.orders,
+          v.spend > 0 ? v.revenue / v.spend : null,
+        ],
+        channel: key,
+      }));
+      note =
+        "Influencerbedragen omvatten nu alleen commissies. Betaald/openstaand is geen extra kostenpost.";
+    } else if ((k === "result" || k === "roas") && det?.type !== "products") {
+      title = "Van omzet naar resultaat";
+      cols = [col("Onderdeel"), col("Bedrag", "eur"), col("Basis")];
+      rows = [
+        {
+          cells: ["Omzet excl. btw", cur.revenue, "Btw geraamd op 21%"],
+          action: action("orders", "Orders"),
+        },
+        {
+          cells: [
+            "− Gebundelde productkosten",
+            cur.fixed == null ? null : -cur.fixed,
+            "Bestaande producttarieven",
+          ],
+          action: action("products", "Productkosten"),
+        },
+        { cells: ["− Betaalfees", -cur.fees, "2% geraamd"] },
+        {
+          cells: [
+            "− Bekende marketingkosten",
+            cur.spend == null ? null : -cur.spend,
+            "Advertenties + commissies",
+          ],
+        },
+        {
+          cells: [
+            "= Resultaat vóór overhead",
+            cur.result,
+            "Voorlopig, geen nettowinst",
+          ],
+        },
+        { cells: ["− Geschatte overhead", -cur.overhead, "4% excl. btw"] },
+        {
+          cells: [
+            "= Na overheadschatting",
+            cur.result == null ? null : cur.result - cur.overhead,
+            "Overige ontbrekende kosten niet inbegrepen",
+          ],
+        },
+      ];
+      note =
+        "Brutomarge op alleen productinkoop is niet apart berekenbaar met de huidige gebundelde tarieven.";
+    } else {
+      title = "Producten en kostprijzen";
+      cols = [
+        col("Product"),
+        col("Aantal", "num"),
+        col("Orders", "num"),
+        col("Tarief per stuk", "eur2"),
+        col("Gebundelde kosten", "eur"),
+      ];
+      const map = new Map();
+      for (const o of cur.orderRows)
+        for (const item of o.items) {
+          if (!map.has(item)) map.set(item, { n: 0, orders: new Set() });
+          const r = map.get(item);
+          r.n++;
+          r.orders.add(o.num);
+        }
+      rows = [...map].map(([name, r]) => ({
+        cells: [
+          name,
+          r.n,
+          r.orders.size,
+          C.items[name] ?? null,
+          C.items[name] == null ? null : C.items[name] * r.n,
+        ],
+        action: action("product", name),
+      }));
+      note =
+        "Klik op een product voor de bijbehorende orders. De huidige export bevat geen omzet per orderregel; daarom verdelen we de orderomzet niet over producten.";
+    }
+  } else if (state.channel === "meta") {
+    title = det?.name || "Advertentiegroepen";
+    cols = standard;
+    const raw = (D.meta?.daily_ads || [])
+      .filter((x) => inRange(x, from, to))
+      .flatMap((x) =>
+        x.ads.map((a) => ({
+          name: a.n,
+          d: x.d,
+          spend: a.spend,
+          revenue: (a.rev7 || 0) + (a.rev1v || 0),
+          orders: a.purch,
+        })),
+      );
+    if (det?.type === "ad") {
+      cols = [col("Dag"), ...standard.slice(1)];
+      rows = raw
+        .filter((a) => a.name === det.name)
+        .map((a) => ({
+          cells: [
+            a.d,
+            a.spend,
+            a.revenue,
+            a.orders,
+            a.spend > 0 ? a.revenue / a.spend : null,
+          ],
+        }));
+    } else
+      rows = aggregate(raw, (r) => r.name).map((r) => ({
+        cells: [r.name, r.spend, r.revenue, r.orders, r.roas],
+        action: action("ad", r.name),
+      }));
+    note =
+      "Historische export groepeert op advertentiegroepnaam; gelijke namen kunnen samengevoegd zijn. Campagne-ID’s ontbreken nog in deze bron. Totalen per advertentiegroep kunnen afwijken van accountdata.";
+  } else if (state.channel === "infl") {
+    const byNum = new Map((D.shopify?.orders || []).map((o) => [o.num, o]));
+    if (det?.type === "creator") {
+      title = det.name;
+      cols = [
+        col("Order"),
+        col("Datum"),
+        col("Code"),
+        col("Omzet incl. btw", "eur"),
+        col("Commissie", "eur"),
+        col("Status"),
+      ];
+      rows = cur.creatorRows
+        .filter((o) => o.creator === det.name)
+        .map((o) => ({
+          cells: [
+            o.num,
+            o.d,
+            o.code,
+            byNum.get(o.num)?.incl ?? o.omzet_excl * 1.21,
+            o.commissie,
+            o.status || "Onbekend",
+          ],
+        }));
+      note =
+        "Vaste vergoedingen en productgiften zijn nog niet vastgelegd. Betaalstatus verandert de verdiende commissie niet.";
+    } else {
+      title = "Creators";
+      cols = [
+        col("Creator"),
+        col("Codeorders", "num"),
+        col("Codeomzet incl. btw", "eur"),
+        col("Commissies", "eur"),
+        col("Omzet / commissie", "ratio"),
+      ];
+      rows = aggregate(
+        cur.creatorRows.map((o) => ({
+          name: o.creator,
+          orders: 1,
+          revenue: byNum.get(o.num)?.incl ?? o.omzet_excl * 1.21,
+          spend: o.commissie,
+        })),
+        (r) => r.name,
+      ).map((r) => ({
+        cells: [r.name, r.orders, r.revenue, r.spend, r.roas],
+        action: action("creator", r.name),
+      }));
+      note =
+        "Omzet/kosten is gebaseerd op alleen commissies. Overige samenwerkingskosten zijn onbekend.";
+    }
+  } else {
+    const available = D.google?.daily_campaigns || [];
+    const campaign = available.filter((r) => inRange(r, from, to));
+    groupControl = `<label>Uitsplitsing<select id="googleGroup"><option value="campaign">Campagnes</option><option value="intent">Merkverkeer en overige zoektermen</option><option value="actions">Aankoopmetingen</option><option value="customers">Nieuwe / terugkerende klanten</option></select></label>`;
+    title =
+      "Google Ads · " +
+      ({
+        campaign: "campagnes",
+        intent: "zoekintentie",
+        actions: "aankoopmetingen",
+        customers: "klantstatus",
+      }[state.group] || "campagnes");
+    cols = standard;
+    if (state.group === "customers") {
+      cols = [
+        col("Klantstatus"),
+        col("Toegerekende aankopen", "num"),
+        col("Conversiewaarde", "eur"),
+      ];
+      rows = [{ cells: ["Onbekend", cur.count, cur.revenue] }];
+      note =
+        "Geen betrouwbare nieuwe-klantclassificatie beschikbaar. Onbekend wordt niet als nieuw geteld.";
+    } else if (state.group === "actions") {
+      cols = [
+        col("Aankoopmeting"),
+        col("Aankopen", "num"),
+        col("Conversiewaarde", "eur"),
+      ];
+      rows = aggregate(
+        (D.google?.daily_actions || [])
+          .filter((r) => inRange(r, from, to))
+          .map((r) => ({ name: r.name, revenue: r.rev, orders: r.conv })),
+        (r) => r.name,
+      ).map((r) => ({ cells: [r.name, r.orders, r.revenue] }));
+      note =
+        "Beide aankoopmetingen tellen nu mee. Of dezelfde aankopen dubbel worden gemeten is nog niet vastgesteld. Er zijn geen Google-instellingen aangepast.";
+    } else if (state.group === "intent") {
+      const intent = (D.google?.daily_intent || []).filter((r) =>
+        inRange(r, from, to),
+      );
+      const grouped = aggregate(
+        intent.map((r) => ({
+          name: r.intent,
+          revenue: r.rev,
+          spend: r.spend,
+          orders: r.conv,
+        })),
+        (r) => r.name,
+      );
+      rows = grouped.map((r) => ({
+        cells: [
+          r.name === "brand"
+            ? "Merktermen (LumeWorks-varianten)"
+            : "Overige zichtbare zoektermen",
+          r.spend,
+          r.revenue,
+          r.orders,
+          r.roas,
+        ],
+      }));
+      const spent = sum(grouped, "spend"),
+        rev = sum(grouped, "revenue"),
+        cnt = sum(grouped, "orders");
+      rows.push({
+        cells: [
+          "Niet uitgesplitst / overige inventaris",
+          cur.spend == null ? null : Math.max(0, cur.spend - spent),
+          cur.revenue == null ? null : cur.revenue - rev,
+          cur.count == null ? null : cur.count - cnt,
+          null,
+        ],
+      });
+      note = `Zichtbare zoektermen dekken ${cur.spend > 0 ? num((spent / cur.spend) * 100) : "—"}% van accountuitgaven. Overige termen zijn niet automatisch generiek of nieuwe klanten. Niet-zoekinventaris en afgeschermde termen blijven apart.`;
+    } else if (det?.type === "campaign") {
+      title = det.name;
+      cols = [col("Dag"), ...standard.slice(1)];
+      rows = campaign
+        .filter((r) => r.id === det.id || r.name === det.name)
+        .map((r) => ({
+          cells: [
+            r.d,
+            r.spend,
+            r.rev,
+            r.conv,
+            r.spend > 0 ? r.rev / r.spend : null,
+          ],
+        }));
+      note =
+        "Conversies op interactiedatum. Aankoopmetingen nog niet ontdubbeld.";
+    } else {
+      rows = aggregate(
+        campaign.map((r) => ({
+          name: r.name,
+          id: r.id,
+          spend: r.spend,
+          revenue: r.rev,
+          orders: r.conv,
+        })),
+        (r) => r.id,
+      ).map((r) => ({
+        cells: [r.rows[0].name, r.spend, r.revenue, r.orders, r.roas],
+        action: { type: "campaign", name: r.rows[0].name, id: r.name },
+      }));
+      note =
+        "Campagnenamen zijn geen bewezen classificatie van merkverkeer. Conversiewaarde bevat beide primaire aankoopmetingen.";
+    }
+    if (!available.length) note += " Campagnedetails worden nog opgehaald.";
+    if (
+      D.google?.details_error ||
+      Date.now() - Date.parse(D.google?.details_synced_at || 0) > 45 * 60000
+    )
+      note +=
+        " Let op: campagnedetails zijn niet actueel; aansluiting op accounttotalen kan afwijken.";
+  }
+  tableModel = { title, note, cols, rows };
+  $("#detail").innerHTML =
+    `<div class="crumbs">${det ? '<button id="detailBack">← Terug naar uitsplitsing</button>' : ""}${state.sub ? `<span class="tag">Details: ${fmt(from)} – ${fmt(to)}</span><button id="clearSub">Hele periode</button><button id="useSub">Als hoofdperiode</button>` : ""}</div><div class="panel-head"><div><h3>${esc(title)}</h3><p class="hint">${esc(note)}</p></div><div class="toolbar">${groupControl}<button id="export">CSV exporteren</button></div></div><label>Zoeken in tabel<input type="search" id="search" class="search" placeholder="Zoek een regel…" value="${esc(search)}"></label><div id="table"></div>`;
+  if ($("#googleGroup")) $("#googleGroup").value = state.group;
+  renderTable();
+}
+function filtered() {
+  let rows = tableModel.rows.filter((r) =>
+    r.cells.some((v) =>
+      String(v ?? "")
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+    ),
+  );
+  rows.sort((a, b) => {
+    const av = a.cells[sortKey],
+      bv = b.cells[sortKey];
+    if (av == null) return bv == null ? 0 : 1;
+    if (bv == null) return -1;
+    return (
+      (typeof av === "number"
+        ? av - bv
+        : String(av).localeCompare(String(bv), "nl")) * sortDir
+    );
+  });
+  return rows;
+}
+function cell(v, c) {
+  return c.type === "eur2"
+    ? v == null
+      ? "—"
+      : new Intl.NumberFormat("nl-NL", {
+          style: "currency",
+          currency: "EUR",
+        }).format(v)
+    : c.type === "eur"
+      ? euro(v)
+      : c.type === "ratio"
+        ? ratio(v)
+        : c.type === "num"
+          ? num(v)
+          : esc(v ?? "—");
+}
+function totalsHtml(rows, cols) {
+  if (["Van omzet naar resultaat", "Kostenopbouw"].includes(tableModel.title))
+    return "";
+  const values = cols.map((c, i) => {
+    if (!i) return "Totaal selectie";
+    if (tableModel.title === "Marketingkosten per kanaal" && i > 1) return "—";
+    if (c.label === "Tarief per stuk" || c.label === "Orders") return "—";
+    if (c.type === "ratio") {
+      const spend = cols.findIndex((x) => /Uitgaven|Commissies/.test(x.label)),
+        rev = cols.findIndex((x) => /waarde|Codeomzet/.test(x.label));
+      if (spend < 0 || rev < 0) return "—";
+      const a = sum(rows, (r) => r.cells[spend]),
+        b = sum(rows, (r) => r.cells[rev]);
+      return ratio(a > 0 ? b / a : null);
+    }
+    if (["eur", "num"].includes(c.type))
+      return rows.some((r) => r.cells[i] == null)
+        ? "Onvolledig"
+        : cell(
+            sum(rows, (r) => r.cells[i]),
+            c,
+          );
+    return "";
+  });
+  return (
+    "<tfoot><tr>" +
+    values.map((v) => "<td>" + v + "</td>").join("") +
+    "</tr></tfoot>"
+  );
+}
+function renderTable() {
+  const { cols } = tableModel,
+    rows = filtered();
+  page = Math.min(page, Math.max(0, Math.ceil(rows.length / 25) - 1));
+  const visible = rows.slice(page * 25, page * 25 + 25);
+  $("#table").innerHTML =
+    `<div class="table-wrap"><table><thead><tr>${cols.map((c, i) => `<th scope="col" aria-sort="${i === sortKey ? (sortDir === 1 ? "ascending" : "descending") : "none"}"><button data-sort="${i}">${c.label} ${i === sortKey ? (sortDir === 1 ? "↑" : "↓") : ""}</button></th>`).join("")}</tr></thead><tbody>${visible.map((r) => `<tr>${r.cells.map((v, i) => `<td>${i === 0 && (r.action || r.channel) ? `<button class="link" ${r.channel ? `data-channel="${r.channel}"` : `data-detail="${esc(JSON.stringify(r.action))}"`}>${esc(v)} →</button>` : cell(v, cols[i])}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${cols.length}" class="empty">Geen regels beschikbaar voor deze selectie.</td></tr>`}</tbody>${totalsHtml(rows, cols)}</table></div><div class="pager"><span>${rows.length} regels · pagina ${page + 1} / ${Math.max(1, Math.ceil(rows.length / 25))}</span><div><button id="pagePrev" ${page === 0 ? "disabled" : ""} aria-label="Vorige pagina">←</button> <button id="pageNext" ${(page + 1) * 25 >= rows.length ? "disabled" : ""} aria-label="Volgende pagina">→</button></div></div>`;
+}
+function selectMetric(k) {
+  if (compareMode) {
+    if (state.metrics.includes(k)) {
+      if (state.metrics.length > 1)
+        change(() => (state.metrics = state.metrics.filter((x) => x !== k)));
+    } else if (state.metrics.length < 2)
+      change(() => {
+        state.metrics.push(k);
+        state.detail = null;
+      });
+    else {
+      pending = k;
+      $("#replacement").innerHTML =
+        `<div class="replacement">Welk cijfer wil je vervangen? ${state.metrics.map((m) => `<button data-replace="${m}">${metricMeta(m).label}</button>`).join("")} <button id="cancelReplace">Annuleren</button></div>`;
+    }
+  } else
+    change(() => {
+      state.metrics = [k];
+      state.detail = null;
+      state.sub = null;
+    });
+}
+function bindContent() {
+  $("#content").onclick = (e) => {
+    const b = e.target.closest("button,[data-bucket]");
+    if (!b) return;
+    if (b.dataset.metric) {
+      selectMetric(b.dataset.metric);
+      document
+        .querySelector(`[data-metric="${b.dataset.metric}"]`)
+        ?.focus({ preventScroll: true });
+      const a = $("#analysis");
+      if (a.getBoundingClientRect().top > innerHeight * 0.8)
+        a.scrollIntoView({
+          behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+            ? "instant"
+            : "smooth",
+          block: "start",
+        });
+    } else if (b.dataset.flow)
+      change(() => {
+        state.metrics = [b.dataset.flow];
+        state.detail = null;
+      });
+    else if (b.dataset.channel) switchChannel(b.dataset.channel);
+    else if (b.dataset.detail)
+      change(() => (state.detail = JSON.parse(b.dataset.detail)));
+    else if (b.dataset.bucket) {
+      const [from, to] = b.dataset.bucket.split("|");
+      state.sub = { from, to };
+      page = 0;
+      renderDetail();
+    } else if (b.dataset.sort !== undefined) {
+      const i = +b.dataset.sort;
+      sortDir = sortKey === i ? -sortDir : 1;
+      sortKey = i;
+      renderTable();
+    } else if (b.dataset.replace) {
+      const next = pending;
+      change(() => {
+        state.metrics = state.metrics.map((k) =>
+          k === b.dataset.replace ? next : k,
+        );
+        state.detail = null;
+      });
+    } else if (b.id === "compareMetric") {
+      compareMode = !compareMode;
+      if (!compareMode) state.metrics = state.metrics.slice(0, 1);
+      persist();
+      render();
+    } else if (b.id === "cancelReplace") {
+      $("#replacement").innerHTML = "";
+      pending = null;
+    } else if (b.id === "detailBack") change(() => (state.detail = null));
+    else if (b.id === "clearSub") {
+      state.sub = null;
+      renderDetail();
+    } else if (b.id === "useSub")
+      change(() => {
+        state.from = state.sub.from;
+        state.to = state.sub.to;
+        state.sub = null;
+        $("#preset").value = "custom";
+      });
+    else if (b.id === "chartMode") {
+      chartTable = !chartTable;
+      render();
+    } else if (b.id === "pageNext") {
+      page++;
+      renderTable();
+    } else if (b.id === "pagePrev") {
+      page--;
+      renderTable();
+    } else if (b.id === "export") exportCsv();
+  };
+  $("#content").onchange = (e) => {
+    if (e.target.id === "gran") change(() => (state.gran = e.target.value));
+    if (e.target.id === "googleGroup")
+      change(() => {
+        state.group = e.target.value;
+        state.detail = null;
+      });
+  };
+  $("#content").oninput = (e) => {
+    if (e.target.id === "search") {
+      search = e.target.value;
+      page = 0;
+      renderTable();
+    }
+  };
+}
+function switchChannel(ch) {
+  change(() => {
+    state.channel = ch;
+    state.metrics = ch === "all" ? ["revenue", "spend"] : ["spend", "revenue"];
+    state.detail = null;
+    state.sub = null;
+    compareMode = false;
+  });
+}
+function exportCsv() {
+  const quote = (v) =>
+    '"' +
+    String(v ?? "")
+      .replace(/^[=+@\-]/, "'$&")
+      .replace(/"/g, '""') +
+    '"';
+  const rows = [
+    ["LumeWorks", tableModel.title],
+    ["Periode", state.sub?.from || state.from, state.sub?.to || state.to],
+    ["Meetbasis", tableModel.note],
+    ["Meta bijgewerkt", D.meta?.snap, D.meta?.snap_time],
+    ["Google bijgewerkt", D.google?.synced_at],
+    ["Creators bijgewerkt", D.creators?.synced_at],
+    [
+      "Status",
+      "Voorlopige cijfers; btw/fees geraamd, overige influencerkosten onbekend, Google-meetbasis niet ontdubbeld",
+    ],
+    tableModel.cols.map((c) => c.label),
+    ...filtered().map((r) => r.cells),
+  ];
+  const blob = new Blob(
+      ["\uFEFF" + rows.map((r) => r.map(quote).join(";")).join("\r\n")],
+      { type: "text/csv;charset=utf-8" },
+    ),
+    a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `lumeworks-${state.channel}-${state.from}-${state.to}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function applyPreset(p) {
+  let from,
+    to = shift(today, -1);
+  if (p === "today") from = to = today;
+  else if (p === "yesterday") from = to;
+  else if (p === "month") {
+    from = today.slice(0, 8) + "01";
+    to = today;
+  } else if (p === "lastmonth") {
+    to = shift(today.slice(0, 8) + "01", -1);
+    from = to.slice(0, 8) + "01";
+  } else if (p === "all") {
+    from = "2026-08-01";
+    to = today;
+  } else from = shift(to, -6);
+  change(() => {
+    state.from = from;
+    state.to = to;
+    state.sub = null;
+    state.detail = null;
+  });
+}
+async function start() {
+  try {
+    ({ data: D, costs: C, errors: E } = await load());
+    const hadQuery = !!location.search;
+    state = readState();
+    persist(false);
+    render();
+    $("#preset").value = hadQuery ? "custom" : "seven";
+    $("#tabs").onclick = (e) => {
+      const b = e.target.closest("[data-channel]");
+      if (b) switchChannel(b.dataset.channel);
+    };
+    $("#tabs").onkeydown = (e) => {
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+      e.preventDefault();
+      const tabs = $$("#tabs button"),
+        i = tabs.indexOf(document.activeElement),
+        next =
+          e.key === "Home"
+            ? 0
+            : e.key === "End"
+              ? 3
+              : (i + (e.key === "ArrowRight" ? 1 : 3)) % 4;
+      switchChannel(tabs[next].dataset.channel);
+      $$("#tabs button")[next].focus();
+    };
+    $("#preset").onchange = (e) => {
+      $("#dates").hidden = e.target.value !== "custom";
+      if (e.target.value !== "custom") applyPreset(e.target.value);
+    };
+    $("#comparison").onchange = (e) => {
+      if (e.target.value === "custom") {
+        $("#compareDates").hidden = false;
+        const p = previous(state.from, state.to);
+        $("#prevFrom").value = p.from;
+        $("#prevTo").value = p.to;
+      } else {
+        $("#compareDates").hidden = true;
+        change(() => (state.compare = e.target.value));
+      }
+    };
+    $("#dates").onsubmit = (e) => {
+      e.preventDefault();
+      const f = $("#from").value,
+        t = $("#to").value;
+      if (f > t || t > today || new Date(t) - new Date(f) > 3 * 366 * 864e5) {
+        $("#to").setCustomValidity(
+          "Kies een geldige periode van maximaal drie jaar, niet in de toekomst.",
+        );
+        $("#to").reportValidity();
+        return;
+      }
+      $("#to").setCustomValidity("");
+      change(() => {
+        state.from = f;
+        state.to = t;
+        state.sub = null;
+        state.detail = null;
+      });
+      $("#dates").hidden = true;
+    };
+    $("#to").oninput = () => $("#to").setCustomValidity("");
+    $("#compareDates").onsubmit = (e) => {
+      e.preventDefault();
+      const f = $("#prevFrom").value,
+        t = $("#prevTo").value;
+      if (f > t || t > today) {
+        $("#prevTo").setCustomValidity("Kies een geldige afgesloten periode.");
+        $("#prevTo").reportValidity();
+        return;
+      }
+      change(() => {
+        state.compare = "custom";
+        state.pfrom = f;
+        state.pto = t;
+      });
+      $("#compareDates").hidden = true;
+    };
+    $("#prevTo").oninput = () => $("#prevTo").setCustomValidity("");
+    $("#statusButton").onclick = () => {
+      const el = $("#status");
+      el.hidden = !el.hidden;
+      $("#statusButton").setAttribute("aria-expanded", String(!el.hidden));
+    };
+    window.onpopstate = () => {
+      state = readState();
+      compareMode = false;
+      render();
+    };
+  } catch (e) {
+    $("#content").innerHTML =
+      `<div class="panel error"><h2>Overzicht kon niet geladen worden</h2><p>${esc(e.message)}</p><button onclick="location.reload()">Opnieuw proberen</button></div>`;
+  }
+}
+start();

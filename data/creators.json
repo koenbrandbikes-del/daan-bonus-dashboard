@@ -1,13 +1,14 @@
 {
- "synced_at": "2026-09-29T11:01:52Z",
- "source": "Creators Google Sheet · tab 'Sales' (momentopname, geen live sync)",
+ "synced_at": "2026-09-30T15:46:07Z",
+ "source": "Creators Google Sheet · tab 'Sales' (ieder uur gesynchroniseerd)",
+ "sync_interval_minutes": 60,
  "totals": {
-  "orders": 79,
+  "orders": 81,
   "retouren": 0,
-  "omzet_excl": 9177.2,
-  "commissie": 984.64,
+  "omzet_excl": 9430.26,
+  "commissie": 1009.94,
   "betaald": 53.64,
-  "openstaand": 931.0
+  "openstaand": 956.3
  },
  "creators": [
   {
@@ -63,6 +64,15 @@
    "commissie": 56.82,
    "betaald": 0.0,
    "openstaand": 56.82
+  },
+  {
+   "creator": "Nickkim",
+   "orders": 3,
+   "retouren": 0,
+   "omzet_excl": 363.89,
+   "commissie": 36.38,
+   "betaald": 0.0,
+   "openstaand": 36.38
   },
   {
    "creator": "Marianne",
@@ -165,15 +175,6 @@
   },
   {
    "creator": "Joan",
-   "orders": 1,
-   "retouren": 0,
-   "omzet_excl": 110.83,
-   "commissie": 11.08,
-   "betaald": 0.0,
-   "openstaand": 11.08
-  },
-  {
-   "creator": "Nickkim",
    "orders": 1,
    "retouren": 0,
    "omzet_excl": 110.83,
@@ -1216,6 +1217,32 @@
    "omzet_excl": 133.97,
    "commissie_pct": 15.0,
    "commissie": 20.1,
+   "status": "Openstaand",
+   "retour": false
+  },
+  {
+   "d": "2026-09-29",
+   "creator": "Nickkim",
+   "code": "NICKKIDS",
+   "num": "#1611",
+   "product": "Prime travelcase",
+   "herkomst": "Google",
+   "omzet_excl": 126.53,
+   "commissie_pct": 10.0,
+   "commissie": 12.65,
+   "status": "Openstaand",
+   "retour": false
+  },
+  {
+   "d": "2026-09-29",
+   "creator": "Nickkim",
+   "code": "NICKKIDS",
+   "num": "#1612",
+   "product": "Prime travelcase",
+   "herkomst": "Direct",
+   "omzet_excl": 126.53,
+   "commissie_pct": 10.0,
+   "commissie": 12.65,
    "status": "Openstaand",
    "retour": false
   }
