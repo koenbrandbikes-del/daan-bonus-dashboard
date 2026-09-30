@@ -632,6 +632,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 </div>
 
 <div id="staleWarning" class="stale-warning" style="display:none"></div>
+<div id="commissieWarning" class="stale-warning" style="display:none"></div>
 
 <div class="card">
   <div class="card-meta"><div class="blend-src-row" id="srcRow"></div></div>
@@ -802,6 +803,80 @@ for(const o of ORDERS){
   SHOP_BY_DAY[o.d] = (SHOP_BY_DAY[o.d]||0) + o.incl;
   SHOP_BY_NUM[o.num] = o;
 }
+
+// Data-kwaliteitscheck (29 sep 2026, op Koens verzoek zichtbaar gemaakt):
+// bij een deel van de orders staat in de sheet zelf de Commissie € berekend
+// over het incl.-BTW-bedrag i.p.v. het excl.-BTW-bedrag (Grondslag) —
+// dezelfde onderliggende spreadsheetfout als bij de Grondslag-kolom (zie
+// sync_creators.py), maar dit keer in het daadwerkelijk uit te betalen
+// bedrag, dus geen dashboard-weergavefout maar een echt te veel/te weinig
+// uitbetaald bedrag. Bewust NIET automatisch gecorrigeerd — dat raakt
+// echt geld richting creators, dat vraagt een menselijke beslissing, geen
+// stille "fix". Hier alleen gedetecteerd zodat het zichtbaar gemaakt kan
+// worden (banner + per-order-markering in Orderdetail).
+const COMMISSIE_MISMATCHES = (()=>{
+  const list = [];
+  for(const o of CREATOR_ORDERS){
+    const match = SHOP_BY_NUM[o.num];
+    if(!match) continue; // geen Shopify-bedrag bekend, kan niet checken
+    const excl = match.incl/BTW;
+    const expected = round2(excl * o.commissie_pct/100);
+    const diff = round2(o.commissie - expected);
+    if(Math.abs(diff) > 0.02){
+      list.push({num:o.num, creator:o.creator, actual:o.commissie, expected, diff});
+    }
+  }
+  return list;
+})();
+function round2(v){ return Math.round(v*100)/100; }
+const COMMISSIE_MISMATCH_BY_NUM = new Map(COMMISSIE_MISMATCHES.map(m=>[m.num,m]));
+
+// Klantkorting-% per order — alleen betrouwbaar te herleiden bij een
+// order met precies 1 artikel van een bekende winkelprijs (Prime/Atlas/
+// Titan; voor accessoires hebben we geen catalogusprijs). Bij een order
+// met meerdere artikelen (bv. Prime + Projectiescherm) klopt "betaald ÷
+// winkelprijs van 1 artikel" niet — dan liever eerlijk "—" dan een
+// verzonnen getal (zo ontstond de schijnbare "-44%" bij Romy/Tessa: dat
+// waren gewoon 2-artikel-orders, geen ander kortingsbeleid).
+const LIST_PRICE_INCL = {"LumeWorks Prime":149, "LumeWorks Atlas":239, "LumeWorks Titan":349};
+function discountPct(match){
+  if(!match || !match.items || match.items.length!==1) return null;
+  const list = LIST_PRICE_INCL[match.items[0]];
+  if(!list) return null;
+  return round2((1 - match.incl/list)*100);
+}
+
+// Per-creator totalen incl. kostprijs/winst — zelf berekend uit
+// CREATOR_ORDERS + SHOP_BY_NUM (niet uit data/creators.json's statische
+// creators[]-lijst, die heeft geen kostprijs/winst) zodat het exact
+// dezelfde calcOrder()-rekenmethode gebruikt als de rest van de pagina.
+function computeCreatorStats(){
+  const map = new Map();
+  for(const o of CREATOR_ORDERS){
+    if(!map.has(o.creator)) map.set(o.creator, {
+      creator:o.creator, orders:0, omzet_incl:0, omzet_excl:0, commissie:0,
+      kosten:0, knownExcl:0, pctSet:new Set(),
+    });
+    const s = map.get(o.creator);
+    const match = SHOP_BY_NUM[o.num];
+    const incl = match ? match.incl : o.omzet_excl*BTW;
+    const excl = match ? match.incl/BTW : o.omzet_excl;
+    const cost = match ? calcOrder(match).cost : null;
+    s.orders++;
+    s.omzet_incl += incl; s.omzet_excl += excl; s.commissie += o.commissie;
+    if(cost!=null){ s.kosten += cost; s.knownExcl += excl; }
+    s.pctSet.add(o.commissie_pct);
+  }
+  return [...map.values()].map(s=>({
+    creator: s.creator, orders: s.orders,
+    omzet_incl: round2(s.omzet_incl), omzet_excl: round2(s.omzet_excl),
+    commissie: round2(s.commissie),
+    kosten: s.knownExcl>0 ? round2(s.kosten) : null,
+    winst: s.knownExcl>0 ? round2(s.omzet_excl - s.kosten - s.commissie) : null,
+    commissie_pct: s.pctSet.size===1 ? [...s.pctSet][0] : null, // null = gemengde tarieven
+  }));
+}
+const CREATOR_STATS = computeCreatorStats();
 
 // Periodegrenzen op de affiliate-orders zelf, niet op Meta — dit dashboard
 // draait nu uitsluitend op de Creators-sheet + Shopify-orderdata.
@@ -1002,32 +1077,38 @@ function setCredBtw(v){
 
 function renderCreatorsTable(){
   let filtered = creatorSearchTerm
-    ? CREATORS.filter(c=>c.creator.toLowerCase().includes(creatorSearchTerm))
-    : [...CREATORS];
+    ? CREATOR_STATS.filter(c=>c.creator.toLowerCase().includes(creatorSearchTerm))
+    : [...CREATOR_STATS];
   filtered.sort((a,b)=>{
     const av=a[credSortKey], bv=b[credSortKey];
+    if(av==null && bv==null) return 0;
+    if(av==null) return 1;
+    if(bv==null) return -1;
     const cmp = typeof av==="string" ? av.localeCompare(bv) : av-bv;
     return credSortDir==="asc" ? cmp : -cmp;
   });
   const showIncl = credBtw==="incl";
-  const omzetOf = c => showIncl ? c.omzet_excl*BTW : c.omzet_excl;
+  const omzetOf = c => showIncl ? c.omzet_incl : c.omzet_excl;
   const rows = filtered.map(c=>`<tr>
     <td>${c.creator}</td>
-    <td class="r">${c.orders}${c.retouren?` <span style="color:#7C8CA6">(${c.retouren} retour)</span>`:""}</td>
+    <td class="r">${c.orders}</td>
     <td class="r">${eur(omzetOf(c))}</td>
+    <td class="r">${c.commissie_pct!=null?c.commissie_pct.toFixed(0)+"%":"gemengd"}</td>
     <td class="r">${eur(c.commissie)}</td>
+    <td class="r">${c.winst!=null?eur(c.winst):"—"}</td>
   </tr>`).join("");
-  const tot = filtered.reduce((s,c)=>({orders:s.orders+c.orders, omzet:s.omzet+omzetOf(c), commissie:s.commissie+c.commissie}),
-    {orders:0, omzet:0, commissie:0});
+  const tot = filtered.reduce((s,c)=>({orders:s.orders+c.orders, omzet:s.omzet+omzetOf(c), commissie:s.commissie+c.commissie,
+    winst:s.winst+(c.winst||0), winstKnown:s.winstKnown||c.winst!=null}),
+    {orders:0, omzet:0, commissie:0, winst:0, winstKnown:false});
   const th = (key,label,cls)=>`<th${cls?` class="${cls}"`:""} style="cursor:pointer" onclick="setCredSort('${key}')">${label}${sortArrow(key,credSortKey,credSortDir)}</th>`;
   document.getElementById("creatorsTable").innerHTML = filtered.length ? `
-    <thead><tr>${th("creator","Creator")}${th("orders","Orders","r")}${th("omzet_excl",`Omzet ${showIncl?"incl.":"excl."} BTW`,"r")}${th("commissie","Commissie","r")}</tr></thead>
+    <thead><tr>${th("creator","Creator")}${th("orders","Orders","r")}${th("omzet_excl",`Omzet ${showIncl?"incl.":"excl."} BTW`,"r")}<th class="r">Commissie %</th>${th("commissie","Commissie","r")}${th("winst","Winst","r")}</tr></thead>
     <tbody>${rows}
-    <tr class="tot"><td>Totaal</td><td class="r">${tot.orders}</td><td class="r">${eur(tot.omzet)}</td><td class="r">${eur(tot.commissie)}</td></tr>
+    <tr class="tot"><td>Totaal</td><td class="r">${tot.orders}</td><td class="r">${eur(tot.omzet)}</td><td></td><td class="r">${eur(tot.commissie)}</td><td class="r">${tot.winstKnown?eur(tot.winst):"—"}</td></tr>
     </tbody>` : `<tbody><tr><td style="padding:16px;color:#7C8CA6">Geen creator gevonden voor "${creatorSearchTerm}".</td></tr></tbody>`;
   document.getElementById("creatorsHdr").textContent = creatorSearchTerm
-    ? `Creators & affiliates (${filtered.length} van ${CREATORS.length})`
-    : `Creators & affiliates (${CREATORS.length})`;
+    ? `Creators & affiliates (${filtered.length} van ${CREATOR_STATS.length})`
+    : `Creators & affiliates (${CREATOR_STATS.length})`;
 }
 
 // Kleine, vaste productset (zie data/creators.json) — dropdown voor
@@ -1084,9 +1165,11 @@ const ORD_COLS = [
   {key:"creator",   label:"Creator",  def:true},
   {key:"product",   label:"Product",  def:true},
   {key:"code",      label:"Kortingscode", def:false},
+  {key:"korting",   label:"Korting %", def:true, r:true},
   {key:"omzet",     label:"Omzet",    def:true,  r:true},
   {key:"kosten",    label:"Kosten", def:false, r:true},
   {key:"marge",     label:"Marge",    def:true,  r:true},
+  {key:"commissie_pct", label:"Commissie %", def:true, r:true},
   {key:"commissie", label:"Commissie", def:true, r:true},
   {key:"netto",     label:"Netto marge", def:false, r:true},
 ];
@@ -1161,7 +1244,8 @@ function renderOrderDetail(){
     if(cost!=null){ totCost+=cost; totWinst+=winst; totKnownCost+=excl; }
     return {
       num:o.num, d:o.d, creator:o.creator, product:o.product, retour:o.retour, code:o.code||null,
-      omzet:omzetVal, kosten:cost, marge:margePct, commissie:o.commissie, netto:nettoPct,
+      omzet:omzetVal, kosten:cost, marge:margePct, commissie:o.commissie, commissie_pct:o.commissie_pct,
+      korting: discountPct(match), netto:nettoPct,
     };
   });
 
@@ -1175,14 +1259,20 @@ function renderOrderDetail(){
   });
 
   const rows = enriched.map(o=>{
+    const mm = COMMISSIE_MISMATCH_BY_NUM.get(o.num);
+    const commissieCell = mm
+      ? `${eur(o.commissie)} <span title="Commissie in de sheet is over het incl.-BTW-bedrag berekend i.p.v. excl. — zou €${mm.expected.toFixed(2)} moeten zijn (${mm.diff>=0?"−":"+"}€${Math.abs(mm.diff).toFixed(2)})" style="color:#E5B863;cursor:help">⚠</span>`
+      : eur(o.commissie);
     const cellVals = {
       creator: o.creator,
       product: `${fmtProduct(o.product)}${o.retour?` <span style="color:#DD9280">(retour)</span>`:""}`,
       code: o.code||"—",
+      korting: o.korting!=null?o.korting.toFixed(0)+"%":"—",
       omzet: eur(o.omzet),
       kosten: o.kosten!=null?eur(o.kosten):"—",
       marge: o.marge!=null?o.marge.toFixed(1)+"%":"—",
-      commissie: eur(o.commissie),
+      commissie_pct: o.commissie_pct.toFixed(0)+"%",
+      commissie: commissieCell,
       netto: o.netto!=null?o.netto.toFixed(1)+"%":"—",
     };
     return `<tr><td>${o.num}</td><td>${fmtS(o.d)}</td>` +
@@ -1192,10 +1282,11 @@ function renderOrderDetail(){
   const totMargePct = totKnownCost>0 ? (totWinst/totKnownCost*100).toFixed(1)+"%" : "—";
   const totNettoPct = totKnownCost>0 ? ((totWinst-totCommissie)/totKnownCost*100).toFixed(1)+"%" : "—";
   const totCellVals = {
-    creator:"", product:"", code:"",
+    creator:"", product:"", code:"", korting:"",
     omzet: eur(totOmzetShown),
     kosten: totCost>0?eur(totCost):"—",
     marge: totMargePct,
+    commissie_pct:"",
     commissie: eur(totCommissie),
     netto: totNettoPct,
   };
@@ -1435,6 +1526,13 @@ if(shared){
   }
 }
 document.querySelectorAll(".pm-opt").forEach(el=>el.classList.toggle("active",el.dataset.p===P));
+
+if(COMMISSIE_MISMATCHES.length){
+  const totalDiff = round2(COMMISSIE_MISMATCHES.reduce((s,m)=>s+m.diff,0));
+  const el = document.getElementById("commissieWarning");
+  el.innerHTML = `⚠️ <strong>${COMMISSIE_MISMATCHES.length} orders</strong> hebben een commissiebedrag dat in de bron-sheet zelf over het incl.-BTW-bedrag berekend is i.p.v. excl. (Grondslag) — samen <strong>${totalDiff>=0?"€"+totalDiff.toFixed(2)+" te veel":"€"+Math.abs(totalDiff).toFixed(2)+" te weinig"}</strong> opengezet/uitbetaald. Gemarkeerd (⚠) bij Commissie in Orderdetail hieronder.`;
+  el.style.display = "block";
+}
 
 render();
 checkStaleness();
