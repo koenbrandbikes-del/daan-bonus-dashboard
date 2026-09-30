@@ -379,9 +379,18 @@ function channelRevenueBar(cur) {
     {key:"google",name:"Google Ads",color:"#E5B863",revenue:google.revenue},
     {key:"infl",name:"Influencers",color:"#B98DE0",revenue:cur.channels.infl.revenue},
   ];
-  const complete=channels.every(c=>c.revenue!=null && c.revenue>=0);
-  const total=complete ? sum(channels,"revenue") : 0;
-  return `<section class="channel-revenue" aria-label="Omzet per kanaal"><span class="mix-label">Verdeling toegerekende omzet</span><div class="revenue-bar">${total>0 ? channels.map((c,i)=>`<button class="mix-segment mix-${i}" data-mix="${c.key}" data-channel="${c.key}" style="flex:${c.revenue/total};--mix-color:${c.color}" aria-label="${c.name}: ${euro(c.revenue)}, ${num(c.revenue/total*100)} procent van toegerekende omzet"></button>`).join('') : '<span class="hint">Verdeling niet beschikbaar</span>'}</div><div class="revenue-legend">${channels.map((c,i)=>`<button data-mix="${c.key}" data-channel="${c.key}" aria-label="${c.name}${c.key==='google'?' non-branded':''}: ${euro(c.revenue)}, ${total>0?num(c.revenue/total*100)+' procent van toegerekende omzet':'aandeel onbekend'}"><i class="channel-dot mix-${i}" style="background-color:${c.color}"></i><span>${c.name}</span><b>${total>0?num(c.revenue/total*100)+'%':'—'}</b><small>${euro(c.revenue)}</small></button>`).join('')}</div><p class="mix-explanation">100% = alle toegerekende kanaalomzet samen. Kanalen kunnen dezelfde order meetellen. Google Ads: zonder branded.</p></section>`;
+  const complete=cur.incl!=null && channels.every(c=>c.revenue!=null && c.revenue>=0);
+  const total=cur.incl;
+  const claimed=complete ? sum(channels,"revenue") : null;
+  const overlap=complete ? Math.max(0,claimed-total) : null;
+  channels.push({key:"other",name:"Overig / niet toegerekend",color:"#7D8BA5",revenue:complete?Math.max(0,total-claimed):null});
+  const share=c=>complete&&total>0?num(c.revenue/total*100)+'%':'—';
+  const label=c=>`${c.name}${c.key==='google'?' non-branded':''}: ${euro(c.revenue)}, ${share(c)} van Shopify-omzet incl. btw`;
+  return `<section class="channel-revenue" aria-label="Omzet per kanaal"><span class="mix-label">Kanaalomzet ten opzichte van totale omzet</span><div class="revenue-bar">${complete&&total>0&&overlap===0 ? channels.map((c,i)=>c.key==='other'?`<span class="mix-segment mix-other" style="flex:${c.revenue/total};--mix-color:${c.color}" role="img" aria-label="${label(c)}"></span>`:`<button class="mix-segment mix-${i}" data-mix="${c.key}" data-channel="${c.key}" style="flex:${c.revenue/total};--mix-color:${c.color}" aria-label="${label(c)}"></button>`).join('') : `<span class="hint">${overlap>0?'Kanaalclaims overlappen · zie bedragen hieronder':'Verdeling niet beschikbaar'}</span>`}</div><div class="revenue-legend">${channels.map((c,i)=>{
+ const tag=c.key==='other'?'span':'button';
+ return `<${tag} class="revenue-item" ${c.key==='other'?'':`data-mix="${c.key}" data-channel="${c.key}"`} aria-label="${label(c)}"><i class="channel-dot mix-${i}" style="background-color:${c.color}"></i><span>${c.name}</span><b>${share(c)}</b><small>${euro(c.revenue)}</small></${tag}>`;
+ }).join('')}</div><p class="mix-explanation">100% = totale Shopify-omzet incl. btw (${euro(total)}). Overig is het rekenkundige verschil met Meta, Google Ads (zonder branded) en influencers; geen bewezen organische omzet. ${overlap>0?`Kanaalclaims liggen ${euro(overlap)} boven de winkelomzet (${total>0?num(overlap/total*100)+'% extra':'geen winkelomzet'}); daarom geen gestapelde verdeling.`:'Kanalen kunnen dezelfde order meetellen; Overig is daardoor een benadering.'}</p></section>`;
+
 }
 function googleFilter() {
   if (state.channel !== "google") return "";

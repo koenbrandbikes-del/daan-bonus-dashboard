@@ -338,7 +338,7 @@ test("channel revenue bar totals attributed revenue, excludes branded Google and
   const w = await boot("?from=2026-09-23&to=2026-09-29"), d = w.document;
   const segments = [...d.querySelectorAll(".revenue-bar > button")];
   assert.equal(segments.length, 3);
-  assert(Math.abs(segments.reduce((n,s)=>n+parseFloat(s.style.flexGrow),0)-1)<0.001);
+  assert(Math.abs([...d.querySelectorAll(".revenue-bar > .mix-segment")].reduce((n,s)=>n+parseFloat(s.style.flexGrow),0)-1)<0.001);
   assert(d.querySelector('.revenue-legend [data-channel=google]').getAttribute('aria-label').includes('non-branded'));
   assert.equal(d.querySelector('.mix-tooltip'),null);
   assert(d.querySelector('.revenue-legend b').textContent.includes('%'));
@@ -519,4 +519,20 @@ test('overview lists period orders independently from selected metrics and suppo
  input.value='not-an-order';input.dispatchEvent(new w.Event('input'));
  assert.equal(d.querySelector('#overviewOrderEmpty').hidden,false);
  w.close();
+});
+
+test('revenue distribution includes unexplained Shopify revenue and discloses excess claims',async()=>{
+ const adjust=(excess)=>(url,data)=>{
+  if(url.includes('meta.json')) data.daily_meta=data.daily_meta.map(r=>({...r,rev7:excess?1e8:1,rev1v:0}));
+  return data;
+ };
+ const w=await boot('?from=2026-09-23&to=2026-09-29','',adjust(false));
+ assert.match(w.document.querySelector('.revenue-legend').textContent,/Overig \/ niet toegerekend/);
+ assert(w.document.querySelector('.revenue-bar .mix-other'));
+ assert.match(w.document.querySelector('.mix-explanation').textContent,/Shopify-omzet incl. btw/);
+ w.close();
+ const v=await boot('?from=2026-09-23&to=2026-09-29','',adjust(true));
+ assert.equal(v.document.querySelectorAll('.revenue-bar .mix-segment').length,0);
+ assert.match(v.document.querySelector('.mix-explanation').textContent,/boven de winkelomzet/);
+ v.close();
 });
