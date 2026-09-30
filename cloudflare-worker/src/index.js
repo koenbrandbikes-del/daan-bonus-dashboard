@@ -62,7 +62,7 @@ const BREAKDOWN_REFRESH_MIN_MS = 55 * 60 * 1000;
 const BREAKDOWN_POLL_MS = 2000;
 const BREAKDOWN_MAX_POLLS = 15; // 15 × 2s = 30s max wachttijd per dag, dan niet-fataal opgeven
 
-import { handleMcpRequest } from "./mcp.js";
+import { handleMcpRequest, handleInternalMcpRequest } from "./mcp.js";
 
 export {
   verifyHmac, mapOrder, timingSafeEqual, orderNumInt, toAmsterdamDate,
@@ -87,12 +87,16 @@ export default {
       }
     }
 
-    // Read-only MCP-server (Meta-bonusdashboard + Creators-dashboard) voor
-    // externe MCP-clients zoals ChatGPT Developer Mode of Claude — geen
-    // auth nodig, alle onderliggende data (data/*.json) is toch al publiek.
-    // Los pad, raakt de Shopify-webhook/Meta-cron hieronder niet aan.
+    // Read-only MCP-servers voor externe MCP-clients (ChatGPT Developer
+    // Mode, Claude, enz.) — los pad, raakt de Shopify-webhook/Meta-cron
+    // hieronder niet aan.
+    //   /mcp         — extern (Pim): alleen het Meta-dashboard, geen auth.
+    //   /mcp-intern  — intern: Meta + affiliates/creators, achter ?key=...
     if (url.pathname === "/mcp") {
       return handleMcpRequest(request);
+    }
+    if (url.pathname === "/mcp-intern") {
+      return handleInternalMcpRequest(request, env);
     }
 
     if (request.method !== "POST") {
