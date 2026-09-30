@@ -158,7 +158,7 @@ function readState() {
     s.compare = "previous";
   const allowed =
     s.channel === "all"
-      ? ["revenue", "cost", "spend", "roas", "result"]
+      ? ["revenue", "cost", "spend", "roas", "result", "profitMargin"]
       : s.channel === "meta" ? ["revenue", "spend", "result", "profitMargin", "count", "roas", "cpa"] : ["revenue", "spend", "result", "profitMargin", "count", "roas", "cpa"];
   if (q.has("metrics"))
     s.metrics = [
@@ -273,11 +273,11 @@ function metricMeta(k) {
       fmt: euro,
     },
     result: {
-      label: state.channel!=="all" ? "Nettowinst · geschat" : "Resultaat incl. overhead",
+      label: state.channel!=="all" ? "Nettowinst · geschat" : "Nettowinst",
       sub: state.channel==="meta" ? (state.daan==="without" ? "Zonder kosten Daan" : "Inclusief kosten Daan") : "Inclusief 4% overhead",
       fmt: euro,
     },
-    profitMargin: { label: "Winstmarge", sub: "Van kanaalomzet excl. btw · geschat", fmt: v => v == null ? "—" : num(v) + "%" },
+    profitMargin: { label: "Nettowinstpercentage", sub: all ? "Van omzet excl. btw · voorlopig" : "Van kanaalomzet excl. btw · geschat", fmt: v => v == null ? "—" : num(v) + "%" },
     roas: {
       label: all ? "Blended ROAS" : "Kanaalrendement",
       sub: all
@@ -536,7 +536,7 @@ function render() {
   $("#content").setAttribute("aria-labelledby", "tab-" + state.channel);
   const metrics =
     state.channel === "all"
-      ? ["revenue", "cost", "spend", "roas", "result"]
+      ? ["revenue", "cost", "spend", "roas", "result", "profitMargin"]
       : state.channel === "meta" ? ["revenue", "spend", "result", "profitMargin", "count", "roas", "cpa"] : ["revenue", "spend", "result", "profitMargin", "count", "roas", "cpa"];
   const notes = [];
   if (keys.some((k) => !D[k] || E[k] || stale(k) || !coverage(k)))
@@ -576,10 +576,10 @@ function render() {
  ${channelRevenueBar(cur)}
  ${googleFilter()}
  ${['all','meta'].includes(state.channel) ? `<section class="daan-choice compact" aria-label="Kosten Daan"><div class="daan-cost"><span>Kosten Daan</span><strong>${euro(cur.management.total)}</strong><button class="link" data-daan-details aria-label="Uitsplitsing kosten Daan bekijken">Details</button></div><div class="daan-toggle" aria-label="Kosten Daan meetellen"><button data-daan="with" aria-pressed="${state.daan!=='without'}">Met Daan</button><button data-daan="without" aria-pressed="${state.daan==='without'}">Zonder Daan</button></div></section>` : ''}
- <section class="kpis ${state.channel === "all" ? "" : state.channel==="meta" ? "channel meta-kpis" : "channel meta-kpis"}" aria-label="Kerncijfers">${metrics
+ <section class="kpis ${state.channel === "all" ? "overview-kpis" : state.channel==="meta" ? "channel meta-kpis" : "channel meta-kpis"}" aria-label="Kerncijfers">${metrics
    .map((k) => {
      const m = metricMeta(k);
-     return `<button class="kpi ${state.metrics.includes(k) ? "active" : ""}" data-metric="${k}" aria-pressed="${state.metrics.includes(k)}"><span class="label">${m.label}</span><strong>${m.fmt(cur[k])}</strong><small>${k === "result" && state.channel === "all" && cur.result != null && cur.revenue > 0 ? num((cur.result / cur.revenue) * 100) + "% van omzet · " + (state.daan==="without" ? "zonder Daan" : "met Daan") : k === "result" && state.channel!=="all" ? (cur.result!=null && cur.revenue>0 ? num(cur.result/(cur.revenue/(1+C.assumed_vat))*100)+"% van omzet excl. btw · geschat" : "Marge niet beschikbaar") : k === "cost" && cur.cost != null && cur.revenue > 0 ? num((cur.cost / cur.revenue) * 100) + "% van omzet · geraamde basis" : k === "revenue" && state.channel === "all" ? num(cur.count) + " orders · " + euro(cur.incl) + " incl. btw" : m.sub}</small><small class="delta">${delta(k, cur, prev)}</small></button>`;
+     return `<button class="kpi ${state.metrics.includes(k) ? "active" : ""}" data-metric="${k}" aria-pressed="${state.metrics.includes(k)}"><span class="label">${m.label}</span><strong>${m.fmt(cur[k])}</strong><small>${k === "result" && state.channel === "all" && cur.result != null && cur.revenue > 0 ? num((cur.result / cur.revenue) * 100) + "% van omzet · voorlopig · " + (state.daan==="without" ? "zonder Daan" : "met Daan") : k === "result" && state.channel!=="all" ? (cur.result!=null && cur.revenue>0 ? num(cur.result/(cur.revenue/(1+C.assumed_vat))*100)+"% van omzet excl. btw · geschat" : "Marge niet beschikbaar") : k === "cost" && cur.cost != null && cur.revenue > 0 ? num((cur.cost / cur.revenue) * 100) + "% van omzet · geraamde basis" : k === "revenue" && state.channel === "all" ? num(cur.count) + " orders · " + euro(cur.incl) + " incl. btw" : m.sub}</small><small class="delta">${delta(k, cur, prev)}</small></button>`;
    })
    .join("")}</section>
  <details class="signals"><summary>Samenvatting & aandachtspunten</summary>${notes
@@ -904,7 +904,7 @@ function renderDetail() {
         ),
         {...row("− Meta salaris", minus(state.daan==="without"?0:cur.management.total), ""), salary: {fixed:cur.management.fixed,bonus:cur.management.bonus,excluded:state.daan==="without"}},
         row(
-          "= Resultaat incl. overhead",
+          "= Nettowinst · voorlopig",
           cur.result,
           "Wat overblijft volgens de huidige kostentarieven",
           null,

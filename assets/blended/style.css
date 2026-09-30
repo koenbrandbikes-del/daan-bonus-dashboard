@@ -1493,3 +1493,5 @@ header .live-dot.warning { width:10px; height:10px; }
 
 /* Keep channel profitability readable without squeezing seven cards into one row. */
 @media(min-width:700px) { .kpis.meta-kpis { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+
+@media(min-width:700px) { .kpis.overview-kpis { grid-template-columns:repeat(6,minmax(0,1fr)); } }

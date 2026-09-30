@@ -45,7 +45,7 @@ test("drilldowns, comparing two metrics, channel switching and Google splits", a
     assert(d.querySelector(s), s);
     d.querySelector(s).click();
   };
-  assert.equal(d.querySelectorAll(".kpi").length, 5);
+  assert.equal(d.querySelectorAll(".kpi").length, 6);
 
   assert(
     d
@@ -296,7 +296,7 @@ test("cost story keeps VAT and margin bases explicit and preserves calculation o
   assert.equal(rows.length, 9);
   assert.match(rows[0].textContent, /Omzet excl. btw100%/);
   assert.match(rows[2].textContent, /Marge na product en levering/);
-  assert.match(rows[8].textContent, /Resultaat incl. overhead/);
+  assert.match(rows[8].textContent, /Nettowinst · voorlopig/);
   assert.equal(d.querySelectorAll("#table [data-sort]").length, 0);
   assert(d.querySelector("#detail .pager").hidden);
   d.querySelector("[data-detail*=products]").click();
@@ -467,7 +467,7 @@ test("channel profit margin is selectable, charted and responds to Daan costs", 
  const value=()=>d.querySelector('[data-metric=profitMargin] strong').textContent;
  const before=value();
  assert.match(before,/%/);
- assert.match(d.querySelector('#chart').textContent,/Winstmarge/);
+ assert.match(d.querySelector('#chart').textContent,/Nettowinstpercentage/);
  assert.match(d.querySelector('[data-metric=profitMargin] .delta').textContent,/procentpunt/);
  d.querySelector('[data-daan=without]').click();
  assert.notEqual(value(),before);
@@ -475,7 +475,18 @@ test("channel profit margin is selectable, charted and responds to Daan costs", 
   d.querySelector('#tab-'+channel).click();
   assert(d.querySelector('[data-metric=result]').classList.contains('active'));
   assert(d.querySelector('[data-metric=profitMargin]').classList.contains('active'));
-  assert.match(d.querySelector('#chart').textContent,/Winstmarge/);
+  assert.match(d.querySelector('#chart').textContent,/Nettowinstpercentage/);
  }
+ w.close();
+});
+
+test("overview offers net profit percentage with period comparison and chart",async()=>{
+ const w=await boot('?from=2026-09-23&to=2026-09-29&metrics=profitMargin');
+ const d=w.document,card=d.querySelector('[data-metric=profitMargin]');
+ assert.match(card.textContent,/Nettowinstpercentage/);
+ assert.match(card.querySelector('strong').textContent,/%/);
+ assert.match(card.querySelector('.delta').textContent,/procentpunt/);
+ assert.match(d.querySelector('#chart').textContent,/Nettowinstpercentage/);
+ assert.equal(d.querySelector('[data-metric=result] .label').textContent,'Nettowinst');
  w.close();
 });
