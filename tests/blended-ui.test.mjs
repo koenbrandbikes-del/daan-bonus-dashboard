@@ -64,8 +64,7 @@ test("drilldowns, comparing two metrics, channel switching and Google splits", a
   click("[data-metric=spend]");
   assert.equal(d.querySelectorAll(".kpi.active").length, 2);
   click("[data-metric=result]");
-  assert(d.querySelector(".replacement"));
-  click("[data-replace=revenue]");
+  assert.equal(d.querySelector(".replacement"),null);
   assert(d.querySelector("[data-metric=result]").classList.contains("active"));
   click("#chartMode");
   assert(d.querySelector("#chart table"));
@@ -85,11 +84,12 @@ test("drilldowns, comparing two metrics, channel switching and Google splits", a
   assert(d.querySelector("#detail th").textContent.includes("Dag"));
   click("[data-channel=all]");
   click("[data-metric=result]");
-  click("[data-replace=revenue]");
+  click("[data-metric=spend]");
   click("[data-detail*=products]");
   assert(
     d.querySelector("#detail").textContent.includes("Producten en kostprijzen"),
   );
+  click("[data-metric=spend]");
   click("[data-metric=result]");
   const totals = [...d.querySelectorAll("#table tfoot td")].map(
     (x) => x.textContent,
@@ -231,8 +231,7 @@ test("video feedback: today comparison, direct metric chooser, channel columns a
   assert(!d.querySelector("[data-flow]"));
   assert.equal(d.querySelector("#compareMetric"), null);
   d.querySelector("[data-metric=cost]").click();
-  assert(d.querySelector(".replacement"));
-  d.querySelector("[data-replace=revenue]").click();
+  assert.equal(d.querySelector(".replacement"),null);
   assert(d.querySelector("[data-metric=cost]").classList.contains("active"));
   assert.match(
     d.querySelector("#marketingMix").textContent,
@@ -294,10 +293,10 @@ test("cost story keeps VAT and margin bases explicit and preserves calculation o
     /Nieuwe basis: 100%/,
   );
   const rows = [...d.querySelectorAll("#table tbody tr")];
-  assert.equal(rows.length, 8);
+  assert.equal(rows.length, 10);
   assert.match(rows[0].textContent, /Omzet excl. btw100%/);
   assert.match(rows[2].textContent, /Marge na product en levering/);
-  assert.match(rows[7].textContent, /Resultaat incl. overhead/);
+  assert.match(rows[9].textContent, /Resultaat incl. overhead/);
   assert.equal(d.querySelectorAll("#table [data-sort]").length, 0);
   assert(d.querySelector("#detail .pager").hidden);
   d.querySelector("[data-detail*=products]").click();
@@ -331,17 +330,17 @@ test("Shopify status explains validation and opens the matching order list", asy
  d.querySelector("#viewShopifyOrders").click();
  assert.match(d.querySelector("#detail h3").textContent,/Alle orders/);
  const bad=await boot("", "",(url,data)=>url.includes("shopify.json") ? {...data,orders:[...data.orders,data.orders[0]]} : data);
- assert.match(bad.document.querySelector("#status").textContent,/Ontbreekt/);
+ assert.match(bad.document.querySelector("#status").textContent,/Niet beschikbaar/);
  assert.equal(bad.document.querySelector("#viewShopifyOrders"),null);
 });
 
 test("channel revenue bar totals attributed revenue, excludes branded Google and opens channel", async () => {
   const w = await boot("?from=2026-09-23&to=2026-09-29"), d = w.document;
-  const segments = [...d.querySelectorAll(".revenue-bar > span")];
+  const segments = [...d.querySelectorAll(".revenue-bar > button")];
   assert.equal(segments.length, 3);
-  assert(Math.abs(segments.reduce((n,s)=>n+parseFloat(s.style.width),0)-100)<0.001);
-  assert(d.querySelector('.revenue-legend [data-channel=google]').textContent.includes('non-branded'));
-  const googleAmount = d.querySelector('.revenue-legend [data-channel=google] strong').textContent;
+  assert(Math.abs(segments.reduce((n,s)=>n+parseFloat(s.style.flexGrow),0)-1)<0.001);
+  assert(d.querySelector('.revenue-legend [data-channel=google]').title.includes('non-branded'));
+  const googleAmount = d.querySelector('.revenue-legend [data-channel=google]').title.split(' · ')[0];
   d.querySelector('.revenue-legend [data-channel=google]').click();
   assert.equal(d.querySelector('.kpi[data-metric=revenue] strong').textContent,googleAmount);
   assert.equal(d.querySelector('.channel-revenue'),null);
@@ -350,7 +349,7 @@ test("channel revenue bar totals attributed revenue, excludes branded Google and
 
 test("missing source suppresses revenue distribution and healthy status tick", async () => {
   const w = await boot("?from=2026-09-23&to=2026-09-29", "google.json"), d = w.document;
-  assert.equal(d.querySelectorAll('.revenue-bar > span').length,0);
+  assert.equal(d.querySelectorAll('.revenue-bar > button').length,0);
   assert(d.querySelector('.channel-revenue').textContent.includes('Verdeling niet beschikbaar'));
   assert(!d.querySelector('#statusButton').classList.contains('status-ok'));
   assert(d.querySelector('#statusButton').getAttribute('aria-label').includes('aandacht nodig'));
@@ -359,16 +358,17 @@ test("missing source suppresses revenue distribution and healthy status tick", a
 
 test('selected days compare side by side, toggle, clear and follow channel metrics', async () => {
   const w=await boot('?from=2026-09-23&to=2026-09-29'),d=w.document;
-  d.querySelector('[data-select-day="2026-09-23"]').click();
-  d.querySelector('[data-select-day="2026-09-25"]').click();
-  assert.equal(d.querySelectorAll('#dayComparison thead th').length,3);
+  d.querySelector("#rangeStart").value="2026-09-23";
+  d.querySelector("#rangeEnd").value="2026-09-25";
+  d.querySelector("#applyChartRange").click();
+  assert.equal(d.querySelectorAll('#dayComparison thead th').length,4);
   assert.equal(d.querySelectorAll('#dayComparison tbody tr').length,2);
   assert(d.querySelector('#dayComparison caption').textContent.includes('23 sep'));
   assert(d.querySelector('#dayComparison tbody small').textContent.includes('%'));
   d.querySelector('#tab-google').click();
-  assert.equal(d.querySelectorAll('#dayComparison thead th').length,3);
+  assert.equal(d.querySelectorAll('#dayComparison thead th').length,4);
   d.querySelector('[data-select-day="2026-09-25"]').click();
-  assert.equal(d.querySelectorAll('#dayComparison thead th').length,2);
+  assert.equal(d.querySelectorAll('#dayComparison thead th').length,3);
   d.querySelector('#clearDays').click();
   assert.equal(d.querySelector('#dayComparison table'),null);
   w.close();
@@ -383,7 +383,28 @@ test('acquisition comparison uses a common store benchmark and channel CPA is se
  d.querySelector('#tab-google').click();
  assert(d.querySelector('[data-metric=cpa] strong').textContent.includes('€'));
  d.querySelector('[data-metric=cpa]').click();
- d.querySelector('[data-replace=spend]').click();
+
  assert(d.querySelector('#analysis h2').textContent.includes('Kosten per aankoop'));
+ w.close();
+});
+
+test('drag selection supports reverse ranges and metric toggles match Meta', async()=>{
+ const w=await boot('?from=2026-09-23&to=2026-09-29'),d=w.document;
+ const svg=d.querySelector('#chart svg');
+ svg.getBoundingClientRect=()=>({left:0,width:960});
+ svg.onpointerdown({button:0,clientX:72+4.5*868/7,pointerId:1});
+ svg.onpointerup({clientX:72+2.5*868/7});
+ assert.equal(d.querySelectorAll('#dayComparison thead th').length,4);
+ assert(d.querySelector('#dayComparison caption').textContent.includes('25 sep'));
+ assert.equal(d.querySelector('.day-options'),null);
+ d.querySelector('[data-metric=result]').click();
+ assert.equal(d.querySelector('.replacement'),null);
+ assert(!d.querySelector('[data-metric=revenue]').classList.contains('active'));
+ d.querySelector('[data-metric=spend]').click();
+ d.querySelector('[data-metric=result]').click();
+ assert.equal(d.querySelectorAll('.kpi.active').length,0);
+ assert(d.querySelector('#chart').textContent.includes('Klik bovenaan'));
+ assert(d.querySelector('#status #updateSummary'));
+ assert(!d.querySelector('main ~ #updateSummary'));
  w.close();
 });

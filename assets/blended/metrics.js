@@ -32,6 +32,41 @@ export function finance(orders, costs) {
     orders: orders.length,
   };
 }
+// Fixed fee: calendar-month proration. Bonus: existing Meta contract formula,
+// calculated for each 30-day contract period, allocated by daily media spend.
+export function managementCosts(data, costs, from, to) {
+  const cfg=costs.meta_management;
+  if(!cfg) return {fixed:0,bonus:0,total:0,periods:[]};
+  let fixed=0,bonus=0;
+  const periods=new Map();
+  for(let d=from;d<=to;d=shift(d,1)) {
+    if(d<cfg.contract_start) continue;
+    const date=new Date(d+'T12:00:00Z');
+    const monthDays=new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth()+1,0)).getUTCDate();
+    fixed+=cfg.monthly_fixed/monthDays;
+    const index=Math.floor((Date.parse(d)-Date.parse(cfg.contract_start))/864e5/cfg.bonus_period_days);
+    const start=shift(cfg.contract_start,index*cfg.bonus_period_days);
+    if(!periods.has(start)) periods.set(start,[]);
+    periods.get(start).push(d);
+  }
+  const audit=[];
+  for(const [start,selected] of periods) {
+    const end=shift(start,cfg.bonus_period_days-1);
+    const until=data.meta?.snap && data.meta.snap<end ? data.meta.snap : end;
+    const meta=data.meta?.daily_meta?.filter(r=>r.d>=start && r.d<=until);
+    const f=finance((data.shopify?.orders||[]).filter(o=>!o.test && o.d>=start && o.d<=until),costs);
+    const margin=f.excl-f.cost-f.overhead;
+    if(!meta || !data.shopify || start<'2026-08-01' || !meta.length || meta[0].d>start || f.cost==null || margin<=0) { bonus=null; audit.push({from:start,to:end,bonus:null}); continue; }
+    const spend=sum(meta,'spend'), revenue=sum(meta,r=>(r.rev7||0)+(r.rev1v||0));
+    const be=f.incl/margin;
+    const periodBonus=spend>0?Math.max(0,revenue-spend*be)*cfg.bonus_rate:0;
+    const selectedSpend=sum(meta.filter(r=>selected.includes(r.d)),'spend');
+    const part=spend>0?periodBonus*selectedSpend/spend:0;
+    if(bonus!=null) bonus+=part;
+    audit.push({from:start,to:end,through:until,bonus:periodBonus,allocated:part,breakEvenRoas:be,spend,revenue});
+  }
+  return {fixed,bonus,total:bonus==null?null:fixed+bonus,periods:audit};
+}
 export function compute(data, costs, from, to, channel = "all") {
   const orders = (data.shopify?.orders || []).filter(
     (o) => !o.test && inRange(o, from, to),
@@ -76,6 +111,9 @@ export function compute(data, costs, from, to, channel = "all") {
       orders: data.creators ? creators.length : null,
     },
   };
+  const management=managementCosts(data,costs,from,to);
+  channels.meta.mediaSpend=channels.meta.spend;
+  channels.meta.spend=channels.meta.spend!=null && management.total!=null ? channels.meta.spend+management.total : null;
   const complete = Object.values(channels).every((c) => c.spend !== null);
   const spend =
     channel === "all"
@@ -118,6 +156,7 @@ export function compute(data, costs, from, to, channel = "all") {
         : channels[channel].orders,
     cpa: spend != null && (channel === "all" ? f.orders : channels[channel].orders) > 0 ? spend / (channel === "all" ? f.orders : channels[channel].orders) : null,
     channels,
+    management,
     orderRows: orders,
     creatorRows: creators,
   };

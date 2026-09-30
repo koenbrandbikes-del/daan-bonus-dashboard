@@ -1286,3 +1286,81 @@ header { position:relative; flex-wrap:wrap; }
 .cost-story .margin-cards b { font-size:28px; }
 
 @media(min-width:700px) { .kpis.channel { grid-template-columns:repeat(5,minmax(0,1fr)); } }
+/* Compact Meta-dashboard rhythm: fixed row alignment, progressive disclosure. */
+header { margin-bottom:20px; }
+#statusButton { width:36px; min-width:36px; height:36px; min-height:36px; padding:8px; border:0; background:transparent; display:grid; place-items:center; }
+.live-dot { display:block; width:9px; height:9px; border-radius:50%; background:#8fc49b; box-shadow:0 0 0 4px #8fc49b14; animation:live-pulse 2.4s ease-in-out infinite; }
+.live-dot.warning { background:#e5b863; animation:none; color:#10162f; font-size:9px; line-height:10px; font-weight:800; }
+@keyframes live-pulse { 50% { box-shadow:0 0 0 7px #8fc49b05; opacity:.6; } }
+@media(prefers-reduced-motion:reduce) { .live-dot { animation:none; } }
+#status { padding:16px; }
+.update-heading { margin-bottom:12px; }
+.update-sources { gap:16px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+.update-source { padding:0; font-size:12px; }
+.order-check { margin-top:14px; }
+nav { margin-bottom:18px; padding-bottom:10px; gap:6px; }
+nav button { padding:8px 14px; font-size:12px; min-height:36px; }
+.view-head { margin-bottom:12px; }
+h2 { font-size:17px; }
+.view-head .eyebrow,.analysis-label { display:none; }
+.subtitle { font-size:11px; }
+.kpis .kpi { display:grid; grid-template-rows:30px 29px 34px auto; align-content:start; gap:4px; min-height:154px; padding:12px 10px; overflow-wrap:normal; }
+.kpi .label { font-size:9px; letter-spacing:.035em; line-height:1.35; min-height:0; padding-right:10px; margin:0; }
+.kpi strong { font-size:23px; line-height:1.2; margin:0; }
+.kpi > small { font-size:10px; line-height:1.4; margin:0; }
+.kpi .delta { padding-top:4px; margin:0; align-self:start; }
+.delta-main { display:flex; flex-direction:column; align-items:flex-start; gap:2px; }
+.delta-badge { font-size:11px; padding:0; background:none!important; }
+.delta-amount { font-size:10px; }
+.delta-base { font-size:9px; margin-top:3px; }
+.kpi.active::after { font-size:12px; top:10px; right:7px; }
+.signals { padding:10px 14px; border:1px solid var(--line); border-radius:12px; margin:14px 0; font-size:12px; }
+.signals summary,.detail-fold>summary,details.panel>summary { cursor:pointer; font-weight:600; min-height:28px; }
+.signals .signal { font-size:12px; margin:10px 0 0; }
+.panel { padding:16px; margin:16px 0; border-radius:12px; }
+.panel-head { gap:12px; margin-bottom:12px; }
+.toolbar { gap:6px; }
+.toolbar button,.toolbar select { min-height:32px; font-size:11px; padding:6px 10px; }
+.gran-buttons { display:flex; gap:3px; }
+.gran-buttons button { background:transparent; border:0; border-radius:18px; min-width:40px; }
+.gran-buttons [aria-pressed=true] { background:#4ea8de20; color:#8dcdf2; box-shadow:inset 0 0 0 1px #4ea8de60; }
+.detail-fold { margin-top:16px; border-top:1px solid var(--line); padding-top:12px; }
+.detail-fold[open]>summary { margin-bottom:14px; }
+.basket-cards>*, .margin-cards>div { align-content:start; }
+.channel-revenue { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; padding:10px 12px; border-radius:12px; position:relative; margin-bottom:14px; }
+.mix-label { color:var(--muted); font-size:10px; }
+.revenue-bar { flex:1; min-width:100px; height:9px; overflow:visible; background:transparent; }
+.revenue-bar .mix-segment { min-height:9px; height:9px; padding:0; border:0; border-radius:0; background-color:var(--mix-color); cursor:crosshair; }
+.mix-segment:first-child { border-radius:9px 0 0 9px; }.mix-segment:last-child{border-radius:0 9px 9px 0;}
+.mix-1 { background-image:repeating-linear-gradient(45deg,transparent 0 3px,#0005 3px 5px)!important; }
+.mix-2 { background-image:radial-gradient(#0008 1px,transparent 1px)!important; background-size:4px 4px!important; }
+.revenue-legend { display:flex; gap:6px; margin:0; }
+.revenue-legend button { display:inline-flex; align-items:center; gap:4px; padding:2px; min-height:24px; font-size:10px; }
+.channel-dot { margin:0; }
+.mix-active { outline:2px solid white!important; outline-offset:2px; }
+.mix-tooltip { position:absolute; top:100%; right:0; z-index:25; padding:8px 12px; background:#080e27; color:white; border:1px solid #ffffff60; border-radius:7px; font-size:12px; box-shadow:0 4px 18px #0006; }
+.range-access { font-size:11px; margin:8px 0; }
+.range-access label { display:inline-grid; margin:8px; }
+.range-access button { min-height:32px; font-size:11px; }
+.day-comparison { padding:8px 0; margin:8px 0; }
+.day-comparison .panel-head:has(+.range-access):not(:has(button)) { display:none; }
+.selected-days { margin:8px 0; }
+.selected-days button { padding:4px 8px; min-height:28px; font-size:11px; }
+#chart svg { user-select:none; cursor:crosshair; }
+#detail .hint { font-size:11px; }
+.management p { margin:12px 0; font-size:12px; }
+@media(max-width:699px) {
+ .controls { grid-template-columns:1fr 1fr 32px; align-items:end; gap:6px; }
+ #statusButton { grid-column:auto; width:32px; min-width:32px; min-height:44px; }
+ .period-btn { padding:8px; font-size:11px; }
+ .kpis .kpi { grid-template-rows:27px 29px 34px auto; }
+ .kpis .kpi strong { font-size:23px; }
+ .channel-revenue { gap:10px; }
+ .mix-label { flex-basis:100%; }
+ .revenue-bar { min-width:120px; }
+ .revenue-legend { flex-wrap:wrap; }
+ .update-sources { grid-template-columns:1fr; }
+ .toolbar button,.gran-buttons button { min-height:44px; }
+}
+
+@media(min-width:1100px){ #statusButton { align-self:center; margin-top:20.5px; } }
