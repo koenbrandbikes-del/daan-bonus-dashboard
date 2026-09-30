@@ -1130,7 +1130,7 @@ function totalsHtml(rows, cols) {
     return "";
   const values = cols.map((c, i) => {
     if (!i) return "Totaal selectie";
-    if (tableModel.title === "Marketingkosten per kanaal" && i > 1) return "—";
+    if (tableModel.title === "Marketingkosten per kanaal" && c.label !== "Uitgaven") return "—";
     if (c.type === "percent" || c.label === "Mee met beamer") return "—";
     if (c.label === "Tarief per stuk" || c.label === "Orders") return "—";
     if (c.type === "ratio") {

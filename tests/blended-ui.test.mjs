@@ -236,3 +236,9 @@ test("video feedback: today comparison, direct metric chooser, channel columns a
   assert.match(heads[2], /Uitgaven/);
   assert(d.querySelector("#detail .row-description"));
 });
+
+test("channel table totals never add overlapping attributed revenue", async () => {
+ const w=await boot("?from=2026-09-23&to=2026-09-29&metrics=spend"), d=w.document;
+ const footer=[...d.querySelectorAll("#detail tfoot td")].map(c=>c.textContent);
+ assert.equal(footer[1],"—"); assert.match(footer[2],/€/);
+});
