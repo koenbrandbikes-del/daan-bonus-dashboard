@@ -1,3 +1,4 @@
+import { createDatePicker } from "./date-picker.js";
 import { load } from "./data.js";
 import {
   compute,
@@ -298,7 +299,9 @@ function coverage(key, from = state.from, to = state.to) {
     return to <= d.synced_at?.slice(0, 10) && from >= "2026-07-16";
   return from >= "2026-08-01";
 }
+let datePickers = [];
 function render() {
+  datePickers.forEach((p) => p.update());
   const cur = compute(D, C, state.from, state.to, state.channel),
     p = getPrev();
   const keys =
@@ -1113,7 +1116,10 @@ function applyPreset(p) {
     to = shift(today, -1);
   if (p === "today") from = to = today;
   else if (p === "yesterday") from = to;
-  else if (p === "month") {
+  else if (p === "week") {
+    to = today;
+    from = shift(today, -((new Date(today + "T12:00:00").getDay() + 6) % 7));
+  } else if (p === "month") {
     from = today.slice(0, 8) + "01";
     to = today;
   } else if (p === "lastmonth") {
@@ -1138,6 +1144,61 @@ async function start() {
     persist(false);
     render();
     $("#preset").value = hadQuery ? "custom" : "seven";
+    datePickers = [
+      createDatePicker({
+        host: $("#periodPicker"),
+        id: "period",
+        label: "Periode",
+        today,
+        options: [
+          ["today", "Vandaag"],
+          ["yesterday", "Gisteren"],
+          ["week", "Deze week"],
+          ["seven", "Laatste 7 afgesloten dagen"],
+          ["month", "Deze maand"],
+          ["lastmonth", "Vorige maand"],
+          ["all", "Sinds start"],
+        ],
+        getRange: () => ({ from: state.from, to: state.to }),
+        onPreset: applyPreset,
+        onApply: (from, to) =>
+          change(() => {
+            state.from = from;
+            state.to = to;
+            state.sub = null;
+            state.detail = null;
+          }),
+      }),
+      createDatePicker({
+        host: $("#comparisonPicker"),
+        id: "comparePeriod",
+        label: "Vergelijken",
+        today,
+        options: [
+          ["previous", "Vorige periode"],
+          ["off", "Niet vergelijken"],
+        ],
+        getRange: () => ({
+          ...previous(state.from, state.to),
+          ...(state.compare === "custom"
+            ? { from: state.pfrom, to: state.pto }
+            : {}),
+          label:
+            state.compare === "custom"
+              ? null
+              : state.compare === "off"
+                ? "Niet vergelijken"
+                : "Vorige periode",
+        }),
+        onPreset: (value) => change(() => (state.compare = value)),
+        onApply: (from, to) =>
+          change(() => {
+            state.compare = "custom";
+            state.pfrom = from;
+            state.pto = to;
+          }),
+      }),
+    ];
     $("#tabs").onclick = (e) => {
       const b = e.target.closest("[data-channel]");
       if (b) switchChannel(b.dataset.channel);

@@ -21,7 +21,7 @@ async function boot(query = "", failSource = "") {
   };
   w.matchMedia = () => ({ matches: true });
   w.HTMLElement.prototype.scrollIntoView = () => {};
-  const scripts = ["metrics.js", "data.js", "app.js"]
+  const scripts = ["metrics.js", "data.js", "date-picker.js", "app.js"]
     .map((f) =>
       fs
         .readFileSync(new URL("assets/blended/" + f, root), "utf8")
@@ -104,4 +104,34 @@ test("malformed dates recover and unavailable source does not become zero", asyn
   );
   assert(d.querySelector(".signals").textContent.includes("niet beschikbaar"));
   w.close();
+});
+test("calendar ranges apply, compare and cancel without changing dates", async () => {
+  const w = await boot("?from=2026-09-23&to=2026-09-29"),
+    d = w.document;
+  d.querySelector("#periodButton").click();
+  assert.equal(d.querySelector("#periodMenu").hidden, false);
+  d.querySelector('#periodMenu [data-date="2026-09-10"]').click();
+  d.querySelector('#periodMenu [data-date="2026-09-15"]').click();
+  d.querySelector("#periodMenu .cal-apply").click();
+  assert.equal(new URL(w.location.href).searchParams.get("from"), "2026-09-10");
+  assert.equal(new URL(w.location.href).searchParams.get("to"), "2026-09-15");
+  d.querySelector("#comparePeriodButton").click();
+  d.querySelector('#comparePeriodMenu [data-date="2026-09-01"]').click();
+  d.querySelector('#comparePeriodMenu [data-date="2026-09-06"]').click();
+  d.querySelector("#comparePeriodMenu .cal-apply").click();
+  assert.equal(new URL(w.location.href).searchParams.get("compare"), "custom");
+  assert.match(
+    d.querySelector("#comparePeriodButton").textContent,
+    /1 sep.*6 sep/,
+  );
+  d.querySelector("#periodButton").click();
+  d.querySelector('#periodMenu [data-date="2026-09-02"]').click();
+  d.querySelector("#periodMenu").dispatchEvent(
+    new w.KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+  );
+  assert.equal(d.querySelector("#periodMenu").hidden, true);
+  assert.equal(new URL(w.location.href).searchParams.get("from"), "2026-09-10");
+  d.querySelector("#periodButton").click();
+  d.querySelector('#periodMenu [data-preset="lastmonth"]').click();
+  assert.match(d.querySelector("#periodButton").textContent, /aug/);
 });

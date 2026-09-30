@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,600..800;1,6..72,600..800&amp;family=Hanken+Grotesk:ital,wght@0,400..700;1,400..700&amp;display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="assets/blended/style.css?v=lumeworks-logo-1" />
+    <link rel="stylesheet" href="assets/blended/style.css?v=meta-picker-1" />
   </head>
   <body>
     <a class="skip" href="#analysis">Naar analyse</a>
@@ -19,28 +19,39 @@
       <header>
         <div class="brand">
           <div>
-            <img class="brand-logo" src="assets/blended/lumeworks-logo.svg" alt="LumeWorks" width="170" height="25" />
+            <img
+              class="brand-logo"
+              src="assets/blended/lumeworks-logo.svg"
+              alt="LumeWorks"
+              width="170"
+              height="25"
+            />
             <h1>Overzicht</h1>
           </div>
         </div>
         <div class="controls">
-          <label
-            >Periode<select id="preset">
-              <option value="seven">Laatste 7 afgesloten dagen</option>
-              <option value="today">Vandaag</option>
-              <option value="yesterday">Gisteren</option>
-              <option value="month">Deze maand</option>
-              <option value="lastmonth">Vorige maand</option>
-              <option value="all">Sinds start</option>
-              <option value="custom">Aangepast</option>
-            </select></label
-          ><label
-            >Vergelijken<select id="comparison">
-              <option value="previous">Vorige periode</option>
-              <option value="custom">Eigen periode</option>
-              <option value="off">Uit</option>
-            </select></label
-          ><button class="quiet" id="statusButton" aria-expanded="false">
+          <div id="periodPicker"></div>
+          <div id="comparisonPicker"></div>
+          <div hidden>
+            <label
+              >Periode<select id="preset">
+                <option value="seven">Laatste 7 afgesloten dagen</option>
+                <option value="today">Vandaag</option>
+                <option value="yesterday">Gisteren</option>
+                <option value="month">Deze maand</option>
+                <option value="lastmonth">Vorige maand</option>
+                <option value="all">Sinds start</option>
+                <option value="custom">Aangepast</option>
+              </select></label
+            ><label
+              >Vergelijken<select id="comparison">
+                <option value="previous">Vorige periode</option>
+                <option value="custom">Eigen periode</option>
+                <option value="off">Uit</option>
+              </select></label
+            >
+          </div>
+          <button class="quiet" id="statusButton" aria-expanded="false">
             Datastatus ⓘ
           </button>
         </div>
@@ -73,6 +84,6 @@
         >
       </footer>
     </div>
-    <script type="module" src="assets/blended/app.js"></script>
+    <script type="module" src="assets/blended/app.js?v=meta-picker-1"></script>
   </body>
 </html>
