@@ -438,6 +438,15 @@
    "type": "SEARCH"
   },
   {
+   "d": "2026-09-30",
+   "spend": 0.52,
+   "rev": 0,
+   "conv": 0,
+   "id": "23980131321",
+   "name": "T | Generiek | B2B",
+   "type": "SEARCH"
+  },
+  {
    "d": "2026-08-01",
    "spend": 2.12,
    "rev": 0,
@@ -980,8 +989,8 @@
   {
    "d": "2026-09-30",
    "spend": 8.71,
-   "rev": 298,
-   "conv": 2,
+   "rev": 444.952591,
+   "conv": 2.986259,
    "id": "23981332205",
    "name": "C | Corporate",
    "type": "SEARCH"
@@ -1528,7 +1537,7 @@
   },
   {
    "d": "2026-09-30",
-   "spend": 7.58,
+   "spend": 8.28,
    "rev": 0,
    "conv": 0,
    "id": "23981395562",
@@ -3962,8 +3971,8 @@
   {
    "d": "2026-09-30",
    "spend": 0,
-   "rev": 291.25477,
-   "conv": 1.95473,
+   "rev": 438.207361,
+   "conv": 2.940989,
    "name": "ORDER (TrackBee)"
   }
  ],
@@ -4273,6 +4282,13 @@
    "d": "2026-09-28",
    "intent": "other",
    "spend": 8.440000000000001,
+   "rev": 0,
+   "conv": 0
+  },
+  {
+   "d": "2026-09-30",
+   "intent": "other",
+   "spend": 6.610000000000001,
    "rev": 0,
    "conv": 0
   },
@@ -4749,15 +4765,8 @@
    "d": "2026-09-30",
    "intent": "brand",
    "spend": 7.310000000000001,
-   "rev": 557.8202222,
-   "conv": 3.90946
-  },
-  {
-   "d": "2026-09-30",
-   "intent": "other",
-   "spend": 5.390000000000001,
-   "rev": 0,
-   "conv": 0
+   "rev": 704.7728132,
+   "conv": 4.895719
   },
   {
    "d": "2026-08-01",
@@ -4823,12 +4832,12 @@
    "conv": 0
   }
  ],
- "details_synced_at": "2026-09-30T21:07:37.741Z",
+ "details_synced_at": "2026-09-30T21:22:38.080Z",
  "source": "google_ads_api",
  "customer_id": "7645288282",
  "currency": "EUR",
  "time_zone": "Europe/Amsterdam",
- "synced_at": "2026-09-30T21:07:37.741Z",
+ "synced_at": "2026-09-30T21:22:38.080Z",
  "coverage_from": "2026-08-01",
  "coverage_to": "2026-09-30",
  "attribution": "Primary conversions and conversion value by ad interaction date; may include non-purchase goals and overlap with other channels.",
@@ -5315,22 +5324,22 @@
   },
   {
    "d": "2026-09-30",
-   "spend": 145.73,
-   "conv": 3.90946,
-   "rev": 557.8202222,
-   "impr": 8780,
-   "cl": 135
+   "spend": 146.95,
+   "conv": 4.895719,
+   "rev": 704.7728132,
+   "impr": 8908,
+   "cl": 138
   }
  ],
  "vandaag": {
   "from": "2026-09-30",
   "to": "2026-09-30",
   "d": "2026-09-30",
-  "spend": 145.73,
-  "conv": 3.90946,
-  "rev": 557.8202222,
-  "impr": 8780,
-  "cl": 135
+  "spend": 146.95,
+  "conv": 4.895719,
+  "rev": 704.7728132,
+  "impr": 8908,
+  "cl": 138
  },
  "gisteren": {
   "from": "2026-09-29",
