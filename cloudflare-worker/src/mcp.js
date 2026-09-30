@@ -179,7 +179,7 @@ function registerAffiliateTools(server) {
       inputSchema: {
         ...periodShape,
         creator: z.string().optional().describe("Filter op exact 1 creator-naam."),
-        product_category: z.enum(["Prime", "Atlas", "Titan", "Scherm", "Accessoires"]).optional(),
+        product_category: z.enum(["Prime", "Atlas", "Titan", "Scherm", "Bundel", "Accessoires"]).optional(),
         limit: z.number().int().min(1).max(MAX_ORDERS).optional().describe(`Max. aantal orders (standaard 100, max ${MAX_ORDERS}).`),
       },
     },

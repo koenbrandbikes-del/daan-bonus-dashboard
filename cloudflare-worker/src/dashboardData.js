@@ -170,6 +170,8 @@ function shopifySummary(shopify, { from, to } = {}) {
 const PROD_CATS = {
   "LumeWorks Prime": "Prime", "LumeWorks Atlas": "Atlas",
   "LumeWorks Titan": "Titan", "Projectiescherm 100 inch": "Scherm",
+  "De complete Prime setup": "Bundel", "De complete Atlas setup": "Bundel",
+  "De complete Titan setup": "Bundel",
 };
 function prodCategory(p) { return PROD_CATS[p] || "Accessoires"; }
 

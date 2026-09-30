@@ -109,7 +109,7 @@ body{background:
    tabel als op de pagina moeten scrollen. Zodra er een rij openstaat, geven
    we de tabel meer ruimte i.p.v. die dubbele scroll. */
 .tscroll.ad-expanded-open{max-height:640px}
-table{width:100%;border-collapse:collapse;font-size:13px}
+table{border-collapse:collapse;font-size:13px}
 th{padding:9px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#93A2B8;border-bottom:1px solid #1f2d45;white-space:nowrap}
 th.r,td.r{text-align:right}
 td{padding:8px 14px;border-bottom:1px solid rgba(31,45,69,.5);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -647,6 +647,10 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
       <div style="padding:12px 16px 0">
         <input type="text" id="creatorSearch" class="creator-search" placeholder="Zoek op creator-naam…" oninput="filterCreatorsSearch(this.value)">
       </div>
+      <div class="ord-filters" style="padding:8px 16px 0">
+        <button class="ord-f cred-btw-f active" onclick="setCredBtw('incl')">Omzet incl. BTW</button>
+        <button class="ord-f cred-btw-f" onclick="setCredBtw('excl')">Omzet excl. BTW</button>
+      </div>
       <div class="fc-note" style="padding:8px 16px 0">Alle tijd (sinds start van de creators-sheet), onafhankelijk van de periodekiezer hierboven — commissie-uitbetaling loopt per kalendermaand, niet per willekeurige periode.</div>
       <div class="tscroll" style="margin-top:6px"><table id="creatorsTable"></table></div>
     </div>
@@ -946,6 +950,19 @@ function setCredSort(key){
 }
 function sortArrow(key, curKey, dir){ return curKey===key ? (dir==="asc"?" ▲":" ▼") : ""; }
 
+// Incl. BTW is de standaard overal op de site (index/meta.html, Orderdetail
+// hieronder) — deze tabel liet excl. zien, dat voelde inconsequent. Zelfde
+// incl./excl.-toggle als Orderdetail, maar met een eigen class (cred-btw-f
+// i.p.v. ord-btw-f) zodat de twee toggles elkaars actieve knop niet
+// per ongeluk meeveranderen.
+let credBtw = "incl";
+function setCredBtw(v){
+  credBtw = v;
+  document.querySelectorAll(".cred-btw-f").forEach(b=>
+    b.classList.toggle("active", b.textContent.toLowerCase().includes(v)));
+  renderCreatorsTable();
+}
+
 function renderCreatorsTable(){
   let filtered = creatorSearchTerm
     ? CREATORS.filter(c=>c.creator.toLowerCase().includes(creatorSearchTerm))
@@ -955,19 +972,21 @@ function renderCreatorsTable(){
     const cmp = typeof av==="string" ? av.localeCompare(bv) : av-bv;
     return credSortDir==="asc" ? cmp : -cmp;
   });
+  const showIncl = credBtw==="incl";
+  const omzetOf = c => showIncl ? c.omzet_excl*BTW : c.omzet_excl;
   const rows = filtered.map(c=>`<tr>
     <td>${c.creator}</td>
     <td class="r">${c.orders}${c.retouren?` <span style="color:#7C8CA6">(${c.retouren} retour)</span>`:""}</td>
-    <td class="r">${eur(c.omzet_excl)}</td>
+    <td class="r">${eur(omzetOf(c))}</td>
     <td class="r">${eur(c.commissie)}</td>
   </tr>`).join("");
-  const tot = filtered.reduce((s,c)=>({orders:s.orders+c.orders, omzet_excl:s.omzet_excl+c.omzet_excl, commissie:s.commissie+c.commissie}),
-    {orders:0, omzet_excl:0, commissie:0});
+  const tot = filtered.reduce((s,c)=>({orders:s.orders+c.orders, omzet:s.omzet+omzetOf(c), commissie:s.commissie+c.commissie}),
+    {orders:0, omzet:0, commissie:0});
   const th = (key,label,cls)=>`<th${cls?` class="${cls}"`:""} style="cursor:pointer" onclick="setCredSort('${key}')">${label}${sortArrow(key,credSortKey,credSortDir)}</th>`;
   document.getElementById("creatorsTable").innerHTML = filtered.length ? `
-    <thead><tr>${th("creator","Creator")}${th("orders","Orders","r")}${th("omzet_excl","Omzet excl. BTW","r")}${th("commissie","Commissie","r")}</tr></thead>
+    <thead><tr>${th("creator","Creator")}${th("orders","Orders","r")}${th("omzet_excl",`Omzet ${showIncl?"incl.":"excl."} BTW`,"r")}${th("commissie","Commissie","r")}</tr></thead>
     <tbody>${rows}
-    <tr class="tot"><td>Totaal</td><td class="r">${tot.orders}</td><td class="r">${eur(tot.omzet_excl)}</td><td class="r">${eur(tot.commissie)}</td></tr>
+    <tr class="tot"><td>Totaal</td><td class="r">${tot.orders}</td><td class="r">${eur(tot.omzet)}</td><td class="r">${eur(tot.commissie)}</td></tr>
     </tbody>` : `<tbody><tr><td style="padding:16px;color:#7C8CA6">Geen creator gevonden voor "${creatorSearchTerm}".</td></tr></tbody>`;
   document.getElementById("creatorsHdr").textContent = creatorSearchTerm
     ? `Creators & affiliates (${filtered.length} van ${CREATORS.length})`
@@ -985,8 +1004,22 @@ const PROD_CATS = {
   "LumeWorks Atlas": "Atlas",
   "LumeWorks Titan": "Titan",
   "Projectiescherm 100 inch": "Scherm",
+  "De complete Prime setup": "Bundel",
+  "De complete Atlas setup": "Bundel",
+  "De complete Titan setup": "Bundel",
 };
 function prodCategory(p){ return PROD_CATS[p] || "Accessoires"; }
+// Leesbaarheid: Shopify-titels als "Prime travelcase" tonen we als
+// "Prime + Travelcase" — duidelijker dat het een accessoire bíj Prime is,
+// i.p.v. het te lezen als één productnaam. Alleen voor accessoires die
+// letterlijk met de productlijn beginnen (Prime/Atlas/Titan); generieke
+// accessoires (Schoonmaak kit, Pro stand, ...) blijven ongewijzigd.
+function fmtProduct(p){
+  const m = /^(Prime|Atlas|Titan) (.+)$/.exec(p);
+  if(!m) return p;
+  const rest = m[2].charAt(0).toUpperCase()+m[2].slice(1);
+  return `${m[1]} + ${rest}`;
+}
 let ordProductFilter = "alle";
 
 function setOrdProductFilter(cat){
@@ -1046,7 +1079,7 @@ function renderOrderDetail(){
 
   const prodSel = document.getElementById("ordProductSel");
   if(!prodSel.dataset.built){
-    const cats = ["alle","Prime","Atlas","Titan","Scherm","Accessoires"];
+    const cats = ["alle","Prime","Atlas","Titan","Scherm","Bundel","Accessoires"];
     prodSel.innerHTML = cats.map(c=>
       `<option value="${c}">${c==="alle"?"Alle producten":c}</option>`
     ).join("");
@@ -1107,7 +1140,7 @@ function renderOrderDetail(){
   const rows = enriched.map(o=>{
     const cellVals = {
       creator: o.creator,
-      product: `${o.product}${o.retour?` <span style="color:#DD9280">(retour)</span>`:""}`,
+      product: `${fmtProduct(o.product)}${o.retour?` <span style="color:#DD9280">(retour)</span>`:""}`,
       code: o.code||"—",
       omzet: eur(o.omzet),
       kosten: o.kosten!=null?eur(o.kosten):"—",
