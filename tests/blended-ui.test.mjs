@@ -293,10 +293,11 @@ test("cost story keeps VAT and margin bases explicit and preserves calculation o
     /Nieuwe basis: 100%/,
   );
   const rows = [...d.querySelectorAll("#table tbody tr")];
-  assert.equal(rows.length, 9);
+  assert.equal(rows.length, 10);
   assert.match(rows[0].textContent, /Omzet excl. btw100%/);
   assert.match(rows[2].textContent, /Marge na product en levering/);
-  assert.match(rows[8].textContent, /Nettowinst · voorlopig/);
+  assert.match(rows[9].textContent, /Nettowinst · voorlopig/);
+  assert.match(rows[4].textContent, /Retourafhandeling/);
   assert.equal(d.querySelectorAll("#table [data-sort]").length, 0);
   assert(d.querySelector("#detail .pager").hidden);
   d.querySelector("[data-detail*=products]").click();

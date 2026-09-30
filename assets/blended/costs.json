@@ -34,7 +34,164 @@
   },
   "returns": {
     "cost_per_return": 20,
-    "basis": "Potloodaanname Koen: extra afhandeling per fysiek retourpakket, los van terugbetaling.",
-    "status": "awaiting_shopify_return_data"
+    "basis": "Shopify betaalgegevens; correcties op oorspronkelijke besteldatum. Eén retourpakket aangenomen per order met RETURN_RECEIVED. Geen voorraadterugboeking zonder uitsplitsing inkoop/verzending.",
+    "status": "manual_shopify_snapshot",
+    "checked_on": "2026-09-30",
+    "orders": [
+      {
+        "num": "#1365",
+        "paid_incl": 149,
+        "refunded_incl": 149,
+        "kind": "received_return",
+        "store_credit": false
+      },
+      {
+        "num": "#1499",
+        "paid_incl": 13.05,
+        "refunded_incl": 13.05,
+        "kind": "cancelled",
+        "store_credit": false
+      },
+      {
+        "num": "#1481",
+        "paid_incl": 239,
+        "refunded_incl": 239,
+        "kind": "cancelled",
+        "store_credit": true
+      },
+      {
+        "num": "#1358",
+        "paid_incl": 168,
+        "refunded_incl": 168,
+        "kind": "cancelled",
+        "store_credit": false
+      },
+      {
+        "num": "#1351",
+        "paid_incl": 149,
+        "refunded_incl": 149,
+        "kind": "received_return",
+        "store_credit": false
+      },
+      {
+        "num": "#1336",
+        "paid_incl": 149,
+        "refunded_incl": 149,
+        "kind": "unknown",
+        "store_credit": false
+      },
+      {
+        "num": "#1303",
+        "paid_incl": 287,
+        "refunded_incl": 287,
+        "kind": "unknown",
+        "store_credit": false
+      },
+      {
+        "num": "#1275",
+        "paid_incl": 149,
+        "refunded_incl": 149,
+        "kind": "unknown",
+        "store_credit": false
+      },
+      {
+        "num": "#1271",
+        "paid_incl": 168,
+        "refunded_incl": 168,
+        "kind": "cancelled",
+        "store_credit": false
+      },
+      {
+        "num": "#1236",
+        "paid_incl": 149,
+        "refunded_incl": 149,
+        "kind": "received_return",
+        "store_credit": false
+      },
+      {
+        "num": "#1227",
+        "paid_incl": 149,
+        "refunded_incl": 149,
+        "kind": "received_return",
+        "store_credit": false
+      },
+      {
+        "num": "#1224",
+        "paid_incl": 134.1,
+        "refunded_incl": 134.1,
+        "kind": "unknown",
+        "store_credit": false
+      },
+      {
+        "num": "#1213",
+        "paid_incl": 149,
+        "refunded_incl": 149,
+        "kind": "unknown",
+        "store_credit": false
+      },
+      {
+        "num": "#1185",
+        "paid_incl": 149,
+        "refunded_incl": 149,
+        "kind": "received_return",
+        "store_credit": false
+      },
+      {
+        "num": "#1158",
+        "paid_incl": 222.55,
+        "refunded_incl": 81,
+        "kind": "received_return",
+        "store_credit": false
+      },
+      {
+        "num": "#1134",
+        "paid_incl": 149,
+        "refunded_incl": 149,
+        "kind": "unknown",
+        "store_credit": false
+      },
+      {
+        "num": "#1056",
+        "paid_incl": 149,
+        "refunded_incl": 149,
+        "kind": "unknown",
+        "store_credit": false
+      },
+      {
+        "num": "#1055",
+        "paid_incl": 239,
+        "refunded_incl": 239,
+        "kind": "unknown",
+        "store_credit": false
+      },
+      {
+        "num": "#1014",
+        "paid_incl": 117.3,
+        "refunded_incl": 117.3,
+        "kind": "unknown",
+        "store_credit": false
+      },
+      {
+        "num": "#1012",
+        "paid_incl": 308.05,
+        "refunded_incl": 308.05,
+        "kind": "unknown",
+        "store_credit": false
+      },
+      {
+        "num": "#1005",
+        "paid_incl": 134.1,
+        "refunded_incl": 134.1,
+        "kind": "unknown",
+        "store_credit": false
+      },
+      {
+        "num": "#1003",
+        "paid_incl": 299,
+        "refunded_incl": 299,
+        "kind": "unknown",
+        "store_credit": false
+      }
+    ]
   }
 }

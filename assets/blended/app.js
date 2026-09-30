@@ -7,13 +7,14 @@ import {
   googleCampaignGroups,
   basketMetrics,
   finance,
+  reconciledOrder,
   sum,
   shift,
   series,
   aggregate,
   previous,
   inRange,
-} from "./metrics.js?v=gift-allocation-1";
+} from "./metrics.js?v=returns-audit-1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (s) =>
@@ -484,12 +485,16 @@ function orderDate(o) {
   );
 }
 const orderColumnWidths=[64,88,190,96,100,76,78];
+function returnSummary(cur) {
+ const affected=cur.orderRows.filter(o=>o.refunded_incl>0);
+ return `<details class="panel" id="returnEstimate"><summary><span>Retouren & terugbetalingen · ${cur.refundedOrders} orders</span><span>${euro(cur.refundedIncl)}</span></summary><p>In omzet verwerkt: <strong>${euro(cur.refundedIncl)} terugbetalingen</strong>. Extra retourafhandeling: <strong>${euro(cur.returnCost)}</strong> (${cur.receivedReturns} bevestigde retourorders × ${euro(C.returns?.cost_per_return??20)}).</p><p class="hint">Controle op ${esc(C.returns?.checked_on || "onbekend")} · momentopname, nog geen automatische retoursynchronisatie. Toegerekend aan de oorspronkelijke besteldatum, niet de terugbetaaldatum. Eén pakket per bevestigde retourorder aangenomen.</p>${affected.length?`<div class="table-wrap"><table><thead><tr><th>Order</th><th>Terugbetaald</th><th>Retourkosten</th><th>Reden</th></tr></thead><tbody>${affected.map(o=>`<tr><td>${esc(o.num)}</td><td>${euro(o.refunded_incl)}</td><td>${euro(o.return_cost)}</td><td>${o.return_kind==="received_return"?"Retour ontvangen":o.return_kind==="cancelled"?"Geannuleerd":"Reden onbekend"}${o.store_credit?" · winkeltegoed":""}</td></tr>`).join("")}</tbody></table></div>`:""}<p class="hint">${cur.unknownReturns ? `${cur.unknownReturns} terugbetaalde orders hebben geen retourreden: hiervoor is nog geen €20 geboekt. ` : ""}Product- en leveringskosten blijven bij verzonden orders staan; de waarde van teruggekomen voorraad is nog niet uitgesplitst. Bij annuleringen vervallen deze kosten. Betaalkosten blijven berekend over het oorspronkelijk betaalde bedrag. Daan-bonus volgt de bestaande Meta-contractberekening.</p></details>`;
+}
 function overviewOrders(cur) {
  const rows=[...cur.orderRows].sort((a,b)=>b.d.localeCompare(a.d)||Number(b.num.replace(/\D/g,''))-Number(a.num.replace(/\D/g,'')));
  return `<details class="panel" id="overviewOrders" open><summary><span>Orderdetail · ${fmt(state.from)} – ${fmt(state.to)} · ${rows.length} orders</span></summary><div class="order-controls"><input id="overviewOrderSearch" type="search" aria-label="Zoek op ordernummer of product" placeholder="Zoek order of product…"><span>Versleep kolomranden om te verbreden</span></div><div class="table-wrap"><table style="width:${sum(orderColumnWidths,x=>x)}px"><colgroup>${orderColumnWidths.map(w=>`<col style="width:${w}px">`).join('')}</colgroup><thead><tr>${["Order","Datum","Producten","Omzet incl. btw","Product + levering","Betaalkosten","Marge %"].map((label,i)=>`<th>${label}<span class="column-resizer" data-resize-column="${i}" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Breedte ${label}" aria-valuemin="48" aria-valuemax="600" aria-valuenow="${orderColumnWidths[i]}"></span></th>`).join('')}</tr></thead><tbody>${rows.map(o=>{
  const f=finance([o],C),margin=f.cost!=null&&f.excl>0?(f.excl-f.cost)/f.excl*100:null;
- return `<tr data-order-search="${esc((o.num+' '+o.items.join(' ')).toLowerCase())}"><td>${esc(o.num)}</td><td title="${esc(orderDate(o))}">${fmt(o.d)}</td><td title="${esc(o.items.join(', '))}">${esc(o.items.map(x=>x.replace(/^LumeWorks /,'')).join(', '))}</td><td>${euro(o.incl)}</td><td>${euro(f.fixed)}</td><td>${euro(f.fees)}</td><td>${margin==null?'—':num(margin)+'%'}</td></tr>`;
- }).join('')}</tbody></table></div><p id="overviewOrderEmpty" class="hint" ${rows.length?'hidden':''}>Geen orders gevonden in deze selectie.</p><p class="order-cost-note">Marge na product- en betaalkosten, vóór marketing en overhead. Datum en producten: volledige details bij aanwijzen.</p></details>`;
+ return `<tr data-order-search="${esc((o.num+' '+o.items.join(' ')).toLowerCase())}"><td title="${o.refunded_incl ? esc("Terugbetaald: "+euro(o.refunded_incl)+" · retourafhandeling: "+euro(o.return_cost)) : ""}">${esc(o.num)}${o.refunded_incl ? " *" : ""}</td><td title="${esc(orderDate(o))}">${fmt(o.d)}</td><td title="${esc(o.items.join(', '))}">${esc(o.items.map(x=>x.replace(/^LumeWorks /,'')).join(', '))}</td><td>${euro(o.incl)}</td><td>${euro(f.fixed)}</td><td>${euro(f.fees)}</td><td>${margin==null?'—':num(margin)+'%'}</td></tr>`;
+ }).join('')}</tbody></table></div><p id="overviewOrderEmpty" class="hint" ${rows.length?'hidden':''}>Geen orders gevonden in deze selectie.</p><p class="order-cost-note">Omzet na gecontroleerde terugbetalingen. Marge na product-, betaal- en retourkosten, vóór marketing en overhead. Datum en producten: volledige details bij aanwijzen.</p></details>`;
 }
 function marketingMix(cur) {
   const nonbrand = compute(
@@ -559,7 +564,7 @@ function render() {
       ? ["revenue", "cost", "spend", "roas", "result", "profitMargin"]
       : state.channel === "meta" ? ["revenue", "spend", "result", "profitMargin", "count", "roas", "cpa"] : ["revenue", "spend", "result", "profitMargin", "count", "roas", "cpa"];
   const notes = [];
-  if(state.channel === "all") notes.push("Retouren en terugbetalingen zijn nog niet verwerkt; de nettowinst is vóór deze correcties. Potloodtarief: €20 per retourpakket.");
+  if(state.channel === "all") notes.push(`Shopify-correcties gecontroleerd op ${C.returns?.checked_on || "onbekend"}: ${euro(cur.refundedIncl)} terugbetaald en ${euro(cur.returnCost)} extra retourkosten voor orders in deze periode. Dit is een momentopname.`);
   if (keys.some((k) => !D[k] || E[k] || stale(k) || !coverage(k)))
     notes.push(
       "Een bron is niet beschikbaar, verouderd of dekt niet de volledige periode. Bekijk de datastatus; totalen kunnen onvolledig zijn.",
@@ -611,7 +616,7 @@ function render() {
    )
    .join("")}</details>
  <section class="panel ${analysisCollapsed?'is-collapsed':''}" id="analysis" tabindex="-1"><div class="panel-head"><div><p class="analysis-label">VERDIEP JE IN DE CIJFERS</p><h2><button class="analysis-heading" id="collapseAnalysis" aria-expanded="${!analysisCollapsed}" aria-controls="analysisBody analysisTools">${state.metrics.map((k) => metricMeta(k).label).join(" & ") || "Analyse"}</button></h2><p class="subtitle">Klik bovenaan maximaal twee cijfers aan om ze hier te vergelijken.</p></div><div class="toolbar" id="analysisTools" ${analysisCollapsed?"hidden":""}><div class="gran-buttons" aria-label="Grafiek groeperen">${['day','week','month'].map((g,i)=>`<button data-gran="${g}" aria-pressed="${state.gran===g || state.gran==='auto' && g===((Date.parse(state.to)-Date.parse(state.from))/864e5<=31?'day':(Date.parse(state.to)-Date.parse(state.from))/864e5<=180?'week':'month')}">${['Dag','Week','Maand'][i]}</button>`).join('')}</div><select id="gran" hidden><option value="auto">Automatisch</option><option value="day">Dag</option><option value="week">Week</option><option value="month">Maand</option></select><button id="chartMode">${chartTable ? "Grafiek tonen" : "Tabel tonen"}</button></div></div><div id="analysisBody" ${analysisCollapsed?"hidden":""}><div id="replacement"></div><div id="chart"></div><div id="dayComparison"></div><details class="detail-fold" id="detailFold"><summary>Onderliggende cijfers & uitsplitsing</summary><div id="detail"></div></details></div></section>
- ${state.channel === "all" ? `<details class="panel" id="returnEstimate"><summary>Retouren · nog niet verwerkt</summary><p class="hint">Shopify-retouren en terugbetalingen ontbreken in de huidige koppeling. De nettowinst hierboven is vóór deze correcties.</p><p>Potloodaanname: <strong>${euro(C.returns?.cost_per_return??20)} extra afhandeling per retourpakket</strong>, los van terugbetaalde omzet.</p><label>Aantal retourpakketten · alleen scenario<input id="returnScenarioCount" type="number" min="0" step="1" placeholder="Nog onbekend"></label><p id="returnScenarioResult" aria-live="polite">Vul een aantal in om de extra kosten te berekenen.</p><small>Dit scenario wijzigt je hoofdcijfers niet. Terugbetalingen en eventuele voorraadcorrecties moeten apart uit Shopify komen.</small></details>`+overviewOrders(cur)+marketingMix(cur) : ""}
+ ${state.channel === "all" ? returnSummary(cur)+overviewOrders(cur)+marketingMix(cur) : ""}
  ${['all','meta'].includes(state.channel) ? `<details class="panel management">
  <summary class="management-heading"><span>Meta-beheer<small>Vaste vergoeding en prestatiebonus</small></span><span class="management-heading-total">${euro(cur.management.total)}</span></summary>
  <div class="management-amounts">
@@ -863,7 +868,7 @@ function renderDetail() {
         cur.fixed != null && cur.revenue != null
           ? cur.revenue - cur.fixed
           : null;
-      const budget = margin != null ? margin - cur.fees - cur.overhead : null;
+      const budget = margin != null ? margin - cur.fees - cur.overhead - cur.returnCost : null;
       cols = [
         col("Opbouw"),
         col("% omzet excl. btw", "percent"),
@@ -905,8 +910,9 @@ function renderDetail() {
         row(
           "− Betaalkosten",
           minus(cur.fees),
-          "Kosten van betaalverwerking · berekend met 2% van klantomzet incl. btw",
+          "2% van oorspronkelijk betaald bedrag; terugbetaling van transactiekosten niet aangenomen",
         ),
+        row("− Retourafhandeling", minus(cur.returnCost), "€20 per bevestigde retourorder · één pakket aangenomen"),
         row(
           "− Overige bedrijfskosten",
           minus(cur.overhead),
@@ -990,7 +996,7 @@ function renderDetail() {
         col("Product en levering", "eur"),
       ];
       const map = new Map();
-      for (const o of cur.orderRows)
+      for (const o of cur.orderRows.filter(o => o.return_kind !== "cancelled"))
         for (const item of o.items) {
           if (!map.has(item)) map.set(item, { n: 0, orders: new Set() });
           const r = map.get(item);
@@ -1052,7 +1058,7 @@ function renderDetail() {
     note =
       "Historische export groepeert op advertentiegroepnaam; gelijke namen kunnen samengevoegd zijn. Campagne-ID’s ontbreken nog in deze bron. Totalen per advertentiegroep kunnen afwijken van accountdata.";
   } else if (state.channel === "infl") {
-    const byNum = new Map((D.shopify?.orders || []).map((o) => [o.num, o]));
+    const byNum = new Map((D.shopify?.orders || []).map((o) => [o.num, reconciledOrder(o,C)]));
     if (det?.type === "creator") {
       title = det.name;
       cols = [
@@ -1352,12 +1358,6 @@ function selectMetric(k) {
   });
 }
 function bindContent() {
- const returnInput=$('#returnScenarioCount');
- if(returnInput) returnInput.oninput=()=>{
-  const count=Number(returnInput.value),rate=C.returns?.cost_per_return??20;
-  $('#returnScenarioResult').textContent=returnInput.value!==''&&Number.isInteger(count)&&count>=0?`${count} retourpakketten × ${euro(rate)} = ${euro(count*rate)} extra kosten. Terugbetalingen komen hier apart bij.`:'Vul een geldig aantal retourpakketten in.';
- };
-
  $$('#overviewOrders [data-resize-column]').forEach(handle=>{
   const index=Number(handle.dataset.resizeColumn);
   const resize=width=>{

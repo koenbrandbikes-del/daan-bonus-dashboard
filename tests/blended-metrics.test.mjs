@@ -30,6 +30,33 @@ const D = {
     orders: [{ d: "2026-09-01", num: "#1", commissie: 12, omzet_excl: 100 }],
   },
 };
+test('audited refunds reduce revenue once, keep paid fees and charge only received returns', () => {
+ const costs={...C,returns:{cost_per_return:20,orders:[
+  {num:'#1',paid_incl:121,refunded_incl:60.5,kind:'received_return'},
+  {num:'#2',paid_incl:242,refunded_incl:242,kind:'cancelled'}]}};
+ const value=compute(D,costs,'2026-09-01','2026-09-02');
+ assert.equal(value.incl,60.5);
+ assert.equal(value.refundedIncl,302.5);
+ assert.equal(value.fixed,40);
+ assert.equal(value.fees,7.26);
+ assert.equal(value.returnCost,20);
+ assert.equal(value.receivedReturns,1);
+ assert.ok(Math.abs(value.cost-67.26)<1e-8);
+ assert.equal(finance(value.orderRows,costs).incl,60.5);
+ const days=series(D,costs,'2026-09-01','2026-09-02','all');
+ assert.ok(Math.abs(days.reduce((s,r)=>s+r.result,0)-value.result)<1e-8);
+ assert.equal(value.profitMargin,value.result/50*100);
+ assert.equal(value.channels.infl.revenue,60.5);
+});
+test('refund without a return reason does not invent a physical return or inventory recovery',()=>{
+ const costs={...C,returns:{cost_per_return:20,orders:[{num:'#1',paid_incl:121,refunded_incl:121,kind:'unknown'}]}};
+ const value=compute(D,costs,'2026-09-01','2026-09-01');
+ assert.equal(value.incl,0);
+ assert.equal(value.returnCost,0);
+ assert.equal(value.fixed,40);
+ assert.equal(value.unknownReturns,1);
+ assert.equal(value.profitMargin,null);
+});
 test("financial waterfall includes overhead and counts quantities", () => {
   const v = compute(D, C, "2026-09-01", "2026-09-02");
   assert.equal(v.revenue, 300);

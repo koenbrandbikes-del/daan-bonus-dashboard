@@ -9,24 +9,41 @@ export const shift = (s, n) => {
   return d.toISOString().slice(0, 10);
 };
 export const inRange = (x, f, t) => x.d >= f && x.d <= t;
+// Audited Shopify payment totals, applied on the original order date.
+// Using paid minus refunded (rather than subtracting from incl) is idempotent.
+export function reconciledOrder(order, costs) {
+  const correction = costs.returns?.orders?.find(r => r.num === order.num);
+  if (!correction) return order;
+  return {...order, incl: correction.paid_incl-correction.refunded_incl,
+    paid_incl: correction.paid_incl, refunded_incl: correction.refunded_incl,
+    return_kind: correction.kind, store_credit: correction.store_credit,
+    return_cost: correction.kind === 'received_return' ? (costs.returns.cost_per_return ?? 20) : 0};
+}
 export function finance(orders, costs) {
+  orders = orders.map(o => reconciledOrder(o, costs));
   let fixed = 0,
     unknown = 0;
   const incl = sum(orders, "incl");
-  for (const o of orders)
+  for (const o of orders.filter(o => o.return_kind !== 'cancelled'))
     for (const item of o.items) {
       if (costs.items[item] == null) unknown++;
       else fixed += costs.items[item];
     }
   const excl = incl / (1 + costs.assumed_vat),
-    fees = incl * costs.payment_rate;
+    fees = sum(orders, o => o.paid_incl ?? o.incl) * costs.payment_rate;
+  const returnCost = sum(orders, 'return_cost');
   return {
     incl,
     excl,
     fixed: unknown ? null : fixed,
     knownFixed: fixed,
     fees,
-    cost: unknown ? null : fixed + fees,
+    cost: unknown ? null : fixed + fees + returnCost,
+    returnCost,
+    refundedIncl: sum(orders, 'refunded_incl'),
+    refundedOrders: orders.filter(o => o.refunded_incl > 0).length,
+    receivedReturns: orders.filter(o => o.return_kind === 'received_return').length,
+    unknownReturns: orders.filter(o => o.return_kind === 'unknown').length,
     overhead: excl * costs.overhead_rate,
     unknown,
     orders: orders.length,
@@ -54,7 +71,9 @@ export function managementCosts(data, costs, from, to) {
     const end=shift(start,cfg.bonus_period_days-1);
     const until=data.meta?.snap && data.meta.snap<end ? data.meta.snap : end;
     const meta=data.meta?.daily_meta?.filter(r=>r.d>=start && r.d<=until);
-    const f=finance((data.shopify?.orders||[]).filter(o=>!o.test && o.d>=start && o.d<=until),costs);
+    // Contract bonus retains the source Meta-dashboard basis; this audit does
+    // not silently alter the agreed bonus calculation.
+    const f=finance((data.shopify?.orders||[]).filter(o=>!o.test && o.d>=start && o.d<=until),{...costs,returns:null});
     const margin=f.excl-f.cost-f.overhead;
     if(!meta || !data.shopify || start<'2026-08-01' || !meta.length || meta[0].d>start || f.cost==null || margin<=0) { bonus=null; audit.push({from:start,to:end,bonus:null}); continue; }
     const spend=sum(meta,'spend'), revenue=sum(meta,r=>(r.rev7||0)+(r.rev1v||0));
@@ -70,12 +89,12 @@ export function managementCosts(data, costs, from, to) {
 export function compute(data, costs, from, to, channel = "all", options = {}) {
   const orders = (data.shopify?.orders || []).filter(
     (o) => !o.test && inRange(o, from, to),
-  );
+  ).map(o => reconciledOrder(o, costs));
   const f = finance(orders, costs),
     byNum = new Map(
       (data.shopify?.orders || [])
         .filter((o) => !o.test)
-        .map((o) => [o.num, o]),
+        .map((o) => [o.num, reconciledOrder(o, costs)]),
     );
   const creators = (data.creators?.orders || []).filter(
     (o) => !o.retour && inRange(o, from, to),

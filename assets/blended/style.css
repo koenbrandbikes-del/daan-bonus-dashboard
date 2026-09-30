@@ -1539,3 +1539,9 @@ header .live-dot.warning { width:10px; height:10px; }
 .analysis-heading{position:relative;padding-right:36px}
 .analysis-heading[aria-expanded=true]::after{content:'›';transform:translateY(-50%) rotate(90deg)}
 .analysis-heading[aria-expanded=false]::after{content:'›'}
+
+#returnEstimate summary { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+#returnEstimate summary > span:nth-child(2) { margin-left: auto; font-weight: 600; }
+#returnEstimate table { width: 100%; min-width: 430px; }
+#returnEstimate th, #returnEstimate td { padding: 10px 12px; }
+#returnEstimate th:last-child, #returnEstimate td:last-child { text-align: left; }
