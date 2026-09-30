@@ -3,6 +3,7 @@ import { load } from "./data.js";
 import {
   compute,
   googleScopeData,
+  googleCampaignGroups,
   basketMetrics,
   finance,
   sum,
@@ -11,7 +12,7 @@ import {
   aggregate,
   previous,
   inRange,
-} from "./metrics.js?v=upsell-1";
+} from "./metrics.js?v=campaign-split-1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (s) =>
@@ -126,7 +127,7 @@ function readState() {
     "pto",
   ])
     if (q.has(k)) s[k] = q.get(k);
-  if (!["nonbrand", "brand", "unknown", "all"].includes(s.googleScope))
+  if (!["nonbrand", "brand", "all"].includes(s.googleScope))
     s.googleScope = "nonbrand";
   if (!(s.channel in names)) s.channel = "all";
   if (!["previous", "off", "custom"].includes(s.compare))
@@ -272,7 +273,12 @@ function metricMeta(k) {
       fmt: ratio,
     },
     count: {
-      label: state.channel === "infl" ? "Codeorders" : "Toegerekende aankopen",
+      label:
+        state.channel === "infl"
+          ? "Codeorders"
+          : state.channel === "google"
+            ? "Toegerekende conversies"
+            : "Toegerekende aankopen",
       sub:
         state.channel === "google"
           ? "Meetbasis nog controleren"
@@ -325,7 +331,7 @@ function coverage(key, from = state.from, to = state.to) {
 const googleScopeNames = {
   nonbrand: "Non-branded",
   brand: "Branded",
-  unknown: "Niet uitgesplitst",
+
   all: "Alles inclusief branded",
 };
 function analysisData() {
@@ -333,6 +339,12 @@ function analysisData() {
 }
 function googleFilter() {
   if (state.channel !== "google") return "";
+  const unknown = (D.google?.daily_campaigns || []).filter(
+    (r) => inRange(r, state.from, state.to) && !googleCampaignGroups[r.id],
+  );
+  const missing = unknown.length
+    ? `<p class="hint">Nieuwe campagne nog niet ingedeeld: ${[...new Set(unknown.map((r) => esc(r.name)))].join(", ")}. Bekijk via Alles inclusief branded.</p>`
+    : "";
   return `<section class="panel google-scope" aria-label="Google Ads merkverkeer"><p class="eyebrow">GOOGLE ADS · MERKVERKEER</p><div class="scope-options">${Object.entries(
     googleScopeNames,
   )
@@ -348,7 +360,7 @@ function googleFilter() {
     })
     .join(
       "",
-    )}</div><p class="hint">Nu in alle cijfers, grafieken en details: <strong>${googleScopeNames[state.googleScope]}</strong>. Non-branded bevat uitsluitend zichtbare zoektermen zonder LumeWorks-variant; onbekend verkeer telt hierin niet mee. Dit is geen indeling naar nieuwe klanten. Het bedrijfsoverzicht blijft alle advertentiekosten meenemen.</p></section>`;
+    )}</div><p class="hint">Nu in alle cijfers, grafieken en details: <strong>${googleScopeNames[state.googleScope]}</strong>. Indeling op campagne: Corporate Search + Branded Shopping zijn branded; Generiek B2C, Generiek PMAX, Generiek B2B en Concurrentie zijn non-branded. Inclusief volledige Shopping- en PMAX-resultaten. Dit is geen indeling naar nieuwe klanten. Het bedrijfsoverzicht telt alle advertentiekosten mee.</p>${missing}</section>`;
 }
 let datePickers = [];
 function render() {
@@ -600,7 +612,7 @@ function renderDetail() {
     col("Naam"),
     col("Uitgaven", "eur"),
     col("Toegerekende waarde", "eur"),
-    col("Aankopen", "num"),
+    col(state.channel === "google" ? "Conversies" : "Aankopen", "num"),
     col("ROAS", "ratio"),
   ];
   if (state.channel === "all") {
@@ -874,42 +886,21 @@ function renderDetail() {
         "Omzet/kosten is gebaseerd op alleen commissies. Overige samenwerkingskosten zijn onbekend.";
     }
   } else {
-    const available = D.google?.daily_campaigns || [];
+    const available = analysisData().google?.daily_campaigns || [];
     const campaign = available.filter((r) => inRange(r, from, to));
-    groupControl = `<label>Uitsplitsing<select id="googleGroup"><option value="campaign">Campagnes</option><option value="intent">Merkverkeer en overige zoektermen</option><option value="actions">Aankoopmetingen</option><option value="customers">Nieuwe / terugkerende klanten</option></select></label>`;
+    groupControl = `<label>Uitsplitsing<select id="googleGroup"><option value="campaign">Campagnes</option><option value="intent">Branded / non-branded</option><option value="actions">Aankoopmetingen</option><option value="customers">Nieuwe / terugkerende klanten</option></select></label>`;
     title =
       "Google Ads · " +
+      googleScopeNames[state.googleScope] +
+      " · " +
       ({
         campaign: "campagnes",
-        intent: "zoekintentie",
+        intent: "campagne-indeling",
         actions: "aankoopmetingen",
         customers: "klantstatus",
       }[state.group] || "campagnes");
     cols = standard;
-    if (state.googleScope !== "all") {
-      groupControl = "";
-      title = "Google Ads · " + googleScopeNames[state.googleScope];
-      cols = [col("Dag"), ...standard.slice(1)];
-      rows = (analysisData().google?.daily_google || [])
-        .filter((r) => inRange(r, from, to))
-        .map((r) => ({
-          cells: [
-            r.d,
-            r.spend,
-            r.rev,
-            r.conv,
-            r.spend > 0 ? r.rev / r.spend : null,
-          ],
-        }));
-      note =
-        state.googleScope === "unknown"
-          ? "Accounttotaal min zichtbare zoektermen. Bevat afgeschermde zoekopdrachten en overige inventaris; niet als non-branded ingedeeld."
-          : "Alleen zichtbare zoektermen " +
-            (state.googleScope === "brand" ? "met" : "zonder") +
-            " LumeWorks-variant. De bron biedt deze splitsing per dag, nog niet per campagne of aankoopmeting. Conversiewaarde bevat beide primaire aankoopmetingen.";
-      if (!D.google?.daily_intent)
-        note = "Zoektermuitsplitsing niet beschikbaar; cijfers zijn onbekend.";
-    } else if (state.group === "customers") {
+    if (state.group === "customers") {
       cols = [
         col("Klantstatus"),
         col("Toegerekende aankopen", "num"),
@@ -925,50 +916,36 @@ function renderDetail() {
         col("Conversiewaarde", "eur"),
       ];
       rows = aggregate(
-        (D.google?.daily_actions || [])
+        (analysisData().google?.daily_actions || [])
           .filter((r) => inRange(r, from, to))
           .map((r) => ({ name: r.name, revenue: r.rev, orders: r.conv })),
         (r) => r.name,
       ).map((r) => ({ cells: [r.name, r.orders, r.revenue] }));
       note =
-        "Beide aankoopmetingen tellen nu mee. Of dezelfde aankopen dubbel worden gemeten is nog niet vastgesteld. Er zijn geen Google-instellingen aangepast.";
+        state.googleScope !== "all"
+          ? "De bron heeft aankoopmetingen alleen op accountniveau. Kies Alles inclusief branded om deze te bekijken; ze worden niet als segmentcijfers gepresenteerd."
+          : "Beide aankoopmetingen tellen nu mee. Of dezelfde aankopen dubbel worden gemeten is nog niet vastgesteld. Er zijn geen Google-instellingen aangepast.";
     } else if (state.group === "intent") {
-      const intent = (D.google?.daily_intent || []).filter((r) =>
-        inRange(r, from, to),
-      );
       const grouped = aggregate(
-        intent.map((r) => ({
-          name: r.intent,
-          revenue: r.rev,
+        campaign.map((r) => ({
+          name: googleCampaignGroups[r.id] || "unknown",
           spend: r.spend,
+          revenue: r.rev,
           orders: r.conv,
         })),
         (r) => r.name,
       );
       rows = grouped.map((r) => ({
         cells: [
-          r.name === "brand"
-            ? "Merktermen (LumeWorks-varianten)"
-            : "Overige zichtbare zoektermen",
+          googleScopeNames[r.name] || "Nieuwe campagne · nog indelen",
           r.spend,
           r.revenue,
           r.orders,
           r.roas,
         ],
       }));
-      const spent = sum(grouped, "spend"),
-        rev = sum(grouped, "revenue"),
-        cnt = sum(grouped, "orders");
-      rows.push({
-        cells: [
-          "Niet uitgesplitst / overige inventaris",
-          cur.spend == null ? null : Math.max(0, cur.spend - spent),
-          cur.revenue == null ? null : cur.revenue - rev,
-          cur.count == null ? null : cur.count - cnt,
-          null,
-        ],
-      });
-      note = `Zichtbare zoektermen dekken ${cur.spend > 0 ? num((spent / cur.spend) * 100) : "—"}% van accountuitgaven. Overige termen zijn niet automatisch generiek of nieuwe klanten. Niet-zoekinventaris en afgeschermde termen blijven apart.`;
+      note =
+        "Volledige campagnecijfers volgens de gecontroleerde campagne-indeling. Branded: Corporate Search en Branded Shopping. Non-branded: generieke Search, PMAX, B2B en Concurrentie.";
     } else if (det?.type === "campaign") {
       title = det.name;
       cols = [col("Dag"), ...standard.slice(1)];
@@ -1000,7 +977,7 @@ function renderDetail() {
         action: { type: "campaign", name: r.rows[0].name, id: r.name },
       }));
       note =
-        "Campagnenamen zijn geen bewezen classificatie van merkverkeer. Conversiewaarde bevat beide primaire aankoopmetingen.";
+        "Campagnes binnen de geselecteerde groep. Indeling gecontroleerd in Google Ads en SEA-rapportage: Corporate + Branded Shopping zijn branded; generiek, PMAX, B2B en Concurrentie zijn non-branded. B2B kan offerteconversies bevatten; geen bewezen nieuweklantverkoop.";
     }
     if (!available.length) note += " Campagnedetails worden nog opgehaald.";
     if (

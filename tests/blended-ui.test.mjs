@@ -147,9 +147,14 @@ test("Google defaults to non-brand and keeps the scope in charts, detail and URL
   const source = JSON.parse(
     fs.readFileSync(new URL("data/google.json", root), "utf8"),
   );
-  const expected = source.daily_intent
+  const expected = source.daily_campaigns
     .filter(
-      (r) => r.intent === "other" && r.d >= "2026-09-23" && r.d <= "2026-09-29",
+      (r) =>
+        ["23981395562", "23985056312", "23980131321", "23981395565"].includes(
+          r.id,
+        ) &&
+        r.d >= "2026-09-23" &&
+        r.d <= "2026-09-29",
     )
     .reduce((s, r) => s + r.spend, 0);
   const shown = d.querySelector("[data-metric=spend] strong").textContent;
@@ -189,17 +194,18 @@ test("products default to best sellers and upsell groups open matching orders", 
   );
   w.close();
 });
-test('calendar survives transient focus loss and clicks on rebuilt day buttons', async()=>{
- const w=await boot('?from=2026-09-23&to=2026-09-29'),d=w.document;
- d.querySelector('#periodButton').click();
- d.activeElement.blur();
- await Promise.resolve();
- assert.equal(d.querySelector('#periodMenu').hidden,false);
- d.querySelector('#periodMenu [data-date="2026-09-10"]').click();
- assert.equal(d.querySelector('#periodMenu').hidden,false);
- d.querySelector('#periodMenu [data-date="2026-09-15"]').click();
- assert.equal(d.querySelector('#periodMenu').hidden,false);
- d.querySelector('#periodMenu .cal-apply').click();
- assert.equal(new URL(w.location.href).searchParams.get('to'),'2026-09-15');
- w.close();
+test("calendar survives transient focus loss and clicks on rebuilt day buttons", async () => {
+  const w = await boot("?from=2026-09-23&to=2026-09-29"),
+    d = w.document;
+  d.querySelector("#periodButton").click();
+  d.activeElement.blur();
+  await Promise.resolve();
+  assert.equal(d.querySelector("#periodMenu").hidden, false);
+  d.querySelector('#periodMenu [data-date="2026-09-10"]').click();
+  assert.equal(d.querySelector("#periodMenu").hidden, false);
+  d.querySelector('#periodMenu [data-date="2026-09-15"]').click();
+  assert.equal(d.querySelector("#periodMenu").hidden, false);
+  d.querySelector("#periodMenu .cal-apply").click();
+  assert.equal(new URL(w.location.href).searchParams.get("to"), "2026-09-15");
+  w.close();
 });

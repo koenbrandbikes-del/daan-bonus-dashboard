@@ -158,34 +158,41 @@ export function previous(from, to) {
   return { from: shift(from, -n), to: shift(from, -1) };
 }
 
-// Search-term classification is partial: never label hidden search/PMax as non-brand.
+// Campaign purpose verified in Ads on 2026-09-30 and the SEA reporting.
+// Stable IDs keep classification intact when a campaign is renamed.
+export const googleCampaignGroups = {
+  23981332205: "brand", // C | Corporate: LumeWorks search
+  23989624267: "brand", // S | Branded: branded Shopping
+  23981395562: "nonbrand", // T | Generiek | B2C
+  23985056312: "nonbrand", // P | Generiek: PMAX
+  23980131321: "nonbrand", // T | Generiek | B2B
+  23981395565: "nonbrand", // T | Concurrentie
+};
 export function googleScopeData(data, scope = "all") {
   if (scope === "all" || !data.google) return data;
   const g = data.google;
-  if (!Array.isArray(g.daily_intent)) return { ...data, google: null };
+  if (!Array.isArray(g.daily_campaigns)) return { ...data, google: null };
+  const selected = g.daily_campaigns.filter(
+    (r) => (googleCampaignGroups[r.id] || "unknown") === scope,
+  );
   const grouped = new Map();
-  for (const r of g.daily_intent) {
-    if (
-      scope !== "unknown" &&
-      r.intent !== (scope === "brand" ? "brand" : "other")
-    )
-      continue;
+  for (const r of selected) {
     const v = grouped.get(r.d) || { d: r.d, spend: 0, rev: 0, conv: 0 };
     for (const k of ["spend", "rev", "conv"]) v[k] += Number(r[k]) || 0;
     grouped.set(r.d, v);
   }
-  const daily = g.daily_google.map((r) => {
-    const v = grouped.get(r.d) || { d: r.d, spend: 0, rev: 0, conv: 0 };
-    return scope === "unknown"
-      ? {
-          d: r.d,
-          spend: r.spend - v.spend,
-          rev: r.rev - v.rev,
-          conv: r.conv - v.conv,
-        }
-      : v;
-  });
-  return { ...data, google: { ...g, daily_google: daily } };
+  const daily = g.daily_google.map(
+    (r) => grouped.get(r.d) || { d: r.d, spend: 0, rev: 0, conv: 0 },
+  );
+  return {
+    ...data,
+    google: {
+      ...g,
+      daily_google: daily,
+      daily_campaigns: selected,
+      daily_actions: [],
+    },
+  };
 }
 
 export function basketMetrics(orders) {

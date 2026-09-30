@@ -1,27 +1,51 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { googleScopeData } from "../assets/blended/metrics.js";
-test("brand split reconciles while keeping hidden inventory separate", () => {
-  const data = {
-    google: {
-      daily_google: [{ d: "2026-09-01", spend: 100, rev: 1000, conv: 10 }],
-      daily_intent: [
-        { d: "2026-09-01", intent: "brand", spend: 20, rev: 600, conv: 6 },
-        { d: "2026-09-01", intent: "other", spend: 50, rev: 300, conv: 3 },
-      ],
-    },
-  };
-  const b = googleScopeData(data, "brand").google.daily_google[0],
-    n = googleScopeData(data, "nonbrand").google.daily_google[0],
-    u = googleScopeData(data, "unknown").google.daily_google[0];
-  assert.equal(n.spend, 50);
-  assert.equal(n.rev, 300);
-  assert.equal(u.spend, 30);
-  for (const k of ["spend", "rev", "conv"])
-    assert.equal(b[k] + n[k] + u[k], data.google.daily_google[0][k]);
-  assert.equal(googleScopeData(data, "all"), data);
+import fs from "node:fs";
+import {
+  googleScopeData,
+  googleCampaignGroups,
+} from "../assets/blended/metrics.js";
+test("campaign groups include full PMAX and reconcile to account totals", () => {
+  const google = JSON.parse(
+    fs.readFileSync(new URL("../data/google.json", import.meta.url)),
+  );
+  assert(google.daily_campaigns.every((r) => googleCampaignGroups[r.id]));
+  const brand = googleScopeData({ google }, "brand").google,
+    nonbrand = googleScopeData({ google }, "nonbrand").google;
+  assert(nonbrand.daily_campaigns.some((r) => r.name === "P | Generiek"));
+  assert(
+    brand.daily_campaigns.every((r) =>
+      ["23981332205", "23989624267"].includes(r.id),
+    ),
+  );
+  for (let i = 0; i < google.daily_google.length; i++)
+    for (const k of ["spend", "rev", "conv"])
+      assert(
+        Math.abs(
+          brand.daily_google[i][k] +
+            nonbrand.daily_google[i][k] -
+            google.daily_google[i][k],
+        ) < 0.02,
+        `${google.daily_google[i].d} ${k}`,
+      );
+});
+test("missing campaign data stays unknown and new campaigns are not guessed", () => {
   assert.equal(
     googleScopeData({ google: { daily_google: [] } }, "nonbrand").google,
     null,
+  );
+  const google = {
+    daily_google: [{ d: "2026-09-01", spend: 5, rev: 10, conv: 1 }],
+    daily_campaigns: [
+      { d: "2026-09-01", id: "new", spend: 5, rev: 10, conv: 1 },
+    ],
+  };
+  assert.equal(
+    googleScopeData({ google }, "nonbrand").google.daily_google[0].spend,
+    0,
+  );
+  assert.equal(
+    googleScopeData({ google }, "unknown").google.daily_google[0].spend,
+    5,
   );
 });
