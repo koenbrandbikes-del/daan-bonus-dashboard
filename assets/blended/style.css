@@ -1258,3 +1258,8 @@ header { position:relative; flex-wrap:wrap; }
 @media (max-width:699px) {
   .revenue-legend strong, .revenue-legend small { justify-self:end; text-align:right; }
 }
+
+/* Align the logo with the buttons, excluding their labels above. */
+@media (min-width:1100px) {
+  header .brand { padding-top:20.5px; }
+}
