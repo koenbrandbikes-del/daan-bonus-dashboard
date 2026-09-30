@@ -439,7 +439,7 @@
   },
   {
    "d": "2026-09-30",
-   "spend": 0.52,
+   "spend": 0.78,
    "rev": 0,
    "conv": 0,
    "id": "23980131321",
@@ -2626,7 +2626,7 @@
   },
   {
    "d": "2026-09-30",
-   "spend": 128.11,
+   "spend": 128.8,
    "rev": 0,
    "conv": 0,
    "id": "23985056312",
@@ -4288,7 +4288,7 @@
   {
    "d": "2026-09-30",
    "intent": "other",
-   "spend": 7.3100000000000005,
+   "spend": 7.57,
    "rev": 0,
    "conv": 0
   },
@@ -4832,12 +4832,12 @@
    "conv": 0
   }
  ],
- "details_synced_at": "2026-09-30T22:07:37.832Z",
+ "details_synced_at": "2026-09-30T22:22:37.738Z",
  "source": "google_ads_api",
  "customer_id": "7645288282",
  "currency": "EUR",
  "time_zone": "Europe/Amsterdam",
- "synced_at": "2026-09-30T22:07:37.832Z",
+ "synced_at": "2026-09-30T22:22:37.738Z",
  "coverage_from": "2026-08-01",
  "coverage_to": "2026-10-01",
  "attribution": "Primary conversions and conversion value by ad interaction date; may include non-purchase goals and overlap with other channels.",
@@ -5324,18 +5324,18 @@
   },
   {
    "d": "2026-09-30",
-   "spend": 151.33,
+   "spend": 152.28,
    "conv": 4.895719,
    "rev": 704.7728132,
-   "impr": 9263,
-   "cl": 144
+   "impr": 9329,
+   "cl": 146
   },
   {
    "d": "2026-10-01",
    "spend": 0,
    "conv": 0,
    "rev": 0,
-   "impr": 0,
+   "impr": 31,
    "cl": 0
   }
  ],
@@ -5346,17 +5346,17 @@
   "spend": 0,
   "conv": 0,
   "rev": 0,
-  "impr": 0,
+  "impr": 31,
   "cl": 0
  },
  "gisteren": {
   "from": "2026-09-30",
   "to": "2026-09-30",
   "d": "2026-09-30",
-  "spend": 151.33,
+  "spend": 152.28,
   "conv": 4.895719,
   "rev": 704.7728132,
-  "impr": 9263,
-  "cl": 144
+  "impr": 9329,
+  "cl": 146
  }
 }
