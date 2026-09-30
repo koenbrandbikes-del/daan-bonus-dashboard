@@ -483,12 +483,13 @@ function orderDate(o) {
     }).format(new Date(o.created_at))
   );
 }
+const orderColumnWidths=[64,88,190,96,100,76,78];
 function overviewOrders(cur) {
  const rows=[...cur.orderRows].sort((a,b)=>b.d.localeCompare(a.d)||Number(b.num.replace(/\D/g,''))-Number(a.num.replace(/\D/g,'')));
- return `<details class="panel" id="overviewOrders" open><summary>Alle orders <small>· ${rows.length} in deze periode</small></summary><p class="hint">${fmt(state.from)} – ${fmt(state.to)} · nieuwste eerst. Marge na product- en betaalkosten; marketing en overhead gaan hier nog af.</p><label class="orders-search">Zoek op ordernummer of product<input id="overviewOrderSearch" type="search" placeholder="Zoek een bestelling…"></label><div class="table-wrap"><table><thead><tr><th>Order</th><th>Datum & tijd</th><th>Producten</th><th>Omzet incl. btw</th><th>Product en levering</th><th>Betaalkosten</th><th>Marge excl. btw</th></tr></thead><tbody>${rows.map(o=>{
+ return `<details class="panel" id="overviewOrders" open><summary><span>Orderdetail · ${fmt(state.from)} – ${fmt(state.to)} · ${rows.length} orders</span></summary><div class="order-controls"><input id="overviewOrderSearch" type="search" aria-label="Zoek op ordernummer of product" placeholder="Zoek order of product…"><span>Versleep kolomranden om te verbreden</span></div><div class="table-wrap"><table style="width:${sum(orderColumnWidths,x=>x)}px"><colgroup>${orderColumnWidths.map(w=>`<col style="width:${w}px">`).join('')}</colgroup><thead><tr>${["Order","Datum","Producten","Omzet incl. btw","Product + levering","Betaalkosten","Marge %"].map((label,i)=>`<th>${label}<span class="column-resizer" data-resize-column="${i}" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Breedte ${label}" aria-valuemin="48" aria-valuemax="600" aria-valuenow="${orderColumnWidths[i]}"></span></th>`).join('')}</tr></thead><tbody>${rows.map(o=>{
  const f=finance([o],C),margin=f.cost!=null&&f.excl>0?(f.excl-f.cost)/f.excl*100:null;
- return `<tr data-order-search="${esc((o.num+' '+o.items.join(' ')).toLowerCase())}"><td>${esc(o.num)}</td><td>${esc(orderDate(o))}</td><td>${esc(o.items.join(', '))}</td><td>${euro(o.incl)}</td><td>${euro(f.fixed)}</td><td>${euro(f.fees)}</td><td>${margin==null?'—':num(margin)+'%'}</td></tr>`;
- }).join('')}</tbody></table></div><p id="overviewOrderEmpty" class="hint" ${rows.length?'hidden':''}>Geen orders gevonden in deze selectie.</p></details>`;
+ return `<tr data-order-search="${esc((o.num+' '+o.items.join(' ')).toLowerCase())}"><td>${esc(o.num)}</td><td title="${esc(orderDate(o))}">${fmt(o.d)}</td><td title="${esc(o.items.join(', '))}">${esc(o.items.map(x=>x.replace(/^LumeWorks /,'')).join(', '))}</td><td>${euro(o.incl)}</td><td>${euro(f.fixed)}</td><td>${euro(f.fees)}</td><td>${margin==null?'—':num(margin)+'%'}</td></tr>`;
+ }).join('')}</tbody></table></div><p id="overviewOrderEmpty" class="hint" ${rows.length?'hidden':''}>Geen orders gevonden in deze selectie.</p><p class="order-cost-note">Marge na product- en betaalkosten, vóór marketing en overhead. Datum en producten: volledige details bij aanwijzen.</p></details>`;
 }
 function marketingMix(cur) {
   const nonbrand = compute(
@@ -1346,6 +1347,24 @@ function selectMetric(k) {
   });
 }
 function bindContent() {
+ $$('#overviewOrders [data-resize-column]').forEach(handle=>{
+  const index=Number(handle.dataset.resizeColumn);
+  const resize=width=>{
+   orderColumnWidths[index]=Math.min(600,Math.max(48,Math.round(width)));
+   $('#overviewOrders colgroup').children[index].style.width=orderColumnWidths[index]+'px';
+   $('#overviewOrders table').style.width=sum(orderColumnWidths,x=>x)+'px';
+   handle.setAttribute('aria-valuenow',orderColumnWidths[index]);
+  };
+  handle.onkeydown=e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();resize(orderColumnWidths[index]+(e.key==='ArrowRight'?16:-16));}};
+  handle.onpointerdown=e=>{
+   e.preventDefault();const start=e.clientX,width=orderColumnWidths[index];
+   handle.setPointerCapture(e.pointerId);
+   handle.onpointermove=event=>resize(width+event.clientX-start);
+   const finish=()=>{handle.onpointermove=null;handle.onpointerup=null;handle.onpointercancel=null;};
+   handle.onpointerup=finish;handle.onpointercancel=finish;
+  };
+ });
+
  const orderSearch=$('#overviewOrderSearch');
  if(orderSearch) orderSearch.oninput=()=>{
   const query=orderSearch.value.trim().toLowerCase();

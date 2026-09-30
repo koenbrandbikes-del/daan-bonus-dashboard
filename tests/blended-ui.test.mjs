@@ -536,3 +536,14 @@ test('revenue distribution includes unexplained Shopify revenue and discloses ex
  assert.match(v.document.querySelector('.mix-explanation').textContent,/boven de winkelomzet/);
  v.close();
 });
+
+test('compact order columns resize with keyboard and retain full product details',async()=>{
+ const w=await boot('?from=2026-09-23&to=2026-09-29');
+ const d=w.document,handle=d.querySelector('[data-resize-column="2"]');
+ const before=Number(handle.getAttribute('aria-valuenow'));
+ handle.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));
+ assert.equal(Number(handle.getAttribute('aria-valuenow')),before+16);
+ assert.equal(d.querySelector('#overviewOrders colgroup').children[2].style.width,(before+16)+'px');
+ assert(d.querySelector('#overviewOrders tbody td:nth-child(3)').title.length>0);
+ w.close();
+});
