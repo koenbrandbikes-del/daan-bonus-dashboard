@@ -1,5 +1,5 @@
 import { createDatePicker } from "./date-picker.js?v=chevron-1";
-import { load } from "./data.js";
+import { load } from "./data.js?v=shopify-check-1";
 import {
   compute,
   googleScopeData,
@@ -566,13 +566,13 @@ function renderUpdateSummary() {
     ["meta", "Meta", metaStamp, "Elke 15 minuten"],
     ["google", "Google Ads", stamp(D.google?.synced_at), "Elke 15 minuten"],
     ["creators", "Influencers", stamp(D.creators?.synced_at), "Elk uur"],
-    ["shopify", "Shopify", "Nieuwe orders automatisch", "Laatste ontvangsttijd nog niet vastgelegd"],
+    ["shopify", "Shopify", D.shopify_check ? "Orders gecontroleerd: " + stamp(D.shopify_check.checked_at) : "Ordergegevens niet gecontroleerd", "Nieuwe orders automatisch"],
   ];
   $("#updateSummary").innerHTML = `<div class="update-heading"><strong>Data & updates</strong><button id="refreshData" class="quiet">Gegevens verversen</button></div><div class="update-sources">${sources.map(([key,name,time,cadence]) => {
     const bad = !D[key] || E[key] || stale(key);
-    const status = !D[key] ? "Niet beschikbaar" : E[key] ? "Laatste bewaarde gegevens" : stale(key) ? "Verversing vertraagd" : key === "shopify" ? "Ontvangsttijd onbekend" : "Bijgewerkt";
-    return `<div class="update-source"><span class="update-dot ${bad ? "warning" : key === "shopify" ? "unknown" : ""}" aria-hidden="true"></span><div><strong>${name}</strong><span>${esc(time)}</span><small>${cadence}</small><small class="update-status">${status}</small></div></div>`;
-  }).join("")}</div><p class="hint">Tijden in Nederland. Dit zijn de opgehaalde bronupdates; ververs deze pagina om de nieuwste beschikbare gegevens te laden. TrackBee-metingen komen via Google Ads binnen.</p>`;
+    const status = !D[key] ? "Niet beschikbaar" : E[key] ? "Laatste bewaarde gegevens" : stale(key) ? "Verversing vertraagd" : key === "shopify" ? (D.shopify_check ? "Ordergegevens gecontroleerd" : "Controle niet beschikbaar") : "Bijgewerkt";
+    return `<div class="update-source"><span class="update-dot ${bad ? "warning" : ""}" aria-hidden="true"></span><div><strong>${name}</strong><span>${esc(time)}</span><small>${cadence}</small><small class="update-status">${status}</small></div></div>`;
+  }).join("")}</div><p class="hint">Tijden in Nederland. Bronupdates en ordercontrole staan afzonderlijk vermeld. Ververs om de nieuwste beschikbare gegevens te laden. TrackBee-metingen komen via Google Ads binnen.</p>`;
   $("#refreshData").onclick = async () => {
     const button = $("#refreshData"); button.disabled = true; button.textContent = "Gegevens ophalen…";
     try { ({data:D,costs:C,errors:E}=await load()); render(); }
@@ -587,7 +587,7 @@ function renderStatus() {
       : "Niet beschikbaar",
     google: D.google?.synced_at,
     creators: D.creators?.synced_at,
-    shopify: "Orderwebhooks · laatste controle onbekend",
+    shopify: D.shopify_check ? `Ordergegevens gecontroleerd · ${new Date(D.shopify_check.checked_at).toLocaleString("nl-NL", {timeZone:"Europe/Amsterdam"})}` : "Ordergegevens niet gecontroleerd",
   };
   $("#status").innerHTML = `<h2>Datastatus</h2><div class="status-grid">${[
     "meta",
@@ -597,11 +597,12 @@ function renderStatus() {
   ]
     .map((k) => {
       const old = stale(k);
-      return `<div><h3>${{ shopify: "Shopify", creators: "Influencers", meta: "Meta", google: "Google Ads" }[k]}</h3><p>${esc(stamps[k] || "Niet beschikbaar")}</p><span class="tag ${E[k] || old || !coverage(k) ? "warn" : ""}">${!D[k] ? "Ontbreekt" : E[k] ? "Laatste goede gegevens" : old ? "Verversing vertraagd" : !coverage(k) ? "Dekking onvolledig" : k === "shopify" ? "Controle nog nodig" : "Beschikbaar"}</span></div>`;
+      return `<div><h3>${{ shopify: "Shopify", creators: "Influencers", meta: "Meta", google: "Google Ads" }[k]}</h3><p>${esc(stamps[k] || "Niet beschikbaar")}</p>${k === "shopify" && D.shopify_check ? `<p>${D.shopify_check.orders} unieke orders · ${D.shopify_check.test_orders} testorders uitgesloten.<br>Laatste order: ${esc(D.shopify_check.latest_num)} · ${esc(D.shopify_check.latest_date)}.</p>` : ""}<span class="tag ${E[k] || old || !coverage(k) ? "warn" : ""}">${!D[k] ? "Ontbreekt" : E[k] ? "Laatste goede gegevens" : old ? "Verversing vertraagd" : !coverage(k) ? "Dekking onvolledig" : k === "shopify" ? (D.shopify_check ? "Ordergegevens gecontroleerd" : "Controle niet beschikbaar") : "Beschikbaar"}</span></div>`;
     })
     .join(
       "",
-    )}</div><p class="hint">Datums van orders en advertenties zijn geen bewijs van een volledige financiële aansluiting. Retouren, kostensplitsing en overige influencerkosten moeten nog worden aangevuld. Google-campagnedetails: ${esc(D.google?.details_synced_at || "nog niet beschikbaar")}.</p>`;
+    )}</div><p class="hint">Shopify gebruikt dezelfde orderbron als het Meta-dashboard. Bij laden controleren we unieke ordernummers, datums, bedragen en productregels. Het controletijdstip is het moment van deze gegevenscontrole, niet van een nieuwe bestelling. Kostenberekeningen en hun aannames staan bij Definities en bronnen.</p>${D.shopify_check && !E.shopify ? `<p>${(() => { const m=compute(D,C,state.from,state.to,"all"); return `Geselecteerde periode: ${num(m.count)} orders · ${euro(m.incl)} omzet incl. btw. Testorders tellen niet mee.`; })()}</p><button id="viewShopifyOrders" class="quiet">Shopify-orders bekijken</button>` : ""}`;
+  if ($("#viewShopifyOrders")) $("#viewShopifyOrders").onclick = () => { change(() => {state.channel="all";state.metrics=["revenue"];state.detail={type:"orders",name:"Alle orders"};state.sub=null;}); $("#detail").scrollIntoView({block:"start"}); };
 }
 function chartRows() {
   const days = (new Date(state.to) - new Date(state.from)) / 864e5;

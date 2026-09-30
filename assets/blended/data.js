@@ -1,3 +1,16 @@
+export function checkShopifyOrders(orders) {
+  const seen = new Set();
+  for (const o of orders) {
+    if (!o.num || typeof o.num !== "string" || seen.has(o.num)) throw Error("Ontbrekend of dubbel ordernummer");
+    seen.add(o.num);
+    if (!Array.isArray(o.items) || !o.items.length || o.items.some(i => typeof i !== "string" || !i.trim())) throw Error("Onvolledige productregels");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(o.d) || !Number.isFinite(Date.parse(o.d)) || new Date(o.d).toISOString().slice(0,10) !== o.d) throw Error("Ongeldige orderdatum");
+    if (!Number.isFinite(o.incl)) throw Error("Ongeldig orderbedrag");
+  }
+  const sales = orders.filter(o => !o.test);
+  const latest = [...sales].sort((a,b) => b.d.localeCompare(a.d) || Number(b.num.replace(/\D/g,""))-Number(a.num.replace(/\D/g,"")))[0];
+  return {checked_at:new Date().toISOString(),orders:orders.length,sales:sales.length,test_orders:orders.length-sales.length,latest_num:latest?.num,latest_date:latest?.d};
+}
 const cacheVersion = "lw-dashboard-v2";
 export async function load() {
   const data = {},
@@ -30,6 +43,7 @@ export async function load() {
                 : ["omzet_excl", "commissie"];
         if (rows.some((x) => numeric.some((k) => !Number.isFinite(x[k]))))
           throw Error("Ongeldige bedragen");
+        if (key === "shopify") data.shopify_check = checkShopifyOrders(rows);
         data[key] = d;
         try {
           sessionStorage.setItem(cacheVersion + key, JSON.stringify(d));
