@@ -691,6 +691,7 @@ function renderChart() {
       `<div class="table-wrap"><table><thead><tr><th>Periode</th>${keys.map((k) => `<th>${metricMeta(k).label}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr><td><button class="link" data-bucket="${r.from}|${r.to}">${fmt(r.from)} – ${fmt(r.to)}</button></td>${keys.map((k) => `<td>${metricMeta(k).fmt(r[k])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
     return;
   }
+  const chartColor = k => keys.indexOf(k) === 0 ? "#38BDF8" : "#FFAD55";
   const same = keys.every((k) =>
     ["revenue", "cost", "spend", "result"].includes(k),
   );
@@ -715,7 +716,7 @@ function renderChart() {
           pw = W - L - R;
         const y = (v) => T + ((max - v) / (max - min)) * ph,
           x = (i) => L + ((i + 0.5) / rows.length) * pw;
-        return `<div class="chart"><div class="legend">${group.map((k) => `<span><i class="dot" style="background:${colors[k]}"></i>${metricMeta(k).label}</span>`).join("")}</div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(group.map((k) => metricMeta(k).label).join(" en "))} per periode. Exacte waarden via Tabel tonen.">${[min, (min + max) / 2, max].map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 10}" y="${y(v) + 4}" text-anchor="end">${esc(metricMeta(group[0]).fmt(v))}</text>`).join("")}${group
+        return `<div class="chart"><div class="legend">${group.map((k) => `<span><i class="dot" style="background:${chartColor(k)}"></i>${metricMeta(k).label}</span>`).join("")}</div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(group.map((k) => metricMeta(k).label).join(" en "))} per periode. Exacte waarden via Tabel tonen.">${[min, (min + max) / 2, max].map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 10}" y="${y(v) + 4}" text-anchor="end">${esc(metricMeta(group[0]).fmt(v))}</text>`).join("")}${group
           .map((k) => {
             const chunks = [];
             let points = [];
@@ -730,14 +731,14 @@ function renderChart() {
               chunks
                 .map(
                   (p) =>
-                    `<polyline points="${p.join(" ")}" stroke="${colors[k]}" stroke-width="2.5" fill="none"/>`,
+                    `<polyline points="${p.join(" ")}" stroke="${chartColor(k)}" stroke-width="2.5" fill="none"/>`,
                 )
                 .join("") +
               rows
                 .map((r, i) =>
                   r[k] == null
                     ? ""
-                    : `<circle class="point ${selectedDays.has(r.from) ? "selected-point" : ""}" data-bucket="${r.from}|${r.to}" cx="${x(i)}" cy="${y(r[k])}" r="${rows.length > 90 ? 2 : 4}" fill="${colors[k]}"><title>${fmt(r.from)}: ${metricMeta(k).fmt(r[k])}</title></circle>`,
+                    : `<circle class="point ${selectedDays.has(r.from) ? "selected-point" : ""}" data-bucket="${r.from}|${r.to}" cx="${x(i)}" cy="${y(r[k])}" r="${rows.length > 90 ? 2 : 4}" fill="${chartColor(k)}"><title>${fmt(r.from)}: ${metricMeta(k).fmt(r[k])}</title></circle>`,
                 )
                 .join("")
             );

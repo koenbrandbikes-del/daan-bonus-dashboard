@@ -547,3 +547,15 @@ test('compact order columns resize with keyboard and retain full product details
  assert(d.querySelector('#overviewOrders tbody td:nth-child(3)').title.length>0);
  w.close();
 });
+
+test('comparison uses contrasting colors consistently for lines points and legends',async()=>{
+ const w=await boot('?from=2026-09-23&to=2026-09-29&metrics=revenue,profitMargin');
+ const charts=[...w.document.querySelectorAll('#chart .chart')];
+ assert.equal(charts.length,2);
+ for(const [i,c] of charts.entries()){
+  const color=['#38BDF8','#FFAD55'][i];
+  assert.equal(c.querySelector('polyline').getAttribute('stroke'),color);
+  assert.equal(c.querySelector('circle.point').getAttribute('fill'),color);
+ }
+ w.close();
+});
