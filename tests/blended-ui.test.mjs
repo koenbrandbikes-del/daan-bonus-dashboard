@@ -358,21 +358,23 @@ test("missing source suppresses revenue distribution and healthy status tick", a
   w.close();
 });
 
-test('selected days compare side by side, toggle, clear and follow channel metrics', async () => {
+test('selected period shows totals without daily chips and follows channel metrics', async () => {
   const w=await boot('?from=2026-09-23&to=2026-09-29'),d=w.document;
   d.querySelector("#rangeStart").value="2026-09-23";
   d.querySelector("#rangeEnd").value="2026-09-25";
   d.querySelector("#applyChartRange").click();
-  assert.equal(d.querySelectorAll('#dayComparison thead th').length,4);
-  assert.equal(d.querySelectorAll('#dayComparison tbody tr').length,2);
-  assert(d.querySelector('#dayComparison caption').textContent.includes('23 sep'));
-  assert(d.querySelector('#dayComparison tbody small').textContent.includes('%'));
-  d.querySelector('#tab-google').click();
-  assert.equal(d.querySelectorAll('#dayComparison thead th').length,4);
-  d.querySelector('[data-select-day="2026-09-25"]').click();
-  assert.equal(d.querySelectorAll('#dayComparison thead th').length,3);
-  d.querySelector('#clearDays').click();
+  assert.equal(d.querySelectorAll('[data-selection-metric]').length,2);
+  assert.equal(d.querySelector('[data-select-day]'),null);
   assert.equal(d.querySelector('#dayComparison table'),null);
+  assert(d.querySelector('#dayComparison .subtitle').textContent.includes('23 sep – 25 sep'));
+  const selectedOrders=JSON.parse(fs.readFileSync(new URL("data/shopify.json",root))).orders.filter(o=>!o.test && o.d>="2026-09-23" && o.d<="2026-09-25");
+  const expected=selectedOrders.reduce((n,o)=>n+o.incl,0)/1.21;
+  const displayed=Number(d.querySelector("[data-selection-metric=revenue]").textContent.replace(/[^0-9]/g,""));
+  assert.equal(displayed,Math.round(expected));
+  d.querySelector('#tab-google').click();
+  assert.equal(d.querySelectorAll('[data-selection-metric]').length,2);
+  d.querySelector('#clearDays').click();
+  assert.equal(d.querySelector('.selection-totals'),null);
   w.close();
 });
 
@@ -396,8 +398,8 @@ test('drag selection supports reverse ranges and metric toggles match Meta', asy
  svg.getBoundingClientRect=()=>({left:0,width:960});
  svg.onpointerdown({button:0,clientX:72+4.5*868/7,pointerId:1});
  svg.onpointerup({clientX:72+2.5*868/7});
- assert.equal(d.querySelectorAll('#dayComparison thead th').length,4);
- assert(d.querySelector('#dayComparison caption').textContent.includes('25 sep'));
+ assert.equal(d.querySelectorAll('[data-selection-metric]').length,2);
+ assert(d.querySelector('#dayComparison .subtitle').textContent.includes('25 sep'));
  assert.equal(d.querySelector('.day-options'),null);
  d.querySelector('[data-metric=result]').click();
  assert.equal(d.querySelector('.replacement'),null);

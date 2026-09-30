@@ -650,18 +650,11 @@ function chartRows() {
   return series(analysisData(), C, state.from, state.to, state.channel, g, {includeDaan:state.daan!=="without"});
 }
 function renderDayComparison() {
-  selectedDays = new Set([...selectedDays].filter(d => d >= state.from && d <= state.to));
-  const days = series(analysisData(), C, state.from, state.to, state.channel, "day", {includeDaan:state.daan!=="without"});
-  const chosen = days.filter(r => selectedDays.has(r.from));
-  const keys = state.metrics;
-  $("#dayComparison").innerHTML = `<section class="day-comparison" aria-label="Dagen vergelijken"><div class="panel-head"><div><h3>Dagen vergelijken</h3><p class="subtitle">Sleep in de grafiek om een periode te vergelijken.</p></div>${chosen.length ? '<button id="clearDays">Selectie wissen</button>' : ''}</div><details class="range-access"><summary>Periode met datums kiezen</summary><label>Van<input id="rangeStart" type="date" min="${state.from}" max="${state.to}" value="${chosen[0]?.from || state.from}"></label><label>Tot<input id="rangeEnd" type="date" min="${state.from}" max="${state.to}" value="${chosen.at(-1)?.from || state.to}"></label><button id="applyChartRange">Selecteren</button></details>${chosen.length ? `<div class="selected-days">${chosen.map(r=>`<button data-select-day="${r.from}" aria-label="${fmt(r.from)} verwijderen">${fmt(r.from)} <span aria-hidden="true">×</span></button>`).join('')}</div><div class="table-wrap"><table><caption>De gekozen dagen naast elkaar${chosen.length>1 ? ' · verschil ten opzichte van '+fmt(chosen[0].from) : ''}</caption><thead><tr><th>Cijfer</th>${chosen.map(r=>`<th scope="col">${fmt(r.from)}${r.from===today ? '<small>Lopende dag</small>' : ''}</th>`).join('')}</tr></thead><tbody>${keys.map(k=>`<tr><th scope="row">${metricMeta(k).label}</th>${chosen.map((r,i)=>{const base=chosen[0][k],v=r[k];return `<td><strong>${metricMeta(k).fmt(v)}</strong>${i && v!=null && base!=null ? `<small>${v-base>0?'+':''}${metricMeta(k).fmt(v-base)}${base ? ' · '+(v-base>0?'+':'')+num((v-base)/Math.abs(base)*100)+'%' : ''}</small>` : ''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div>${chosen.length===1 ? '<p class="hint">Kies nog een dag om het verschil te zien.</p>' : ''}` : '<p class="hint">Sleep over de grafiek om meerdere dagen te selecteren.</p>'}</section>`;
-}
-function toggleDays(from, to=from) {
-  const dates=[];
-  for(let d=from;d<=to;d=shift(d,1)) dates.push(d);
-  const remove=dates.every(d=>selectedDays.has(d));
-  dates.forEach(d=>remove ? selectedDays.delete(d) : selectedDays.add(d));
-  renderChart();
+  const dates=[...selectedDays].filter(d=>d>=state.from && d<=state.to).sort();
+  selectedDays=new Set(dates);
+  const from=dates[0],to=dates.at(-1);
+  const totals=dates.length ? viewCompute(analysisData(),C,from,to,state.channel) : null;
+  $("#dayComparison").innerHTML=`<section class="selection-overview" aria-label="Geselecteerde periode">${totals ? `<div class="panel-head"><div><h3>Geselecteerde periode</h3><p class="subtitle">${fmt(from)} – ${fmt(to)} ${to.slice(0,4)} · ${dates.length} ${dates.length===1?'dag':'dagen'}</p></div><button id="clearDays">Selectie wissen</button></div><div class="selection-totals">${state.metrics.map(k=>`<div><span>${metricMeta(k).label}</span><strong data-selection-metric="${k}">${metricMeta(k).fmt(totals[k])}</strong></div>`).join('')}</div>` : ''}<details class="range-access"><summary>${totals?'Selectie aanpassen':'Periode met datums kiezen'}</summary><label>Van<input id="rangeStart" type="date" min="${state.from}" max="${state.to}" value="${from||state.from}"></label><label>Tot<input id="rangeEnd" type="date" min="${state.from}" max="${state.to}" value="${to||state.to}"></label><button id="applyChartRange">Selecteren</button></details></section>`;
 }
 function renderChart() {
   renderDayComparison();
@@ -729,7 +722,7 @@ function renderChart() {
           )}${rows.map((r, i) => (i % Math.ceil(rows.length / 7) === 0 || i === rows.length - 1 ? `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${fmt(r.from)}</text>` : "")).join("")}</svg></div>`;
       })
       .join("") +
-    '<p class="chart-help">Sleep over de grafiek om dagen te selecteren. De vergelijking verschijnt hieronder.</p>';
+    '<p class="chart-help">Sleep over de grafiek om een periode te selecteren. De totalen verschijnen hieronder.</p>';
   bindChartDrag(rows);
 }
 function selectChartRange(from,to) {
@@ -1344,8 +1337,7 @@ function bindContent() {
       selectChartRange($("#rangeStart").value,$("#rangeEnd").value);
     } else if (b.dataset.gran) {
       change(()=>state.gran=b.dataset.gran);
-    } else if (b.dataset.selectDay) {
-      toggleDays(b.dataset.selectDay);
+
     } else if (b.id === "clearDays") {
       selectedDays.clear();
       renderChart();
