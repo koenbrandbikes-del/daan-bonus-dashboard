@@ -30,13 +30,13 @@ const D = {
     orders: [{ d: "2026-09-01", num: "#1", commissie: 12, omzet_excl: 100 }],
   },
 };
-test("financial waterfall excludes overhead and counts quantities", () => {
+test("financial waterfall includes overhead and counts quantities", () => {
   const v = compute(D, C, "2026-09-01", "2026-09-02");
   assert.equal(v.revenue, 300);
   assert.equal(v.fixed, 120);
   assert.equal(v.fees, 7.26);
   assert.equal(v.spend, 117);
-  assert.ok(Math.abs(v.result - 55.74) < 1e-8);
+  assert.ok(Math.abs(v.result - 43.74) < 1e-8);
   assert.equal(v.overhead, 12);
   assert.equal(v.roas, 363 / 117);
 });

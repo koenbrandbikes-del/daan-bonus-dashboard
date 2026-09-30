@@ -1061,5 +1061,67 @@ header {
 }
 
 /* Keep the range action reachable when the popup needs to scroll. */
-.period-menu .cal-apply { position:sticky; bottom:0; z-index:1; box-shadow:0 -6px 12px #0d122d; }
-.period-menu { background:#0d122d; }
+.period-menu .cal-apply {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  box-shadow: 0 -6px 12px #0d122d;
+}
+.period-menu {
+  background: #0d122d;
+}
+
+/* Direct metric selection and compact, aligned detail controls. */
+.brand {
+  text-decoration: none;
+}
+.metric-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 16px 0;
+}
+.metric-picker[hidden] {
+  display: none;
+}
+.metric-picker > span {
+  width: 100%;
+  color: var(--muted, #93a2b8);
+}
+.metric-picker button.active {
+  border-color: #14a6f1;
+  background: #14a6f122;
+}
+#detail > .panel-head {
+  align-items: flex-start;
+  gap: 24px;
+}
+#detail > .panel-head > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+#detail .toolbar {
+  flex: 0 0 auto;
+  align-items: flex-end;
+  flex-wrap: nowrap;
+}
+#detail .toolbar label {
+  min-width: 190px;
+}
+.row-description {
+  display: block;
+  color: #93a2b8;
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: 350px;
+  margin-top: 6px;
+}
+@media (max-width: 700px) {
+  #detail > .panel-head {
+    flex-direction: column;
+  }
+  #detail .toolbar {
+    flex-wrap: wrap;
+  }
+}

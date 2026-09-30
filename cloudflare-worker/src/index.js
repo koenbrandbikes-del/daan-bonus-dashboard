@@ -181,7 +181,7 @@ function timingSafeEqual(a, b) {
 function mapOrder(o) {
   const name = o.name || (o.order_number ? `#${o.order_number}` : null);
   const createdAt = o.created_at;
-  if (!name || !createdAt || !Array.isArray(o.line_items)) return null;
+  if (!name || !createdAt || !Number.isFinite(Date.parse(createdAt)) || !Array.isArray(o.line_items)) return null;
 
   const items = [];
   for (const li of o.line_items) {
@@ -190,7 +190,7 @@ function mapOrder(o) {
   }
   const code = (o.discount_codes && o.discount_codes[0] && o.discount_codes[0].code) || "";
   const incl = round2(parseFloat(o.total_price || o.current_total_price || "0"));
-  const rec = { d: toAmsterdamDate(createdAt), num: name, items, code, incl };
+  const rec = { d: toAmsterdamDate(createdAt), created_at: new Date(createdAt).toISOString(), num: name, items, code, incl };
   if (TEST_CODES.has(code.toLowerCase()) || incl < 10) rec.test = true;
   return rec;
 }

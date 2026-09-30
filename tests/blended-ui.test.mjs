@@ -209,3 +209,30 @@ test("calendar survives transient focus loss and clicks on rebuilt day buttons",
   assert.equal(new URL(w.location.href).searchParams.get("to"), "2026-09-15");
   w.close();
 });
+
+test("video feedback: today comparison, direct metric chooser, channel columns and descriptions", async () => {
+  const w = await boot("?from=2026-09-30&to=2026-09-30&compare=previous"),
+    d = w.document;
+  assert.match(d.querySelector(".subtitle").textContent, /vs\. 29 sep/);
+  assert.match(
+    d.querySelector("[data-metric=revenue] .delta").textContent,
+    /Vorige periode/,
+  );
+  assert(!d.querySelector("[data-flow]"));
+  d.querySelector("#compareMetric").click();
+  assert.equal(d.querySelector(".metric-picker").hidden, false);
+  d.querySelector("[data-chart-metric=cost]").click();
+  assert(d.querySelector(".replacement"));
+  d.querySelector("[data-replace=revenue]").click();
+  assert(d.querySelector("[data-metric=cost]").classList.contains("active"));
+  assert.match(
+    d.querySelector("#marketingMix").textContent,
+    /Waarvan non-branded/,
+  );
+  d.querySelector("[data-channel=google]").click();
+  assert.equal(d.querySelector(".kpi").dataset.metric, "revenue");
+  const heads = [...d.querySelectorAll("#detail th")].map((n) => n.textContent);
+  assert.match(heads[1], /waarde/);
+  assert.match(heads[2], /Uitgaven/);
+  assert(d.querySelector("#detail .row-description"));
+});

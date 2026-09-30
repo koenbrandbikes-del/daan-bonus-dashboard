@@ -107,7 +107,7 @@ export function compute(data, costs, from, to, channel = "all") {
     spend,
     result:
       channel === "all" && data.shopify && spend !== null && f.cost !== null
-        ? f.excl - f.cost - spend
+        ? f.excl - f.cost - spend - f.overhead
         : null,
     roas: spend > 0 && numerator !== null ? numerator / spend : null,
     count:
