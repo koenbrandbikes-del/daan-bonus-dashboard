@@ -165,3 +165,27 @@ test("Google defaults to non-brand and keeps the scope in charts, detail and URL
   assert.equal(d.querySelector(".google-scope"), null);
   w.close();
 });
+test("products default to best sellers and upsell groups open matching orders", async () => {
+  const w = await boot("?from=2026-09-23&to=2026-09-29"),
+    d = w.document;
+  assert.equal(
+    d.querySelector("#table tbody tr td").textContent.trim(),
+    "LumeWorks Prime →",
+  );
+  assert.equal(
+    d.querySelectorAll("#table th")[1].getAttribute("aria-sort"),
+    "descending",
+  );
+  assert(d.querySelector(".basket-insights"));
+  d.querySelector('[data-basket="with"]').click();
+  assert.match(d.querySelector("#detail h3").textContent, /met accessoire/);
+  assert(d.querySelectorAll("#table tbody tr").length > 0);
+  d.querySelector("#detailBack").click();
+  assert(d.querySelector(".basket-insights"));
+  d.querySelector('#table [data-sort="0"]').click();
+  assert.equal(
+    d.querySelector("#table th").getAttribute("aria-sort"),
+    "ascending",
+  );
+  w.close();
+});

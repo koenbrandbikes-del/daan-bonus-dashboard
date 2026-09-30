@@ -1006,3 +1006,56 @@ header {
   font-size: 12px;
   line-height: 1.5;
 }
+.basket-insights {
+  margin: 18px 0 26px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.basket-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 14px 0 20px;
+}
+.basket-stats > * {
+  text-align: left;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.basket-stats span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.basket-stats b {
+  display: block;
+  font-size: 25px;
+  margin: 8px 0;
+}
+.basket-stats small {
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #aebdd1;
+  margin-top: 5px;
+}
+.basket-stats em {
+  display: block;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+}
+.basket-models {
+  width: 100%;
+}
+@media (max-width: 1099px) {
+  .basket-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 499px) {
+  .basket-stats {
+    grid-template-columns: 1fr;
+  }
+}

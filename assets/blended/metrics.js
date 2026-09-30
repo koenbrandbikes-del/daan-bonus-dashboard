@@ -187,3 +187,56 @@ export function googleScopeData(data, scope = "all") {
   });
   return { ...data, google: { ...g, daily_google: daily } };
 }
+
+export function basketMetrics(orders) {
+  const models = ["Prime", "Atlas", "Titan"];
+  const beamers = models.map((m) => "LumeWorks " + m);
+  const bundles = models.map((m) => "De complete " + m + " setup");
+  const accessories = [
+    "Projectiescherm 100 inch",
+    "Pro stand",
+    "LumeWorks USB-C naar HDMI-kabel",
+    "Mini stand",
+    "Prime travelcase",
+    "Schoonmaak kit",
+    "Atlas afstandsbediening",
+    "Titan afstandsbediening",
+  ];
+  const clean = orders.filter((o) => !o.test);
+  const hasAccessory = (o) => o.items.some((i) => accessories.includes(i));
+  const bundleOrders = clean.filter((o) =>
+    o.items.some((i) => bundles.includes(i)),
+  );
+  // Exclude complete packages from the standalone-projector comparison.
+  const base = clean.filter(
+    (o) =>
+      o.items.some((i) => beamers.includes(i)) && !bundleOrders.includes(o),
+  );
+  const withExtra = base.filter(hasAccessory),
+    withoutExtra = base.filter((o) => !hasAccessory(o));
+  const avg = (rows) => (rows.length ? sum(rows, "incl") / rows.length : null);
+  const byModel = beamers
+    .map((name) => {
+      const rows = base.filter((o) => o.items.includes(name));
+      const extra = rows.filter(hasAccessory);
+      return {
+        name,
+        orders: rows.length,
+        withExtra: extra.length,
+        rate: rows.length ? extra.length / rows.length : null,
+      };
+    })
+    .filter((r) => r.orders)
+    .sort((a, b) => b.orders - a.orders);
+  return {
+    base,
+    withExtra,
+    withoutExtra,
+    bundleOrders,
+    rate: base.length ? withExtra.length / base.length : null,
+    avgWith: avg(withExtra),
+    avgWithout: avg(withoutExtra),
+    byModel,
+    accessories,
+  };
+}

@@ -3,6 +3,7 @@ import { load } from "./data.js";
 import {
   compute,
   googleScopeData,
+  basketMetrics,
   finance,
   sum,
   shift,
@@ -10,7 +11,7 @@ import {
   aggregate,
   previous,
   inRange,
-} from "./metrics.js?v=google-brand-1";
+} from "./metrics.js?v=upsell-1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (s) =>
@@ -166,6 +167,7 @@ function readState() {
       if (
         [
           "product",
+          "basket",
           "creator",
           "ad",
           "campaign",
@@ -591,7 +593,8 @@ function renderDetail() {
     note = "",
     cols = [],
     rows = [],
-    groupControl = "";
+    groupControl = "",
+    productInsights = "";
   const action = (type, name) => ({ type, name });
   const standard = [
     col("Naam"),
@@ -601,7 +604,11 @@ function renderDetail() {
     col("ROAS", "ratio"),
   ];
   if (state.channel === "all") {
-    if (det?.type === "product" || det?.type === "orders") {
+    if (
+      det?.type === "product" ||
+      det?.type === "orders" ||
+      det?.type === "basket"
+    ) {
       title = det.type === "product" ? det.name : "Alle orders";
       cols = [
         col("Order"),
@@ -611,7 +618,23 @@ function renderDetail() {
         col("Gebundelde kosten", "eur"),
         col("Fees geraamd", "eur"),
       ];
-      rows = cur.orderRows
+      const basketGroups = basketMetrics(cur.orderRows);
+      const selectedOrders =
+        det.type === "basket"
+          ? {
+              with: basketGroups.withExtra,
+              without: basketGroups.withoutExtra,
+              bundles: basketGroups.bundleOrders,
+            }[det.name] || []
+          : cur.orderRows;
+      if (det.type === "basket")
+        title =
+          {
+            with: "Beamerorders met accessoire",
+            without: "Beamerorders zonder accessoire",
+            bundles: "Complete setups",
+          }[det.name] || "Orders";
+      rows = selectedOrders
         .filter((o) => det.type !== "product" || o.items.includes(det.name))
         .map((o) => {
           const f = finance([o], C);
@@ -703,10 +726,38 @@ function renderDetail() {
         "Brutomarge op alleen productinkoop is niet apart berekenbaar met de huidige gebundelde tarieven.";
     } else {
       title = "Producten en kostprijzen";
+      const basket = basketMetrics(cur.orderRows);
+      const rate = (n) => (n == null ? "—" : num(n * 100) + "%");
+      const prevRange = getPrev();
+      const prevBasket =
+        prevRange &&
+        !state.sub &&
+        coverage("shopify", prevRange.from, prevRange.to)
+          ? basketMetrics(
+              compute(D, C, prevRange.from, prevRange.to, "all").orderRows,
+            )
+          : null;
+      const movement =
+        basket.rate != null && prevBasket?.rate != null
+          ? `${basket.rate >= prevBasket.rate ? "+" : ""}${num((basket.rate - prevBasket.rate) * 100)} procentpunt t.o.v. vergelijkingsperiode`
+          : "Aandeel beamerorders met minstens één accessoire";
+      productInsights = `<section class="basket-insights" aria-label="Upsell en meeverkoop"><h3>Upsell & meeverkoop</h3><div class="basket-stats">
+      <button data-basket="with"><span>Beamer + accessoire</span><b>${rate(basket.rate)}</b><small>${basket.withExtra.length} van ${basket.base.length} beamerorders · bekijk orders →</small><small>${movement}</small></button>
+      <button data-basket="without"><span>Zonder accessoire</span><b>${basket.withoutExtra.length} orders</b><small>${basket.base.length ? rate(basket.withoutExtra.length / basket.base.length) : "—"} van beamerorders · bekijk orders →</small><small>Hier zit ruimte voor meeverkoop</small></button>
+      <div><span>Gemiddelde orderwaarde</span><b>${euro(basket.avgWith)} <em>met accessoire</em></b><small>${euro(basket.avgWithout)} zonder accessoire · incl. btw</small><small>Verschil tussen ordergroepen, geen bewezen extra omzet</small></div>
+      <button data-basket="bundles"><span>Complete setups</span><b>${basket.bundleOrders.length} orders</b><small>Bundels apart van losse beamerorders · bekijk →</small></button></div>
+      <div class="table-wrap"><table class="basket-models"><thead><tr><th>Beamermodel</th><th>Beamerorders</th><th>Met accessoire</th><th>Meeverkoop</th></tr></thead><tbody>${basket.byModel.map((r) => `<tr><td>${esc(r.name)}</td><td>${r.orders}</td><td>${r.withExtra}</td><td>${rate(r.rate)}</td></tr>`).join("") || '<tr><td colspan="4">Geen losse beamerorders in deze periode.</td></tr>'}</tbody></table></div>
+      <p class="hint">Meeverkoop = een losse beamer en minstens één bekend accessoire in dezelfde order; elke order telt één keer. Complete setups tellen apart. Gratis artikelen kunnen meetellen: betaalde upsells, aanbodacceptatie en accessoire-omzet zijn zonder regelprijzen niet vast te stellen. Een order met meerdere beamermodellen telt bij elk model; tel die modelrijen niet op.</p></section>`;
+      if (!D.shopify)
+        productInsights = `<p class="hint">Meeverkoopanalyse niet beschikbaar: ordergegevens ontbreken.</p>`;
+      sortKey = 1;
+      sortDir = -1;
       cols = [
         col("Product"),
         col("Aantal", "num"),
         col("Orders", "num"),
+        col("Mee met beamer", "num"),
+        col("Meeverkoop", "percent"),
         col("Tarief per stuk", "eur2"),
         col("Gebundelde kosten", "eur"),
       ];
@@ -723,13 +774,20 @@ function renderDetail() {
           name,
           r.n,
           r.orders.size,
+          basket.accessories.includes(name)
+            ? basket.base.filter((o) => o.items.includes(name)).length
+            : null,
+          basket.accessories.includes(name) && basket.base.length
+            ? basket.base.filter((o) => o.items.includes(name)).length /
+              basket.base.length
+            : null,
           C.items[name] ?? null,
           C.items[name] == null ? null : C.items[name] * r.n,
         ],
         action: action("product", name),
       }));
       note =
-        "Klik op een product voor de bijbehorende orders. De huidige export bevat geen omzet per orderregel; daarom verdelen we de orderomzet niet over producten.";
+        "Standaard gesorteerd op meest verkochte stuks. Mee met beamer toont accessoire-orders naast een losse beamer; meeverkoop is het aandeel van alle losse beamerorders. Klik een product voor orders. Productomzet is zonder regelprijzen niet beschikbaar.";
     }
   } else if (state.channel === "meta") {
     title = det?.name || "Advertentiegroepen";
@@ -954,7 +1012,7 @@ function renderDetail() {
   }
   tableModel = { title, note, cols, rows };
   $("#detail").innerHTML =
-    `<div class="crumbs">${det ? '<button id="detailBack">← Terug naar uitsplitsing</button>' : ""}${state.sub ? `<span class="tag">Details: ${fmt(from)} – ${fmt(to)}</span><button id="clearSub">Hele periode</button><button id="useSub">Als hoofdperiode</button>` : ""}</div><div class="panel-head"><div><h3>${esc(title)}</h3><p class="hint">${esc(note)}</p></div><div class="toolbar">${groupControl}<button id="export">CSV exporteren</button></div></div><label>Zoeken in tabel<input type="search" id="search" class="search" placeholder="Zoek een regel…" value="${esc(search)}"></label><div id="table"></div>`;
+    `<div class="crumbs">${det ? '<button id="detailBack">← Terug naar uitsplitsing</button>' : ""}${state.sub ? `<span class="tag">Details: ${fmt(from)} – ${fmt(to)}</span><button id="clearSub">Hele periode</button><button id="useSub">Als hoofdperiode</button>` : ""}</div><div class="panel-head"><div><h3>${esc(title)}</h3><p class="hint">${esc(note)}</p></div><div class="toolbar">${groupControl}<button id="export">CSV exporteren</button></div></div>${productInsights}<label>Zoeken in tabel<input type="search" id="search" class="search" placeholder="Zoek een regel…" value="${esc(search)}"></label><div id="table"></div>`;
   if ($("#googleGroup")) $("#googleGroup").value = state.group;
   renderTable();
 }
@@ -980,6 +1038,7 @@ function filtered() {
   return rows;
 }
 function cell(v, c) {
+  if (c.type === "percent") return v == null ? "—" : num(v * 100) + "%";
   return c.type === "eur2"
     ? v == null
       ? "—"
@@ -1001,6 +1060,7 @@ function totalsHtml(rows, cols) {
   const values = cols.map((c, i) => {
     if (!i) return "Totaal selectie";
     if (tableModel.title === "Marketingkosten per kanaal" && i > 1) return "—";
+    if (c.type === "percent" || c.label === "Mee met beamer") return "—";
     if (c.label === "Tarief per stuk" || c.label === "Orders") return "—";
     if (c.type === "ratio") {
       const spend = cols.findIndex((x) => /Uitgaven|Commissies/.test(x.label)),
@@ -1059,7 +1119,9 @@ function bindContent() {
   $("#content").onclick = (e) => {
     const b = e.target.closest("button,[data-bucket]");
     if (!b) return;
-    if (b.dataset.googleScope) {
+    if (b.dataset.basket) {
+      change(() => (state.detail = { type: "basket", name: b.dataset.basket }));
+    } else if (b.dataset.googleScope) {
       change(() => {
         state.googleScope = b.dataset.googleScope;
         state.detail = null;
@@ -1184,7 +1246,11 @@ function exportCsv() {
       "Voorlopige cijfers; btw/fees geraamd, overige influencerkosten onbekend, Google-meetbasis niet ontdubbeld",
     ],
     tableModel.cols.map((c) => c.label),
-    ...filtered().map((r) => r.cells),
+    ...filtered().map((r) =>
+      r.cells.map((v, i) =>
+        tableModel.cols[i].type === "percent" ? cell(v, tableModel.cols[i]) : v,
+      ),
+    ),
   ];
   const blob = new Blob(
       ["\uFEFF" + rows.map((r) => r.map(quote).join(";")).join("\r\n")],
