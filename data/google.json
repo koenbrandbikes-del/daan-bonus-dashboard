@@ -979,7 +979,7 @@
   },
   {
    "d": "2026-09-30",
-   "spend": 6.11,
+   "spend": 6.6,
    "rev": 298,
    "conv": 2,
    "id": "23981332205",
@@ -2617,7 +2617,7 @@
   },
   {
    "d": "2026-09-30",
-   "spend": 88.62,
+   "spend": 89.3,
    "rev": 0,
    "conv": 0,
    "id": "23985056312",
@@ -4753,6 +4753,13 @@
    "conv": 3.90946
   },
   {
+   "d": "2026-09-30",
+   "intent": "other",
+   "spend": 4.830000000000001,
+   "rev": 0,
+   "conv": 0
+  },
+  {
    "d": "2026-08-01",
    "intent": "other",
    "spend": 9.196760999999999,
@@ -4814,21 +4821,14 @@
    "spend": 2.88,
    "rev": 0,
    "conv": 0
-  },
-  {
-   "d": "2026-09-30",
-   "intent": "other",
-   "spend": 4.34,
-   "rev": 0,
-   "conv": 0
   }
  ],
- "details_synced_at": "2026-09-30T17:37:37.807Z",
+ "details_synced_at": "2026-09-30T17:52:37.841Z",
  "source": "google_ads_api",
  "customer_id": "7645288282",
  "currency": "EUR",
  "time_zone": "Europe/Amsterdam",
- "synced_at": "2026-09-30T17:37:37.807Z",
+ "synced_at": "2026-09-30T17:52:37.841Z",
  "coverage_from": "2026-08-01",
  "coverage_to": "2026-09-30",
  "attribution": "Primary conversions and conversion value by ad interaction date; may include non-purchase goals and overlap with other channels.",
@@ -5315,22 +5315,22 @@
   },
   {
    "d": "2026-09-30",
-   "spend": 102.64,
+   "spend": 103.81,
    "conv": 3.90946,
    "rev": 557.8202222,
-   "impr": 6013,
-   "cl": 93
+   "impr": 6158,
+   "cl": 95
   }
  ],
  "vandaag": {
   "from": "2026-09-30",
   "to": "2026-09-30",
   "d": "2026-09-30",
-  "spend": 102.64,
+  "spend": 103.81,
   "conv": 3.90946,
   "rev": 557.8202222,
-  "impr": 6013,
-  "cl": 93
+  "impr": 6158,
+  "cl": 95
  },
  "gisteren": {
   "from": "2026-09-29",
