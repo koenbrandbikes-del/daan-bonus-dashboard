@@ -490,3 +490,19 @@ test("overview offers net profit percentage with period comparison and chart",as
  assert.equal(d.querySelector('[data-metric=result] .label').textContent,'Nettowinst');
  w.close();
 });
+
+test('overview keeps specialist details folded and collapses chart tools with heading',async()=>{
+ const w=await boot('?from=2026-09-23&to=2026-09-29');
+ const d=w.document;
+ const heading=d.querySelector('#collapseAnalysis');
+ const title=heading.textContent;
+ heading.click();
+ assert.equal(d.querySelector('#analysisTools').hidden,true);
+ assert.equal(d.querySelector('#analysisBody').hidden,true);
+ assert.equal(heading.textContent,title);
+ heading.click();
+ assert.equal(d.querySelector('#analysisTools').hidden,false);
+ for(const selector of ['#marketingMix','#acquisitionCompare','.management','.creator-overview']) assert.equal(d.querySelector(selector).open,false);
+ assert(d.querySelector('#analysis').compareDocumentPosition(d.querySelector('.creator-overview')) & w.Node.DOCUMENT_POSITION_FOLLOWING);
+ w.close();
+});

@@ -1495,3 +1495,16 @@ header .live-dot.warning { width:10px; height:10px; }
 @media(min-width:700px) { .kpis.meta-kpis { grid-template-columns:repeat(4,minmax(0,1fr)); } }
 
 @media(min-width:700px) { .kpis.overview-kpis { grid-template-columns:repeat(6,minmax(0,1fr)); } }
+
+/* One disclosure pattern: compact heading, details only on demand. */
+.analysis-heading{display:flex;align-items:center;gap:16px;width:100%;padding:0;border:0;border-radius:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;min-height:32px}
+.analysis-heading::after{content:'−';font-size:18px;font-weight:400;color:var(--muted);margin-left:auto}
+.analysis-heading[aria-expanded=false]::after{content:'+'}
+#analysis.is-collapsed .panel-head{margin-bottom:0;display:block}
+#analysis.is-collapsed .panel-head>div:first-child{width:100%}
+#analysis.is-collapsed .subtitle{display:none}
+#analysisTools[hidden]{display:none}
+#analysis.is-collapsed h2{margin:0}
+.creator-overview>summary{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.creator-overview>summary small{font-size:12px;color:var(--muted);font-weight:400}
+.creator-overview .creator-summary{border:0;background:none;padding:0;margin:16px 0 0}

@@ -493,7 +493,7 @@ function marketingMix(cur) {
     const cpa=spend!=null && count>0 ? spend/count : null;
     return `<tr><td>${names[k]}${k==='google'?'<small class="row-description">Non-branded</small>':''}</td><td>${num(count)}</td><td>${euro(cpa)}</td><td>${euro(limit)}</td><td>${cpa!=null && limit!=null ? euro(limit-cpa) : '—'}</td></tr>`;
   }).join('');
-  return `<details class="panel" id="acquisitionCompare"><summary>Kosten per aankoop & break-even</summary><p class="hint">Vergelijk bekende marketingkosten per toegerekende aankoop. CAC voor uitsluitend nieuwe klanten is nog niet beschikbaar.</p><div class="table-wrap"><table><thead><tr><th>Kanaal</th><th>Aankopen</th><th>Kosten per aankoop</th><th>Break-even · raming</th><th>Ruimte per aankoop</th></tr></thead><tbody>${purchaseRows}</tbody></table></div><p class="hint">Break-even is één winkelbenchmark: (omzet excl. btw − product-, betaal- en bedrijfskosten) / Shopify-orders. Dezelfde grens geldt hier voor elk kanaal; verschillen in klant- en productmix zijn niet bekend. Positieve ruimte is geen bewezen kanaalwinst. Google gebruikt non-branded conversies; overlap tussen aankoopmetingen kan de kosten per aankoop te laag laten lijken. Influencers bevatten alleen bekende commissies.</p></details><details class="panel" id="marketingMix"><summary>Kanalen naast elkaar</summary><div class="table-wrap"><table><thead><tr><th>Kanaal</th><th>Kanaalomzet</th><th>Kosten</th><th>ROAS</th><th>Winst · geschat</th><th>Winstmarge · geschat</th></tr></thead><tbody>${Object.entries(
+  return `<details class="panel" id="marketingMix"><summary>Kanalen naast elkaar</summary><div class="table-wrap"><table><thead><tr><th>Kanaal</th><th>Kanaalomzet</th><th>Kosten</th><th>ROAS</th><th>Winst · geschat</th><th>Winstmarge · geschat</th></tr></thead><tbody>${Object.entries(
     cur.channels,
   )
     .map(([k, v]) => {
@@ -507,7 +507,7 @@ function marketingMix(cur) {
     })
     .join(
       "",
-    )}</tbody></table></div><p class="hint">Google-ROAS: non-branded omzet / non-branded kosten. Resultaat: geschatte marge minus alle kanaalkosten, inclusief branded bij Google. Winstmarge = geschat resultaat / kanaalomzet excl. btw. Gebaseerd op de gemiddelde winkelkosten; kanaalresultaten zijn niet optelbaar.</p></details>`;
+    )}</tbody></table></div><p class="hint">Google-ROAS: non-branded omzet / non-branded kosten. Resultaat: geschatte marge minus alle kanaalkosten, inclusief branded bij Google. Winstmarge = geschat resultaat / kanaalomzet excl. btw. Gebaseerd op de gemiddelde winkelkosten; kanaalresultaten zijn niet optelbaar.</p></details><details class="panel" id="acquisitionCompare"><summary>Kosten per aankoop & break-even</summary><p class="hint">Vergelijk bekende marketingkosten per toegerekende aankoop. CAC voor uitsluitend nieuwe klanten is nog niet beschikbaar.</p><div class="table-wrap"><table><thead><tr><th>Kanaal</th><th>Aankopen</th><th>Kosten per aankoop</th><th>Break-even · raming</th><th>Ruimte per aankoop</th></tr></thead><tbody>${purchaseRows}</tbody></table></div><p class="hint">Break-even is één winkelbenchmark: (omzet excl. btw − product-, betaal- en bedrijfskosten) / Shopify-orders. Dezelfde grens geldt hier voor elk kanaal; verschillen in klant- en productmix zijn niet bekend. Positieve ruimte is geen bewezen kanaalwinst. Google gebruikt non-branded conversies; overlap tussen aankoopmetingen kan de kosten per aankoop te laag laten lijken. Influencers bevatten alleen bekende commissies.</p></details>`;
 }
 let datePickers = [];
 function render() {
@@ -589,8 +589,8 @@ function render() {
        `<div class="signal"><span aria-hidden="true">ⓘ</span><span>${esc(n)}</span></div>`,
    )
    .join("")}</details>
- ${["all","infl"].includes(state.channel) ? creatorSummary(D.creators,C) : ""}
- <section class="panel" id="analysis" tabindex="-1"><div class="panel-head"><div><p class="analysis-label">VERDIEP JE IN DE CIJFERS</p><h2>${state.metrics.map((k) => metricMeta(k).label).join(" & ") || "Analyse"}</h2><p class="subtitle">Klik bovenaan maximaal twee cijfers aan om ze hier te vergelijken.</p></div><div class="toolbar"><button id="collapseAnalysis" aria-expanded="${!analysisCollapsed}" aria-controls="analysisBody">${analysisCollapsed?"Uitklappen":"Inklappen"}</button><div class="gran-buttons" aria-label="Grafiek groeperen">${['day','week','month'].map((g,i)=>`<button data-gran="${g}" aria-pressed="${state.gran===g || state.gran==='auto' && g===((Date.parse(state.to)-Date.parse(state.from))/864e5<=31?'day':(Date.parse(state.to)-Date.parse(state.from))/864e5<=180?'week':'month')}">${['Dag','Week','Maand'][i]}</button>`).join('')}</div><select id="gran" hidden><option value="auto">Automatisch</option><option value="day">Dag</option><option value="week">Week</option><option value="month">Maand</option></select><button id="chartMode">${chartTable ? "Grafiek tonen" : "Tabel tonen"}</button></div></div><div id="analysisBody" ${analysisCollapsed?"hidden":""}><div id="replacement"></div><div id="chart"></div><div id="dayComparison"></div><details class="detail-fold" id="detailFold"><summary>Onderliggende cijfers & uitsplitsing</summary><div id="detail"></div></details></div></section>
+ <section class="panel ${analysisCollapsed?'is-collapsed':''}" id="analysis" tabindex="-1"><div class="panel-head"><div><p class="analysis-label">VERDIEP JE IN DE CIJFERS</p><h2><button class="analysis-heading" id="collapseAnalysis" aria-expanded="${!analysisCollapsed}" aria-controls="analysisBody analysisTools">${state.metrics.map((k) => metricMeta(k).label).join(" & ") || "Analyse"}</button></h2><p class="subtitle">Klik bovenaan maximaal twee cijfers aan om ze hier te vergelijken.</p></div><div class="toolbar" id="analysisTools" ${analysisCollapsed?"hidden":""}><div class="gran-buttons" aria-label="Grafiek groeperen">${['day','week','month'].map((g,i)=>`<button data-gran="${g}" aria-pressed="${state.gran===g || state.gran==='auto' && g===((Date.parse(state.to)-Date.parse(state.from))/864e5<=31?'day':(Date.parse(state.to)-Date.parse(state.from))/864e5<=180?'week':'month')}">${['Dag','Week','Maand'][i]}</button>`).join('')}</div><select id="gran" hidden><option value="auto">Automatisch</option><option value="day">Dag</option><option value="week">Week</option><option value="month">Maand</option></select><button id="chartMode">${chartTable ? "Grafiek tonen" : "Tabel tonen"}</button></div></div><div id="analysisBody" ${analysisCollapsed?"hidden":""}><div id="replacement"></div><div id="chart"></div><div id="dayComparison"></div><details class="detail-fold" id="detailFold"><summary>Onderliggende cijfers & uitsplitsing</summary><div id="detail"></div></details></div></section>
+ ${state.channel === "all" ? marketingMix(cur) : ""}
  ${['all','meta'].includes(state.channel) ? `<details class="panel management">
  <summary class="management-heading"><span>Meta-beheer<small>Vaste vergoeding en prestatiebonus</small></span><span class="management-heading-total">${euro(cur.management.total)}</span></summary>
  <div class="management-amounts">
@@ -605,7 +605,7 @@ function render() {
  <div class="table-wrap"><table><thead><tr><th>Bonusperiode</th><th>Bonus hele periode</th><th>Hiervan in je selectie</th></tr></thead><tbody>${cur.management.periods.map(p=>`<tr><td>${fmt(p.from)} – ${fmt(p.to)}<small>${p.bonus==null?'Nog niet berekenbaar':p.through<p.to?'Voorlopig · bijgewerkt t/m '+fmt(p.through):'Periode afgelopen'}</small></td><td>${euro(p.bonus)}</td><td>${euro(p.allocated)}</td></tr>`).join('')}</tbody></table></div>
  <p class="management-method">Rekenregel: 10% × max(0, Meta-omzet − advertentiekosten × break-even-ROAS). Break-even is gebaseerd op de Shopify-marge na productkosten, betaalkosten en 4% overige bedrijfskosten. De contractperiodes starten op 16 juli 2026. De bonus van een lopende periode kan nog veranderen.</p>
  </details></details>` : ''}
- ${state.channel === "all" ? marketingMix(cur) : ""}
+ ${state.channel === "infl" ? creatorSummary(D.creators,C) : state.channel === "all" && D.creators?.collaborations ? `<details class="panel creator-overview"><summary><span>Influencers · investering & opbrengst</span><small>${D.creators.collaborations.total} samenwerkingen · ${Math.round(D.creators.collaborations.without_orders/D.creators.collaborations.total*100)}% zonder codebestellingen</small></summary>${creatorSummary(D.creators,C)}</details>` : ""}
 `;
   $("#gran").value = state.gran;
   renderChart();
@@ -1342,7 +1342,7 @@ function bindContent() {
     const b = e.target.closest("button,[data-bucket]");
     if (!b) return;
     if (b.id === "collapseAnalysis") {
-      analysisCollapsed=!analysisCollapsed; $("#analysisBody").hidden=analysisCollapsed; b.textContent=analysisCollapsed?"Uitklappen":"Inklappen"; b.setAttribute("aria-expanded",String(!analysisCollapsed));
+      analysisCollapsed=!analysisCollapsed; $("#analysisBody").hidden=analysisCollapsed; $("#analysisTools").hidden=analysisCollapsed; $("#analysis").classList.toggle("is-collapsed",analysisCollapsed); b.setAttribute("aria-expanded",String(!analysisCollapsed));
     } else if (b.id === "applyChartRange") {
       selectChartRange($("#rangeStart").value,$("#rangeEnd").value);
     } else if (b.dataset.gran) {
