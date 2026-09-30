@@ -996,6 +996,15 @@
    "type": "SEARCH"
   },
   {
+   "d": "2026-10-01",
+   "spend": 0.33,
+   "rev": 0,
+   "conv": 0,
+   "id": "23981332205",
+   "name": "C | Corporate",
+   "type": "SEARCH"
+  },
+  {
    "d": "2026-08-01",
    "spend": 9.026761,
    "rev": 0,
@@ -4832,12 +4841,12 @@
    "conv": 0
   }
  ],
- "details_synced_at": "2026-09-30T22:22:37.738Z",
+ "details_synced_at": "2026-09-30T22:37:37.831Z",
  "source": "google_ads_api",
  "customer_id": "7645288282",
  "currency": "EUR",
  "time_zone": "Europe/Amsterdam",
- "synced_at": "2026-09-30T22:22:37.738Z",
+ "synced_at": "2026-09-30T22:37:37.831Z",
  "coverage_from": "2026-08-01",
  "coverage_to": "2026-10-01",
  "attribution": "Primary conversions and conversion value by ad interaction date; may include non-purchase goals and overlap with other channels.",
@@ -5332,22 +5341,22 @@
   },
   {
    "d": "2026-10-01",
-   "spend": 0,
+   "spend": 0.33,
    "conv": 0,
    "rev": 0,
-   "impr": 31,
-   "cl": 0
+   "impr": 93,
+   "cl": 1
   }
  ],
  "vandaag": {
   "from": "2026-10-01",
   "to": "2026-10-01",
   "d": "2026-10-01",
-  "spend": 0,
+  "spend": 0.33,
   "conv": 0,
   "rev": 0,
-  "impr": 31,
-  "cl": 0
+  "impr": 93,
+  "cl": 1
  },
  "gisteren": {
   "from": "2026-09-30",
