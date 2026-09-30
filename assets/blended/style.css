@@ -1275,3 +1275,12 @@ header { position:relative; flex-wrap:wrap; }
 .day-comparison small { display:block; color:var(--muted); margin-top:6px; font-weight:400; white-space:nowrap; }
 .selected-point { stroke:white; stroke-width:3px; }
 .point { cursor:pointer; }
+
+/* Quiet, consistent typography for the financial breakdown. */
+#table .cost-breakdown td, #table .cost-breakdown td button.link { font-size:13px; line-height:1.55; }
+#table .cost-breakdown .subtotal td:nth-child(2) { font-size:13px; }
+#table .cost-breakdown th:last-child, #table .cost-breakdown td:last-child { text-align:left; white-space:normal; min-width:210px; }
+#table .cost-breakdown td:last-child { color:var(--muted); font-weight:400; }
+#table .cost-breakdown th:first-child, #table .cost-breakdown td:first-child { min-width:180px; white-space:normal; }
+.cost-story .vat-bridge span, .cost-story .margin-cards span, .cost-story small, .cost-reading { font-size:13px; line-height:1.55; }
+.cost-story .margin-cards b { font-size:28px; }
