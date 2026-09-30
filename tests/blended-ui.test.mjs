@@ -3,7 +3,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { JSDOM } from "jsdom";
 const root = new URL("../", import.meta.url);
-async function boot(query = "", failSource = "", transform = (url, data) => data) {
+async function boot(
+  query = "",
+  failSource = "",
+  transform = (url, data) => data,
+) {
   const dom = new JSDOM(
       fs.readFileSync(new URL("blended.html", root), "utf8"),
       {
@@ -16,7 +20,8 @@ async function boot(query = "", failSource = "", transform = (url, data) => data
     if (url.includes(failSource) && failSource) throw Error("Unavailable");
     return {
       ok: true,
-      json: async () => transform(url, JSON.parse(fs.readFileSync(new URL(url, root), "utf8"))),
+      json: async () =>
+        transform(url, JSON.parse(fs.readFileSync(new URL(url, root), "utf8"))),
     };
   };
   w.matchMedia = () => ({ matches: true });
@@ -42,7 +47,11 @@ test("drilldowns, comparing two metrics, channel switching and Google splits", a
   };
   assert.equal(d.querySelectorAll(".kpi").length, 5);
   click("[data-metric=cost]");
-  assert(d.querySelector("#detail").textContent.includes("Kostenopbouw"));
+  assert(
+    d
+      .querySelector("#detail")
+      .textContent.includes("Van klantomzet naar marge"),
+  );
   click("[data-detail]");
   assert(
     d.querySelector("#detail").textContent.includes("Producten en kostprijzen"),
@@ -238,26 +247,65 @@ test("video feedback: today comparison, direct metric chooser, channel columns a
 });
 
 test("channel table totals never add overlapping attributed revenue", async () => {
- const w=await boot("?from=2026-09-23&to=2026-09-29&metrics=spend"), d=w.document;
- const footer=[...d.querySelectorAll("#detail tfoot td")].map(c=>c.textContent);
- assert.equal(footer[1],"—"); assert.match(footer[2],/€/);
+  const w = await boot("?from=2026-09-23&to=2026-09-29&metrics=spend"),
+    d = w.document;
+  const footer = [...d.querySelectorAll("#detail tfoot td")].map(
+    (c) => c.textContent,
+  );
+  assert.equal(footer[1], "—");
+  assert.match(footer[2], /€/);
 });
 
 test("Google campaign table uses current enabled status, including active campaigns with zero spend", async () => {
- const query="?channel=google&googleScope=all&from=2026-09-23&to=2026-09-29";
- const normal=await boot(query);
- const w=await boot(query,"",(url,data)=> {
-  if(!url.includes("google.json")) return data;
-  return {...data,campaigns:[
-   {id:"23981395562",name:"Active search",status:"ENABLED"},
-   {id:"23985056312",name:"Paused PMAX",status:"PAUSED"},
-   {id:"23981332205",name:"Removed brand",status:"REMOVED"},
-   {id:"new-zero",name:"Active without spend",status:"ENABLED"}
-  ]};
- });
- const body=w.document.querySelector("#detail tbody").textContent;
- assert.match(body,/Active search/); assert.match(body,/Active without spend/);
- assert.doesNotMatch(body,/Paused PMAX|Removed brand/);
- assert.equal(w.document.querySelectorAll("#detail tbody tr").length,2);
- assert.equal(w.document.querySelector(".kpis").textContent,normal.document.querySelector(".kpis").textContent);
+  const query = "?channel=google&googleScope=all&from=2026-09-23&to=2026-09-29";
+  const normal = await boot(query);
+  const w = await boot(query, "", (url, data) => {
+    if (!url.includes("google.json")) return data;
+    return {
+      ...data,
+      campaigns: [
+        { id: "23981395562", name: "Active search", status: "ENABLED" },
+        { id: "23985056312", name: "Paused PMAX", status: "PAUSED" },
+        { id: "23981332205", name: "Removed brand", status: "REMOVED" },
+        { id: "new-zero", name: "Active without spend", status: "ENABLED" },
+      ],
+    };
+  });
+  const body = w.document.querySelector("#detail tbody").textContent;
+  assert.match(body, /Active search/);
+  assert.match(body, /Active without spend/);
+  assert.doesNotMatch(body, /Paused PMAX|Removed brand/);
+  assert.equal(w.document.querySelectorAll("#detail tbody tr").length, 2);
+  assert.equal(
+    w.document.querySelector(".kpis").textContent,
+    normal.document.querySelector(".kpis").textContent,
+  );
+});
+
+test("cost story keeps VAT and margin bases explicit and preserves calculation order", async () => {
+  const w = await boot("?from=2026-09-23&to=2026-09-29&metrics=cost"),
+    d = w.document;
+  assert.match(
+    d.querySelector(".vat-bridge").textContent,
+    /17,36% van klantomzet/,
+  );
+  assert.match(
+    d.querySelector(".vat-bridge").textContent,
+    /Nieuwe basis: 100%/,
+  );
+  const rows = [...d.querySelectorAll("#table tbody tr")];
+  assert.equal(rows.length, 8);
+  assert.match(rows[0].textContent, /Omzet excl. btw100%/);
+  assert.match(rows[2].textContent, /Marge na product en levering/);
+  assert.match(rows[7].textContent, /Resultaat incl. overhead/);
+  assert.equal(d.querySelectorAll("#table [data-sort]").length, 0);
+  assert(d.querySelector("#detail .pager").hidden);
+  d.querySelector("[data-detail*=products]").click();
+  d.querySelector("[data-detail]").click();
+  assert.match(d.querySelector("#table").textContent, /Betaalkosten \(2%\)/);
+  assert.match(
+    d.querySelector("#table").textContent,
+    /Marge vóór marketing en overhead/,
+  );
+  assert.doesNotMatch(d.querySelector("#detail").textContent, /Fees geraamd/);
 });
