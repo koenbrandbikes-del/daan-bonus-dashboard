@@ -912,8 +912,45 @@ header {
     max-height: calc(100dvh - 180px);
   }
 }
-.period-menu .pm-opt { min-height:30px; padding:5px 14px; }
-.period-menu .cal-day { min-height:30px; padding:5px 2px; }
-.period-menu .cal-nb { min-height:28px; }
-.period-menu .cal-apply { min-height:32px; }
-@media (min-width:700px) and (max-width:1099px) { .period-menu {left:0;right:auto;} }
+.period-menu .pm-opt {
+  min-height: 30px;
+  padding: 5px 14px;
+}
+.period-menu .cal-day {
+  min-height: 30px;
+  padding: 5px 2px;
+}
+.period-menu .cal-nb {
+  min-height: 28px;
+}
+.period-menu .cal-apply {
+  min-height: 32px;
+}
+@media (min-width: 700px) and (max-width: 1099px) {
+  .period-menu {
+    left: 0;
+    right: auto;
+  }
+}
+.google-scope {
+  margin-bottom: 20px;
+  padding: 18px 20px;
+}
+.scope-options {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+.scope-options button {
+  flex: 1;
+  min-width: 190px;
+  text-align: left;
+  border-radius: 12px;
+}
+.scope-options small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 5px;
+}

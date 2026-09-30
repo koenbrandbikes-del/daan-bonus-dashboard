@@ -34,7 +34,7 @@ async function boot(query = "", failSource = "") {
   return w;
 }
 test("drilldowns, comparing two metrics, channel switching and Google splits", async () => {
-  const w = await boot("?from=2026-09-23&to=2026-09-29"),
+  const w = await boot("?from=2026-09-23&to=2026-09-29&googleScope=all"),
     d = w.document;
   const click = (s) => {
     assert(d.querySelector(s), s);
@@ -134,4 +134,34 @@ test("calendar ranges apply, compare and cancel without changing dates", async (
   d.querySelector("#periodButton").click();
   d.querySelector('#periodMenu [data-preset="lastmonth"]').click();
   assert.match(d.querySelector("#periodButton").textContent, /aug/);
+});
+test("Google defaults to non-brand and keeps the scope in charts, detail and URL", async () => {
+  const w = await boot("?channel=google&from=2026-09-23&to=2026-09-29"),
+    d = w.document;
+  assert.equal(
+    d
+      .querySelector("[data-google-scope=nonbrand]")
+      .getAttribute("aria-pressed"),
+    "true",
+  );
+  const source = JSON.parse(
+    fs.readFileSync(new URL("data/google.json", root), "utf8"),
+  );
+  const expected = source.daily_intent
+    .filter(
+      (r) => r.intent === "other" && r.d >= "2026-09-23" && r.d <= "2026-09-29",
+    )
+    .reduce((s, r) => s + r.spend, 0);
+  const shown = d.querySelector("[data-metric=spend] strong").textContent;
+  assert(shown.includes(Math.round(expected).toLocaleString("nl-NL")));
+  assert.match(d.querySelector("#detail").textContent, /Non-branded/);
+  d.querySelector("[data-google-scope=brand]").click();
+  assert.equal(
+    new URL(w.location.href).searchParams.get("googleScope"),
+    "brand",
+  );
+  assert.match(d.querySelector("#detail").textContent, /Branded/);
+  d.querySelector("[data-channel=all]").click();
+  assert.equal(d.querySelector(".google-scope"), null);
+  w.close();
 });

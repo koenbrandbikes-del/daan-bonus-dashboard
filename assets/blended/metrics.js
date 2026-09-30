@@ -157,3 +157,33 @@ export function previous(from, to) {
   const n = Math.round((new Date(to) - new Date(from)) / 86400000) + 1;
   return { from: shift(from, -n), to: shift(from, -1) };
 }
+
+// Search-term classification is partial: never label hidden search/PMax as non-brand.
+export function googleScopeData(data, scope = "all") {
+  if (scope === "all" || !data.google) return data;
+  const g = data.google;
+  if (!Array.isArray(g.daily_intent)) return { ...data, google: null };
+  const grouped = new Map();
+  for (const r of g.daily_intent) {
+    if (
+      scope !== "unknown" &&
+      r.intent !== (scope === "brand" ? "brand" : "other")
+    )
+      continue;
+    const v = grouped.get(r.d) || { d: r.d, spend: 0, rev: 0, conv: 0 };
+    for (const k of ["spend", "rev", "conv"]) v[k] += Number(r[k]) || 0;
+    grouped.set(r.d, v);
+  }
+  const daily = g.daily_google.map((r) => {
+    const v = grouped.get(r.d) || { d: r.d, spend: 0, rev: 0, conv: 0 };
+    return scope === "unknown"
+      ? {
+          d: r.d,
+          spend: r.spend - v.spend,
+          rev: r.rev - v.rev,
+          conv: r.conv - v.conv,
+        }
+      : v;
+  });
+  return { ...data, google: { ...g, daily_google: daily } };
+}

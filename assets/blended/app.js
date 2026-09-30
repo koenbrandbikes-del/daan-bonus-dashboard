@@ -2,6 +2,7 @@ import { createDatePicker } from "./date-picker.js";
 import { load } from "./data.js";
 import {
   compute,
+  googleScopeData,
   finance,
   sum,
   shift,
@@ -9,7 +10,7 @@ import {
   aggregate,
   previous,
   inRange,
-} from "./metrics.js";
+} from "./metrics.js?v=google-brand-1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (s) =>
@@ -107,12 +108,14 @@ const defaults = () => ({
   detail: null,
   sub: null,
   group: "campaign",
+  googleScope: "nonbrand",
 });
 function readState() {
   const q = new URLSearchParams(location.search),
     s = defaults();
   for (const k of [
     "channel",
+    "googleScope",
     "from",
     "to",
     "compare",
@@ -122,6 +125,8 @@ function readState() {
     "pto",
   ])
     if (q.has(k)) s[k] = q.get(k);
+  if (!["nonbrand", "brand", "unknown", "all"].includes(s.googleScope))
+    s.googleScope = "nonbrand";
   if (!(s.channel in names)) s.channel = "all";
   if (!["previous", "off", "custom"].includes(s.compare))
     s.compare = "previous";
@@ -186,6 +191,7 @@ function persist(push = true) {
   const q = new URLSearchParams();
   for (const k of [
     "channel",
+    "googleScope",
     "from",
     "to",
     "compare",
@@ -299,10 +305,38 @@ function coverage(key, from = state.from, to = state.to) {
     return to <= d.synced_at?.slice(0, 10) && from >= "2026-07-16";
   return from >= "2026-08-01";
 }
+const googleScopeNames = {
+  nonbrand: "Non-branded",
+  brand: "Branded",
+  unknown: "Niet uitgesplitst",
+  all: "Alles inclusief branded",
+};
+function analysisData() {
+  return state.channel === "google" ? googleScopeData(D, state.googleScope) : D;
+}
+function googleFilter() {
+  if (state.channel !== "google") return "";
+  return `<section class="panel google-scope" aria-label="Google Ads merkverkeer"><p class="eyebrow">GOOGLE ADS · MERKVERKEER</p><div class="scope-options">${Object.entries(
+    googleScopeNames,
+  )
+    .map(([key, label]) => {
+      const m = compute(
+        googleScopeData(D, key),
+        C,
+        state.from,
+        state.to,
+        "google",
+      );
+      return `<button data-google-scope="${key}" aria-pressed="${state.googleScope === key}" class="${state.googleScope === key ? "active" : ""}"><b>${label}</b><small>${euro(m.spend)} uitgaven · ${euro(m.revenue)} waarde</small></button>`;
+    })
+    .join(
+      "",
+    )}</div><p class="hint">Nu in alle cijfers, grafieken en details: <strong>${googleScopeNames[state.googleScope]}</strong>. Non-branded bevat uitsluitend zichtbare zoektermen zonder LumeWorks-variant; onbekend verkeer telt hierin niet mee. Dit is geen indeling naar nieuwe klanten. Het bedrijfsoverzicht blijft alle advertentiekosten meenemen.</p></section>`;
+}
 let datePickers = [];
 function render() {
   datePickers.forEach((p) => p.update());
-  const cur = compute(D, C, state.from, state.to, state.channel),
+  const cur = compute(analysisData(), C, state.from, state.to, state.channel),
     p = getPrev();
   const keys =
     state.channel === "all"
@@ -312,7 +346,7 @@ function render() {
         : [state.channel];
   const prev =
     p && keys.every((k) => coverage(k, p.from, p.to))
-      ? compute(D, C, p.from, p.to, state.channel)
+      ? compute(analysisData(), C, p.from, p.to, state.channel)
       : null;
   $("#comparison").value = state.compare;
   $("#from").value = state.from;
@@ -374,6 +408,7 @@ function render() {
           : "";
   $("#content").innerHTML =
     `<div class="view-head"><div><p class="eyebrow">${state.channel === "all" ? "HET TOTAALBEELD" : "KANAALANALYSE"}</p><h2>${names[state.channel]}</h2></div><div class="subtitle">${fmt(state.from)} – ${fmt(state.to)} ${state.to.slice(0, 4)}<br>${comparisonText}</div></div>
+ ${googleFilter()}
  <section class="kpis ${state.channel === "all" ? "" : "channel"}" aria-label="Kerncijfers">${metrics
    .map((k) => {
      const m = metricMeta(k);
@@ -460,7 +495,7 @@ function chartRows() {
           ? "week"
           : "month"
       : state.gran;
-  return series(D, C, state.from, state.to, state.channel, g);
+  return series(analysisData(), C, state.from, state.to, state.channel, g);
 }
 function renderChart() {
   const rows = chartRows(),
@@ -534,7 +569,7 @@ function col(label, type = "text") {
 function renderDetail() {
   const from = state.sub?.from || state.from,
     to = state.sub?.to || state.to,
-    cur = compute(D, C, from, to, state.channel),
+    cur = compute(analysisData(), C, from, to, state.channel),
     det = state.detail,
     k = state.metrics[0];
   let title = "",
@@ -778,7 +813,30 @@ function renderDetail() {
         customers: "klantstatus",
       }[state.group] || "campagnes");
     cols = standard;
-    if (state.group === "customers") {
+    if (state.googleScope !== "all") {
+      groupControl = "";
+      title = "Google Ads · " + googleScopeNames[state.googleScope];
+      cols = [col("Dag"), ...standard.slice(1)];
+      rows = (analysisData().google?.daily_google || [])
+        .filter((r) => inRange(r, from, to))
+        .map((r) => ({
+          cells: [
+            r.d,
+            r.spend,
+            r.rev,
+            r.conv,
+            r.spend > 0 ? r.rev / r.spend : null,
+          ],
+        }));
+      note =
+        state.googleScope === "unknown"
+          ? "Accounttotaal min zichtbare zoektermen. Bevat afgeschermde zoekopdrachten en overige inventaris; niet als non-branded ingedeeld."
+          : "Alleen zichtbare zoektermen " +
+            (state.googleScope === "brand" ? "met" : "zonder") +
+            " LumeWorks-variant. De bron biedt deze splitsing per dag, nog niet per campagne of aankoopmeting. Conversiewaarde bevat beide primaire aankoopmetingen.";
+      if (!D.google?.daily_intent)
+        note = "Zoektermuitsplitsing niet beschikbaar; cijfers zijn onbekend.";
+    } else if (state.group === "customers") {
       cols = [
         col("Klantstatus"),
         col("Toegerekende aankopen", "num"),
@@ -986,7 +1044,13 @@ function bindContent() {
   $("#content").onclick = (e) => {
     const b = e.target.closest("button,[data-bucket]");
     if (!b) return;
-    if (b.dataset.metric) {
+    if (b.dataset.googleScope) {
+      change(() => {
+        state.googleScope = b.dataset.googleScope;
+        state.detail = null;
+        state.sub = null;
+      });
+    } else if (b.dataset.metric) {
       selectMetric(b.dataset.metric);
       document
         .querySelector(`[data-metric="${b.dataset.metric}"]`)
@@ -1091,6 +1155,12 @@ function exportCsv() {
     ["LumeWorks", tableModel.title],
     ["Periode", state.sub?.from || state.from, state.sub?.to || state.to],
     ["Meetbasis", tableModel.note],
+    [
+      "Google-selectie",
+      state.channel === "google"
+        ? googleScopeNames[state.googleScope]
+        : "Alle advertentiekosten",
+    ],
     ["Meta bijgewerkt", D.meta?.snap, D.meta?.snap_time],
     ["Google bijgewerkt", D.google?.synced_at],
     ["Creators bijgewerkt", D.creators?.synced_at],
