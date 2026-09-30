@@ -552,8 +552,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 }
 
 /* ── Blended-dashboard extra's (niet in het Meta-dashboard) ── */
-.nav-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.09);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border:1px solid rgba(255,255,255,.18);color:#f1f5f9;font-size:12px;font-weight:500;padding:7px 13px;border-radius:999px;text-decoration:none;white-space:nowrap;transition:background .15s ease,border-color .15s ease}
-.nav-pill:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.26)}
 .src-tag{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px}
 .src-tag.live{background:rgba(143,196,155,.12);color:#8FC49B}
 .src-tag.frozen{background:rgba(221,146,128,.12);color:#DD9280}
@@ -573,7 +571,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .mf-val.neg{color:#DD9280}
 .mf-val.pos{color:#8FC49B}
 @media(max-width:540px){
-  .nav-pill span.nav-pill-full{display:none}
   .hd{flex-wrap:wrap}
   .hd-left{flex:1 1 100%}
   .hd-left ~ div{margin-left:52px}
@@ -594,7 +591,6 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
     <select class="period-select" id="periodSel" onchange="onPeriodChange(this.value)"></select>
-    <a class="nav-pill" href="index.html">← <span class="nav-pill-full">Meta-dashboard</span></a>
   </div>
 </div>
 
