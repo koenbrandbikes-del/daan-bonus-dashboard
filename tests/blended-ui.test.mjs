@@ -309,3 +309,16 @@ test("cost story keeps VAT and margin bases explicit and preserves calculation o
   );
   assert.doesNotMatch(d.querySelector("#detail").textContent, /Fees geraamd/);
 });
+
+test("footer reports actual source timestamps and cadence without inventing a Shopify sync time", async () => {
+ const w=await boot("?from=2026-09-23&to=2026-09-29"),d=w.document;
+ const footer=d.querySelector("#updateSummary");
+ assert.equal(footer.querySelectorAll(".update-source").length,4);
+ assert.match(footer.textContent,/Elke 15 minuten/);
+ assert.match(footer.textContent,/Elk uur/);
+ assert.match(footer.textContent,/Laatste ontvangsttijd nog niet vastgelegd/);
+ assert(footer.querySelector("#refreshData"));
+ const failed=await boot("?from=2026-09-23&to=2026-09-29","google.json");
+ assert.match(failed.document.querySelectorAll(".update-source")[1].textContent,/Niet beschikbaar/);
+ assert(failed.document.querySelectorAll(".update-source")[1].querySelector(".warning"));
+});

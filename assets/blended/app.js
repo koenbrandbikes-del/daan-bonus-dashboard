@@ -559,7 +559,28 @@ function render() {
   renderStatus();
   bindContent();
 }
+function renderUpdateSummary() {
+  const stamp = value => value && Number.isFinite(Date.parse(value)) ? new Intl.DateTimeFormat("nl-NL", {timeZone:"Europe/Amsterdam",day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}).format(new Date(value)) : "Tijdstip niet beschikbaar";
+  const metaStamp = D.meta?.snap && D.meta?.snap_time ? `${fmt(D.meta.snap)} ${D.meta.snap.slice(0,4)} · ${D.meta.snap_time}` : "Tijdstip niet beschikbaar";
+  const sources = [
+    ["meta", "Meta", metaStamp, "Elke 15 minuten"],
+    ["google", "Google Ads", stamp(D.google?.synced_at), "Elke 15 minuten"],
+    ["creators", "Influencers", stamp(D.creators?.synced_at), "Elk uur"],
+    ["shopify", "Shopify", "Nieuwe orders automatisch", "Laatste ontvangsttijd nog niet vastgelegd"],
+  ];
+  $("#updateSummary").innerHTML = `<div class="update-heading"><strong>Data & updates</strong><button id="refreshData" class="quiet">Gegevens verversen</button></div><div class="update-sources">${sources.map(([key,name,time,cadence]) => {
+    const bad = !D[key] || E[key] || stale(key);
+    const status = !D[key] ? "Niet beschikbaar" : E[key] ? "Laatste bewaarde gegevens" : stale(key) ? "Verversing vertraagd" : key === "shopify" ? "Ontvangsttijd onbekend" : "Bijgewerkt";
+    return `<div class="update-source"><span class="update-dot ${bad ? "warning" : key === "shopify" ? "unknown" : ""}" aria-hidden="true"></span><div><strong>${name}</strong><span>${esc(time)}</span><small>${cadence}</small><small class="update-status">${status}</small></div></div>`;
+  }).join("")}</div><p class="hint">Tijden in Nederland. Dit zijn de opgehaalde bronupdates; ververs deze pagina om de nieuwste beschikbare gegevens te laden. TrackBee-metingen komen via Google Ads binnen.</p>`;
+  $("#refreshData").onclick = async () => {
+    const button = $("#refreshData"); button.disabled = true; button.textContent = "Gegevens ophalen…";
+    try { ({data:D,costs:C,errors:E}=await load()); render(); }
+    catch { button.disabled=false; button.textContent="Verversen mislukt · opnieuw proberen"; }
+  };
+}
 function renderStatus() {
+  renderUpdateSummary();
   const stamps = {
     meta: D.meta
       ? `${D.meta.snap} ${D.meta.snap_time} (Amsterdam)`

@@ -1188,3 +1188,16 @@ header {
     grid-template-columns: 1fr;
   }
 }
+
+.update-summary { margin-top: 28px; padding: 22px 26px; border: 1px solid #ffffff20; border-radius: 24px; background: #ffffff07; }
+.update-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px; }
+.update-sources { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; }
+.update-source { display:flex; gap:10px; align-items:flex-start; }
+.update-source > div { display:grid; gap:6px; }
+.update-source small,.update-source span:not(.update-dot) { color:#93a2b8; }
+.update-dot { flex:0 0 9px; height:9px; margin-top:7px; border-radius:50%; background:#8fc49b; }
+.update-dot.warning { background:#e5b863; }
+.update-dot.unknown { background:#93a2b8; }
+.update-summary .hint { margin-bottom:0; }
+@media(max-width:900px) { .update-sources { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:500px) { .update-sources { grid-template-columns:1fr; } .update-summary { padding:20px; } }
