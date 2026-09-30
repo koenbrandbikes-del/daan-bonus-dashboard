@@ -550,6 +550,13 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 @media(max-width:360px){
   .ad-card-kpis,.adkpi-grid,.adkpi-funnel-grid{grid-template-columns:1fr}
 }
+
+/* ── Link naar creators.html (LumeWorks-navigatie) ── */
+.nav-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.09);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border:1px solid rgba(255,255,255,.18);color:#f1f5f9;font-size:12px;font-weight:500;padding:7px 13px;border-radius:999px;text-decoration:none;white-space:nowrap;transition:background .15s ease,border-color .15s ease;flex-shrink:0}
+.nav-pill:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.26)}
+@media(max-width:540px){
+  .nav-pill span.nav-pill-full{display:none}
+}
 </style>
 </head>
 <body>
@@ -565,6 +572,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
       <h1>Meta bonusdashboard</h1>
     </div>
   </div>
+  <a class="nav-pill" href="creators.html">← <span class="nav-pill-full">Creators</span></a>
   <div class="period-wrap">
     <button class="period-btn" onclick="event.stopPropagation();togglePM()">
       <span id="periodBtnTxt">Augustus (v.a. 5 aug)</span>
