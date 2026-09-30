@@ -596,18 +596,14 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 
 <div id="staleWarning" class="stale-warning" style="display:none"></div>
 
-<!-- Meta als eigen, onafhankelijk berekende sectie — geen iframe/link naar
-     index.html (dat is Daans eigen dashboard, blijft daar los van staan),
-     wél dezelfde brondata (data/meta.json) en dezelfde simpele som/ratio,
-     dus geen duplicatie-risico op iets ingewikkelds. -->
-<div class="card">
-  <div class="card-meta">Meta — advertentiecijfers</div>
-  <div class="mrow">
-    <div class="mc"><div class="mc-lbl">META-UITGAVEN</div><div class="mc-val" id="mMetaSpend"></div><div class="mc-sub" id="mMetaSpendSub"></div></div>
-    <div class="mc"><div class="mc-lbl">META-OMZET</div><div class="mc-val" id="mMetaOmzet"></div><div class="mc-sub">7d click + 1d view</div></div>
-    <div class="mc"><div class="mc-lbl">META ROAS</div><div class="mc-val" id="mMetaRoas"></div></div>
-  </div>
-</div>
+<!-- Meta-dashboard hier volledig ingeladen via iframe (letterlijk
+     index.html, zelfde origin) i.p.v. de rekenlogica een 2e keer over te
+     typen of samen te vatten — Koen wil hier precies dezelfde volledige
+     pagina zien als op index.html zelf. Geen kaart/accordion eromheen
+     (geen dubbele header, geen "doos-in-doos"-effect), en geen link
+     terug — de iframe-hoogte groeit gewoon mee met de echte inhoud. -->
+<iframe id="metaFrame" src="index.html" title="Meta bonusdashboard" loading="lazy"
+  style="width:100%;height:900px;border:0;display:block;background:transparent;margin-bottom:14px"></iframe>
 
 <div class="card">
   <div class="card-meta"><div class="blend-src-row" id="srcRow"></div></div>
@@ -804,13 +800,6 @@ function periodRange(key){
 }
 
 function computePeriod(from,to){
-  // Meta — eigen, simpele som/ratio direct uit data/meta.json (dezelfde
-  // bron als index.html), niet via een link of iframe naar dat dashboard.
-  const metaRows = DAILY_META.filter(x=>x.d>=from && x.d<=to);
-  const metaSpend = metaRows.reduce((s,x)=>s+x.spend,0);
-  const metaOmzetAttr = metaRows.reduce((s,x)=>s+x.rev7+x.rev1v,0);
-  const metaRoas = metaSpend>0 ? metaOmzetAttr/metaSpend : null;
-
   // Totale winkelomzet in de periode — alleen als context (aandeel%),
   // niet als hoofdcijfer: dit dashboard gaat over affiliate-sales specifiek.
   const ordersP = ORDERS.filter(o=>o.d>=from && o.d<=to);
@@ -852,8 +841,7 @@ function computePeriod(from,to){
   const sharePct = shopIncl>0 ? (affOmzetIncl/shopIncl*100) : null;
 
   return {from,to,shopIncl,affOmzetExcl,affOmzetIncl,cogs,unknownCost,commissie,
-    betaald,openstaand,roasAffiliates,nettoAffiliates,sharePct,credCount:credP.length,
-    metaSpend,metaOmzetAttr,metaRoas};
+    betaald,openstaand,roasAffiliates,nettoAffiliates,sharePct,credCount:credP.length};
 }
 
 /* ═══ RENDER ═══ */
@@ -887,12 +875,6 @@ function render(){
   } else {
     dEl.innerHTML = "";
   }
-
-  // Meta-kaart
-  document.getElementById("mMetaSpend").textContent = eur(cur.metaSpend);
-  document.getElementById("mMetaSpendSub").textContent = `${fmtS(pd.from)} – ${fmtS(pd.to)}`;
-  document.getElementById("mMetaOmzet").textContent = eur(cur.metaOmzetAttr);
-  document.getElementById("mMetaRoas").textContent = cur.metaRoas!=null ? x2(cur.metaRoas) : "—";
 
   // Bronnen-rij
   const creatorsSyncDate = _CREATORS.synced_at ? fmtL(_CREATORS.synced_at.slice(0,10)) : "onbekend";
@@ -1122,7 +1104,7 @@ function renderOrderDetail(){
 
 function renderAbout(){
   document.getElementById("aboutBody").innerHTML = `
-    <div class="analysis-row">Dit is het totaaloverzicht: Meta-advertentiecijfers bovenaan, affiliate/creator-sales (orders via een kortingscode) daaronder. Geen link of iframe naar het aparte Meta-bonusdashboard van Daan — dat blijft zijn eigen, losstaande pagina; hier wordt hetzelfde brondata (data/meta.json) zelfstandig herberekend.</div>
+    <div class="analysis-row">Dit is het totaaloverzicht: het volledige Meta-bonusdashboard bovenaan (ingeladen vanaf <code>index.html</code>, dezelfde pagina als Daan zelf ziet — geen aparte samenvatting), affiliate/creator-sales (orders via een kortingscode) daaronder.</div>
     <div class="analysis-row"><b style="color:#E5B863">● Creators/affiliates</b> — momentopname uit het externe Creators Google Sheet (tab "Sales"), opgehaald met <code>scripts/sync_creators.py</code>. Geen cron hierop — herdraai dat script en commit <code>data/creators.json</code> opnieuw om te verversen.</div>
     <div class="analysis-row"><b style="color:#8FC49B">● Shopify</b> — live, gebruikt om per affiliate-order het <b>echte</b> orderbedrag op te zoeken (op ordernummer): dat is het bedrag ná de 10%-klantkorting die bij deze kortingscodes hoort, dus lager dan de normale prijs. Zowel de omzet hierboven als de kostprijs/marge worden tegen dát bedrag afgezet — de korting werkt dus al automatisch door in een lagere marge per order, niet alleen de commissie. De sheet's eigen "Grondslag excl. BTW"-kolom bleek bij 13 van de 75 gematchte orders niet te kloppen (stond gelijk aan het incl.-bedrag, 2x zelfs op €0 voor een upsell-regel) — <code>sync_creators.py</code> corrigeert dat nu automatisch via het Shopify-bedrag. data/shopify.json begint 1 aug 2026 — 4 vroege affiliate-orders (medio juli) hebben daardoor geen match en vallen terug op de sheet-eigen (mogelijk minder nauwkeurige) omzet.</div>
     <div class="analysis-row"><b>ROAS affiliates</b> = omzet excl. BTW via affiliates (al na klantkorting) ÷ betaalde commissie. Dat is dus geen advertentie-ROAS (er wordt geen mediabudget aan besteed) maar de "omzet per euro commissie" van dit verkoopkanaal, inclusief het effect van de korting op de marge.</div>
@@ -1239,6 +1221,26 @@ document.getElementById("periodSel").innerHTML = PERIOD_OPTS.map(o=>
 render();
 checkStaleness();
 setInterval(checkStaleness,60000);
+
+/* ═══ META-IFRAME AUTO-HOOGTE ═══
+   Zelfde origin (beide op GitHub Pages), dus de echte content-hoogte van
+   index.html is gewoon leesbaar — laat de iframe daarmee meegroeien i.p.v.
+   een vaste hoogte met eigen scrollbalk. Periodieke check (niet alleen
+   onload) omdat index.html's eigen accordions/periodewissel de hoogte
+   nadien nog laten veranderen, zonder dat er een reload-event voor is. */
+(function(){
+  const frame = document.getElementById("metaFrame");
+  function syncHeight(){
+    try{
+      const doc = frame.contentWindow && frame.contentWindow.document;
+      if(!doc || !doc.documentElement) return;
+      const h = Math.max(doc.documentElement.scrollHeight, doc.body ? doc.body.scrollHeight : 0);
+      if(h>0) frame.style.height = h+"px";
+    }catch(e){ /* cross-origin fallback: vaste hoogte uit de inline style blijft staan */ }
+  }
+  frame.addEventListener("load", ()=>{ syncHeight(); setTimeout(syncHeight,300); });
+  setInterval(syncHeight, 1000);
+})();
 </script>
 </body>
 </html>
