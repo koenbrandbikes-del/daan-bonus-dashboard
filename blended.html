@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daan · Creators-dashboard</title>
+<title>LumeWorks cijfers</title>
 <link rel="icon" type="image/png" href="favicon-meta.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -559,6 +559,9 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .src-tag.frozen{background:rgba(221,146,128,.12);color:#DD9280}
 .src-tag.snapshot{background:rgba(229,184,99,.12);color:#E5B863}
 .period-select{background:#141e33;border:1px solid #1f3050;color:#f1f5f9;font-size:13px;font-weight:500;padding:8px 32px 8px 12px;border-radius:999px;cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.creator-search{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);color:#f1f5f9;font-size:13px;font-family:inherit;padding:9px 12px;border-radius:8px;outline:none}
+.creator-search::placeholder{color:#7C8CA6}
+.creator-search:focus{border-color:rgba(96,165,250,.5)}
 .blend-chart-svgwrap{position:relative}
 .blend-src-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
 .margin-flow{display:flex;flex-direction:column}
@@ -586,7 +589,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
       <div class="avatar-inner"><img src="meta-badge.gif" alt="Blended"></div>
     </div>
     <div class="hd-text">
-      <h1>Creators-dashboard</h1>
+      <h1>LumeWorks cijfers</h1>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -596,6 +599,21 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 </div>
 
 <div id="staleWarning" class="stale-warning" style="display:none"></div>
+
+<!-- Meta-dashboard hier ingebed via iframe i.p.v. de rekenlogica (calcOrder,
+     KP, ITEM_FIXED, bonusformule, ...) een 2e keer over te typen — dit is
+     letterlijk index.html, zelfde origin dus de iframe-hoogte kan gewoon
+     meegroeien met de echte inhoud (geen dubbele scrollbalk). Blijft een
+     apart, onafhankelijk bestand; hier alleen weergegeven. -->
+<div class="acc" style="margin-bottom:14px">
+  <div class="acc-item open" id="acc-metaframe">
+    <div class="acc-hd" onclick="tog('acc-metaframe')"><span>Meta bonusdashboard</span><span class="acc-chv">›</span></div>
+    <div class="acc-body">
+      <iframe id="metaFrame" src="index.html" title="Meta bonusdashboard" loading="lazy"
+        style="width:100%;height:900px;border:0;display:block;background:#0A0D26"></iframe>
+    </div>
+  </div>
+</div>
 
 <div class="card">
   <div class="card-meta"><div class="blend-src-row" id="srcRow"></div></div>
@@ -637,7 +655,10 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
   <div class="acc-item" id="acc-creators">
     <div class="acc-hd" onclick="tog('acc-creators')"><span id="creatorsHdr">Creators &amp; affiliates</span><span class="acc-chv">›</span></div>
     <div class="acc-body">
-      <div class="fc-note" style="padding:12px 16px 0">Alle tijd (sinds start van de creators-sheet), onafhankelijk van de periodekiezer hierboven — commissie-uitbetaling loopt per kalendermaand, niet per willekeurige periode.</div>
+      <div style="padding:12px 16px 0">
+        <input type="text" id="creatorSearch" class="creator-search" placeholder="Zoek op creator-naam…" oninput="filterCreatorsSearch(this.value)">
+      </div>
+      <div class="fc-note" style="padding:8px 16px 0">Alle tijd (sinds start van de creators-sheet), onafhankelijk van de periodekiezer hierboven — commissie-uitbetaling loopt per kalendermaand, niet per willekeurige periode.</div>
       <div class="tscroll" style="margin-top:6px"><table id="creatorsTable"></table></div>
     </div>
   </div>
@@ -910,20 +931,32 @@ function renderMarginFlow(cur){
   ).join("");
 }
 
+let creatorSearchTerm = "";
+function filterCreatorsSearch(v){
+  creatorSearchTerm = v.trim().toLowerCase();
+  renderCreatorsTable();
+}
+
 function renderCreatorsTable(){
-  const t = _CREATORS.totals;
-  const rows = CREATORS.map(c=>`<tr>
+  const filtered = creatorSearchTerm
+    ? CREATORS.filter(c=>c.creator.toLowerCase().includes(creatorSearchTerm))
+    : CREATORS;
+  const rows = filtered.map(c=>`<tr>
     <td>${c.creator}</td>
     <td class="r">${c.orders}${c.retouren?` <span style="color:#7C8CA6">(${c.retouren} retour)</span>`:""}</td>
     <td class="r">${eur(c.omzet_excl)}</td>
     <td class="r">${eur(c.commissie)}</td>
   </tr>`).join("");
-  document.getElementById("creatorsTable").innerHTML = `
+  const tot = filtered.reduce((s,c)=>({orders:s.orders+c.orders, omzet_excl:s.omzet_excl+c.omzet_excl, commissie:s.commissie+c.commissie}),
+    {orders:0, omzet_excl:0, commissie:0});
+  document.getElementById("creatorsTable").innerHTML = filtered.length ? `
     <thead><tr><th>Creator</th><th class="r">Orders</th><th class="r">Omzet excl. BTW</th><th class="r">Commissie</th></tr></thead>
     <tbody>${rows}
-    <tr class="tot"><td>Totaal</td><td class="r">${t.orders}</td><td class="r">${eur(t.omzet_excl)}</td><td class="r">${eur(t.commissie)}</td></tr>
-    </tbody>`;
-  document.getElementById("creatorsHdr").textContent = `Creators & affiliates (${CREATORS.length})`;
+    <tr class="tot"><td>Totaal</td><td class="r">${tot.orders}</td><td class="r">${eur(tot.omzet_excl)}</td><td class="r">${eur(tot.commissie)}</td></tr>
+    </tbody>` : `<tbody><tr><td style="padding:16px;color:#7C8CA6">Geen creator gevonden voor "${creatorSearchTerm}".</td></tr></tbody>`;
+  document.getElementById("creatorsHdr").textContent = creatorSearchTerm
+    ? `Creators & affiliates (${filtered.length} van ${CREATORS.length})`
+    : `Creators & affiliates (${CREATORS.length})`;
 }
 
 // Kleine, vaste productset (zie data/creators.json) — dropdown voor
@@ -1198,6 +1231,26 @@ document.getElementById("periodSel").innerHTML = PERIOD_OPTS.map(o=>
 render();
 checkStaleness();
 setInterval(checkStaleness,60000);
+
+/* ═══ META-IFRAME AUTO-HOOGTE ═══
+   Zelfde origin (beide op GitHub Pages), dus de echte content-hoogte van
+   index.html is gewoon leesbaar — laat de iframe daarmee meegroeien i.p.v.
+   een vaste hoogte met eigen scrollbalk. Periodieke check (niet alleen
+   onload) omdat index.html's eigen accordions/periodewissel de hoogte
+   nadien nog laten veranderen, zonder dat er een reload-event voor is.*/
+(function(){
+  const frame = document.getElementById("metaFrame");
+  function syncHeight(){
+    try{
+      const doc = frame.contentWindow && frame.contentWindow.document;
+      if(!doc || !doc.documentElement) return;
+      const h = Math.max(doc.documentElement.scrollHeight, doc.body ? doc.body.scrollHeight : 0);
+      if(h>0) frame.style.height = h+"px";
+    }catch(e){ /* cross-origin fallback: vaste hoogte uit de inline style blijft staan */ }
+  }
+  frame.addEventListener("load", ()=>{ syncHeight(); setTimeout(syncHeight,300); });
+  setInterval(syncHeight, 1000);
+})();
 </script>
 </body>
 </html>
