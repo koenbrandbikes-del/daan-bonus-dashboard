@@ -1,5 +1,5 @@
 {
- "synced_at": "2026-10-01T00:50:31Z",
+ "synced_at": "2026-10-01T06:50:47Z",
  "source": "Creators Google Sheet · tab 'Sales' (ieder uur gesynchroniseerd)",
  "sync_interval_minutes": 60,
  "collaborations": {
@@ -10,12 +10,12 @@
   "through": "2026-09-30"
  },
  "totals": {
-  "orders": 87,
+  "orders": 89,
   "retouren": 0,
-  "omzet_excl": 10118.38,
-  "commissie": 1078.74,
+  "omzet_excl": 10355.74,
+  "commissie": 1114.34,
   "betaald": 53.64,
-  "openstaand": 1025.1
+  "openstaand": 1060.7
  },
  "creators": [
   {
@@ -38,12 +38,12 @@
   },
   {
    "creator": "Naomi",
-   "orders": 7,
+   "orders": 9,
    "retouren": 0,
-   "omzet_excl": 839.52,
-   "commissie": 125.91,
+   "omzet_excl": 1076.88,
+   "commissie": 161.51,
    "betaald": 0.0,
-   "openstaand": 125.91
+   "openstaand": 161.51
   },
   {
    "creator": "Rowan",
@@ -1328,6 +1328,32 @@
    "omzet_excl": 133.97,
    "commissie_pct": 10.0,
    "commissie": 13.4,
+   "status": "Openstaand",
+   "retour": false
+  },
+  {
+   "d": "2026-09-30",
+   "creator": "Naomi",
+   "code": "Naomi",
+   "num": "#1635",
+   "product": "Prime travelcase",
+   "herkomst": "Instagram",
+   "omzet_excl": 126.53,
+   "commissie_pct": 15.0,
+   "commissie": 18.98,
+   "status": "Openstaand",
+   "retour": false
+  },
+  {
+   "d": "2026-09-30",
+   "creator": "Naomi",
+   "code": "Naomi",
+   "num": "#1639",
+   "product": "LumeWorks Prime",
+   "herkomst": "Onbekend",
+   "omzet_excl": 110.83,
+   "commissie_pct": 15.0,
+   "commissie": 16.62,
    "status": "Openstaand",
    "retour": false
   }
