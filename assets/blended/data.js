@@ -48,6 +48,10 @@ export function validateSource(key, d) {
 export function validateCosts(d) {
   if (!d || !d.items || !Object.keys(d.items).length || Object.values(d.items).some(v=>!Number.isFinite(v)||v<0)) throw Error("Ongeldige kostprijzen");
   for (const key of ["payment_rate","overhead_rate","assumed_vat"]) if (!Number.isFinite(d[key]) || d[key]<0 || d[key]>1) throw Error("Ongeldig kostentarief");
+  for(const [name,parts] of Object.entries(d.item_components || {})) {
+    const values=['purchase','inbound_shipping','fulfillment','source_adjustment'].map(k=>parts[k]);
+    if(values.some(v=>!Number.isFinite(v)) || values.slice(0,3).some(v=>v<0) || !Number.isFinite(d.items[name]) || Math.abs(values.reduce((a,b)=>a+b,0)-d.items[name])>0.01) throw Error("Ongeldige kostprijsuitsplitsing");
+  }
   const m=d.meta_management;
   if (!m || !Number.isFinite(m.monthly_fixed) || m.monthly_fixed<0 || !Number.isFinite(m.bonus_rate) || m.bonus_rate<0 || m.bonus_rate>1 || !validSourceDate(m.contract_start) || !Number.isInteger(m.bonus_period_days) || m.bonus_period_days<1) throw Error("Ongeldige bonusregeling");
   if(d.returns?.orders?.some(r=>r.received_packages!==undefined && (!Number.isInteger(r.received_packages)||r.received_packages<0))) throw Error("Ongeldig aantal retourpakketten");

@@ -374,11 +374,14 @@ test("cost story keeps VAT and margin bases explicit and preserves calculation o
     /Nieuwe basis: 100%/,
   );
   const rows = [...d.querySelectorAll("#table tbody tr")];
-  assert.equal(rows.length, 10);
+  assert.equal(rows.length, 13);
   assert.match(rows[0].textContent, /Omzet excl. btw100%/);
-  assert.match(rows[2].textContent, /Marge na product en levering/);
-  assert.match(rows[9].textContent, /Nettowinst · voorlopig/);
-  assert.match(rows[4].textContent, /Retourafhandeling/);
+  assert.match(rows[1].textContent, /Productkosten · inkoop/);
+  assert.match(rows[2].textContent, /Transport naar Nederland/);
+  assert.match(rows[3].textContent, /Fulfilment \/ verzending naar klant/);
+  assert.match(rows[5].textContent, /Marge na product en levering/);
+  assert.match(rows[12].textContent, /Nettowinst · voorlopig/);
+  assert.match(rows[7].textContent, /Retourafhandeling/);
   assert.equal(d.querySelectorAll("#table [data-sort]").length, 0);
   assert(d.querySelector("#detail .pager").hidden);
   d.querySelector("[data-detail*=products]").click();
@@ -665,7 +668,7 @@ test("renamed products with stable codes retain KPI and product-table costs", as
  w.document.querySelector('[data-detail]').click();
  const row=[...w.document.querySelectorAll('#detail tr')].find(r=>r.textContent.includes('Volledig hernoemde beamer'));
  assert(row);
- assert.match(row.textContent,/43,80/);
+ assert.match(row.textContent,/44,50/);
 });
 
 test('period presets show the applied choice and remain usable after repeated opening',async()=>{
@@ -766,4 +769,24 @@ test('store start blocks early URL, presets, calendars and comparisons',async()=
  d.querySelector('[data-date="2026-08-05"]').click();d.querySelector('#periodMenu .cal-apply').click();
  assert.equal(new w.URLSearchParams(w.location.search).get('from'),'2026-08-05');
  w.close();
+});
+
+test('channel KPI shows its share of the same positive store result',async()=>{
+ const w=await boot('?from=2026-09-01&to=2026-09-30');const d=w.document;
+ const euroValue=el=>Number(el.textContent.replace(/[^0-9,−-]/g,'').replace('−','-').replace(',','.'));
+ const store=euroValue(d.querySelector('[data-metric=result] strong'));
+ d.querySelector('[data-channel=meta]').click();
+ const channel=euroValue(d.querySelector('[data-metric=result] strong'));
+ const share=d.querySelector('.profit-share');
+ assert.match(share.textContent,/van winkelwinst/);
+ const pct=Number(share.textContent.split('%')[0].replace(',','.'));
+ assert(Math.abs(pct-channel/store*100)<.11);
+ w.close();
+});
+test('channel share stays unavailable for missing or negative total store profit',async()=>{
+ for(const fail of ['shopify.json','']) {
+  const w=await boot('?from=2026-09-01&to=2026-09-30&channel=meta',fail,(url,data)=>url.includes('costs.json')?{...data,overhead_rate:1}:data);
+  assert.equal(w.document.querySelector('.profit-share').textContent,'Aandeel winkelwinst niet beschikbaar');
+  w.close();
+ }
 });

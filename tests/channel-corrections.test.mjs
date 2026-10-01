@@ -81,3 +81,20 @@ test('vertical margin build adds to the KPI for every channel and Google scope',
     if(channel==='meta'||channel==='all')assert(value.marginBuild.some(r=>r.key==='daanFixed'));
   }
 });
+
+test('cost components retain received products, release cancelled costs and reconcile every channel',()=>{
+ const c={...costs,item_components:{Prime:{purchase:30,inbound_shipping:2,fulfillment:7,source_adjustment:1}}};
+ for(const channel of ['all','meta','google','infl']) {
+  const m=compute(data,c,from,to,channel);
+  const ledger=m.marginBuild.filter(r=>r.kind==='line');
+  close(ledger.reduce((s,r)=>s+r.value,0),m.result);
+  assert(m.marginBuild.some(r=>r.key==='fulfillment'));
+ }
+ const all=compute(data,c,from,to);
+ close(all.purchase,270);close(all.inbound_shipping,18);close(all.fulfillment,63);close(all.source_adjustment,9);
+ close(all.purchase+all.inbound_shipping+all.fulfillment+all.source_adjustment,all.fixed);
+ const meta=compute(data,c,from,to,'meta');
+ close(meta.correctionAllocation.pool.purchaseCredit,30);
+ const daily=series(data,c,from,to,'meta','day');
+ close(daily.reduce((s,r)=>s+r.marginBuild.find(x=>x.key==='purchase').value,0),meta.marginBuild.find(x=>x.key==='purchase').value);
+});

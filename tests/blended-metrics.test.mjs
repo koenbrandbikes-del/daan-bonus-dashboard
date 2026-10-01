@@ -144,7 +144,7 @@ test('renamed Prime preserves costs, management bonus and profit across order an
  }
  assert.ok(Number.isFinite(actual.management.total));
  const row=data.shopify.orders.find(o=>o.items.includes(renamed));
- assert.equal(finance([row],costs).fixed,43.8);
+ assert.equal(finance([row],costs).fixed,44.5);
  const points=series(data,costs,'2026-09-24','2026-09-30','all');
  assert.ok(points.every(p=>Number.isFinite(p.result)));
  assert.equal(finance([{...row,items:['Unknown future product']}],costs).cost,null);

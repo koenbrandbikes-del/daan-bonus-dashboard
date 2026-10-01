@@ -1,24 +1,24 @@
 {
   "version": 1,
-  "basis": "Gebundelde bestaande tarieven: inkoop, verzending en fulfilment. Historische ingangsdata niet vastgelegd.",
+  "basis": "Actuele kostprijssheet 1 oktober 2026; inkoop, shipping naar NL, fulfilment en eventuele broncorrectie apart. Historische ingangsdatums en losse klantverzendtarieven ontbreken.",
   "payment_rate": 0.02,
   "overhead_rate": 0.04,
   "assumed_vat": 0.21,
   "items": {
-    "LumeWorks Prime": 43.8,
-    "LumeWorks Atlas": 67.74,
-    "LumeWorks Titan": 110.85,
-    "Projectiescherm 100 inch": 37.81,
-    "Pro stand": 20.66,
+    "LumeWorks Prime": 44.5,
+    "LumeWorks Atlas": 71.75,
+    "LumeWorks Titan": 110.75,
+    "Projectiescherm 100 inch": 37.71,
+    "Pro stand": 20.31,
     "LumeWorks USB-C naar HDMI-kabel": 6.09,
     "Mini stand": 12.68,
     "Prime travelcase": 10.8,
     "Schoonmaak kit": 4.95,
     "Atlas afstandsbediening": 4.95,
     "Titan afstandsbediening": 4.95,
-    "De complete Prime setup": 95.26,
-    "De complete Atlas setup": 114.8,
-    "De complete Titan setup": 159.82
+    "De complete Prime setup": 100.21,
+    "De complete Atlas setup": 119.5,
+    "De complete Titan setup": 161.52
   },
   "meta_management": {
     "monthly_fixed": 1500,
@@ -304,5 +304,118 @@
   },
   "item_aliases": {
     "LumeWorks Prime | Van gewone avond naar datenight.": "LumeWorks Prime"
+  },
+  "item_components": {
+    "LumeWorks Prime": {
+      "purchase": 35.56,
+      "inbound_shipping": 1.24,
+      "fulfillment": 7.7,
+      "source_adjustment": 0,
+      "sku": "8721008982625"
+    },
+    "LumeWorks Atlas": {
+      "purchase": 58.41,
+      "inbound_shipping": 1.33,
+      "fulfillment": 8.95,
+      "source_adjustment": 3.06,
+      "sku": "8721008982564"
+    },
+    "LumeWorks Titan": {
+      "purchase": 98.24,
+      "inbound_shipping": 3.11,
+      "fulfillment": 9.4,
+      "source_adjustment": 0,
+      "sku": "8721008982557"
+    },
+    "Projectiescherm 100 inch": {
+      "purchase": 25.94,
+      "inbound_shipping": 2.37,
+      "fulfillment": 9.4,
+      "source_adjustment": 0,
+      "sku": "8721008982649"
+    },
+    "Pro stand": {
+      "purchase": 8.95,
+      "inbound_shipping": 1.86,
+      "fulfillment": 9.5,
+      "source_adjustment": 0,
+      "sku": "8721008982601"
+    },
+    "Mini stand": {
+      "purchase": 5.32,
+      "inbound_shipping": 0.36,
+      "fulfillment": 7,
+      "source_adjustment": 0,
+      "sku": "8721008982595"
+    },
+    "Prime travelcase": {
+      "purchase": 2.8,
+      "inbound_shipping": 1,
+      "fulfillment": 7,
+      "source_adjustment": 0,
+      "sku": "8721008982663"
+    },
+    "LumeWorks USB-C naar HDMI-kabel": {
+      "purchase": 1.14,
+      "inbound_shipping": 0,
+      "fulfillment": 4.95,
+      "source_adjustment": 0,
+      "sku": "8721008982618"
+    },
+    "Schoonmaak kit": {
+      "purchase": 0,
+      "inbound_shipping": 0,
+      "fulfillment": 4.95,
+      "source_adjustment": 0,
+      "sku": "8721008982632"
+    },
+    "Atlas afstandsbediening": {
+      "purchase": 0,
+      "inbound_shipping": 0,
+      "fulfillment": 4.95,
+      "source_adjustment": 0,
+      "sku": "8721008982588"
+    },
+    "Titan afstandsbediening": {
+      "purchase": 0,
+      "inbound_shipping": 0,
+      "fulfillment": 4.95,
+      "source_adjustment": 0,
+      "sku": "8721008982571"
+    },
+    "De complete Prime setup": {
+      "purchase": 74.04,
+      "inbound_shipping": 5.47,
+      "fulfillment": 20.7,
+      "source_adjustment": 0,
+      "sku": "8721008982700"
+    },
+    "De complete Atlas setup": {
+      "purchase": 93.24,
+      "inbound_shipping": 5.56,
+      "fulfillment": 20.7,
+      "source_adjustment": 0,
+      "sku": "8721008982687"
+    },
+    "De complete Titan setup": {
+      "purchase": 133.48,
+      "inbound_shipping": 7.34,
+      "fulfillment": 20.7,
+      "source_adjustment": 0,
+      "sku": "8721008982694"
+    }
+  },
+  "item_cost_source": {
+    "spreadsheet_id": "15pzQF3PGd_ne2Abu24koPlykuc9Lf35UpO_EruhwLnQ",
+    "sheet": "Kostprijscalculatie",
+    "sheet_id": 212835131,
+    "range": "A1:V30",
+    "checked_on": "2026-10-01",
+    "basis": "Actuele rij Totale directe kostprijs; invoer Inkoopprijs, Shipping naar NL en Fulfilment. Geen historische tariefingangsdatums. Fulfilment/verzending naar klant niet apart gespecificeerd.",
+    "notes": [
+      "Atlas: Landed cost is handmatig 62,80; invoer inkoop + shipping geeft 59,74. Verschil 3,06 apart als broncorrectie opgenomen.",
+      "Shipping naar NL is inkomend transport, niet klantverzending. Fulfilment wordt als één brontarief gebruikt.",
+      "Herhaalorderkorting niet toegepast: betrouwbare klant-/herhaalorderkoppeling ontbreekt."
+    ]
   }
 }

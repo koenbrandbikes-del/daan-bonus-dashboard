@@ -60,7 +60,7 @@ function blockFixture(contributions, snap='2026-09-30') {
  const fixtureCosts={...costs,meta_management:{monthly_fixed:1500,contract_start:'2026-09-01',bonus_period_days:30,bonus_rate:0.1},returns:null};
  const shopify={orders:[{d:'2026-09-01',num:'#fixture',items:['LumeWorks Prime'],incl:149}]};
  const base={meta:{snap,daily_meta:[]},shopify};
- const margin=149/1.21-43.8-149*fixtureCosts.payment_rate-(149/1.21)*fixtureCosts.overhead_rate;
+ const margin=149/1.21-44.5-149*fixtureCosts.payment_rate-(149/1.21)*fixtureCosts.overhead_rate;
  const be=149/margin;
  for(let d='2026-09-01',i=0;d<=snap;d=shift(d,1),i++) base.meta.daily_meta.push({d,spend:1000,rev7:1000*be+(contributions[i]||0)/0.1,rev1v:0,purch:1});
  return {data:base,costs:fixtureCosts};

@@ -42,3 +42,9 @@ test('startup totals and components must reconcile before caching',()=>{
  const rows=d.startup_costs.rows.map((r,i)=>i? r:{...r,shipping:r.shipping+1});
  assert.throws(()=>validateSource('creators',{...d,startup_costs:{...d.startup_costs,rows}}),/sluiten niet aan/);
 });
+
+test('cost components must reconcile to the published unit cost',()=>{
+ const c=read('assets/blended/costs.json'),name=Object.keys(c.item_components)[0];
+ const invalid={...c,item_components:{...c.item_components,[name]:{...c.item_components[name],purchase:c.item_components[name].purchase+1}}};
+ assert.throws(()=>validateCosts(invalid),/uitsplitsing/);
+});

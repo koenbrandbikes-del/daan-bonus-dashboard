@@ -38,17 +38,25 @@ export function finance(orders, costs) {
   orders = orders.map(o => reconciledOrder(o, costs));
   let fixed = 0,
     unknown = 0;
+  const components = {purchase:0,inbound_shipping:0,fulfillment:0,source_adjustment:0,unallocated:0};
   const incl = sum(orders, "incl");
   for (const o of orders.filter(o => o.return_kind !== 'cancelled'))
     for (const [i, item] of o.items.entries()) {
       const unitCost = itemCost(item, costs, o.item_refs?.[i]);
       if (unitCost == null) unknown++;
-      else fixed += unitCost;
+      else {
+        fixed += unitCost;
+        const name=globalThis.LumeProductCosts.productName(item,o.item_refs?.[i],costs.item_aliases);
+        const parts=costs.item_components?.[name];
+        if(parts) for(const key of ['purchase','inbound_shipping','fulfillment','source_adjustment']) components[key]+=parts[key];
+        else components.unallocated+=unitCost;
+      }
     }
   const excl = incl / (1 + costs.assumed_vat),
     fees = sum(orders, o => o.paid_incl ?? o.incl) * costs.payment_rate;
   const returnCost = sum(orders, 'return_cost');
   return {
+    ...Object.fromEntries(Object.entries(components).map(([k,v])=>[k,unknown?null:v])),
     incl,
     excl,
     fixed: unknown ? null : fixed,
@@ -171,7 +179,7 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
     incl:o.paid_incl ?? o.incl, return_kind:undefined, return_cost:0,
     return_packages:0, refunded_incl:0})), {...costs,returns:null});
   const grossFinance = beforeCorrections(orders);
-  const baselineRates=options.baselineRates ?? Object.fromEntries(['fixed','fees','overhead'].map(k=>[k,
+  const baselineRates=options.baselineRates ?? Object.fromEntries(['fixed','fees','overhead','purchase','inbound_shipping','fulfillment','source_adjustment','unallocated'].map(k=>[k,
     data.shopify && grossFinance.incl>0 && grossFinance[k]!=null ? grossFinance[k]/grossFinance.incl : null]));
   const creatorNums = new Set((data.creators?.orders || []).map(o => o.num));
   const remainingOrders = orders.filter(o => !creatorNums.has(o.num));
@@ -191,6 +199,7 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
     other:Math.max(0,1-(rawMeta+rawGoogle)/normalization),
   } : null);
   const pool = {
+    ...Object.fromEntries(['purchase','inbound_shipping','fulfillment','source_adjustment','unallocated'].map(k=>[k+'Credit',remainingGross[k]!=null && remainingFinance[k]!=null ? remainingGross[k]-remainingFinance[k] : null])),
     refundedIncl:remainingFinance.refundedIncl,
     returnCost:remainingFinance.returnCost,
     cancelledCostCredit:remainingGross.fixed!=null && remainingFinance.fixed!=null ? remainingGross.fixed-remainingFinance.fixed : null,
@@ -266,7 +275,11 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
     line('refunds',own?'Terugbetalingen & annuleringen':'Toegerekende omzetcorrecties',negative(own?own.refundedIncl:correction?.refundedIncl)),
     line('vat','Btw na omzetcorrecties',ownNet!=null && netExcl!=null ? -(ownNet-netExcl) : null),
     line('netRevenue','Netto omzet · excl. btw',netExcl,'subtotal'),
-    line('products',own?'Product & levering':'Product & levering · raming',negative(own?own.fixed:estimated('fixed',correction?.cancelledCostCredit))),
+    ...(costs.item_components ? [
+      ['purchase','Productkosten · inkoop'],['inbound_shipping','Transport naar Nederland'],
+      ['fulfillment','Fulfilment / verzending naar klant'],['source_adjustment','Correctie kostprijssheet'],['unallocated','Niet uitgesplitste productkosten']
+    ].map(([key,label])=>line(key,label+(own?'':' · raming'),negative(own?own[key]:estimated(key,correction?.[key+'Credit'])))).filter(r=>!['source_adjustment','unallocated'].includes(r.key) || r.value!==0)
+    : [line('products',own?'Product & levering':'Product & levering · raming',negative(own?own.fixed:estimated('fixed',correction?.cancelledCostCredit)))]),
     line('payments',own?'Betaalkosten':'Betaalkosten · raming',negative(own?own.fees:estimated('fees'))),
     line('returns',own?'Retourafhandeling':'Retourafhandeling · toegerekend',negative(own?own.returnCost:correction?.returnCost)),
   ];

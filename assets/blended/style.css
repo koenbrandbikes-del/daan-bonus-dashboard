@@ -1628,3 +1628,14 @@ header .live-dot.warning { width:10px; height:10px; }
 .status-badge .badge-arrow {margin-left:6px;color:var(--muted);font-size:18px}
 .status-badge[aria-expanded=true] .badge-arrow {transform:rotate(90deg)}
 @media(max-width:600px){.channel-benchmark{gap:8px;font-size:10px}.channel-benchmark>span+span{padding-left:8px}.status-badge small{font-size:10px}}
+
+/* Compact, equal panel titles and a centered freshness indicator. */
+#content details.panel>summary,#content .analysis-heading{font-size:14px;font-weight:600;line-height:1.45}
+#dashboardStatus{display:flex;justify-content:center}
+header .live-dot:not(.warning){animation:live-pulse 2.4s ease-in-out infinite}
+.kpis.primary-kpis .kpi{grid-template-rows:28px 34px minmax(32px,auto) auto}
+.profit-share{display:block;color:var(--text);margin-top:3px}
+.cost-subtotal{font-weight:600;border-top:1px solid var(--line)}
+@media(prefers-reduced-motion:reduce){header .live-dot:not(.warning){animation:none}}
+
+footer{justify-content:center;text-align:center}

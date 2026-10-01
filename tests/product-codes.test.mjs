@@ -17,19 +17,19 @@ test('webhook preserves stable identifiers per unit; renamed products keep their
  assert.equal(o.item_refs[1].sku,'8721008982625');
  assert.equal(o.item_refs[2].variant_id,'56819086524742');
  checkShopifyOrders([o]);
- assert.equal(finance([o],C).fixed,2*43.8+4.95);
+ assert.equal(finance([o],C).fixed,2*44.5+4.95);
 });
 test('EAN, SKU and variant each work independently of name; known identifier beats misleading name',()=>{
- assert.equal(itemCost('Anything',C,{barcode:'8721008982625'}),43.8);
- assert.equal(itemCost('LumeWorks Titan',C,{sku:'8721008982625'}),43.8);
- assert.equal(itemCost('Anything',C,{variant_id:'gid://shopify/ProductVariant/57300256096582'}),43.8);
- assert.equal(itemCost('Anything',C,{variant_id:'56657929077062'}),43.8);
+ assert.equal(itemCost('Anything',C,{barcode:'8721008982625'}),44.5);
+ assert.equal(itemCost('LumeWorks Titan',C,{sku:'8721008982625'}),44.5);
+ assert.equal(itemCost('Anything',C,{variant_id:'gid://shopify/ProductVariant/57300256096582'}),44.5);
+ assert.equal(itemCost('Anything',C,{variant_id:'56657929077062'}),44.5);
  assert.equal(itemCost('LumeWorks Prime',C,{sku:'NEW-UNKNOWN'}),null);
  assert.equal(itemCost('LumeWorks Prime',C,{sku:'8721008982625',variant_id:'56742735642950'}),null);
 });
 test('historical name-only orders retain exact and explicitly aliased costs',()=>{
- assert.equal(itemCost('LumeWorks Prime',C),43.8);
- assert.equal(itemCost('LumeWorks Prime | Van gewone avond naar datenight.',C),43.8);
+ assert.equal(itemCost('LumeWorks Prime',C),44.5);
+ assert.equal(itemCost('LumeWorks Prime | Van gewone avond naar datenight.',C),44.5);
  assert.equal(itemCost('Some unknown Prime',C),null);
  assert.throws(()=>checkShopifyOrders([{...mapOrder(input),item_refs:[{}]}]),/productcodes/);
 });
@@ -39,7 +39,7 @@ test('all classic dashboards use the same code-based costs',()=>{
   const ctx={LumeProductCosts:globalThis.LumeProductCosts,ITEM_FIXED:C.items,BTW:1.21,SHOPIFY_FEE:0.02,OVERHEAD_FEE:0.04,prodLabel:x=>x};
   vm.createContext(ctx);
   vm.runInContext(html.match(/function calcOrder\(o\)\{[\s\S]*?\n\}/)[0],ctx);
-  assert.equal(ctx.calcOrder(mapOrder(input)).cost,2*43.8+4.95+300*.02+(300/1.21)*.04,page);
+  assert.equal(ctx.calcOrder(mapOrder(input)).cost,2*44.5+4.95+300*.02+(300/1.21)*.04,page);
   assert.match(html,/<script src="assets\/product-costs.js/);
  }
 });

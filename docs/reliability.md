@@ -71,3 +71,9 @@ met bewaarde incidentduur, bereikbare eigenaar en herstelafspraken.
 `npm test` controleert berekeningen, bediening en gesimuleerde netwerkfouten.
 `node scripts/check-dashboard-health.mjs` controleert de gepubliceerde gegevens.
 Voer na wijzigingen beide uit en bekijk de laatste Pages-deployment.
+
+
+### Kostprijssheet, gecontroleerd 1 oktober 2026
+Actuele tarieven uit `001 LumeWorks / Kostprijscalculatie` splitsen inkoop, transport naar Nederland en fulfilment. Atlas heeft een handmatig landed bedrag van €62,80: €3,06 boven inkoop plus transport. Deze broncorrectie blijft expliciet zichtbaar en het totaal blijft €71,75. Er zijn geen historische ingangsdatums; actuele tarieven worden voor alle orders gebruikt. Fulfilmenttarieven per product/bundel worden per verkochte eenheid toegepast; werkelijke gecombineerde pakketten en losse outbound tarieven ontbreken. Herhaalorderkorting is niet toegepast zonder betrouwbare klantkoppeling. Retourafhandeling blijft afzonderlijk €20 per geregistreerd ontvangen pakket. Ontvangen producten blijven kosten totdat aantoonbaar voorraadherstel bekend is. Kostcomponenten moeten aansluiten op het eenheidstarief voordat caching is toegestaan. De kostenopbouw per kanaal gebruikt dezelfde verdeling en annuleringsvrijval als het resultaat.
+
+Het winstaandeel is kanaalresultaat gedeeld door het totale winkelresultaat over dezelfde periode, met dezelfde Daan-keuze. Geen percentage bij onbekende, nul of negatieve winkelwinst. Kanaalramingen overlappen en hoeven niet tot 100% op te tellen. Groene bronstatussen pulseren; waarschuwingen en reduced-motion blijven statisch.
