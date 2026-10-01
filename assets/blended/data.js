@@ -45,6 +45,19 @@ export function validateSource(key, d) {
   }
   return d;
 }
+export function validateReturns(d) {
+ if(d?.version!==2 || d.complete!==true || !validSourceDate(d.coverage_from) || !Number.isFinite(Date.parse(d.synced_at)) || !Array.isArray(d.daily) || !d.daily.length || !d.model || d.orders || d.corrections)throw Error('Onvolledige geaggregeerde retourregistratie');
+ const dates=new Set();
+ for(const r of d.daily){
+  if(!validSourceDate(r.d)||dates.has(r.d)||r.num||r.id)throw Error('Ongeldige retourdag');dates.add(r.d);
+  for(const key of ['gross','actual','creatorGross','creatorActual'])if(!r[key] || Object.values(r[key]).some(v=>v!==null && (!Number.isFinite(v)||v<-.01)))throw Error('Ongeldige retourtotalen');
+  for(const key of ['all','creator']){const p=r.reserve?.[key];if(!p || Object.values(p).some(v=>!Number.isFinite(v)||v<-.01) || Math.abs(p.impact-(p.refundExcl+p.handling-p.overheadCredit))>.011)throw Error('Ongeldige retourbegroting');}
+  if(r.actual.incl>r.gross.incl+.01 || r.creatorActual.incl>r.actual.incl+.01 || r.actual.orders!==r.gross.orders)throw Error('Retourtotalen sluiten niet aan');
+ }
+ const m=d.model;
+ if(!Number.isInteger(m.horizon)||m.horizon<28||!validSourceDate(m.asOf)||!Array.isArray(m.weeks)||typeof m.available!=='boolean'||(m.available && (!Number.isFinite(m.rate)||m.rate<0||m.rate>=1||!Number.isFinite(m.fraction)||m.fraction<0||m.fraction>1)))throw Error('Ongeldig retourmodel');
+ return d;
+}
 export function validateCosts(d) {
   if (!d || !d.items || !Object.keys(d.items).length || Object.values(d.items).some(v=>!Number.isFinite(v)||v<0)) throw Error("Ongeldige kostprijzen");
   for (const key of ["payment_rate","overhead_rate","assumed_vat"]) if (!Number.isFinite(d[key]) || d[key]<0 || d[key]>1) throw Error("Ongeldig kostentarief");
@@ -87,6 +100,7 @@ export async function load() {
   const [costs,status]=await Promise.all([
     resource("costs","assets/blended/costs.json",validateCosts),
     fetchJSON("data/status.json").catch(()=>null),
+    (async()=>{const d=await resource("returns","data/returns.json",validateReturns);if(d)data.returns=d;})(),
     ...["meta","google","shopify","creators"].map(async key=>{
       const d=await resource(key,`data/${key}.json`,d=>validateSource(key,d));
       if(d) data[key]=d;
@@ -94,6 +108,9 @@ export async function load() {
     }),
   ]);
   if(!costs) throw Error("Kostenregister niet beschikbaar of ongeldig; resultaat kan niet veilig worden berekend");
+  if(data.returns?.cost_basis!==JSON.stringify([costs.items,costs.assumed_vat,costs.payment_rate,costs.overhead_rate])){
+    if(data.returns){errors.returns='Retourbegroting gebruikt andere kostentarieven; dagelijkse herberekening nodig';delete data.returns;}
+  }
   if(status) data.source_status=status;
   else errors.status="Synchronisatiestatus niet beschikbaar";
   return {data,errors,costs};

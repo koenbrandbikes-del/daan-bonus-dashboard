@@ -1639,3 +1639,5 @@ header .live-dot:not(.warning){animation:live-pulse 2.4s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){header .live-dot:not(.warning){animation:none}}
 
 footer{justify-content:center;text-align:center}
+
+#returnForecast .summary-value{margin-left:auto;font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}

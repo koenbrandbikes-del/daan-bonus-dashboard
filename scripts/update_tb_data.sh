@@ -53,6 +53,9 @@ git stash -u --quiet 2>/dev/null || true
 git pull --rebase origin main --quiet 2>/dev/null || true
 git stash pop --quiet 2>/dev/null || true
 
+# Refunds also revisit older orders; the sync throttles successful reads to daily.
+python3 "$SCRIPT_DIR/sync_returns.py" || echo "Retourregistratie niet vernieuwd; vorige controle blijft zichtbaar"
+
 # 2. Shopify — sinds 15 aug 2026 vangt de Cloudflare Worker
 #    (cloudflare-worker/, Shopify "Aanmaken van bestelling"-webhook) nieuwe
 #    orders al real-time en gratis op. Dit is dus nu alleen nog een vangnet

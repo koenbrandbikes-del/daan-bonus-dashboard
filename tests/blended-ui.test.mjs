@@ -103,7 +103,7 @@ async function boot(
   w.eval(fs.readFileSync(new URL("assets/product-costs.js", root), "utf8"));
   w.matchMedia = () => ({ matches: true });
   w.HTMLElement.prototype.scrollIntoView = () => {};
-  const scripts = ["metrics.js", "data.js", "date-picker.js", "creator-summary.js", "app.js"]
+  const scripts = ["return-reserve.js", "metrics.js", "data.js", "date-picker.js", "creator-summary.js", "app.js"]
     .map((f) =>
       fs
         .readFileSync(new URL("assets/blended/" + f, root), "utf8")
@@ -374,13 +374,14 @@ test("cost story keeps VAT and margin bases explicit and preserves calculation o
     /Nieuwe basis: 100%/,
   );
   const rows = [...d.querySelectorAll("#table tbody tr")];
-  assert.equal(rows.length, 13);
+  assert.equal(rows.length, 14);
   assert.match(rows[0].textContent, /Omzet excl. btw100%/);
   assert.match(rows[1].textContent, /Productkosten · inkoop/);
   assert.match(rows[2].textContent, /Transport naar Nederland/);
   assert.match(rows[3].textContent, /Fulfilment \/ verzending naar klant/);
   assert.match(rows[5].textContent, /Marge na product en levering/);
-  assert.match(rows[12].textContent, /Nettowinst · voorlopig/);
+  assert.match(rows[13].textContent, /Nettowinst · voorlopig/);
+  assert(rows.some(r=>r.textContent.includes("Begrote retouren")));
   assert.match(rows[7].textContent, /Retourafhandeling/);
   assert.equal(d.querySelectorAll("#table [data-sort]").length, 0);
   assert(d.querySelector("#detail .pager").hidden);

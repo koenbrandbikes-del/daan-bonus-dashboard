@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import {fetchJSON,validateSource,validateCosts} from '../assets/blended/data.js';
+import {fetchJSON,validateSource,validateCosts,validateReturns} from '../assets/blended/data.js';
 const base=process.env.DASHBOARD_URL || 'https://koenbrandbikes-del.github.io/daan-bonus-dashboard/';
 const sample={checked_at:new Date().toISOString(),url:base,checks:[]};
 async function check(name,task){const start=Date.now();try{await task();sample.checks.push({name,ok:true,duration_ms:Date.now()-start});}catch(e){sample.checks.push({name,ok:false,duration_ms:Date.now()-start,error:e.message});}}
@@ -14,6 +14,7 @@ await Promise.all([
   }else if(d.synced_at) age=(Date.now()-Date.parse(d.synced_at))/60000;
   if(age!=null && (age < -5 || age > (key==='creators'?180:45))) throw Error(`Bron ${Math.round(age)} minuten oud`);
  })),
+ check('returns',async()=>{const d=validateReturns(await get('data/returns.json'));if(Date.now()-Date.parse(d.synced_at)>48*3600e3)throw Error('Retourcontrole meer dan 48 uur oud');}),
  check('costs',async()=>validateCosts(await get('assets/blended/costs.json'))),
  check('sync-status',async()=>{
   const s=await get('data/status.json');
