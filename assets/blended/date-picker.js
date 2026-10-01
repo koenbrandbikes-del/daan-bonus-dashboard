@@ -24,7 +24,7 @@ export function createDatePicker({
     from,
     to,
     pickingEnd = false,
-    chosenPreset, chosenRange; 
+    chosenPreset, chosenRange;
   const close = (focus = false) => {
     panel.hidden = true;
     trigger.setAttribute("aria-expanded", "false");
