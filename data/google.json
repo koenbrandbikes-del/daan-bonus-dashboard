@@ -3235,6 +3235,15 @@
    "id": "23989624267",
    "name": "S | Branded",
    "type": "SHOPPING"
+  },
+  {
+   "d": "2026-10-02",
+   "spend": 0.41,
+   "rev": 0,
+   "conv": 0,
+   "id": "23989624267",
+   "name": "S | Branded",
+   "type": "SHOPPING"
   }
  ],
  "daily_actions": [
@@ -4914,12 +4923,12 @@
    "conv": 0
   }
  ],
- "details_synced_at": "2026-10-01T22:37:15.634Z",
+ "details_synced_at": "2026-10-01T22:52:17.080Z",
  "source": "google_ads_api",
  "customer_id": "7645288282",
  "currency": "EUR",
  "time_zone": "Europe/Amsterdam",
- "synced_at": "2026-10-01T22:37:15.634Z",
+ "synced_at": "2026-10-01T22:52:17.080Z",
  "coverage_from": "2026-08-01",
  "coverage_to": "2026-10-02",
  "attribution": "Primary conversions and conversion value by ad interaction date; may include non-purchase goals and overlap with other channels.",
@@ -5422,22 +5431,22 @@
   },
   {
    "d": "2026-10-02",
-   "spend": 0,
+   "spend": 0.41,
    "conv": 0,
    "rev": 0,
-   "impr": 68,
-   "cl": 0
+   "impr": 115,
+   "cl": 1
   }
  ],
  "vandaag": {
   "from": "2026-10-02",
   "to": "2026-10-02",
   "d": "2026-10-02",
-  "spend": 0,
+  "spend": 0.41,
   "conv": 0,
   "rev": 0,
-  "impr": 68,
-  "cl": 0
+  "impr": 115,
+  "cl": 1
  },
  "gisteren": {
   "from": "2026-10-01",
