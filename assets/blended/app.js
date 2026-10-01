@@ -1,6 +1,6 @@
 import { creatorSummary } from "./creator-summary.js?v=startup-costs-1";
-import { createDatePicker } from "./date-picker.js?v=selection-feedback-1";
-import { load } from "./data.js?v=reliability-1";
+import { createDatePicker } from "./date-picker.js?v=store-start-1";
+import { load } from "./data.js?v=returns-channel-1";
 import {
   compute,
   googleScopeData,
@@ -15,7 +15,7 @@ import {
   aggregate,
   previous,
   inRange,
-} from "./metrics.js?v=startup-costs-1";
+} from "./metrics.js?v=returns-channel-1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (s) =>
@@ -112,9 +112,11 @@ const stale = (k) => {
         (k === "google" ? 45 : 180) * 60000)
   );
 };
+const STORE_START = "2026-08-05";
+const boundDate = d => d < STORE_START ? STORE_START : d;
 const defaults = () => ({
   channel: "all",
-  from: shift(today, -7),
+  from: boundDate(shift(today, -7)),
   to: shift(today, -1),
   metrics: ["revenue", "result"],
   compare: "previous",
@@ -163,6 +165,9 @@ function readState() {
     (!validDate(s.pfrom) || !validDate(s.pto) || s.pfrom > s.pto)
   )
     s.compare = "previous";
+  s.from=boundDate(s.from);
+  s.to=boundDate(s.to);
+  if(s.compare==='custom' && (s.pfrom<STORE_START || s.pto>today)) { s.compare='off'; delete s.pfrom; delete s.pto; }
   const allowed =
     s.channel === "all"
       ? ["revenue", "cost", "spend", "roas", "result", "profitMargin"]
@@ -233,6 +238,8 @@ function persist(push = true) {
 }
 function change(fn) {
   fn();
+  state.from=boundDate(state.from); state.to=boundDate(state.to);
+  if(state.compare==='custom' && (state.pfrom<STORE_START || state.pto>today)) {state.compare='off'; delete state.pfrom; delete state.pto;}
   page = 0;
   search = "";
   sortKey = 0;
@@ -280,7 +287,7 @@ function metricMeta(k) {
       fmt: euro,
     },
     result: {
-      label: state.channel!=="all" ? "Nettowinst · geschat" : "Nettowinst · voorlopig",
+      label: state.channel==="infl" ? "Resultaat · eigen orders" : state.channel!=="all" ? "Nettowinst · geschat" : "Nettowinst · voorlopig",
       sub: state.channel==="meta" ? (state.daan==="without" ? "Zonder kosten Daan" : "Inclusief kosten Daan") : "Inclusief 4% overhead",
       fmt: euro,
     },
@@ -290,7 +297,7 @@ function metricMeta(k) {
       sub: all
         ? "Omzet incl. btw / bekende marketingkosten"
         : state.channel === "infl"
-          ? "Inclusief toegerekende beamers"
+          ? "Inclusief toegerekende opstartkosten"
           : "Kanaalomzet / alle kanaalkosten",
       fmt: ratio,
     },
@@ -335,6 +342,7 @@ function delta(k, cur, prev) {
     state.compare === "custom" ? "Vergelijkingsperiode" : "Vorige periode";
   return `<span class="delta-main ${tone}"><span class="delta-badge">${direction} ${esc(pct || amount)}</span>${pct ? `<span class="delta-amount">${esc(amount)}</span>` : ""}</span><span class="delta-base">${label}: ${esc(f(prev[k]))}</span>`;
 }
+const boundedComparison = p => p && p.from >= STORE_START && p.to <= today ? p : null;
 function getPrev() {
   if (state.compare === "off") return null;
   const p =
@@ -348,17 +356,17 @@ function getPrev() {
     );
     if (state.from === today.slice(0, 8) + "01") {
       const end = shift(state.from, -1);
-      return {
+      return boundedComparison({
         from: end.slice(0, 8) + "01",
         to:
           end.slice(0, 8) +
           String(Math.min(+today.slice(8), +end.slice(8))).padStart(2, "0"),
-      };
+      });
     }
     if (state.from === monday && state.from !== today)
-      return { from: shift(state.from, -7), to: shift(state.to, -7) };
+      return boundedComparison({ from: shift(state.from, -7), to: shift(state.to, -7) });
   }
-  return p;
+  return boundedComparison(p);
 }
 function coverage(key, from = state.from, to = state.to) {
   const d = D[key];
@@ -496,7 +504,7 @@ function orderDate(o) {
 const orderColumnWidths=[64,88,190,96,100,76,78];
 function returnSummary(cur) {
  const affected=cur.orderRows.filter(o=>o.refunded_incl>0);
- return `<details class="panel" id="returnEstimate"><summary><span>Omzetcorrecties & retouren · ${cur.refundedOrders} orders</span><span>${euro(cur.refundedIncl)}</span></summary><p>Al van omzet afgetrokken: <strong>${euro(cur.refundedIncl)} terugbetalingen, inclusief in behandeling</strong>. Extra retourafhandeling: <strong>${euro(cur.returnCost)}</strong> (${cur.receivedReturns} bevestigde retourorders × ${euro(C.returns?.cost_per_return??20)}).</p><p class="hint">Controle op ${esc(C.returns?.checked_on || "onbekend")} · momentopname, nog geen automatische retoursynchronisatie. Toegerekend aan de oorspronkelijke besteldatum, niet de terugbetaaldatum. Eén pakket per bevestigde retourorder aangenomen.</p>${C.returns?.report_audit?`<p class="hint">Historische aansluiting met Shopify: ${C.returns.report_audit.orders} orders met verkoopherroepingen gecontroleerd t/m ${esc(C.returns.report_audit.through)}. Omzet, winst en winstmarge zijn voor deze orders ook in eerdere perioden gecorrigeerd. Rapportbedragen worden niet nogmaals afgetrokken. Bij terugbetalingen in behandeling gebruiken we het gecontroleerde ordertotaal; het rapport kan daar nog een afwijkend bedrag tonen.</p>`:""}${affected.length?`<div class="table-wrap"><table><thead><tr><th>Order</th><th>Terugbetaling</th><th>Shopify-herroeping</th><th>Retourkosten</th><th>Reden</th></tr></thead><tbody>${affected.map(o=>`<tr><td>${esc(o.num)}</td><td>${euro(o.refunded_incl)}</td><td>${o.sales_reversal_report==null?"—":euro(o.sales_reversal_report)}</td><td>${euro(o.return_cost)}</td><td>${o.return_kind==="received_return"?"Retour ontvangen":o.return_kind==="cancelled"?"Geannuleerd":"Reden onbekend"}${o.store_credit?" · winkeltegoed":""}${o.refund_status==="pending"?" · terugbetaling in behandeling":""}</td></tr>`).join("")}</tbody></table></div>`:""}<p class="hint">${cur.unknownReturns ? `${cur.unknownReturns} terugbetaalde orders hebben geen retourreden: hiervoor is nog geen €20 geboekt. ` : ""}Product- en leveringskosten blijven bij verzonden orders staan; de waarde van teruggekomen voorraad is nog niet uitgesplitst. Bij annuleringen vervallen deze kosten. Betaalkosten blijven berekend over het oorspronkelijk betaalde bedrag. Daan-bonus volgt de bestaande Meta-contractberekening.</p></details>`;
+ return `<details class="panel" id="returnEstimate"><summary><span>Omzetcorrecties & retouren · ${cur.refundedOrders} orders</span><span>${euro(cur.refundedIncl)}</span></summary><p>Al van omzet afgetrokken: <strong>${euro(cur.refundedIncl)} terugbetalingen, inclusief in behandeling</strong>. Extra retourafhandeling: <strong>${euro(cur.returnCost)}</strong> (${cur.receivedReturnPackages} geregistreerde retourpakketten × ${euro(C.returns?.cost_per_return??20)}).</p><p class="hint">Controle op ${esc(C.returns?.checked_on || "onbekend")} · momentopname, nog geen automatische retoursynchronisatie. Retourindeling gecontroleerd op ${esc(C.returns?.classification_checked_on || C.returns?.checked_on || "onbekend")}. Toegerekend aan de oorspronkelijke besteldatum, niet de terugbetaaldatum. Pakketaantal uit de registratie; bij deze historische orders is één pakket per retourorder aangenomen. Meerdere artikelen zijn niet automatisch meerdere pakketten.</p>${C.returns?.report_audit?`<p class="hint">Historische aansluiting met Shopify: ${C.returns.report_audit.orders} orders met verkoopherroepingen gecontroleerd t/m ${esc(C.returns.report_audit.through)}. Omzet, winst en winstmarge zijn voor deze orders ook in eerdere perioden gecorrigeerd. Rapportbedragen worden niet nogmaals afgetrokken. Bij terugbetalingen in behandeling gebruiken we het gecontroleerde ordertotaal; het rapport kan daar nog een afwijkend bedrag tonen.</p>`:""}${affected.length?`<div class="table-wrap"><table><thead><tr><th>Order</th><th>Terugbetaling</th><th>Shopify-herroeping</th><th>Retourkosten</th><th>Reden</th></tr></thead><tbody>${affected.map(o=>`<tr><td>${esc(o.num)}</td><td>${euro(o.refunded_incl)}</td><td>${o.sales_reversal_report==null?"—":euro(o.sales_reversal_report)}</td><td>${euro(o.return_cost)}</td><td>${o.return_kind==="received_return"?"Retour ontvangen":o.return_kind==="cancelled"?"Geannuleerd":"Reden onbekend"}${o.store_credit?" · winkeltegoed":""}${o.refund_status==="pending"?" · terugbetaling in behandeling":""}</td></tr>`).join("")}</tbody></table></div>`:""}<p class="hint">${cur.unknownReturns ? `${cur.unknownReturns} terugbetaalde orders hebben geen retourreden: hiervoor is nog geen €20 geboekt. ` : ""}Product- en leveringskosten blijven bij verzonden orders staan; de waarde van teruggekomen voorraad is nog niet uitgesplitst. Bij annuleringen vervallen deze kosten. Betaalkosten blijven berekend over het oorspronkelijk betaalde bedrag. Daan-bonus volgt de bestaande Meta-contractberekening.</p></details>`;
 }
 function overviewOrders(cur) {
  const rows=[...cur.orderRows].sort((a,b)=>b.d.localeCompare(a.d)||Number(b.num.replace(/\D/g,''))-Number(a.num.replace(/\D/g,'')));
@@ -506,6 +514,7 @@ function overviewOrders(cur) {
  }).join('')}</tbody></table></div><p id="overviewOrderEmpty" class="hint" ${rows.length?'hidden':''}>Geen orders gevonden in deze selectie.</p><p class="order-cost-note">Omzet na gecontroleerde terugbetalingen. Marge na product-, betaal- en retourkosten, vóór marketing en overhead. Datum en producten: volledige details bij aanwijzen.</p></details>`;
 }
 function marketingMix(cur) {
+  const influencer = compute(D, C, state.from, state.to, "infl");
   const nonbrand = compute(
     googleScopeData(D, "nonbrand"),
     C,
@@ -533,7 +542,7 @@ function marketingMix(cur) {
     .map(([k, v]) => {
       const rev = k === "google" ? nonbrand.revenue : v.revenue;
       const denominator = k === "google" ? nonbrand.spend : v.spend;
-      const profit =
+      const profit = k === "infl" ? influencer.result :
         rev != null && rate != null && v.spend != null
           ? rev / (1 + C.assumed_vat) - rev * rate - v.spend
           : null;
@@ -541,7 +550,7 @@ function marketingMix(cur) {
     })
     .join(
       "",
-     )}${otherRow}</tbody></table></div><p class="hint">Google-ROAS: non-branded omzet / non-branded kosten. Resultaat: geschatte marge minus alle kanaalkosten, inclusief branded bij Google. Winstmarge = geschat resultaat / kanaalomzet excl. btw. Gebaseerd op de gemiddelde winkelkosten; kanaalresultaten zijn niet optelbaar. Overig is het positieve verschil tussen Shopify-omzet incl. btw en de kanaalclaims; kosten en winst zijn niet afzonderlijk toe te rekenen.</p></details><details class="panel" id="acquisitionCompare"><summary>Kosten per aankoop & break-even</summary><p class="hint">Vergelijk bekende marketingkosten per toegerekende aankoop. CAC voor uitsluitend nieuwe klanten is nog niet beschikbaar.</p><div class="table-wrap"><table><thead><tr><th>Kanaal</th><th>Aankopen</th><th>Kosten per aankoop</th><th>Break-even · raming</th><th>Ruimte per aankoop</th></tr></thead><tbody>${purchaseRows}</tbody></table></div><p class="hint">Break-even is één winkelbenchmark: (omzet excl. btw − product-, betaal- en bedrijfskosten) / Shopify-orders. Dezelfde grens geldt hier voor elk kanaal; verschillen in klant- en productmix zijn niet bekend. Positieve ruimte is geen bewezen kanaalwinst. Google gebruikt non-branded conversies; overlap tussen aankoopmetingen kan de kosten per aankoop te laag laten lijken. Influencers: commissies plus geregistreerde opstartkosten, verdeeld naar omzetaandeel.</p></details>`;
+     )}${otherRow}</tbody></table></div><p class="hint">Google-ROAS: non-branded omzet / non-branded kosten. Resultaat: geschatte marge minus alle kanaalkosten, inclusief branded bij Google. Winstmarge = geschat resultaat / kanaalomzet excl. btw. Meta en Google zijn gebaseerd op gemiddelde winkelkosten; influencerresultaat gebruikt de eigen gekoppelde orders. Kanaalresultaten zijn niet optelbaar. Overig is het positieve verschil tussen Shopify-omzet incl. btw en de kanaalclaims; kosten en winst zijn niet afzonderlijk toe te rekenen.</p></details><details class="panel" id="acquisitionCompare"><summary>Kosten per aankoop & break-even</summary><p class="hint">Vergelijk bekende marketingkosten per toegerekende aankoop. CAC voor uitsluitend nieuwe klanten is nog niet beschikbaar.</p><div class="table-wrap"><table><thead><tr><th>Kanaal</th><th>Aankopen</th><th>Kosten per aankoop</th><th>Break-even · raming</th><th>Ruimte per aankoop</th></tr></thead><tbody>${purchaseRows}</tbody></table></div><p class="hint">Break-even is één winkelbenchmark: (omzet excl. btw − product-, betaal- en bedrijfskosten) / Shopify-orders. Dezelfde grens geldt hier voor elk kanaal; verschillen in klant- en productmix zijn niet bekend. Positieve ruimte is geen bewezen kanaalwinst. Google gebruikt non-branded conversies; overlap tussen aankoopmetingen kan de kosten per aankoop te laag laten lijken. Influencers: commissies plus geregistreerde opstartkosten, verdeeld naar omzetaandeel.</p></details>`;
 }
 function resultLimitations(cur, keys) {
   const messages = [];
@@ -552,6 +561,7 @@ function resultLimitations(cur, keys) {
   }
   if (cur.channels.infl.giftTotal==null && ["all","infl"].includes(state.channel)) messages.push("Opstartkosten influencers ontbreken; resultaat niet volledig berekenbaar.");
   if (cur.unknown) messages.push(`${cur.unknown} productregels zonder kostprijs; resultaat niet berekenbaar.`);
+  if (["meta","google"].includes(state.channel)) messages.push("Kanaalresultaat is een raming: retouren en annuleringen beïnvloeden de gemiddelde winkelmarge, maar ontbreken als orderkoppeling met dit kanaal. Dit is geen exact resultaat na kanaalretouren.");
   if (E.status) messages.push("Synchronisatiestatus niet beschikbaar; actualiteit is niet volledig controleerbaar.");
   if (E.costs) messages.push("Kostenregister niet vernieuwd: berekening gebruikt de laatst gecontroleerde tarieven.");
   const unavailable = keys.filter(k => !D[k] || E[k] || stale(k) || !coverage(k));
@@ -569,9 +579,9 @@ function steeringSummary(cur, prev) {
     return `${noun}: ${euro(Math.abs(diff))} ${diff>0?'meer':'minder'}${pct}`;
   };
   let text=`Ten opzichte van ${fmt(p.from)} – ${fmt(p.to)}: `+movement(cur.revenue,prev.revenue,state.channel==='all'?'omzet':'toegerekende omzet');
-  if(cur.result!=null && prev.result!=null) text+='; '+movement(cur.result,prev.result,state.channel==='all'?'voorlopig resultaat':'geschat resultaat');
+  if(cur.result!=null && prev.result!=null) text+='; '+movement(cur.result,prev.result,state.channel==='all'?'voorlopig resultaat':state.channel==='infl'?'resultaat eigen orders':'geschat resultaat');
   text+='.';
-  if(cur.profitMargin!=null && prev.profitMargin!=null) text+=` Winstmarge: van ${num(prev.profitMargin)}% naar ${num(cur.profitMargin)}% (van elke €100 omzet excl. btw blijft ${num(cur.profitMargin)} euro ${state.channel==='all'?'voorlopig':'naar schatting'} over).`;
+  if(cur.profitMargin!=null && prev.profitMargin!=null) text+=` Winstmarge: van ${num(prev.profitMargin)}% naar ${num(cur.profitMargin)}% (van elke €100 omzet excl. btw blijft ${num(cur.profitMargin)} euro ${state.channel==='all'?'voorlopig':state.channel==='infl'?'na toegerekende kosten':'naar schatting'} over).`;
   if(cur.spend!=null && prev.spend!=null && prev.spend>0 && prev.revenue>0 && cur.spend>prev.spend && cur.spend/prev.spend>cur.revenue/prev.revenue) text+=' Marketingkosten groeien sneller dan omzet.';
   return text;
 }
@@ -650,7 +660,7 @@ function render() {
       ? "Zonder vergelijking"
       : p
         ? `vs. ${fmt(p.from)} – ${fmt(p.to)}`
-        : "";
+        : "Geen eerdere periode vanaf 5 aug beschikbaar";
   const metricCard = (k) => {
      const m = metricMeta(k);
      return `<button class="kpi ${state.metrics.includes(k) ? "active" : ""}" data-metric="${k}" aria-pressed="${state.metrics.includes(k)}"><span class="label">${m.label}</span><strong>${m.fmt(cur[k])}</strong><small>${k === "result" && state.channel === "all" && cur.result != null && cur.revenue > 0 ? (state.daan==="without" ? "Zonder kosten Daan" : "Met Daan · na 4% overhead") : k === "result" && state.channel!=="all" ? (cur.result!=null && cur.revenue>0 ? num(cur.result/(cur.revenue/(1+C.assumed_vat))*100)+"% van omzet excl. btw · geschat" : "Marge niet beschikbaar") : k === "cost" && cur.cost != null && cur.revenue > 0 ? num((cur.cost / cur.revenue) * 100) + "% van omzet · geraamde basis" : k === "revenue" && state.channel === "all" ? num(cur.count) + " orders · " + euro(cur.incl) + " incl. btw" : m.sub}</small><small class="delta">${delta(k, cur, prev)}</small></button>`;
@@ -1622,10 +1632,10 @@ function presetRange(p) {
     to = shift(today.slice(0, 8) + "01", -1);
     from = to.slice(0, 8) + "01";
   } else if (p === "all") {
-    from = "2026-08-01";
+    from = STORE_START;
     to = today;
   } else from = shift(to, -6);
-  return {from, to};
+  return {from:boundDate(from), to:boundDate(to)};
 }
 function activePeriodPreset() {
   return ["today", "yesterday", "seven", "week", "month", "lastmonth", "all"].find(key => {
@@ -1645,6 +1655,7 @@ async function start() {
     ({ data: D, costs: C, errors: E } = await load());
     const hadQuery = !!location.search;
     state = readState();
+    for(const id of ["from","to","prevFrom","prevTo"]) {$("#"+id).min=STORE_START; $("#"+id).max=today;}
     persist(false);
     render();
     $("#preset").value = hadQuery ? "custom" : "seven";
@@ -1654,6 +1665,7 @@ async function start() {
         id: "period",
         label: "Periode",
         today,
+        min: STORE_START,
         options: [
           ["today", "Vandaag"],
           ["yesterday", "Gisteren"],
@@ -1678,13 +1690,14 @@ async function start() {
         id: "comparePeriod",
         label: "Vergelijken",
         today,
+        min: STORE_START,
         options: [
           ["previous", "Vorige periode"],
           ["off", "Niet vergelijken"],
         ],
         getRange: () => ({
           preset: state.compare,
-          ...previous(state.from, state.to),
+          ...(getPrev() || {from:state.from,to:state.to}),
           ...(state.compare === "custom"
             ? { from: state.pfrom, to: state.pto }
             : {}),
@@ -1741,9 +1754,9 @@ async function start() {
       e.preventDefault();
       const f = $("#from").value,
         t = $("#to").value;
-      if (f > t || t > today || new Date(t) - new Date(f) > 3 * 366 * 864e5) {
+      if (!validDate(f) || !validDate(t) || f < STORE_START || f > t || t > today || new Date(t) - new Date(f) > 3 * 366 * 864e5) {
         $("#to").setCustomValidity(
-          "Kies een geldige periode van maximaal drie jaar, niet in de toekomst.",
+          "Kies een periode vanaf 5 augustus 2026, niet in de toekomst.",
         );
         $("#to").reportValidity();
         return;
@@ -1762,7 +1775,7 @@ async function start() {
       e.preventDefault();
       const f = $("#prevFrom").value,
         t = $("#prevTo").value;
-      if (f > t || t > today) {
+      if (!validDate(f) || !validDate(t) || f < STORE_START || f > t || t > today) {
         $("#prevTo").setCustomValidity("Kies een geldige afgesloten periode.");
         $("#prevTo").reportValidity();
         return;

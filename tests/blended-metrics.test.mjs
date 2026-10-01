@@ -149,3 +149,20 @@ test('renamed Prime preserves costs, management bonus and profit across order an
  assert.ok(points.every(p=>Number.isFinite(p.result)));
  assert.equal(finance([{...row,items:['Unknown future product']}],costs).cost,null);
 });
+
+
+test('return handling charges per package and influencer profit uses own refunded orders',()=>{
+ const costs={...C,returns:{cost_per_return:20,orders:[{num:'#1',paid_incl:121,refunded_incl:121,kind:'received_return',received_packages:2}]}};
+ const m=compute(D,costs,'2026-09-01','2026-09-01','infl');
+ assert.equal(m.creatorFinance.returnCost,40);
+ assert.equal(m.creatorFinance.receivedReturnPackages,2);
+ assert.equal(m.revenue,0);
+ assert.equal(m.result,-40-2.42-40-12);
+ assert.equal(m.result,m.creatorFinance.excl-m.creatorFinance.cost-m.creatorFinance.overhead-m.spend);
+ const flagged=compute({...D,creators:{orders:D.creators.orders.map(o=>({...o,retour:true}))}},costs,'2026-09-01','2026-09-01','infl');
+ assert.equal(flagged.result,m.result);
+ const unverified=compute({...D,creators:{orders:D.creators.orders.map(o=>({...o,retour:true}))}},C,'2026-09-01','2026-09-01','infl');
+ assert.equal(unverified.result,null);
+ const missing=compute({...D,shopify:{orders:[]}},costs,'2026-09-01','2026-09-01','infl');
+ assert.equal(missing.result,null);
+});

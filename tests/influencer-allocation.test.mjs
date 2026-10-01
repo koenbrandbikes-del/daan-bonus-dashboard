@@ -14,6 +14,9 @@ test('gift investment is allocated once across all influencer revenue and deduct
  const daily=series(data,costs,from,to,'infl');
  assert(Math.abs(daily.reduce((n,r)=>n+r.channels.infl.giftAllocated,0)-expected)<1e-8);
  const without=compute(data,{...costs,influencer_gifting:null},from,to,'infl');
- assert(Math.abs(without.result-full.result-expected)<1e-8);
+ const knownFull=compute(data,costs,'2026-08-05',to,'infl');
+ const knownWithout=compute(data,{...costs,influencer_gifting:null},'2026-08-05',to,'infl');
+ assert.notEqual(knownFull.result,null);
+ assert(Math.abs(knownWithout.result-knownFull.result-knownFull.channels.infl.giftAllocated)<1e-8);
  assert(Math.abs(full.spend-without.spend-expected)<1e-8);
 });

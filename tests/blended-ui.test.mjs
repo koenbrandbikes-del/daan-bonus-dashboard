@@ -3,6 +3,18 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { JSDOM } from "jsdom";
 const root = new URL("../", import.meta.url);
+test('influencer channel comparison matches its own-order result',async()=>{
+ const w=await boot('?from=2026-09-01&to=2026-09-30');
+ const d=w.document;
+ const row=[...d.querySelectorAll('#marketingMix tbody tr')].find(r=>r.querySelector('[data-channel=infl]'));
+ const profit=row.children[4].textContent;
+ row.querySelector('[data-channel=infl]').click();
+ assert.equal(d.querySelector('[data-metric=result] strong').textContent,profit);
+ assert.match(d.querySelector('[data-metric=result]').textContent,/eigen orders/);
+ d.querySelector('#tab-meta').click();
+ assert.match(d.querySelector('.result-limitations').textContent,/geen exact resultaat na kanaalretouren/);
+ w.close();
+});
 async function boot(
   query = "",
   failSource = "",
@@ -664,5 +676,25 @@ test('Daan detail exposes negative daily accrual and known calendar fixed fees',
  assert(rows.some(r=>r.cells[2].textContent.includes('-')));
  assert.match(d.querySelector('.management').textContent,/Verliesdagen geven een negatief bedrag/);
  assert.match(daily.textContent,/Blokcorrectie/);
+ w.close();
+});
+
+
+test('store start blocks early URL, presets, calendars and comparisons',async()=>{
+ const w=await boot('?from=2026-08-01&to=2026-10-01&compare=custom&pfrom=2026-07-01&pto=2026-07-31'),d=w.document;
+ assert.equal(new w.URLSearchParams(w.location.search).get('from'),'2026-08-05');
+ assert.equal(new w.URLSearchParams(w.location.search).get('compare'),'off');
+ assert.equal(d.querySelector('#from').min,'2026-08-05');
+ d.querySelector('#periodButton').click();
+ d.querySelector('[data-preset=all]').click();
+ assert.equal(new w.URLSearchParams(w.location.search).get('from'),'2026-08-05');
+ assert.doesNotMatch(d.querySelector('.view-head .subtitle').textContent,/31 mei|31 jul/);
+ d.querySelector('#periodButton').click();
+ for(let n=0;n<3;n++){const b=d.querySelector('#periodMenu [aria-label="Vorige maand"]');if(!b.disabled)b.click();}
+ for(const date of ['2026-08-01','2026-08-02','2026-08-03','2026-08-04']) assert.equal(d.querySelector(`[data-date="${date}"]`).disabled,true);
+ assert.equal(d.querySelector('[data-date="2026-08-05"]').disabled,false);
+ assert.equal(d.querySelector('#periodMenu [aria-label="Vorige maand"]').disabled,true);
+ d.querySelector('[data-date="2026-08-05"]').click();d.querySelector('#periodMenu .cal-apply').click();
+ assert.equal(new w.URLSearchParams(w.location.search).get('from'),'2026-08-05');
  w.close();
 });

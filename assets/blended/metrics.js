@@ -26,7 +26,8 @@ export function reconciledOrder(order, costs) {
     paid_incl: correction.paid_incl, refunded_incl: correction.refunded_incl,
     sales_reversal_report: correction.sales_reversal_report, refund_status: correction.refund_status,
     return_kind: correction.kind, store_credit: correction.store_credit,
-    return_cost: correction.kind === 'received_return' ? (costs.returns.cost_per_return ?? 20) : 0};
+    return_packages: correction.kind === 'received_return' ? (correction.received_packages ?? 1) : 0,
+    return_cost: correction.kind === 'received_return' ? (costs.returns.cost_per_return ?? 20)*(correction.received_packages ?? 1) : 0};
 }
 // Explicit aliases preserve a single cost for renamed products. Unknown products
 // must remain unknown rather than silently getting a zero or guessed cost.
@@ -57,6 +58,7 @@ export function finance(orders, costs) {
     returnCost,
     refundedIncl: sum(orders, 'refunded_incl'),
     refundedOrders: orders.filter(o => o.refunded_incl > 0).length,
+    receivedReturnPackages: sum(orders,'return_packages'),
     receivedReturns: orders.filter(o => o.return_kind === 'received_return').length,
     unknownReturns: orders.filter(o => o.return_kind === 'unknown').length,
     overhead: excl * costs.overhead_rate,
@@ -129,9 +131,9 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
         .filter((o) => !o.test)
         .map((o) => [o.num, reconciledOrder(o, costs)]),
     );
-  const creators = (data.creators?.orders || []).filter(
-    (o) => !o.retour && inRange(o, from, to),
-  );
+  const creatorSelection = (data.creators?.orders || []).filter(o => inRange(o, from, to));
+  const creators = creatorSelection.filter(o => !o.retour || byNum.get(o.num)?.return_kind);
+  const unverifiedCreatorReturn = creatorSelection.some(o => o.retour && !byNum.get(o.num)?.return_kind);
   const meta = (data.meta?.daily_meta || []).filter((o) =>
     inRange(o, from, to),
   );
@@ -164,7 +166,7 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
     },
   };
   const giftTotal=influencerInvestment(data.creators,costs);
-  const allCreatorRevenue=sum((data.creators?.orders||[]).filter(o=>!o.retour),o=>Math.max(0,byNum.get(o.num)?.incl ?? o.omzet_excl*(1+costs.assumed_vat)));
+  const allCreatorRevenue=sum((data.creators?.orders||[]).filter(o=>!o.retour || byNum.get(o.num)?.return_kind),o=>Math.max(0,byNum.get(o.num)?.incl ?? o.omzet_excl*(1+costs.assumed_vat)));
   const giftRate=giftTotal==null?null:allCreatorRevenue>0?giftTotal/allCreatorRevenue:0;
   channels.infl.commission=channels.infl.spend;
   channels.infl.giftRate=giftRate;
@@ -190,7 +192,9 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
   const numerator =
     channel === "all" ? (data.shopify ? f.incl : null) : revenue;
   const marginRate = options.marginRate !== undefined ? options.marginRate : data.shopify && f.incl>0 && f.cost!=null ? (f.excl-f.cost-f.overhead)/f.incl : null;
-  const result = channel !== "all" ? (marginRate!=null && revenue!=null && spend!=null ? revenue*marginRate-spend : null) :
+  const creatorOrders=creators.map(o=>byNum.get(o.num));
+  const creatorFinance=!unverifiedCreatorReturn && data.creators && creatorOrders.every(Boolean) ? finance(creatorOrders,costs) : null;
+  const result = channel === "infl" ? (creatorFinance && creatorFinance.cost!=null && spend!=null ? creatorFinance.excl-creatorFinance.cost-creatorFinance.overhead-spend : null) : channel !== "all" ? (marginRate!=null && revenue!=null && spend!=null ? revenue*marginRate-spend : null) :
       data.shopify && spend !== null && f.cost !== null ? f.excl-f.cost-spend-f.overhead : null;
   const netRevenue = channel === "all" ? revenue : revenue / (1 + costs.assumed_vat);
   return {
@@ -208,6 +212,7 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
     revenue,
     spend,
     marginRate,
+    creatorFinance,
     result,
     profitMargin: result != null && netRevenue > 0 ? result / netRevenue * 100 : null,
     roas: spend > 0 && numerator !== null ? numerator / spend : null,

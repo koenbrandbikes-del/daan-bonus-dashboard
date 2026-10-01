@@ -8,6 +8,7 @@ export function createDatePicker({
   onPreset,
   onApply,
   today,
+  min = "0001-01-01",
 }) {
   const format = (d) =>
     new Date(d + "T12:00:00").toLocaleDateString("nl-NL", {
@@ -59,7 +60,7 @@ export function createDatePicker({
           : from && to && date > from && date < to
             ? " cd-range"
             : "");
-      b.disabled = date > today;
+      b.disabled = date < min || date > today;
       b.setAttribute(
         "aria-label",
         new Date(date + "T12:00:00").toLocaleDateString("nl-NL", {
@@ -70,6 +71,7 @@ export function createDatePicker({
       );
       b.setAttribute("aria-pressed", String(date === from || date === to));
       b.onclick = () => {
+        if(date<min || date>today) return;
         if (!pickingEnd) {
           from = date;
           to = date;
@@ -88,7 +90,8 @@ export function createDatePicker({
       ? `${format(from)} · kies een einddatum, of pas één dag toe`
       : `${format(from)} – ${format(to)} · klik een begindatum om te wijzigen`;
     host.querySelector(".cal-apply").disabled =
-      new Date(to) - new Date(from) > 3 * 366 * 864e5;
+      from<min || to>today || from>to || new Date(to) - new Date(from) > 3 * 366 * 864e5;
+    host.querySelectorAll(".cal-nb")[0].disabled = iso(new Date(month.getFullYear(),month.getMonth()+1,0)) <= min.slice(0,8)+"31";
     host.querySelectorAll(".cal-nb")[1].disabled =
       iso(new Date(month.getFullYear(), month.getMonth() + 1, 1)) > today;
   }
@@ -144,11 +147,13 @@ export function createDatePicker({
   host.querySelectorAll(".cal-nb").forEach(
     (b, i) =>
       (b.onclick = () => {
+        if(b.disabled) return;
         month.setMonth(month.getMonth() + (i ? 1 : -1));
         paint();
       }),
   );
   host.querySelector(".cal-apply").onclick = () => {
+    if(from<min || to>today || from>to) return;
     onApply(from, to);
     chosenPreset = null;
     chosenRange = rangeKey(getRange());

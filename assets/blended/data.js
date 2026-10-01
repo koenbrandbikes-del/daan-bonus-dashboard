@@ -50,6 +50,7 @@ export function validateCosts(d) {
   for (const key of ["payment_rate","overhead_rate","assumed_vat"]) if (!Number.isFinite(d[key]) || d[key]<0 || d[key]>1) throw Error("Ongeldig kostentarief");
   const m=d.meta_management;
   if (!m || !Number.isFinite(m.monthly_fixed) || m.monthly_fixed<0 || !Number.isFinite(m.bonus_rate) || m.bonus_rate<0 || m.bonus_rate>1 || !validSourceDate(m.contract_start) || !Number.isInteger(m.bonus_period_days) || m.bonus_period_days<1) throw Error("Ongeldige bonusregeling");
+  if(d.returns?.orders?.some(r=>r.received_packages!==undefined && (!Number.isInteger(r.received_packages)||r.received_packages<0))) throw Error("Ongeldig aantal retourpakketten");
   return d;
 }
 export async function fetchJSON(url, {timeoutMs=8000, attempts=2}={}) {

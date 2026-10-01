@@ -29,6 +29,18 @@ met bewaarde incidentduur, bereikbare eigenaar en herstelafspraken.
 - Historische bonusgegevens vóór beschikbare daghistorie ontbreken.
 - Retouren en kostprijzen blijven gecontroleerde momentopnamen/aannamen.
   Influenceropstartkosten volgen de brontabel; verzenddatums ontbreken nog.
+- Retourclassificatie gecontroleerd op 1 oktober 2026: ontvangen retouren volgen
+  `RETURN_RECEIVED` of Shopify refundregels met `restockType: RETURN`.
+  €20 per pakket; historisch één pakket per retourorder aangenomen, niet per artikel.
+  Nieuwe ontvangstregistraties en terugbetalingen worden nog niet automatisch
+  volledig gesynchroniseerd. De datum van de financiële momentopname blijft apart zichtbaar.
+- Influencerresultaat gebruikt de eigen gekoppelde Shopify-orders na correcties,
+  inclusief behouden product-/betaalkosten, retourafhandeling en kanaalkosten.
+  Ontbrekende orderkoppelingen of ongecontroleerde retourvlaggen geven geen resultaat.
+  Meta en Google gebruiken de gemiddelde winkelmarge: correcties beïnvloeden die
+  marge, maar zijn zonder orderattributie niet exact per kanaal verwerkt.
+- Selecties, presets en vergelijking beginnen op 5 augustus 2026; de historische
+  Daan-contractberekening behoudt haar eigen oorspronkelijke begindatum.
 - Platformattributie overlapt en wordt achteraf bijgesteld; kanaalwinst is geschat.
 - Worker/MCP bevatten afzonderlijke rekenlogica. Wijzigingen aan het financieel
   dashboard zijn geen bewijs dat die aparte API exact dezelfde uitkomst geeft.
