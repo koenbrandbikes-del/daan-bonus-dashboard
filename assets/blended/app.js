@@ -661,11 +661,10 @@ function renderUpdateSummary() {
   };
 }
 function renderStatus() {
-  const statusOk=['meta','google','shopify','creators'].every(k=>D[k]&&!E[k]&&!stale(k)&&coverage(k))&&!!D.shopify_check;
-  $('#statusButton').innerHTML=`<span class="live-dot ${statusOk?'':'warning'}" aria-hidden="true">${statusOk?'':'!'}</span>`;
-  $('#statusButton').className=statusOk?'status-ok':'status-warning';
-  $('#statusButton').setAttribute('aria-label',statusOk?'Datastatus: broncontroles goed':'Datastatus: aandacht nodig');
-  $('#statusButton').title=statusOk?'Bronnen bijgewerkt · klik voor datastatus':'Datastatus: aandacht nodig';
+  $('#statusButton').innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.5" r=".8" fill="currentColor" stroke="none"/></svg>';
+  $('#statusButton').className='status-info';
+  $('#statusButton').setAttribute('aria-label','Data & updates bekijken');
+  $('#statusButton').title='Data & updates';
   $('#status').innerHTML=`<div id="updateSummary" aria-live="polite"></div><details class="order-check"><summary>Shopify-ordercontrole</summary>${D.shopify_check ? `<p>${D.shopify_check.orders} unieke orders · ${D.shopify_check.test_orders} testorders uitgesloten. Laatste order: ${esc(D.shopify_check.latest_num)} · ${esc(D.shopify_check.latest_date)}.</p><p>${(()=>{const m=compute(D,C,state.from,state.to,'all');return `Geselecteerde periode: ${num(m.count)} orders · ${euro(m.incl)} omzet incl. btw.`})()}</p><button id="viewShopifyOrders">Shopify-orders bekijken</button>` : '<p>Ordercontrole niet beschikbaar.</p>'}<p class="hint">Dezelfde orderbron als het Meta-dashboard. Controle op unieke ordernummers, datums, bedragen en productregels bij laden; dit is niet het tijdstip van een nieuwe bestelling.</p></details>`;
   renderUpdateSummary();
   if($('#viewShopifyOrders')) $('#viewShopifyOrders').onclick=()=>{change(()=>{state.channel='all';state.metrics=['revenue'];state.detail={type:'orders',name:'Alle orders'};state.sub=null;});$('#detailFold').open=true;$('#detail').scrollIntoView({block:'start'});};

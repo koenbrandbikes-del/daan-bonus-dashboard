@@ -350,12 +350,15 @@ test("channel revenue bar totals attributed revenue, excludes branded Google and
   w.close();
 });
 
-test("missing source suppresses revenue distribution and healthy status tick", async () => {
+test("missing source stays visible in details with a neutral data information button", async () => {
   const w = await boot("?from=2026-09-23&to=2026-09-29", "google.json"), d = w.document;
   assert.equal(d.querySelectorAll('.revenue-bar > button').length,0);
   assert(d.querySelector('.channel-revenue').textContent.includes('Verdeling niet beschikbaar'));
   assert(!d.querySelector('#statusButton').classList.contains('status-ok'));
-  assert(d.querySelector('#statusButton').getAttribute('aria-label').includes('aandacht nodig'));
+  assert.equal(d.querySelector('#statusButton').getAttribute('aria-label'),'Data & updates bekijken');
+  d.querySelector('#statusButton').click();
+  assert.equal(d.querySelector('#status').hidden,false);
+  assert(d.querySelector('#updateSummary').textContent.includes('Niet beschikbaar'));
   w.close();
 });
 

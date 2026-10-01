@@ -1224,8 +1224,7 @@ header { position:relative; flex-wrap:wrap; }
 .revenue-legend strong,.revenue-legend small { display:block; margin-top:5px; }
 .revenue-legend small { color:#93a2b8; }
 .channel-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }
-#statusButton.status-ok { color:#8fc49b; }
-#statusButton.status-warning { color:#e5b863; }
+#statusButton.status-info { color:#93a2b8; }
 @media(min-width:700px) { .kpis { grid-template-columns:repeat(5,minmax(0,1fr)); } .kpis.channel { grid-template-columns:repeat(4,minmax(0,1fr)); } .kpi { padding:14px 12px; } .kpi .label { font-size:10px; } .delta-main { flex-wrap:wrap; } }
 @media(max-width:699px) {
  .shell { padding:20px 12px; }
