@@ -1555,7 +1555,7 @@
   },
   {
    "d": "2026-10-01",
-   "spend": 0.71,
+   "spend": 1.1,
    "rev": 0,
    "conv": 0,
    "id": "23981395562",
@@ -2644,7 +2644,7 @@
   },
   {
    "d": "2026-09-30",
-   "spend": 128.8,
+   "spend": 129.77,
    "rev": 395.28,
    "conv": 3,
    "id": "23985056312",
@@ -3211,7 +3211,7 @@
   },
   {
    "d": "2026-10-01",
-   "spend": 0.34,
+   "spend": 0.72,
    "rev": 0,
    "conv": 0,
    "id": "23989624267",
@@ -4875,12 +4875,12 @@
    "conv": 0
   }
  ],
- "details_synced_at": "2026-10-01T05:22:37.779Z",
+ "details_synced_at": "2026-10-01T05:37:37.813Z",
  "source": "google_ads_api",
  "customer_id": "7645288282",
  "currency": "EUR",
  "time_zone": "Europe/Amsterdam",
- "synced_at": "2026-10-01T05:22:37.779Z",
+ "synced_at": "2026-10-01T05:37:37.813Z",
  "coverage_from": "2026-08-01",
  "coverage_to": "2026-10-01",
  "attribution": "Primary conversions and conversion value by ad interaction date; may include non-purchase goals and overlap with other channels.",
@@ -5367,39 +5367,39 @@
   },
   {
    "d": "2026-09-30",
-   "spend": 152.28,
+   "spend": 153.25,
    "conv": 8.895719,
    "rev": 1234.0228132,
    "impr": 9329,
-   "cl": 146
+   "cl": 147
   },
   {
    "d": "2026-10-01",
-   "spend": 4.19,
+   "spend": 4.96,
    "conv": 0,
    "rev": 0,
-   "impr": 744,
-   "cl": 9
+   "impr": 803,
+   "cl": 11
   }
  ],
  "vandaag": {
   "from": "2026-10-01",
   "to": "2026-10-01",
   "d": "2026-10-01",
-  "spend": 4.19,
+  "spend": 4.96,
   "conv": 0,
   "rev": 0,
-  "impr": 744,
-  "cl": 9
+  "impr": 803,
+  "cl": 11
  },
  "gisteren": {
   "from": "2026-09-30",
   "to": "2026-09-30",
   "d": "2026-09-30",
-  "spend": 152.28,
+  "spend": 153.25,
   "conv": 8.895719,
   "rev": 1234.0228132,
   "impr": 9329,
-  "cl": 146
+  "cl": 147
  }
 }
