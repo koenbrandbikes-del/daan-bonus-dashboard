@@ -248,8 +248,12 @@ test("Google defaults to non-brand and keeps the scope in charts, detail and URL
         r.d <= "2026-09-29",
     )
     .reduce((s, r) => s + r.spend, 0);
+  const fee=source.daily_google.filter(r=>r.d>='2026-09-23' && r.d<='2026-09-29').reduce((n,day)=>{
+    const selected=source.daily_campaigns.filter(r=>r.d===day.d && ["23981395562","23985056312","23980131321","23981395565"].includes(r.id)).reduce((n,r)=>n+r.spend,0);
+    return n+12*(day.spend>0?Math.min(1,selected/day.spend):1);
+  },0);
   const shown = d.querySelector("[data-metric=spend] strong").textContent;
-  assert(shown.includes(Math.round(expected).toLocaleString("nl-NL")));
+  assert(shown.includes(Math.round(expected+fee).toLocaleString("nl-NL")));
   assert.match(d.querySelector("#detail").textContent, /Non-branded/);
   d.querySelector("[data-google-scope=brand]").click();
   assert.equal(
@@ -716,16 +720,11 @@ test('first glance has four KPIs, visible interpretation and revenue-profit defa
  assert.match(d.querySelector('#collapseAnalysis').textContent,/Omzet excl. btw & Nettowinst/);
  w.close();
 });
-test('historical missing Daan bonus is explained and excluded scenario stays explicit',async()=>{
- const w=await boot('?from=2026-08-01&to=2026-09-30'),d=w.document;
- assert.match(d.querySelector('.result-limitations').textContent,/historische bonusgegevens Daan ontbreken/);
- assert.equal(d.querySelector('[data-metric=result] strong').textContent,'—');
- d.querySelector('[data-show-status]').click();assert.equal(d.querySelector('#status').hidden,false);
- d.querySelector('[data-daan=without]').click();
- assert.doesNotMatch(d.querySelector('.result-limitations')?.textContent || '',/bonusgegevens Daan/);
- assert.match(d.querySelector('#costOverview').textContent,/Bekende marketingkosten|Marketingkosten/);
- assert.match(d.querySelector('.scenario-note').textContent,/vergoeding uitgesloten/);
+test('full history starts on 5 August and includes both management fees',async()=>{
+ const w=await boot('?from=2026-08-05&to=2026-10-01'),d=w.document;
+ assert.doesNotMatch(d.querySelector('.result-limitations')?.textContent || '',/historische bonusgegevens Daan ontbreken/);
  assert.notEqual(d.querySelector('[data-metric=result] strong').textContent,'—');
+ assert.match(d.querySelector('#googleManagement').textContent,/360/);
  w.close();
 });
 test('near-zero and negative previous profit use euro changes, not extreme growth claims',async()=>{

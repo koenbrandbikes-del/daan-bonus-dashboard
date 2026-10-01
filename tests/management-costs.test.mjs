@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import {managementCosts,compute,shift,series} from '../assets/blended/metrics.js';
+import {managementCosts,googleManagementCosts,googleScopeData,compute,shift,series} from '../assets/blended/metrics.js';
 const read=f=>JSON.parse(fs.readFileSync(new URL('../'+f,import.meta.url)));
 const costs=read('assets/blended/costs.json');
 const data={meta:read('data/meta.json'),shopify:read('data/shopify.json'),google:read('data/google.json'),creators:read('data/creators.json')};
@@ -101,5 +101,35 @@ test('missing middle day or duplicate day remains unknown while fixed fee stays 
   const m=managementCosts(f.data,f.costs,'2026-09-01','2026-09-30');
   assert.equal(m.bonus,null);assert.equal(m.total,null);close(m.fixed,1500);
   assert(m.daily.every(d=>d.bonus===null && d.fixed===50));
+ }
+});
+
+test('owner-selected 5 August calculation cutoff makes full history finite without July input',()=>{
+ const m=managementCosts(data,costs,'2026-08-05','2026-09-30');
+ assert.ok(Number.isFinite(m.total));
+ assert.equal(m.periods[0].calculationFrom,'2026-08-05');
+ assert.equal(m.periods[0].daily[0].d,'2026-08-05');
+ const missing={...data,meta:{...data.meta,daily_meta:data.meta.daily_meta.filter(r=>r.d!=='2026-08-08')}};
+ assert.equal(managementCosts(missing,costs,'2026-08-05','2026-08-14').total,null);
+});
+test('Google fixed fee affects result once, scopes and daily series reconcile',()=>{
+ const f='2026-09-01',t='2026-09-30';
+ close(googleManagementCosts(data,costs,f,t).fixed,360);
+ close(googleManagementCosts(data,costs,'2026-08-05','2026-08-31').fixed,360*27/31);
+ const noFee={...costs,google_management:undefined};
+ for(const channel of ['all','meta','google','infl']) {
+  const withFee=compute(data,costs,f,t,channel),without=compute(data,noFee,f,t,channel);
+  close(without.result-withFee.result,['all','google'].includes(channel)?360:0);
+  close(withFee.marginBuild.filter(r=>r.kind==='line').reduce((n,r)=>n+r.value,0),withFee.result);
+ }
+ const whole=compute(data,costs,f,t,'google');
+ const nb=compute(googleScopeData(data,'nonbrand'),costs,f,t,'google');
+ const brand=compute(googleScopeData(data,'brand'),costs,f,t,'google');
+ close(nb.googleManagement.fixed+brand.googleManagement.fixed,360);
+ close(nb.channels.google.spend+brand.channels.google.spend,whole.channels.google.spend);
+ close(whole.roas,compute(data,noFee,f,t,'google').roas);
+ for(const scope of ['all','nonbrand','brand']) {
+  const scoped=googleScopeData(data,scope),total=compute(scoped,costs,f,t,'google');
+  close(series(scoped,costs,f,t,'google','day').reduce((n,r)=>n+r.result,0),total.result);
  }
 });

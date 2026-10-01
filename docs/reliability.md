@@ -91,3 +91,20 @@ De leeftijd bevriest op de laatste succesvolle controle, zodat een storing de re
 
 
 De publieke dagtotalen bevatten een basis vóór correcties en de werkelijke correcties per oorspronkelijke besteldatum, met een aparte influenceruitsplitsing. Het dashboard past alleen het verschil tussen die twee toe op zijn eigen orderbasis, zodat nieuwe orders blijven meetellen en de oude handmatige correcties niet dubbel worden afgetrokken. Kostengrondslag moet exact overeenkomen met de huidige tarieven; bij afwijking vervalt de nieuwe bron met waarschuwing totdat de runner opnieuw rekent. Onderliggende orderregels uit de oude export blijven als eerdere momentopname aangeduid; nieuwe individuele retourdetails zijn geen onderdeel van de publieke update.
+
+## Start financiële berekening en Google-beheer
+
+Op instructie van de eigenaar begint de financiële berekening op 5 augustus 2026.
+Het eerste Daan-contractblok gebruikt alleen de dagen vanaf deze start; de
+contractankers en daaropvolgende 30-dagenblokken blijven behouden. Dit is geen
+herberekening van vóór 5 augustus verschuldigde bonussen. Ontbrekende dagen
+binnen de geselecteerde financiële geschiedenis blijven een fout.
+
+Google-beheer staat standaard op €360 excl. btw per kalendermaand vanaf
+5 augustus, naar dagen verdeeld. De afspraak van 25–26 juni noemt gemiddeld
+6 uur à €60 met nacalculatie; op instructie van de eigenaar wordt dit als
+vaste maandpost begroot. Het betreft Google/Microsoft-beheer, hier geheel
+aan Google toegerekend. Eenmalige inrichting wordt niet maandelijks herhaald.
+Branded/non-branded verdelen de vergoeding per dag naar advertentiekosten;
+zonder kosten krijgt non-branded de vergoeding. De scopes tellen samen op
+tot één volledige maandpost. Google-platform-ROAS gebruikt alleen media spend.

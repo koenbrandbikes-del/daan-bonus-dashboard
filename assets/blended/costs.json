@@ -24,7 +24,8 @@
     "monthly_fixed": 1500,
     "bonus_rate": 0.1,
     "contract_start": "2026-07-16",
-    "bonus_period_days": 30
+    "bonus_period_days": 30,
+    "calculation_start": "2026-08-05"
   },
   "influencer_gifting": {
     "source": "creators.startup_costs",
@@ -417,5 +418,10 @@
       "Shipping naar NL is inkomend transport, niet klantverzending. Fulfilment wordt als één brontarief gebruikt.",
       "Herhaalorderkorting niet toegepast: betrouwbare klant-/herhaalorderkoppeling ontbreekt."
     ]
+  },
+  "google_management": {
+    "monthly_fixed": 360,
+    "start": "2026-08-05",
+    "basis": "Standaard maandpost volgens instructie eigenaar; afgesproken uitgangspunt 6 uur x €60 excl. btw (25–26 juni 2026), mail vermeldt nacalculatie. Google/Microsoft beheer volledig toegerekend aan Google binnen dit dashboard."
   }
 }

@@ -99,14 +99,15 @@ export function managementCosts(data, costs, from, to) {
   for(const [start,selected] of periods) {
     const end=shift(start,cfg.bonus_period_days-1);
     const until=data.meta?.snap && data.meta.snap<end ? data.meta.snap : end;
-    const meta=data.meta?.daily_meta?.filter(r=>r.d>=start && r.d<=until).sort((a,b)=>a.d.localeCompare(b.d));
+    const calculationFrom=cfg.calculation_start && cfg.calculation_start>start ? cfg.calculation_start : start;
+    const meta=data.meta?.daily_meta?.filter(r=>r.d>=calculationFrom && r.d<=until).sort((a,b)=>a.d.localeCompare(b.d));
     // Retain the original contract margin basis, excluding manual refunds.
-    const f=finance((data.shopify?.orders||[]).filter(o=>!o.test && o.d>=start && o.d<=until),{...costs,returns:null});
+    const f=finance((data.shopify?.orders||[]).filter(o=>!o.test && o.d>=calculationFrom && o.d<=until),{...costs,returns:null});
     const margin=f.excl-f.cost-f.overhead;
     // Missing days are not zero-spend days. July Shopify coverage is incomplete.
     const byDate=new Map(meta?.map(r=>[r.d,r]));
-    let complete=!!meta && !!data.shopify && start>='2026-08-01' && until>=start && f.cost!=null && margin>0 && byDate.size===meta.length;
-    for(let d=start;complete && d<=until;d=shift(d,1)) {
+    let complete=!!meta && !!data.shopify && calculationFrom>='2026-08-01' && until>=calculationFrom && f.cost!=null && margin>0 && byDate.size===meta.length;
+    for(let d=calculationFrom;complete && d<=until;d=shift(d,1)) {
       const row=byDate.get(d);
       if(!row || !['spend','rev7','rev1v'].every(k=>Number.isFinite(row[k]))) complete=false;
     }
@@ -126,9 +127,28 @@ export function managementCosts(data, costs, from, to) {
       const selectedDay=daily.get(row.d);
       if(selectedDay) Object.assign(selectedDay,row,{total:selectedDay.fixed+row.bonus});
     }
-    audit.push({from:start,to:end,through:until,bonus:periodBonus,rawBonus,closingAdjustment,allocated:part,breakEvenRoas:be,spend,revenue,daily:blockDaily});
+    audit.push({from:start,to:end,through:until,calculationFrom,bonus:periodBonus,rawBonus,closingAdjustment,allocated:part,breakEvenRoas:be,spend,revenue,daily:blockDaily});
   }
   return {fixed,bonus,total:bonus==null?null:fixed+bonus,periods:audit,daily:[...daily.values()]};
+}
+// Calendar-day fee. Split scopes by each day's media spend so daily charts
+// and branded + non-branded views reconcile to the company fee exactly once.
+export function googleManagementCosts(data,costs,from,to) {
+ const cfg=costs.google_management;
+ if(!cfg)return {fixed:0,full:0,daily:[]};
+ const all=data.google?.allocation_all_daily ?? data.google?.daily_google ?? [];
+ const selected=data.google?.daily_google ?? [];
+ const scope=data.google?.allocation_scope ?? 'all';
+ const daily=[];
+ for(let d=from;d<=to;d=shift(d,1)) {
+  if(d<cfg.start)continue;
+  const date=new Date(d+'T12:00:00Z');
+  const full=cfg.monthly_fixed/new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth()+1,0)).getUTCDate();
+  const totalSpend=sum(all.filter(r=>r.d===d),'spend'),selectedSpend=sum(selected.filter(r=>r.d===d),'spend');
+  const weight=scope==='all'?1:totalSpend>0?Math.min(1,selectedSpend/totalSpend):scope==='nonbrand'?1:0;
+  daily.push({d,full,fixed:full*weight});
+ }
+ return {fixed:sum(daily,'fixed'),full:sum(daily,'full'),daily};
 }
 export function compute(data, costs, from, to, channel = "all", options = {}) {
   const orders = (data.shopify?.orders || []).filter(
@@ -251,6 +271,10 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
   channels.infl.giftAllocated=channels.infl.revenue!=null && giftRate!=null?Math.max(0,channels.infl.revenue)*giftRate:null;
   channels.infl.spend=channels.infl.commission!=null && channels.infl.giftAllocated!=null?channels.infl.commission+channels.infl.giftAllocated:null;
   const management=managementCosts(data,costs,from,to);
+  const googleManagement=googleManagementCosts(data,costs,from,to);
+  channels.google.mediaSpend=channels.google.spend;
+  channels.google.managementFee=googleManagement.fixed;
+  if(channels.google.spend!=null)channels.google.spend+=googleManagement.fixed;
   channels.meta.mediaSpend=channels.meta.spend;
   channels.meta.spend=["meta","all"].includes(channel) && options.includeDaan === false ? channels.meta.mediaSpend : channels.meta.spend!=null && management.total!=null ? channels.meta.spend+management.total : null;
   const complete = Object.values(channels).every((c) => c.spend !== null);
@@ -307,10 +331,11 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
   ];
   if(channel==='all')marginBuild.push(
     line('metaAds','Meta-advertenties',negative(channels.meta.mediaSpend)),
-    line('googleAds','Google Ads · inclusief branded',negative(channels.google.spend)),
+    line('googleAds','Google Ads · inclusief branded',negative(channels.google.mediaSpend)),
   );
   if(channel==='meta')marginBuild.push(line('metaAds','Meta-advertenties',negative(channels.meta.mediaSpend)));
-  if(channel==='google')marginBuild.push(line('googleAds','Google Ads · geselecteerde campagnes',negative(spend)));
+  if(channel==='google')marginBuild.push(line('googleAds','Google Ads · geselecteerde campagnes',negative(channels.google.mediaSpend)));
+  if(['all','google'].includes(channel))marginBuild.push(line('googleFixed','Google-beheer · vaste maandpost',negative(googleManagement.fixed))); 
   if(['all','meta'].includes(channel))marginBuild.push(
     line('daanFixed','Daan · vaste vergoeding',options.includeDaan===false?0:negative(management.fixed)),
     line('daanBonus','Daan · bonus',options.includeDaan===false?0:negative(management.bonus)),
@@ -349,7 +374,7 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
     actualResult,
     returnReserve:{...reserveModel,...reserveParts,impact:reserveImpact,storeImpact:reserveModel.impact,creatorImpact:creatorReserve,remainingImpact:remainingReserve},
     profitMargin: result != null && netRevenue > 0 ? result / netRevenue * 100 : null,
-    roas: spend > 0 && numerator !== null ? numerator / spend : null,
+    roas: (channel==='google'?channels.google.mediaSpend:spend) > 0 && numerator !== null ? numerator / (channel==='google'?channels.google.mediaSpend:spend) : null,
     count:
       channel === "all"
         ? data.shopify
@@ -359,6 +384,7 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
     cpa: spend != null && (channel === "all" ? f.orders : channels[channel].orders) > 0 ? spend / (channel === "all" ? f.orders : channels[channel].orders) : null,
     channels,
     management,
+    googleManagement,
     orderRows: orders,
     creatorRows: creators,
   };
@@ -435,6 +461,7 @@ export function googleScopeData(data, scope = "all") {
     google: {
       ...g,
       allocation_scope: scope,
+      allocation_all_daily: g.allocation_all_daily ?? g.daily_google,
       allocation_nonbrand_daily: g.allocation_nonbrand_daily ?? g.daily_campaigns.filter(r => googleCampaignGroups[r.id] === 'nonbrand'),
       daily_google: daily,
       daily_campaigns: selected,

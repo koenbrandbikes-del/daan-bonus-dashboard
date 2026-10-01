@@ -1,6 +1,6 @@
 import { creatorSummary } from "./creator-summary.js?v=startup-costs-1";
 import { createDatePicker } from "./date-picker.js?v=store-start-1";
-import { load } from "./data.js?v=return-reserve-1";
+import { load } from "./data.js?v=management-start-2";
 import {
   compute,
   googleScopeData,
@@ -15,7 +15,7 @@ import {
   aggregate,
   previous,
   inRange,
-} from "./metrics.js?v=return-reserve-1";
+} from "./metrics.js?v=management-start-2";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (s) =>
@@ -276,7 +276,7 @@ function metricMeta(k) {
           ? "Commissies + toegerekende opstartkosten"
           : all
             ? (state.daan==="without" ? "Zonder kosten Daan" : "Inclusief kosten Daan")
-            : state.channel === "meta" ? (state.daan==="without" ? "Alleen advertenties" : "Ads + kosten Daan") : names[state.channel],
+            : state.channel === "meta" ? (state.daan==="without" ? "Alleen advertenties" : "Ads + kosten Daan") : state.channel === "google" ? "Ads + vaste beheervergoeding" : names[state.channel],
       fmt: euro,
     },
     result: {
@@ -291,7 +291,7 @@ function metricMeta(k) {
         ? "Omzet incl. btw / bekende marketingkosten"
         : state.channel === "infl"
           ? "Inclusief toegerekende opstartkosten"
-          : "Kanaalomzet incl. btw / alle kanaalkosten",
+          : state.channel === "google" ? "Platform-ROAS · omzet incl. btw / advertentiekosten" : "Kanaalomzet incl. btw / alle kanaalkosten",
       fmt: ratio,
     },
     cpa: { label: "Kosten per aankoop", sub: "Per toegerekende aankoop", fmt: euro },
@@ -682,6 +682,7 @@ function render() {
  ${channelBenchmark(cur)}
  <section class="panel ${analysisCollapsed?'is-collapsed':''}" id="analysis" tabindex="-1"><div class="panel-head"><div><p class="analysis-label">VERDIEP JE IN DE CIJFERS</p><h2><button class="analysis-heading" id="collapseAnalysis" aria-expanded="${!analysisCollapsed}" aria-controls="analysisBody analysisTools">${state.metrics.map((k) => metricMeta(k).label).join(" & ") || "Analyse"}</button></h2><p class="subtitle">Klik bovenaan maximaal twee cijfers aan om ze hier te vergelijken.</p></div><div class="toolbar" id="analysisTools" ${analysisCollapsed?"hidden":""}><div class="gran-buttons" aria-label="Grafiek groeperen">${['day','week','month'].map((g,i)=>`<button data-gran="${g}" aria-pressed="${state.gran===g || state.gran==='auto' && g===((Date.parse(state.to)-Date.parse(state.from))/864e5<=31?'day':(Date.parse(state.to)-Date.parse(state.from))/864e5<=180?'week':'month')}">${['Dag','Week','Maand'][i]}</button>`).join('')}</div><select id="gran" hidden><option value="auto">Automatisch</option><option value="day">Dag</option><option value="week">Week</option><option value="month">Maand</option></select><button id="chartMode">${chartTable ? "Grafiek tonen" : "Tabel tonen"}</button></div></div><div id="analysisBody" ${analysisCollapsed?"hidden":""}><div id="replacement"></div><div id="chart"></div><div id="dayComparison"></div><details class="detail-fold" id="detailFold"><summary>Onderliggende cijfers & uitsplitsing</summary><div id="detail"></div></details></div></section>
  <details class="panel" id="costOverview"><summary>${state.channel==='all'?'Kostenopbouw & rendement':'Meer marketingcijfers'}</summary><section class="kpis secondary-kpis" aria-label="Aanvullende cijfers">${secondaryMetrics.map(metricCard).join('')}</section>${knownMarketingCosts(cur)}${state.channel==='all'?`<dl class="cost-lines">${cur.marginBuild.filter(r=>['purchase','inbound_shipping','fulfillment','source_adjustment','unallocated','products','payments','returns'].includes(r.key)).map(r=>`<div><dt>${esc(r.label)}</dt><dd>${euro(r.value==null?null:-r.value)}</dd></div>`).join('')}<div class="cost-subtotal"><dt>Totaal product- en orderkosten</dt><dd>${euro(cur.cost)}</dd></div><div><dt>Marketingkosten ${state.daan==='without'?'zonder Daan':'met Daan'}</dt><dd>${euro(cur.spend)}</dd></div><div><dt>Overige bedrijfskosten · 4%</dt><dd>${euro(cur.overhead)}</dd></div></dl><p class="hint">Productkosten zijn geraamd. Open onderliggende cijfers in de grafiek voor de uitsplitsing.</p>`:''}${['all','meta'].includes(state.channel)?`<div class="daan-choice compact"><span>Kosten Daan meetellen</span><div class="daan-toggle" aria-label="Kosten Daan meetellen"><button data-daan="with" aria-pressed="${state.daan!=='without'}">Met Daan</button><button data-daan="without" aria-pressed="${state.daan==='without'}">Zonder Daan</button></div><button class="link" data-daan-details>Vast + bonus bekijken</button></div>`:''}</details>
+ ${['all','google'].includes(state.channel) && C.google_management ? `<details class="panel" id="googleManagement"><summary><span>Google-beheer · vaste maandpost</span><span class="summary-value">${euro(cur.googleManagement.fixed)}</span></summary><p class="hint">€${num(C.google_management.monthly_fixed)} excl. btw per kalendermaand, verdeeld over de geselecteerde dagen vanaf 5 augustus. Meegenomen in marketingkosten, winst en netto marge. Bij branded/non-branded naar het advertentiekostenaandeel per dag; zonder advertenties naar non-branded. In het bedrijfsoverzicht één keer de volledige vergoeding. Mailafspraak: 6 uur × €60 excl. btw als uitgangspunt met nacalculatie; hier als vaste maandpost begroot. Google/Microsoft-beheer is hier volledig aan Google toegerekend. Platform-ROAS blijft op advertentiekosten gebaseerd.</p></details>` : ''}
  ${state.channel === "all" ? marketingMix(cur)+returnSummary(cur) : ""}
  ${['all','meta','google'].includes(state.channel) ? correctionAllocationPanel(cur) : ''}
  ${['all','meta'].includes(state.channel) ? `<details class="panel management">
@@ -693,7 +694,7 @@ function render() {
  </div>
  <p class="management-note">De 4% overige bedrijfskosten wordt apart berekend.</p>
  <details class="management-calculation"><summary>Hoe wordt de bonus berekend?</summary>
- <p>Per dag: 10% × (Meta-omzet − advertentiekosten × break-even-ROAS). Verliesdagen geven een negatief bedrag en verlagen de opgebouwde bonus. Alle dagen binnen één contractblok gebruiken dezelfde break-even-ROAS.</p>
+ <p>Per dag: 10% × (Meta-omzet − advertentiekosten × break-even-ROAS). Verliesdagen geven een negatief bedrag en verlagen de opgebouwde bonus. Alle dagen binnen één contractblok gebruiken dezelfde break-even-ROAS. De financiële berekening begint op 5 augustus; eerdere dagen tellen hierin niet mee.</p>
  <p>We tellen de dagbedragen op per contractblok van 30 dagen. Alleen het bloktotaal krijgt een minimum van € 0. Als het saldo negatief is, wordt op de laatste blokdag één correctie geboekt. Bij een lopend blok gebeurt dit voorlopig op de laatste beschikbare dag; dit kan bij nieuwe data veranderen. Je selectie telt de dagbedragen en correcties op de geselecteerde dagen mee.</p>
  <div class="table-wrap"><table><thead><tr><th>Bonusperiode</th><th>Bonus hele periode</th><th>Hiervan in je selectie</th></tr></thead><tbody>${cur.management.periods.map(p=>`<tr><td>${fmt(p.from)} – ${fmt(p.to)}<small>${p.bonus==null?'Nog niet berekenbaar':p.through<p.to?'Voorlopig · bijgewerkt t/m '+fmt(p.through):'Periode afgelopen'}</small></td><td>${euro(p.bonus)}</td><td>${euro(p.allocated)}</td></tr>`).join('')}</tbody></table></div>
  <p class="management-method">Rekenregel: 10% × max(0, Meta-omzet − advertentiekosten × break-even-ROAS). Break-even is gebaseerd op de Shopify-marge na productkosten, betaalkosten en 4% overige bedrijfskosten. De contractperiodes starten op 16 juli 2026. De bonus van een lopende periode kan nog veranderen. De vaste vergoeding is € 1.500 gedeeld door de kalenderdagen van de betreffende maand.</p>
@@ -1018,7 +1019,7 @@ function renderDetail() {
         row(
           "− Marketinguitgaven",
           minus(state.daan==="without" ? cur.spend : cur.spend==null||cur.management.total==null?null:cur.spend-cur.management.total),
-          "Meta- en Google-advertenties en influencercommissies plus toegerekende beamers",
+          "Meta- en Google-advertenties, Google-beheer en influencercommissies plus toegerekende beamers",
         ),
         {...row("− Meta salaris", minus(state.daan==="without"?0:cur.management.total), ""), salary: {fixed:cur.management.fixed,bonus:cur.management.bonus,excluded:state.daan==="without"}},
         row(

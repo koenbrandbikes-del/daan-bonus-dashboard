@@ -67,6 +67,9 @@ export function validateCosts(d) {
   }
   const m=d.meta_management;
   if (!m || !Number.isFinite(m.monthly_fixed) || m.monthly_fixed<0 || !Number.isFinite(m.bonus_rate) || m.bonus_rate<0 || m.bonus_rate>1 || !validSourceDate(m.contract_start) || !Number.isInteger(m.bonus_period_days) || m.bonus_period_days<1) throw Error("Ongeldige bonusregeling");
+  if(m.calculation_start && !validSourceDate(m.calculation_start))throw Error("Ongeldige start berekening");
+  const g=d.google_management;
+  if(g && (!Number.isFinite(g.monthly_fixed)||g.monthly_fixed<0||!validSourceDate(g.start)))throw Error("Ongeldige Google-beheervergoeding");
   if(d.returns?.orders?.some(r=>r.received_packages!==undefined && (!Number.isInteger(r.received_packages)||r.received_packages<0))) throw Error("Ongeldig aantal retourpakketten");
   return d;
 }
