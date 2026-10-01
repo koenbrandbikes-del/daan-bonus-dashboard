@@ -997,7 +997,7 @@
   },
   {
    "d": "2026-10-01",
-   "spend": 1.68,
+   "spend": 2.19,
    "rev": 0,
    "conv": 0,
    "id": "23981332205",
@@ -2096,6 +2096,15 @@
   {
    "d": "2026-09-30",
    "spend": 1.7,
+   "rev": 0,
+   "conv": 0,
+   "id": "23981395565",
+   "name": "T | Concurrentie",
+   "type": "SEARCH"
+  },
+  {
+   "d": "2026-10-01",
+   "spend": 0.14,
    "rev": 0,
    "conv": 0,
    "id": "23981395565",
@@ -4807,7 +4816,7 @@
   {
    "d": "2026-10-01",
    "intent": "brand",
-   "spend": 1.6900000000000002,
+   "spend": 2.2,
    "rev": 0,
    "conv": 0
   },
@@ -4873,14 +4882,21 @@
    "spend": 2.88,
    "rev": 0,
    "conv": 0
+  },
+  {
+   "d": "2026-10-01",
+   "intent": "other",
+   "spend": 0.14,
+   "rev": 0,
+   "conv": 0
   }
  ],
- "details_synced_at": "2026-10-01T06:22:37.818Z",
+ "details_synced_at": "2026-10-01T06:37:38.074Z",
  "source": "google_ads_api",
  "customer_id": "7645288282",
  "currency": "EUR",
  "time_zone": "Europe/Amsterdam",
- "synced_at": "2026-10-01T06:22:37.818Z",
+ "synced_at": "2026-10-01T06:37:38.074Z",
  "coverage_from": "2026-08-01",
  "coverage_to": "2026-10-01",
  "attribution": "Primary conversions and conversion value by ad interaction date; may include non-purchase goals and overlap with other channels.",
@@ -5375,22 +5391,22 @@
   },
   {
    "d": "2026-10-01",
-   "spend": 8.74,
+   "spend": 9.39,
    "conv": 0,
    "rev": 0,
-   "impr": 967,
-   "cl": 13
+   "impr": 1017,
+   "cl": 16
   }
  ],
  "vandaag": {
   "from": "2026-10-01",
   "to": "2026-10-01",
   "d": "2026-10-01",
-  "spend": 8.74,
+  "spend": 9.39,
   "conv": 0,
   "rev": 0,
-  "impr": 967,
-  "cl": 13
+  "impr": 1017,
+  "cl": 16
  },
  "gisteren": {
   "from": "2026-09-30",
