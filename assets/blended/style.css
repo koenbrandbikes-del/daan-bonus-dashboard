@@ -1551,3 +1551,47 @@ header .live-dot.warning { width:10px; height:10px; }
 .period-menu .pm-opt.is-selected::after {content:"✓";color:#38bdf8;}
 .period-menu .pm-opt:focus-visible {outline:2px solid #38bdf8;outline-offset:-3px;}
 .period-menu .cal-hint {font-size:12px;line-height:1.5;}
+
+/* First glance: four outcomes, interpretation, then progressive detail. */
+.kpis.primary-kpis{grid-template-columns:repeat(4,minmax(0,1fr));margin:0 0 12px}
+.kpis.primary-kpis .kpi{grid-template-rows:28px 34px 32px auto;min-height:158px;padding:14px 12px;gap:5px}
+.primary-kpis .kpi .label{font-size:10px;letter-spacing:.025em}
+.primary-kpis .kpi strong{font-size:27px}
+.primary-kpis .kpi>small{font-size:11px}
+.primary-kpis .delta-main{display:block}
+.primary-kpis .delta-amount{display:none}
+.primary-kpis .delta-base{font-size:10px}
+.kpis.secondary-kpis{grid-template-columns:repeat(3,minmax(0,1fr));margin:14px 0 0}
+.secondary-kpis .kpi{min-height:145px}
+.steering-summary{border-left:2px solid #4ea8de;padding:2px 0 2px 12px;margin:0 0 16px;font-size:12px;line-height:1.65}
+.steering-summary>p{margin:0;color:#dbe5f4}
+.steering-summary .signals{border:0;border-radius:0;background:none;padding:0;margin:5px 0 0}
+.steering-summary .signals>summary{font-size:11px;font-weight:400;color:#9eacc6;min-height:24px}
+.result-limitations{border:1px solid #e5b86355;background:#e5b86309;border-radius:10px;padding:10px 12px;margin:0 0 12px;font-size:12px;line-height:1.5}
+.result-limitations p{margin:0 0 4px}
+.scenario-note{font-size:12px;color:#e5b863;margin:0 0 12px}
+.cost-lines{margin:14px 0;font-size:12px}
+.cost-lines>div{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid #ffffff10}
+.cost-lines dd{margin:0;font-weight:600}
+#costOverview .daan-choice{flex-wrap:wrap;margin:12px 0 0;padding:10px 0}
+#costOverview .daan-choice>span{font-size:12px}
+#marketingMix .channel-revenue{border:0;border-radius:0;padding:12px 0;margin:0}
+#marketingMix .revenue-legend{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px}
+#marketingMix .revenue-item{display:grid;grid-template-columns:10px 1fr auto 68px;width:100%;text-align:left;min-height:36px;font-size:11px}
+#marketingMix .revenue-item small{margin:0;text-align:right}
+.channel-benchmark{display:flex;flex-wrap:wrap;gap:8px 20px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:11px;margin:0 0 14px}
+.channel-benchmark strong{display:block;font-size:15px;margin-top:3px}
+.channel-benchmark details{width:100%;color:#9eacc6}
+.channel-benchmark summary,.scope-explanation summary{cursor:pointer;font-size:11px}
+.channel-benchmark p{margin:8px 0 0;font-size:11px}
+.scope-explanation{margin-top:8px}
+#analysis #chart svg{max-height:245px}
+@media(max-width:699px){
+ .kpis.primary-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .kpis.primary-kpis .kpi{grid-template-rows:25px 32px 30px auto;min-height:150px}
+ .kpis.primary-kpis .kpi strong{font-size:25px}
+ .kpis.primary-kpis .kpi[data-metric="result"]{grid-column:auto}
+ .kpis.secondary-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #marketingMix .revenue-legend{grid-template-columns:1fr}
+ .steering-summary{font-size:12px}
+}
