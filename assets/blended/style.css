@@ -1640,4 +1640,7 @@ header .live-dot:not(.warning){animation:live-pulse 2.4s ease-in-out infinite}
 
 footer{justify-content:center;text-align:center}
 
-#returnForecast .summary-value{margin-left:auto;font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}
+/* Amount disclosures share the same quiet, right-aligned header layout. */
+#content #returnForecast>summary,#content #googleManagement>summary{display:flex;align-items:center;gap:16px}
+#returnForecast .summary-value,#googleManagement .summary-value{margin-left:auto;flex-shrink:0;white-space:nowrap;font-size:14px;line-height:1.4;font-weight:500;font-variant-numeric:tabular-nums}
+#returnForecast>summary>span:first-child,#googleManagement>summary>span:first-child{min-width:0}
