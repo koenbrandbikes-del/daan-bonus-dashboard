@@ -599,7 +599,7 @@ function render() {
         ? `vs. ${fmt(p.from)} – ${fmt(p.to)}`
         : "";
   $("#content").innerHTML =
-    `<div class="view-head"><div><p class="eyebrow">${state.channel === "all" ? "HET TOTAALBEELD" : "KANAALANALYSE"}</p><h2>${names[state.channel]}</h2></div><div class="subtitle">${fmt(state.from)} – ${fmt(state.to)} ${state.to.slice(0, 4)}<br>${comparisonText}${state.to === today ? "<br><small>Vandaag loopt nog · vergeleken met hele dagen</small>" : ""}</div></div>
+    `<div class="view-head"><div><p class="eyebrow">${state.channel === "all" ? "HET TOTAALBEELD" : "KANAALANALYSE"}</p><h2>${state.channel === "all" ? "Financieel overzicht" : names[state.channel]}</h2></div><div class="subtitle">${fmt(state.from)} – ${fmt(state.to)} ${state.to.slice(0, 4)}<br>${comparisonText}${state.to === today ? "<br><small>Vandaag loopt nog · vergeleken met hele dagen</small>" : ""}</div></div>
  ${channelRevenueBar(cur)}
  ${googleFilter()}
  ${['all','meta'].includes(state.channel) ? `<section class="daan-choice compact" aria-label="Kosten Daan"><div class="daan-cost"><span>Kosten Daan</span><strong>${euro(cur.management.total)}</strong><button class="link" data-daan-details aria-label="Uitsplitsing kosten Daan bekijken">Details</button></div><div class="daan-toggle" aria-label="Kosten Daan meetellen"><button data-daan="with" aria-pressed="${state.daan!=='without'}">Met Daan</button><button data-daan="without" aria-pressed="${state.daan==='without'}">Zonder Daan</button></div></section>` : ''}
