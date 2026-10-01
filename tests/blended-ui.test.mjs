@@ -143,7 +143,10 @@ test("calendar ranges apply, compare and cancel without changing dates", async (
   assert.equal(new URL(w.location.href).searchParams.get("from"), "2026-09-10");
   d.querySelector("#periodButton").click();
   d.querySelector('#periodMenu [data-preset="lastmonth"]').click();
-  assert.match(d.querySelector("#periodButton").textContent, /aug/);
+  const todayNL = new Intl.DateTimeFormat('en-CA', {timeZone:'Europe/Amsterdam',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const [year,month] = todayNL.split('-').map(Number);
+  const lastMonth = new Date(Date.UTC(year,month-2,1)).toISOString().slice(0,10);
+  assert.equal(new URL(w.location.href).searchParams.get('from'),lastMonth);
 });
 test("Google defaults to non-brand and keeps the scope in charts, detail and URL", async () => {
   const w = await boot("?channel=google&from=2026-09-23&to=2026-09-29"),

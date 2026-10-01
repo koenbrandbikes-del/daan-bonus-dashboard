@@ -20,6 +20,12 @@ export function reconciledOrder(order, costs) {
     return_kind: correction.kind, store_credit: correction.store_credit,
     return_cost: correction.kind === 'received_return' ? (costs.returns.cost_per_return ?? 20) : 0};
 }
+// Explicit aliases preserve a single cost for renamed products. Unknown products
+// must remain unknown rather than silently getting a zero or guessed cost.
+export function itemCost(name, costs) {
+  const canonical = costs.item_aliases?.[name] ?? name;
+  return costs.items[canonical] ?? null;
+}
 export function finance(orders, costs) {
   orders = orders.map(o => reconciledOrder(o, costs));
   let fixed = 0,
@@ -27,8 +33,9 @@ export function finance(orders, costs) {
   const incl = sum(orders, "incl");
   for (const o of orders.filter(o => o.return_kind !== 'cancelled'))
     for (const item of o.items) {
-      if (costs.items[item] == null) unknown++;
-      else fixed += costs.items[item];
+      const unitCost = itemCost(item, costs);
+      if (unitCost == null) unknown++;
+      else fixed += unitCost;
     }
   const excl = incl / (1 + costs.assumed_vat),
     fees = sum(orders, o => o.paid_incl ?? o.incl) * costs.payment_rate;

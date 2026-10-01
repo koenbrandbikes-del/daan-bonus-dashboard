@@ -128,3 +128,24 @@ test('historical report audit includes pending refunds once and reconciles all r
  const oldOrders=data.orders.filter(o=>o.d<'2026-09-01');
  assert.ok(finance(oldOrders,costs).refundedIncl>0);
 });
+
+test('renamed Prime preserves costs, management bonus and profit across order and chart views', async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const costs=JSON.parse(await readFile(new URL('../assets/blended/costs.json',import.meta.url)));
+ const read=async name=>JSON.parse(await readFile(new URL('../data/'+name+'.json',import.meta.url)));
+ const data={shopify:await read('shopify'),meta:await read('meta'),google:await read('google'),creators:await read('creators')};
+ const renamed='LumeWorks Prime | Van gewone avond naar datenight.';
+ const canonical={...data,shopify:{orders:data.shopify.orders.map(o=>({...o,items:o.items.map(i=>i===renamed?'LumeWorks Prime':i)}))}};
+ const actual=compute(data,costs,'2026-09-24','2026-09-30');
+ const expected=compute(canonical,costs,'2026-09-24','2026-09-30');
+ for(const key of ['cost','spend','result','profitMargin','roas']) {
+  assert.ok(Number.isFinite(actual[key]),key+' must be available');
+  assert.equal(actual[key],expected[key]);
+ }
+ assert.ok(Number.isFinite(actual.management.total));
+ const row=data.shopify.orders.find(o=>o.items.includes(renamed));
+ assert.equal(finance([row],costs).fixed,43.8);
+ const points=series(data,costs,'2026-09-24','2026-09-30','all');
+ assert.ok(points.every(p=>Number.isFinite(p.result)));
+ assert.equal(finance([{...row,items:['Unknown future product']}],costs).cost,null);
+});

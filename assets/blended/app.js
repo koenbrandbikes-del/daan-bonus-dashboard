@@ -7,6 +7,7 @@ import {
   googleCampaignGroups,
   basketMetrics,
   finance,
+  itemCost,
   reconciledOrder,
   sum,
   shift,
@@ -14,7 +15,7 @@ import {
   aggregate,
   previous,
   inRange,
-} from "./metrics.js?v=returns-audit-2";
+} from "./metrics.js?v=product-alias-1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (s) =>
@@ -1014,8 +1015,8 @@ function renderDetail() {
             ? basket.base.filter((o) => o.items.includes(name)).length /
               basket.base.length
             : null,
-          C.items[name] ?? null,
-          C.items[name] == null ? null : C.items[name] * r.n,
+          itemCost(name, C),
+          itemCost(name, C) == null ? null : itemCost(name, C) * r.n,
         ],
         action: action("product", name),
       }));
