@@ -4,6 +4,7 @@ export function checkShopifyOrders(orders) {
     if (!o.num || typeof o.num !== "string" || seen.has(o.num)) throw Error("Ontbrekend of dubbel ordernummer");
     seen.add(o.num);
     if (!Array.isArray(o.items) || !o.items.length || o.items.some(i => typeof i !== "string" || !i.trim())) throw Error("Onvolledige productregels");
+    if (o.item_refs !== undefined && (!Array.isArray(o.item_refs) || o.item_refs.length !== o.items.length || o.item_refs.some(ref => !ref || typeof ref !== "object" || Array.isArray(ref) || Object.values(ref).some(v => typeof v !== "string")))) throw Error("Ongeldige productcodes");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(o.d) || !Number.isFinite(Date.parse(o.d)) || new Date(o.d).toISOString().slice(0,10) !== o.d) throw Error("Ongeldige orderdatum");
     if (!Number.isFinite(o.incl)) throw Error("Ongeldig orderbedrag");
   }

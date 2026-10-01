@@ -734,6 +734,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 <div id="dataCheck" style="display:none;text-align:center;font-size:11px;color:#DD9280;padding:4px 0 8px;font-weight:600"></div>
 </div>
 
+<script src="assets/product-costs.js?v=stable-codes-1"></script>
 <script>
 /* ═══ DATA LOADER ════════════════════════════════════════════════
    Meta/Shopify/Google-cijfers leven in data/*.json, buiten dit bestand,
@@ -941,8 +942,8 @@ function calcOrder(o){
   const excl = o.incl / BTW;
   // Vaste kosten: inkoop + shipping + fulfilment (uit KP-sheet rij 19)
   let fixed = 0, hasUnknown = false;
-  for(const it of o.items){
-    const c = ITEM_FIXED[it];
+  for(const [i, it] of o.items.entries()){
+    const c = LumeProductCosts.itemCost(it, ITEM_FIXED, o.item_refs?.[i]);
     if(c == null) hasUnknown = true;
     else fixed += c;
   }

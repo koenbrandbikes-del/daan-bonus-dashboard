@@ -99,6 +99,13 @@ def validate_new_orders(new_orders, existing_nums):
         seen.add(o["num"])
         code = o.get("code") or ""
         rec = {"d": o["d"], "num": o["num"], "items": o["items"], "code": code, "incl": round(incl, 2)}
+        if "item_refs" in o:
+            refs = o["item_refs"]
+            keys = {"sku", "barcode", "variant_id"}
+            if not isinstance(refs, list) or len(refs) != len(o["items"]) or any(not isinstance(r, dict) or set(r) - keys or any(not isinstance(v, str) for v in r.values()) for r in refs):
+                errors.append(f"{o['num']}: ongeldige productcodes")
+                continue
+            rec["item_refs"] = refs
         if code.lower() in TEST_CODES or incl < 10:
             rec["test"] = True
         valid.append(rec)
@@ -127,7 +134,7 @@ def main():
         f"Use the Shopify MCP graphql_query tool to fetch orders from {SHOP} with "
         f"order number strictly greater than #{last_num} (query: \"created_at:>=2026-08-01\", "
         f"sort by CREATED_AT, first 20 is enough), with name, createdAt, totalPriceSet "
-        f"shopMoney amount, discountCodes, and lineItems title+quantity. "
+        f"shopMoney amount, discountCodes, and lineItems title+quantity+sku+variant {{ id barcode }}. "
         f"IMPORTANT: the GraphQL Admin API returns createdAt in UTC. Convert it to "
         f"Europe/Amsterdam local time (CEST, UTC+2) BEFORE extracting the calendar date for "
         f"the \"d\" field — do not just take the first 10 characters of the raw UTC string, "
@@ -136,7 +143,10 @@ def main():
         f"Output ONLY a raw JSON array on stdout, nothing else — no markdown fences, no "
         f"explanation, no leading/trailing text. Each element: "
         f'{{"d":"YYYY-MM-DD","num":"#XXXX","items":["Product",...],"code":"discountcode-or-empty",'
-        f'"incl":123.45}} where "d" is the Europe/Amsterdam LOCAL date. '
+        f'"incl":123.45,"item_refs":[{{"sku":"...","barcode":"...","variant_id":"..."}}]}} '
+        f'where "d" is the Europe/Amsterdam LOCAL date. Repeat items AND item_refs for quantity, '
+        f'in exactly the same order (one entry per unit). Copy identifiers verbatim as strings; '
+        f'omit unavailable fields, never infer codes from names. '
         f'If there are no orders newer than #{last_num}, output exactly: []'
     )
 

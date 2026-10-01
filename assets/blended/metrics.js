@@ -1,3 +1,4 @@
+import "../product-costs.js?v=stable-codes-1";
 export const sum = (a, k) =>
   a.reduce(
     (s, x) => s + (Number(typeof k === "function" ? k(x) : x[k]) || 0),
@@ -22,9 +23,8 @@ export function reconciledOrder(order, costs) {
 }
 // Explicit aliases preserve a single cost for renamed products. Unknown products
 // must remain unknown rather than silently getting a zero or guessed cost.
-export function itemCost(name, costs) {
-  const canonical = costs.item_aliases?.[name] ?? name;
-  return costs.items[canonical] ?? null;
+export function itemCost(name, costs, ref) {
+  return globalThis.LumeProductCosts.itemCost(name, costs.items, ref, costs.item_aliases);
 }
 export function finance(orders, costs) {
   orders = orders.map(o => reconciledOrder(o, costs));
@@ -32,8 +32,8 @@ export function finance(orders, costs) {
     unknown = 0;
   const incl = sum(orders, "incl");
   for (const o of orders.filter(o => o.return_kind !== 'cancelled'))
-    for (const item of o.items) {
-      const unitCost = itemCost(item, costs);
+    for (const [i, item] of o.items.entries()) {
+      const unitCost = itemCost(item, costs, o.item_refs?.[i]);
       if (unitCost == null) unknown++;
       else fixed += unitCost;
     }

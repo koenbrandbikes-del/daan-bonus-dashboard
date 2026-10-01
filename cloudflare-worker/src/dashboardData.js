@@ -1,3 +1,4 @@
+import "../../assets/product-costs.js";
 /**
  * Gedeelde databron + rekenlogica voor de MCP-tools (mcp.js) — leest
  * dezelfde data/*.json als index.html/blended.html, maar via de publieke
@@ -10,10 +11,8 @@
  * Rekenlogica (calcOrder, ITEM_FIXED, KP, BTW, shopifyBeroas, bonCalc, en
  * de affiliate-kostprijscorrectie) is 1-op-1 overgenomen uit index.html en
  * blended.html. Bij wijziging van kostprijzen/fees/bonusformule daar, hier
- * ook bijwerken — er is bewust geen gedeeld bestand met de browser-kant
- * (die is puur client-side, dit draait op de Worker), dus dit is een
- * tweede plek om in sync te houden, net zoals blended.html al een eigen
- * kopie van calcOrder() had t.o.v. index.html.
+ * ook bijwerken. Productherkenning via EAN/SKU/variant wordt wel gedeeld met
+ * alle dashboards via assets/product-costs.js.
  */
 
 const PAGES_BASE = "https://koenbrandbikes-del.github.io/daan-bonus-dashboard";
@@ -51,8 +50,8 @@ function round2(v) { return Math.round(v * 100) / 100; }
 function calcOrder(o) {
   const excl = o.incl / BTW;
   let fixed = 0, hasUnknown = false;
-  for (const it of o.items || [o.product]) {
-    const c = ITEM_FIXED[it];
+  for (const [i, it] of (o.items || [o.product]).entries()) {
+    const c = globalThis.LumeProductCosts.itemCost(it, ITEM_FIXED, o.item_refs?.[i]);
     if (c == null) hasUnknown = true;
     else fixed += c;
   }

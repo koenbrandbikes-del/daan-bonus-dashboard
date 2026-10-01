@@ -24,6 +24,7 @@ async function boot(
         transform(url, JSON.parse(fs.readFileSync(new URL(url, root), "utf8"))),
     };
   };
+  w.eval(fs.readFileSync(new URL("assets/product-costs.js", root), "utf8"));
   w.matchMedia = () => ({ matches: true });
   w.HTMLElement.prototype.scrollIntoView = () => {};
   const scripts = ["metrics.js", "data.js", "date-picker.js", "creator-summary.js", "app.js"]
@@ -565,4 +566,19 @@ test('comparison uses contrasting colors consistently for lines points and legen
   assert.equal(c.querySelector('circle.point').getAttribute('fill'),color);
  }
  w.close();
+});
+
+test("renamed products with stable codes retain KPI and product-table costs", async () => {
+ const w=await boot('?from=2026-09-23&to=2026-09-29&metrics=cost','',(url,data)=>{
+  if(url.includes('shopify.json')) for(const o of data.orders) {
+   o.item_refs=o.items.map(name=>name==='LumeWorks Prime'?{sku:'8721008982625'}:{});
+   o.items=o.items.map(name=>name==='LumeWorks Prime'?'Volledig hernoemde beamer':name);
+  }
+  return data;
+ });
+ assert(!w.document.querySelector('.kpi').textContent.includes('€ NaN'));
+ w.document.querySelector('[data-detail]').click();
+ const row=[...w.document.querySelectorAll('#detail tr')].find(r=>r.textContent.includes('Volledig hernoemde beamer'));
+ assert(row);
+ assert.match(row.textContent,/43,80/);
 });

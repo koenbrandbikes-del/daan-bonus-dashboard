@@ -183,14 +183,20 @@ function mapOrder(o) {
   const createdAt = o.created_at;
   if (!name || !createdAt || !Number.isFinite(Date.parse(createdAt)) || !Array.isArray(o.line_items)) return null;
 
-  const items = [];
+  const items = [], item_refs = [];
   for (const li of o.line_items) {
+    if (typeof li.title !== "string" || !li.title.trim()) return null;
     const qty = Math.max(1, parseInt(li.quantity, 10) || 1);
-    for (let i = 0; i < qty; i++) items.push(li.title);
+    const ref = {};
+    for (const key of ["sku", "barcode", "variant_id"]) {
+      if (li[key] != null && String(li[key]).trim()) ref[key] = String(li[key]).trim();
+    }
+    for (let i = 0; i < qty; i++) { items.push(li.title); item_refs.push({...ref}); }
   }
   const code = (o.discount_codes && o.discount_codes[0] && o.discount_codes[0].code) || "";
   const incl = round2(parseFloat(o.total_price || o.current_total_price || "0"));
   const rec = { d: toAmsterdamDate(createdAt), created_at: new Date(createdAt).toISOString(), num: name, items, code, incl };
+  if (item_refs.some(ref => Object.keys(ref).length)) rec.item_refs = item_refs;
   if (TEST_CODES.has(code.toLowerCase()) || incl < 10) rec.test = true;
   return rec;
 }

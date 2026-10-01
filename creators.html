@@ -725,6 +725,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 </span></div>
 </div>
 
+<script src="assets/product-costs.js?v=stable-codes-1"></script>
 <script>
 /* ═══ DATA LOADER ═══ (zelfde patroon als index.html) */
 function _loadJSON(url){
@@ -777,8 +778,8 @@ const BTW = 1.21;
 function calcOrder(o){
   const excl = o.incl / BTW;
   let fixed = 0, hasUnknown = false;
-  for(const it of o.items){
-    const c = ITEM_FIXED[it];
+  for(const [i, it] of o.items.entries()){
+    const c = LumeProductCosts.itemCost(it, ITEM_FIXED, o.item_refs?.[i]);
     if(c == null) hasUnknown = true;
     else fixed += c;
   }

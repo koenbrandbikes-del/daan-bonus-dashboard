@@ -1,6 +1,6 @@
 import { creatorSummary } from "./creator-summary.js?v=gift-allocation-1";
 import { createDatePicker } from "./date-picker.js?v=chevron-1";
-import { load } from "./data.js?v=shopify-check-1";
+import { load } from "./data.js?v=stable-codes-1";
 import {
   compute,
   googleScopeData,
@@ -15,7 +15,7 @@ import {
   aggregate,
   previous,
   inRange,
-} from "./metrics.js?v=product-alias-1";
+} from "./metrics.js?v=stable-codes-1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (s) =>
@@ -997,10 +997,13 @@ function renderDetail() {
       ];
       const map = new Map();
       for (const o of cur.orderRows.filter(o => o.return_kind !== "cancelled"))
-        for (const item of o.items) {
-          if (!map.has(item)) map.set(item, { n: 0, orders: new Set() });
+        for (const [i, item] of o.items.entries()) {
+          if (!map.has(item)) map.set(item, { n: 0, orders: new Set(), total: 0, unknown: false, rates: new Set() });
           const r = map.get(item);
           r.n++;
+          const rate = itemCost(item, C, o.item_refs?.[i]);
+          if (rate == null) r.unknown = true;
+          else { r.total += rate; r.rates.add(rate); }
           r.orders.add(o.num);
         }
       rows = [...map].map(([name, r]) => ({
@@ -1015,8 +1018,8 @@ function renderDetail() {
             ? basket.base.filter((o) => o.items.includes(name)).length /
               basket.base.length
             : null,
-          itemCost(name, C),
-          itemCost(name, C) == null ? null : itemCost(name, C) * r.n,
+          !r.unknown && r.rates.size === 1 ? [...r.rates][0] : null,
+          r.unknown ? null : r.total,
         ],
         action: action("product", name),
       }));
