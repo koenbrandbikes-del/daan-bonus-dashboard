@@ -1,15 +1,15 @@
 {
  "snap": "2026-10-01",
- "snap_time": "03:00",
+ "snap_time": "03:15",
  "tb": {
   "vandaag": {
    "from": "2026-10-01",
    "to": "2026-10-01",
-   "spend": 9.76,
+   "spend": 10.28,
    "rev7": 0,
    "rev1v": 0,
    "purch": 0,
-   "impr": 954,
+   "impr": 1000,
    "cl": 18
   },
   "gisteren": {
@@ -25,11 +25,11 @@
   "week": {
    "from": "2026-09-28",
    "to": "2026-10-01",
-   "spend": 1275.89,
+   "spend": 1276.41,
    "rev7": 3828,
    "rev1v": 796,
    "purch": 28,
-   "impr": 135495,
+   "impr": 135541,
    "cl": 2267
   },
   "prevweek": {
@@ -55,11 +55,11 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-10-01",
-   "spend": 22459.84,
+   "spend": 22460.36,
    "rev7": 59833.4,
    "rev1v": 5997,
    "purch": 414,
-   "impr": 2440203,
+   "impr": 2440249,
    "cl": 54280
   }
  },
@@ -579,11 +579,11 @@
   },
   {
    "d": "2026-10-01",
-   "spend": 9.76,
+   "spend": 10.28,
    "rev7": 0,
    "rev1v": 0,
    "purch": 0,
-   "impr": 954,
+   "impr": 1000,
    "cl": 18
   }
  ],
@@ -6168,16 +6168,29 @@
    "ads": [
     {
      "n": "001_002",
-     "spend": 3,
+     "spend": 3.23,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 3.49,
-     "cpc": 0.33,
+     "ctr": 3.32,
+     "cpc": 0.36,
      "atc": 0,
-     "impr": 258,
-     "reach": 245,
+     "impr": 271,
+     "reach": 253,
      "linkCl": 5
+    },
+    {
+     "n": "007 BOF statics - 6",
+     "spend": 1.86,
+     "rev7": 0,
+     "rev1v": 0,
+     "purch": 0,
+     "ctr": 1.59,
+     "cpc": 0.62,
+     "atc": 0,
+     "impr": 189,
+     "reach": 159,
+     "linkCl": 0
     },
     {
      "n": "Cycle 6",
@@ -6193,42 +6206,29 @@
      "linkCl": 3
     },
     {
-     "n": "007 BOF statics - 6",
-     "spend": 1.77,
-     "rev7": 0,
-     "rev1v": 0,
-     "purch": 0,
-     "ctr": 1.71,
-     "cpc": 0.59,
-     "atc": 0,
-     "impr": 175,
-     "reach": 154,
-     "linkCl": 0
-    },
-    {
      "n": "Cycle 2 - relaunch",
-     "spend": 1.65,
+     "spend": 1.75,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 0.71,
-     "cpc": 1.65,
+     "ctr": 0.68,
+     "cpc": 1.75,
      "atc": 0,
-     "impr": 140,
-     "reach": 135,
+     "impr": 146,
+     "reach": 139,
      "linkCl": 1
     },
     {
      "n": "Retargeting - 006 vid - Copy",
-     "spend": 1.55,
+     "spend": 1.65,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.06,
-     "cpc": 0.78,
+     "ctr": 1,
+     "cpc": 0.83,
      "atc": 0,
-     "impr": 188,
-     "reach": 171,
+     "impr": 201,
+     "reach": 181,
      "linkCl": 1
     }
    ]
