@@ -12,6 +12,9 @@ test('SVG selection respects the rendered coordinate transform and matches table
  svg.onpointerdown({button:0,clientX:539.8,clientY:100,pointerId:1});
  svg.onpointerup({clientX:539.8,clientY:100});
  assert.match(d.querySelector('#dayComparison .subtitle').textContent,/21 sep – 27 sep/);
+ const pickedPoint=d.querySelector('[data-bucket="2026-09-21|2026-09-27"]');
+ assert.equal(d.querySelector('.selection-boundary').getAttribute('x1'),pickedPoint.getAttribute('cx'));
+ assert.equal(d.querySelector('.selection-boundary').getAttribute('display'),'inline');
  const selected=d.querySelector('[data-selection-metric=revenue]').textContent;
  d.querySelector('#chartMode').click();
  const row=d.querySelector('[data-bucket="2026-09-21|2026-09-27"]');
@@ -486,6 +489,11 @@ test('drag selection supports reverse ranges and metric toggles match Meta', asy
  svg.onpointerup({clientX:72+2.5*868/7});
  assert.equal(d.querySelectorAll('[data-selection-metric]').length,2);
  assert(d.querySelector('#dayComparison .subtitle').textContent.includes('25 sep'));
+ const selectedSvg=d.querySelector('#chart svg'),shade=selectedSvg.querySelector('rect');
+ const leftPoint=selectedSvg.querySelector('[data-bucket="2026-09-25|2026-09-25"]');
+ const rightPoint=selectedSvg.querySelector('[data-bucket="2026-09-27|2026-09-27"]');
+ assert.equal(Number(shade.getAttribute('x')),Number(leftPoint.getAttribute('cx')));
+ assert.equal(Number(shade.getAttribute('x'))+Number(shade.getAttribute('width')),Number(rightPoint.getAttribute('cx')));
  assert.equal(d.querySelector('.day-options'),null);
  d.querySelector('[data-metric=result]').click();
  assert.equal(d.querySelector('.replacement'),null);

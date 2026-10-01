@@ -845,6 +845,11 @@ function bindChartDrag(rows) {
     const overlay=document.createElementNS('http://www.w3.org/2000/svg','rect');
     overlay.setAttribute('y','18');overlay.setAttribute('height','178');overlay.setAttribute('fill','#ffffff18');overlay.setAttribute('stroke','#fff');overlay.setAttribute('pointer-events','none');
     svg.append(overlay);
+    const boundary=document.createElementNS('http://www.w3.org/2000/svg','line');
+    boundary.classList.add('selection-boundary');
+    boundary.style.stroke='#fff';
+    for(const [key,value] of Object.entries({y1:'18',y2:'196',stroke:'#fff','pointer-events':'none',display:'none'})) boundary.setAttribute(key,value);
+    svg.append(boundary);
     const index=e=>{
       const point=e.target?.closest?.('[data-bucket]');
       if(point){const found=rows.findIndex(r=>point.dataset.bucket===r.from+'|'+r.to);if(found>=0)return found;}
@@ -854,14 +859,20 @@ function bindChartDrag(rows) {
       else x=(e.clientX-svg.getBoundingClientRect().left)/svg.getBoundingClientRect().width*960;
       return Math.max(0,Math.min(rows.length-1,Math.round((x-72)/868*rows.length-.5)));
     };
-    const paint=(a,b)=>{overlay.setAttribute('x',String(72+Math.min(a,b)*868/rows.length));overlay.setAttribute('width',String((Math.abs(b-a)+1)*868/rows.length));};
+    const paint=(a,b)=>{
+      const left=72+((Math.min(a,b)+.5)/rows.length)*868;
+      const right=72+((Math.max(a,b)+.5)/rows.length)*868;
+      overlay.setAttribute('x',String(left));overlay.setAttribute('width',String(right-left));
+      boundary.setAttribute('x1',String(left));boundary.setAttribute('x2',String(left));
+      boundary.setAttribute('display',a===b?'inline':'none');
+    };
     const picked=rows.map((r,i)=>selectedDays.has(r.from)?i:-1).filter(i=>i>=0);
     if(picked.length) paint(picked[0],picked.at(-1));
     let first=null;
     svg.onpointerdown=e=>{if(e.button!==0)return;first=index(e);svg.setPointerCapture?.(e.pointerId);paint(first,first);};
     svg.onpointermove=e=>{if(first!=null)paint(first,index(e));};
     svg.onpointerup=e=>{if(first==null)return;const last=index(e),a=Math.min(first,last),b=Math.max(first,last);first=null;selectChartRange(rows[a].from,rows[b].to);};
-    svg.onpointercancel=()=>{first=null;overlay.setAttribute('width','0');};
+    svg.onpointercancel=()=>{first=null;if(picked.length)paint(picked[0],picked.at(-1));else{overlay.setAttribute('width','0');boundary.setAttribute('display','none');}};
   });
 }
 function col(label, type = "text") {
