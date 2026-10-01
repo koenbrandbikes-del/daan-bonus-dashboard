@@ -273,7 +273,7 @@ function metricMeta(k) {
           : "Marketingkosten",
       sub:
         state.channel === "infl"
-          ? "Commissies + toegerekende beamers"
+          ? "Commissies + toegerekende opstartkosten"
           : all
             ? (state.daan==="without" ? "Zonder kosten Daan" : "Inclusief kosten Daan")
             : state.channel === "meta" ? (state.daan==="without" ? "Alleen advertenties" : "Ads + kosten Daan") : names[state.channel],
@@ -569,7 +569,7 @@ function steeringSummary(cur, prev) {
     return `${noun}: ${euro(Math.abs(diff))} ${diff>0?'meer':'minder'}${pct}`;
   };
   let text=`Ten opzichte van ${fmt(p.from)} – ${fmt(p.to)}: `+movement(cur.revenue,prev.revenue,state.channel==='all'?'omzet':'toegerekende omzet');
-  if(cur.result!=null && prev.result!=null) text+='; '+movement(cur.result,prev.result,'voorlopig resultaat');
+  if(cur.result!=null && prev.result!=null) text+='; '+movement(cur.result,prev.result,state.channel==='all'?'voorlopig resultaat':'geschat resultaat');
   text+='.';
   if(cur.profitMargin!=null && prev.profitMargin!=null) text+=` Winstmarge: van ${num(prev.profitMargin)}% naar ${num(cur.profitMargin)}% (van elke €100 omzet excl. btw blijft ${num(cur.profitMargin)} euro ${state.channel==='all'?'voorlopig':'naar schatting'} over).`;
   if(cur.spend!=null && prev.spend!=null && prev.spend>0 && prev.revenue>0 && cur.spend>prev.spend && cur.spend/prev.spend>cur.revenue/prev.revenue) text+=' Marketingkosten groeien sneller dan omzet.';
