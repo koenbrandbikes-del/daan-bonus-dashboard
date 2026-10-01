@@ -851,7 +851,7 @@ function renderChart() {
                 .map((r, i) =>
                   r[k] == null
                     ? ""
-                    : `<circle class="point ${selectedDays.has(r.from) ? "selected-point" : ""}" data-chart-key="${k}" data-bucket="${r.from}|${r.to}" cx="${x(i)}" cy="${y(r[k])}" r="${rows.length > 90 ? 2 : 4}" fill="${chartColor(k)}"><title>${fmt(r.from)}${r.to!==r.from?' – '+fmt(r.to):''}: ${chartMetricMeta(k).fmt(r[k])}</title></circle>`,
+                    : `<circle class="point ${selectedDays.has(r.from) ? "selected-point" : ""}" data-chart-key="${k}" data-bucket="${r.from}|${r.to}" cx="${x(i)}" cy="${y(r[k])}" r="${rows.length > 90 ? 2 : 4}" fill="${chartColor(k)}"><title>${multi?chartMetricMeta(k).label+' · ':''}${fmt(r.from)}${r.to!==r.from?' – '+fmt(r.to):''}: ${chartMetricMeta(k).fmt(r[k])}</title></circle>`,
                 )
                 .join("")
             );

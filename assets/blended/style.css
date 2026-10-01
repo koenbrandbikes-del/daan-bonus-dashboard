@@ -1662,3 +1662,7 @@ footer{justify-content:center;text-align:center}
 #marketingMix th,#acquisitionCompare th{white-space:normal;line-height:1.5}
 .channel-change{font-variant-numeric:tabular-nums}
 @media(max-width:600px){.chart-channels button{flex:1}.rendement-comparison .delta-amount{display:none}}
+
+/* Keep multiple channel labels readable within the chart width. */
+.chart .legend{flex-wrap:wrap;row-gap:8px}
+.chart .legend>span{display:inline-flex;align-items:center}
