@@ -1,5 +1,5 @@
 import { creatorSummary } from "./creator-summary.js?v=gift-allocation-1";
-import { createDatePicker } from "./date-picker.js?v=chevron-1";
+import { createDatePicker } from "./date-picker.js?v=selection-feedback-1";
 import { load } from "./data.js?v=stable-codes-1";
 import {
   compute,
@@ -1555,7 +1555,7 @@ function exportCsv() {
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
-function applyPreset(p) {
+function presetRange(p) {
   let from,
     to = shift(today, -1);
   if (p === "today") from = to = today;
@@ -1573,9 +1573,17 @@ function applyPreset(p) {
     from = "2026-08-01";
     to = today;
   } else from = shift(to, -6);
+  return {from, to};
+}
+function activePeriodPreset() {
+  return ["today", "yesterday", "seven", "week", "month", "lastmonth", "all"].find(key => {
+    const range = presetRange(key);
+    return range.from === state.from && range.to === state.to;
+  });
+}
+function applyPreset(p) {
   change(() => {
-    state.from = from;
-    state.to = to;
+    Object.assign(state, presetRange(p));
     state.sub = null;
     state.detail = null;
   });
@@ -1603,7 +1611,7 @@ async function start() {
           ["lastmonth", "Vorige maand"],
           ["all", "Sinds start"],
         ],
-        getRange: () => ({ from: state.from, to: state.to }),
+        getRange: () => ({ from: state.from, to: state.to, preset: activePeriodPreset() }),
         onPreset: applyPreset,
         onApply: (from, to) =>
           change(() => {
@@ -1623,6 +1631,7 @@ async function start() {
           ["off", "Niet vergelijken"],
         ],
         getRange: () => ({
+          preset: state.compare,
           ...previous(state.from, state.to),
           ...(state.compare === "custom"
             ? { from: state.pfrom, to: state.pto }

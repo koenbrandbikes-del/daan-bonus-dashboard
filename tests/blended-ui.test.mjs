@@ -582,3 +582,33 @@ test("renamed products with stable codes retain KPI and product-table costs", as
  assert(row);
  assert.match(row.textContent,/43,80/);
 });
+
+test('period presets show the applied choice and remain usable after repeated opening',async()=>{
+ const w=await boot('?from=2026-09-23&to=2026-09-29');
+ const d=w.document, trigger=d.querySelector('#periodButton');
+ for(const [preset,label] of [['today','Vandaag'],['yesterday','Gisteren'],['lastmonth','Vorige maand'],['yesterday','Gisteren']]) {
+  trigger.click();
+  const option=d.querySelector(`#periodMenu [data-preset="${preset}"]`);
+  option.dispatchEvent(new w.Event('pointerdown',{bubbles:true}));
+  option.focus();
+  assert.equal(d.querySelector('#periodMenu').hidden,false);
+  option.click();
+  assert.equal(d.querySelector('#periodMenu').hidden,true);
+  assert.equal(option.getAttribute('aria-pressed'),'true');
+  assert.equal(d.querySelectorAll('#periodMenu .is-selected').length,1);
+  assert.match(d.querySelector('#periodPicker').textContent,new RegExp(label));
+  trigger.click();
+  assert.equal(d.activeElement,option);
+  trigger.click();
+ }
+ assert.match(trigger.textContent,/Gisteren ·/);
+ const query=new w.URLSearchParams(w.location.search);
+ assert.equal(query.get('from'),query.get('to'));
+ assert.equal(d.querySelector('#periodMenu').hidden,true);
+ trigger.click();
+ d.querySelector('#periodMenu [data-date]').click();
+ assert.match(d.querySelector('#periodMenu .cal-hint').textContent,/kies een einddatum/);
+ d.querySelector('#periodMenu .cal-apply').click();
+ assert.equal(d.querySelectorAll('#periodMenu .is-selected').length,0);
+ assert.doesNotMatch(trigger.textContent,/Gisteren/);
+});

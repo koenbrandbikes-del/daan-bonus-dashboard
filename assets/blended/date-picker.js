@@ -23,7 +23,8 @@ export function createDatePicker({
   let month,
     from,
     to,
-    pickingEnd = false;
+    pickingEnd = false,
+    chosenPreset, chosenRange; 
   const close = (focus = false) => {
     panel.hidden = true;
     trigger.setAttribute("aria-expanded", "false");
@@ -85,19 +86,29 @@ export function createDatePicker({
     }
     host.querySelector(".cal-hint").textContent = pickingEnd
       ? `${format(from)} · kies een einddatum, of pas één dag toe`
-      : `${format(from)} – ${format(to)}`;
+      : `${format(from)} – ${format(to)} · klik een begindatum om te wijzigen`;
     host.querySelector(".cal-apply").disabled =
       new Date(to) - new Date(from) > 3 * 366 * 864e5;
     host.querySelectorAll(".cal-nb")[1].disabled =
       iso(new Date(month.getFullYear(), month.getMonth() + 1, 1)) > today;
   }
+  const rangeKey = r => `${r.from}|${r.to}`;
+  function activePreset(r) {
+    return chosenRange === rangeKey(r) ? chosenPreset : r.preset;
+  }
   function update() {
-    const r = getRange();
-    trigger.textContent = `${r.label || `${format(r.from)} – ${format(r.to)}`}`;
-    trigger.setAttribute(
-      "aria-label",
-      `${label}: ${r.label || `${format(r.from)} – ${format(r.to)}`}`,
-    );
+    const r = getRange(), preset = activePreset(r);
+    const presetLabel = options.find(([key]) => key === preset)?.[1];
+    const dates = r.from === r.to ? format(r.from) : `${format(r.from)} – ${format(r.to)}`;
+    const text = r.label || (preset === "today" || preset === "yesterday" ? `${presetLabel} · ${dates}` : dates);
+    trigger.textContent = text;
+    trigger.setAttribute("aria-label", `${label}: ${text}`);
+    host.querySelector(".picker-label").textContent = label === "Periode" && presetLabel && !["today", "yesterday"].includes(preset)
+      ? `${label} · ${presetLabel === "Laatste 7 afgesloten dagen" ? "Laatste 7 dagen" : presetLabel}` : label;
+    host.querySelectorAll(".pm-opt").forEach(b => {
+      b.setAttribute("aria-pressed", String(b.dataset.preset === preset));
+      b.classList.toggle("is-selected", b.dataset.preset === preset);
+    });
   }
   trigger.onclick = () => {
     const opening = panel.hidden;
@@ -112,7 +123,8 @@ export function createDatePicker({
     paint();
     panel.hidden = false;
     trigger.setAttribute("aria-expanded", "true");
-    host.querySelector(".pm-opt").focus();
+    update();
+    (host.querySelector(".pm-opt.is-selected") || host.querySelector(".pm-opt")).focus({preventScroll:true});
   };
   for (const [key, text] of options) {
     const b = document.createElement("button");
@@ -122,6 +134,8 @@ export function createDatePicker({
     b.dataset.preset = key;
     b.onclick = () => {
       onPreset(key);
+      chosenPreset = key;
+      chosenRange = rangeKey(getRange());
       close(true);
       update();
     };
@@ -136,6 +150,8 @@ export function createDatePicker({
   );
   host.querySelector(".cal-apply").onclick = () => {
     onApply(from, to);
+    chosenPreset = null;
+    chosenRange = rangeKey(getRange());
     close(true);
     update();
   };

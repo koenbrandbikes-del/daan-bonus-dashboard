@@ -1544,3 +1544,10 @@ header .live-dot.warning { width:10px; height:10px; }
 #returnEstimate table { width: 100%; min-width: 430px; }
 #returnEstimate th, #returnEstimate td { padding: 10px 12px; }
 #returnEstimate th:last-child, #returnEstimate td:last-child { text-align: left; }
+
+/* Distinguish the applied period from hover/focus. */
+.period-menu .pm-opt {display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.period-menu .pm-opt.is-selected {background:#38bdf818;color:#f1f5f9;font-weight:600;}
+.period-menu .pm-opt.is-selected::after {content:"✓";color:#38bdf8;}
+.period-menu .pm-opt:focus-visible {outline:2px solid #38bdf8;outline-offset:-3px;}
+.period-menu .cal-hint {font-size:12px;line-height:1.5;}
