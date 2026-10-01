@@ -625,7 +625,7 @@ test('revenue distribution includes unexplained Shopify revenue and discloses ex
  assert.match(w.document.querySelector('.revenue-legend').textContent,/Overig \/ niet toegerekend/);
  assert.equal(w.document.querySelector('.revenue-bar'),null);
  assert.equal(w.document.querySelectorAll('.revenue-legend .revenue-item').length,4);
- assert.match(w.document.querySelector('.mix-explanation').textContent,/Shopify-omzet incl. btw/);
+ assert.match(w.document.querySelector('.mix-explanation').textContent,/Shopify-omzet excl. btw/);
  w.close();
  const v=await boot('?from=2026-09-23&to=2026-09-29','',adjust(true));
  assert.equal(v.document.querySelectorAll('.revenue-bar .mix-segment').length,0);
@@ -789,4 +789,13 @@ test('channel share stays unavailable for missing or negative total store profit
   assert.equal(w.document.querySelector('.profit-share').textContent,'Aandeel winkelwinst niet beschikbaar');
   w.close();
  }
+});
+test('all four channel revenue KPIs explicitly use exclusive VAT and match the margin ledger',async()=>{
+ const w=await boot('?from=2026-09-01&to=2026-09-30');const d=w.document;
+ for(const channel of ['all','meta','google','infl']) {
+  d.querySelector('[data-channel='+channel+']').click();
+  assert.match(d.querySelector('[data-metric=revenue] .label').textContent,/excl\. btw/i);
+  assert.equal(d.querySelector('[data-metric=revenue] strong').textContent,d.querySelector('[data-margin-row=netRevenue] dd').textContent);
+ }
+ w.close();
 });

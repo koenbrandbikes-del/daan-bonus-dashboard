@@ -33,9 +33,10 @@ test('remaining refunds and return packages use order shares, preserving exact i
   close(a.pool.cancelledCostCredit,40);close(a.pool.overheadCredit,8);close(a.pool.profitImpact,172);
   close(Object.values(a.allocations).reduce((n,v)=>n+v.returnCost,0)+a.direct.returnCost,40);
   close(Object.values(a.allocations).reduce((n,v)=>n+v.refundedIncl,0)+a.direct.refundedIncl,363);
-  close(m.revenue,484-242*4/9);
+  close(m.revenue,(484-242*4/9)/1.21);
+  close(m.revenueIncl,484-242*4/9);
   close(m.result,4*53.58-172*4/9-40);
-  close(m.profitMargin,m.result/(m.revenue/1.21)*100);
+  close(m.profitMargin,m.result/m.revenue*100);
   const infl=compute(data,costs,from,to,'infl');close(infl.result,-74.42);
   const all=compute(data,costs,from,to);close(all.revenue,700);close(all.returnCost,40);close(all.result,175.8);
 });
@@ -97,4 +98,15 @@ test('cost components retain received products, release cancelled costs and reco
  close(meta.correctionAllocation.pool.purchaseCredit,30);
  const daily=series(data,c,from,to,'meta','day');
  close(daily.reduce((s,r)=>s+r.marginBuild.find(x=>x.key==='purchase').value,0),meta.marginBuild.find(x=>x.key==='purchase').value);
+});
+test('every KPI and chart revenue is exclusive VAT, while profit and platform ROAS retain their calculation basis',()=>{
+ for(const channel of ['all','meta','google','infl']) {
+  const m=compute(data,costs,from,to,channel);
+  close(m.revenue,m.marginBuild.find(r=>r.key==='netRevenue').value);
+  close(m.revenueIncl,m.revenue*1.21);
+  close(m.roas,m.revenueIncl/m.spend);
+  if(m.revenue>0)close(m.profitMargin,m.result/m.revenue*100);
+  close(m.marginBuild.filter(r=>r.kind==='line').reduce((n,r)=>n+r.value,0),m.result);
+  if(channel==='meta'||channel==='google')close(m.result,m.channels[channel].grossRevenue*m.marginRate-m.channels[channel].corrections.profitImpact-m.spend);
+ }
 });

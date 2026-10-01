@@ -69,9 +69,10 @@ test("financial waterfall includes overhead and counts quantities", () => {
 });
 test("channel selection uses attributed numerator and estimated store margin", () => {
   const m = compute(D, C, "2026-09-01", "2026-09-02", "meta");
-  assert.equal(m.revenue, 180);
+  assert.equal(m.revenue, 180/1.21);
+  assert.equal(m.revenueIncl,180);
   assert.equal(m.roas, 1.8);
-  assert.equal(m.result, m.revenue * ((m.excl-m.cost-m.overhead)/m.incl) - m.spend);
+  assert.equal(m.result, m.revenueIncl * ((m.excl-m.cost-m.overhead)/m.incl) - m.spend);
   const g = compute(D, C, "2026-09-01", "2026-09-02", "google");
   assert.equal(g.count, 0.5);
   assert.equal(g.roas, 6);

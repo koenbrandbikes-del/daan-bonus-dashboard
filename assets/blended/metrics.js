@@ -314,7 +314,8 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
           overhead: null,
         }
       : {}),
-    revenue,
+    revenue:netRevenue,
+    revenueIncl:numerator,
     spend,
     marginRate,
     creatorFinance,
