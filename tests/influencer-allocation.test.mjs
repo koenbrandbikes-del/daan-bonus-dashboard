@@ -8,7 +8,8 @@ test('gift investment is allocated once across all influencer revenue and deduct
  const costs=read('assets/blended/costs.json');
  const from=data.creators.orders.map(o=>o.d).sort()[0],to=data.creators.orders.map(o=>o.d).sort().at(-1);
  const full=compute(data,costs,from,to,'infl');
- const expected=41*43.8;
+ const expected=data.creators.startup_costs.total;
+ assert.equal(expected,2349.28);
  assert(Math.abs(full.channels.infl.giftAllocated-expected)<1e-8);
  const daily=series(data,costs,from,to,'infl');
  assert(Math.abs(daily.reduce((n,r)=>n+r.channels.infl.giftAllocated,0)-expected)<1e-8);

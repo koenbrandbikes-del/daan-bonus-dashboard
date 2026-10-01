@@ -26,6 +26,10 @@ import json
 import re
 import sys
 import urllib.request
+import time
+import os
+import tempfile
+from pathlib import Path
 from collections import defaultdict
 from datetime import datetime, timezone
 
@@ -62,15 +66,49 @@ def nl_date_to_iso(s):
     if not m:
         return None
     d, mo, y = m.groups()
-    return f"{y}-{mo}-{d}"
+    value = f"{y}-{mo}-{d}"
+    datetime.strptime(value, "%Y-%m-%d")
+    return value
 
 
 def fetch_csv(url):
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        raw = resp.read()
-    return raw.decode("utf-8-sig")
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                raw = resp.read()
+            return raw.decode("utf-8-sig")
+        except (OSError, UnicodeError):
+            if attempt == 2:
+                raise
+            time.sleep(attempt + 1)
 
+
+STARTUP_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=1511639179"
+
+def load_startup_costs():
+    grid = list(csv.reader(io.StringIO(fetch_csv(STARTUP_URL))))
+    if len(grid) < 5 or grid[3][:5] != ["Creator", "Kortingscode", "Beamer", "Accessoire", "Extra accessoire"]:
+        raise ValueError("Onverwachte opstartkostentabel; bestaande dataset blijft behouden")
+    rows = []
+    excluded = []
+    for row in grid[4:]:
+        row += [""] * max(0, 23 - len(row))
+        if row[22].strip(): excluded.append(row[22].strip())
+        if not row[0].strip(): continue
+        values = [eur_to_float(row[i]) for i in range(5,10)]
+        import math
+        if any(not math.isfinite(v) or v < 0 for v in values) or abs(sum(values[:4])-values[4]) > .011:
+            raise ValueError("Ongeldige opstartkosten voor " + row[0])
+        rows.append(dict(zip(
+            ["creator","code","beamer","accessory","extra_accessory","beamer_cost","accessory_cost","extra_accessory_cost","shipping","total"],
+            [v.strip() for v in row[:5]] + values,
+        )))
+    if not rows or any(not r["code"] for r in rows) or len({r["code"].casefold() for r in rows}) != len(rows):
+        raise ValueError("Ontbrekende/dubbele opstartkostenregistratie")
+    if any(r["creator"] in excluded for r in rows):
+        raise ValueError("Uitgesloten influencer staat in kostentabel")
+    return {"source":"Extra kosten influencers", "date_basis":"shipment_dates_unknown", "count":len(rows), "total":round(sum(r["total"] for r in rows),2), "excluded":excluded, "rows":rows}
 
 BTW = 1.21
 
@@ -99,6 +137,7 @@ def main():
     roster = {r.get("Kortingscode", "").strip().casefold() for r in settings if r.get("Creator", "").strip() and r.get("Kortingscode", "").strip()}
     if not roster:
         raise ValueError("Geen creators in Instellingen; bestaande dataset blijft behouden")
+    startup_costs = load_startup_costs()
     shopify_incl_by_num = load_shopify_by_num()
     corrected = 0
     reader = csv.DictReader(io.StringIO(text))
@@ -193,6 +232,7 @@ def main():
             "basis": "Instellingen + volledige Sales-tab; bestellingen via kortingscode, inclusief eventuele retouren",
             "through": max(r["d"] for r in rows if r["d"]),
         },
+        "startup_costs": startup_costs,
         "totals": totals,
         "creators": creators,
         "orders": rows,
@@ -207,8 +247,18 @@ def main():
     import math
     if any(not math.isfinite(o["commissie"]) or not math.isfinite(o["omzet_excl"]) for o in rows):
         raise ValueError("Ongeldige bedragen; bestaande dataset blijft behouden")
-    with open(OUT_PATH, "w", encoding="utf-8") as f:
-        json.dump(out, f, ensure_ascii=False, indent=1)
+    target = Path(OUT_PATH)
+    temp_name = None
+    try:
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=target.parent, delete=False) as f:
+            temp_name = f.name
+            json.dump(out, f, ensure_ascii=False, indent=1, allow_nan=False)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(temp_name, target)
+    finally:
+        if temp_name and os.path.exists(temp_name):
+            os.unlink(temp_name)
 
     print(f"✓ {len(rows)} orders, {len(creators)} creators -> {OUT_PATH}")
     print(f"  Totaal omzet (excl BTW, excl retour): €{totals['omzet_excl']:.2f}")

@@ -8,7 +8,7 @@ The live page is `blended.html`, with frontend modules in `assets/blended/`. Goo
 
 - Shopify currently contains order totals and product names, not separate tax/refund/payment records or complete customer history. Ex-VAT revenue and payment fees are estimates.
 - Product rates combine purchase, shipping and fulfillment; component splits and historical rate start dates are unavailable.
-- Other creator fees and product gifting costs are unknown; only known commissions are included.
+- Startup costs follow Extra kosten influencers (products, accessories and one shipment each). Shipment dates are unavailable; allocation follows lifetime revenue share. Other unregistered creator fees remain unknown.
 - Google primary conversion actions GTM and TrackBee both contribute. No account settings were changed; action reporting exposes their values separately. New-customer reporting is not yet reliable.
 - Google search-term grouping only classifies explicit LumeWorks variants. Other visible terms and unreported inventory remain separate; there is no inferred nonbrand acquisition or incrementality claim.
 - Legacy Meta rows are ad-set-name aggregates, not individual ads or stable campaign IDs.

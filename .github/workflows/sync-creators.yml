@@ -3,6 +3,8 @@ on:
   schedule:
     - cron: "41 * * * *"
   workflow_dispatch:
+  push:
+    paths: ["scripts/sync_creators.py", ".github/workflows/sync-creators.yml"]
 permissions:
   contents: write
   pages: write
@@ -38,6 +40,15 @@ jobs:
             sleep 3
           done
           exit 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate latest website before publishing
+        run: |
+          git pull --rebase origin main
+          npm ci
+          npm ci --prefix cloudflare-worker
+          npm test
       - name: Prepare website files
         run: |
           mkdir -p _site

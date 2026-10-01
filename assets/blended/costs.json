@@ -27,10 +27,8 @@
     "bonus_period_days": 30
   },
   "influencer_gifting": {
-    "product": "LumeWorks Prime",
-    "quantity": 41,
-    "assumption_date": "2026-09-30",
-    "basis": "Aanname Koen: één Prime voor elk van de 41 geregistreerde influencers. Verzenddatums en accessoires onbekend."
+    "source": "creators.startup_costs",
+    "basis": "Actuele tab Extra kosten influencers; producten, accessoires en één pakket per influencer. Verzenddatums niet geregistreerd."
   },
   "returns": {
     "cost_per_return": 20,

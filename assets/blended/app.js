@@ -1,6 +1,6 @@
-import { creatorSummary } from "./creator-summary.js?v=gift-allocation-1";
+import { creatorSummary } from "./creator-summary.js?v=startup-costs-1";
 import { createDatePicker } from "./date-picker.js?v=selection-feedback-1";
-import { load } from "./data.js?v=stable-codes-1";
+import { load } from "./data.js?v=reliability-1";
 import {
   compute,
   googleScopeData,
@@ -15,7 +15,7 @@ import {
   aggregate,
   previous,
   inRange,
-} from "./metrics.js?v=signed-daan-1";
+} from "./metrics.js?v=startup-costs-1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (s) =>
@@ -81,6 +81,11 @@ let D,
   analysisCollapsed = false,
   selectedDays = new Set();
 const stale = (k) => {
+  if (D.source_status?.[k]?.status && D.source_status[k].status !== "ok") return true;
+  if (k === "shopify") {
+    const t=Date.parse(D.source_status?.shopify?.last_success);
+    return !Number.isFinite(t) || Date.now()-t>24*60*60000;
+  }
   if (k === "meta") {
     if (!D.meta) return true;
     const wall = new Intl.DateTimeFormat("sv-SE", {
@@ -102,7 +107,7 @@ const stale = (k) => {
   }
   return (
     ["google", "creators"].includes(k) &&
-    (!D[k]?.synced_at ||
+    (!Number.isFinite(Date.parse(D[k]?.synced_at)) ||
       Date.now() - Date.parse(D[k].synced_at) >
         (k === "google" ? 45 : 180) * 60000)
   );
@@ -358,8 +363,11 @@ function getPrev() {
 function coverage(key, from = state.from, to = state.to) {
   const d = D[key];
   if (!d) return false;
-  if (key === "google") return from >= d.coverage_from && to <= d.coverage_to;
-  if (key === "meta") return from >= d.daily_meta[0].d && to <= d.snap;
+  if (["meta","google"].includes(key)) {
+    const dates=new Set(d[key==="meta"?"daily_meta":"daily_google"].map(r=>r.d));
+    for(let day=from;day<=to;day=shift(day,1)) if(!dates.has(day)) return false;
+    return true;
+  }
   if (key === "creators")
     return to <= d.synced_at?.slice(0, 10) && from >= "2026-07-16";
   return from >= "2026-08-01";
@@ -533,7 +541,7 @@ function marketingMix(cur) {
     })
     .join(
       "",
-     )}${otherRow}</tbody></table></div><p class="hint">Google-ROAS: non-branded omzet / non-branded kosten. Resultaat: geschatte marge minus alle kanaalkosten, inclusief branded bij Google. Winstmarge = geschat resultaat / kanaalomzet excl. btw. Gebaseerd op de gemiddelde winkelkosten; kanaalresultaten zijn niet optelbaar. Overig is het positieve verschil tussen Shopify-omzet incl. btw en de kanaalclaims; kosten en winst zijn niet afzonderlijk toe te rekenen.</p></details><details class="panel" id="acquisitionCompare"><summary>Kosten per aankoop & break-even</summary><p class="hint">Vergelijk bekende marketingkosten per toegerekende aankoop. CAC voor uitsluitend nieuwe klanten is nog niet beschikbaar.</p><div class="table-wrap"><table><thead><tr><th>Kanaal</th><th>Aankopen</th><th>Kosten per aankoop</th><th>Break-even · raming</th><th>Ruimte per aankoop</th></tr></thead><tbody>${purchaseRows}</tbody></table></div><p class="hint">Break-even is één winkelbenchmark: (omzet excl. btw − product-, betaal- en bedrijfskosten) / Shopify-orders. Dezelfde grens geldt hier voor elk kanaal; verschillen in klant- en productmix zijn niet bekend. Positieve ruimte is geen bewezen kanaalwinst. Google gebruikt non-branded conversies; overlap tussen aankoopmetingen kan de kosten per aankoop te laag laten lijken. Influencers: commissies plus Prime-opstartkosten, verdeeld naar omzetaandeel.</p></details>`;
+     )}${otherRow}</tbody></table></div><p class="hint">Google-ROAS: non-branded omzet / non-branded kosten. Resultaat: geschatte marge minus alle kanaalkosten, inclusief branded bij Google. Winstmarge = geschat resultaat / kanaalomzet excl. btw. Gebaseerd op de gemiddelde winkelkosten; kanaalresultaten zijn niet optelbaar. Overig is het positieve verschil tussen Shopify-omzet incl. btw en de kanaalclaims; kosten en winst zijn niet afzonderlijk toe te rekenen.</p></details><details class="panel" id="acquisitionCompare"><summary>Kosten per aankoop & break-even</summary><p class="hint">Vergelijk bekende marketingkosten per toegerekende aankoop. CAC voor uitsluitend nieuwe klanten is nog niet beschikbaar.</p><div class="table-wrap"><table><thead><tr><th>Kanaal</th><th>Aankopen</th><th>Kosten per aankoop</th><th>Break-even · raming</th><th>Ruimte per aankoop</th></tr></thead><tbody>${purchaseRows}</tbody></table></div><p class="hint">Break-even is één winkelbenchmark: (omzet excl. btw − product-, betaal- en bedrijfskosten) / Shopify-orders. Dezelfde grens geldt hier voor elk kanaal; verschillen in klant- en productmix zijn niet bekend. Positieve ruimte is geen bewezen kanaalwinst. Google gebruikt non-branded conversies; overlap tussen aankoopmetingen kan de kosten per aankoop te laag laten lijken. Influencers: commissies plus geregistreerde opstartkosten, verdeeld naar omzetaandeel.</p></details>`;
 }
 function resultLimitations(cur, keys) {
   const messages = [];
@@ -542,26 +550,30 @@ function resultLimitations(cur, keys) {
     const historical = missing.some(p => p.from < '2026-08-01' || (D.meta?.daily_meta?.[0]?.d && p.from < D.meta.daily_meta[0].d));
     messages.push(`Resultaat onvolledig: ${historical ? 'historische bonusgegevens Daan ontbreken' : 'bonus Daan nog niet berekenbaar'}.`);
   }
+  if (cur.channels.infl.giftTotal==null && ["all","infl"].includes(state.channel)) messages.push("Opstartkosten influencers ontbreken; resultaat niet volledig berekenbaar.");
   if (cur.unknown) messages.push(`${cur.unknown} productregels zonder kostprijs; resultaat niet berekenbaar.`);
-  const unavailable = keys.filter(k => !D[k] || E[k] || !coverage(k));
+  if (E.status) messages.push("Synchronisatiestatus niet beschikbaar; actualiteit is niet volledig controleerbaar.");
+  if (E.costs) messages.push("Kostenregister niet vernieuwd: berekening gebruikt de laatst gecontroleerde tarieven.");
+  const unavailable = keys.filter(k => !D[k] || E[k] || stale(k) || !coverage(k));
   if (unavailable.length) messages.push(`Brongegevens onvolledig: ${unavailable.map(k=>k==='shopify'?'Shopify':k==='creators'?'Influencers':names[k]).join(', ')}. Totalen kunnen onvolledig zijn.`);
   if (!messages.length && cur.result == null) messages.push('Resultaat niet berekenbaar met de beschikbare omzet- en kostengegevens.');
   return messages;
 }
 function steeringSummary(cur, prev) {
-  if (!prev || cur.revenue == null || prev.revenue == null) return 'Bekijk omzet, voorlopig resultaat en kosten samen. Er is geen volledige vergelijkingsperiode beschikbaar.';
-  const movement=(value, before, noun, money=false)=>{
-    if(value==null || before==null) return `${noun} is niet vergelijkbaar`;
+  if (!prev || cur.revenue == null || prev.revenue == null) return 'Er is geen volledige vergelijkingsperiode beschikbaar.';
+  const p=getPrev();
+  const movement=(value,before,noun)=>{
     const diff=value-before;
     if(diff===0) return `${noun} blijft gelijk`;
-    const change=before>0 && Math.abs(diff/before)<=5 ? num(Math.abs(diff/before*100))+'%' : money ? euro(Math.abs(diff)) : num(Math.abs(diff));
-    return `${noun} ${diff>0?'stijgt':'daalt'} ${change}`;
+    const pct=before>0 && Math.abs(diff/before)<=5 ? ` (${num(Math.abs(diff/before*100))}%)` : '';
+    return `${noun}: ${euro(Math.abs(diff))} ${diff>0?'meer':'minder'}${pct}`;
   };
-  let text = movement(cur.revenue,prev.revenue,state.channel==='all'?'Omzet':'Toegerekende omzet',true);
-  if(cur.result!=null && prev.result!=null) text += '. '+movement(cur.result,prev.result,'Winst',true);
-  if(cur.spend!=null && prev.spend!=null && prev.spend>0 && prev.revenue>0 && cur.spend>prev.spend && (cur.spend/prev.spend > cur.revenue/prev.revenue)) text += '. Marketingkosten groeien sneller dan omzet';
-  if(cur.profitMargin!=null && prev.profitMargin!=null) text += `. Marge ${cur.profitMargin>prev.profitMargin?'stijgt':cur.profitMargin<prev.profitMargin?'daalt':'blijft gelijk'}: ${num(prev.profitMargin)}% → ${num(cur.profitMargin)}%`;
-  return text+'.';
+  let text=`Ten opzichte van ${fmt(p.from)} – ${fmt(p.to)}: `+movement(cur.revenue,prev.revenue,state.channel==='all'?'omzet':'toegerekende omzet');
+  if(cur.result!=null && prev.result!=null) text+='; '+movement(cur.result,prev.result,'voorlopig resultaat');
+  text+='.';
+  if(cur.profitMargin!=null && prev.profitMargin!=null) text+=` Winstmarge: van ${num(prev.profitMargin)}% naar ${num(cur.profitMargin)}% (van elke €100 omzet excl. btw blijft ${num(cur.profitMargin)} euro ${state.channel==='all'?'voorlopig':'naar schatting'} over).`;
+  if(cur.spend!=null && prev.spend!=null && prev.spend>0 && prev.revenue>0 && cur.spend>prev.spend && cur.spend/prev.spend>cur.revenue/prev.revenue) text+=' Marketingkosten groeien sneller dan omzet.';
+  return text;
 }
 function knownMarketingCosts(cur) {
   if (!['all','meta'].includes(state.channel) || state.daan==='without' || cur.management.total!=null) return '';
@@ -614,7 +626,7 @@ function render() {
 
   if (state.channel === "infl")
     notes.push(
-      "Kosten bevatten commissies en de geraamde Prime-investering naar omzetaandeel. Dit is een verdeelsleutel, geen boeking op verzenddatum; nieuwe omzet herverdeelt historische kosten.",
+      "Kosten bevatten commissies en de geregistreerde opstartkosten naar omzetaandeel. Dit is een verdeelsleutel, geen boeking op verzenddatum; nieuwe omzet herverdeelt historische kosten.",
     );
 
   if (cur.unknown)
@@ -649,7 +661,7 @@ function render() {
  ${state.daan==='without' && ['all','meta'].includes(state.channel) ? '<p class="scenario-note">Scenario zonder kosten Daan · vergoeding uitgesloten van resultaat</p>' : ''}
  ${googleFilter()}
  <section class="kpis overview-kpis primary-kpis" aria-label="Kerncijfers">${metrics.map(metricCard).join('')}</section>
- <section class="steering-summary" aria-label="Ontwikkeling"><p>${esc(state.compare==='off' ? `Geselecteerde periode: ${euro(cur.revenue)} ${state.channel==='all'?'omzet excl. btw':'toegerekende omzet'} en ${euro(cur.result)} ${state.channel==='all'?'voorlopige':'geschatte'} winst.` : steeringSummary(cur,prev))}</p><details class="signals"><summary>${state.channel==='all'?'Geraamde kosten · retourmomentopname · details':'Schattingen & meetbasis'}</summary>${notes.map(n=>`<div class="signal">${esc(n)}</div>`).join('')}</details></section>
+ <section class="steering-summary" aria-label="Ontwikkeling"><p>${esc(state.compare==='off' ? `Geselecteerde periode: ${euro(cur.revenue)} ${state.channel==='all'?'omzet excl. btw':'toegerekende omzet'} en ${euro(cur.result)} ${state.channel==='all'?'voorlopige':'geschatte'} winst.` : steeringSummary(cur,prev))}</p><details class="signals"><summary>${state.channel==='all'?'Toelichting · kosten & retouren':'Schattingen & meetbasis'}</summary>${notes.map(n=>`<div class="signal">${esc(n)}</div>`).join('')}</details></section>
  ${channelBenchmark(cur)}
  <section class="panel ${analysisCollapsed?'is-collapsed':''}" id="analysis" tabindex="-1"><div class="panel-head"><div><p class="analysis-label">VERDIEP JE IN DE CIJFERS</p><h2><button class="analysis-heading" id="collapseAnalysis" aria-expanded="${!analysisCollapsed}" aria-controls="analysisBody analysisTools">${state.metrics.map((k) => metricMeta(k).label).join(" & ") || "Analyse"}</button></h2><p class="subtitle">Klik bovenaan maximaal twee cijfers aan om ze hier te vergelijken.</p></div><div class="toolbar" id="analysisTools" ${analysisCollapsed?"hidden":""}><div class="gran-buttons" aria-label="Grafiek groeperen">${['day','week','month'].map((g,i)=>`<button data-gran="${g}" aria-pressed="${state.gran===g || state.gran==='auto' && g===((Date.parse(state.to)-Date.parse(state.from))/864e5<=31?'day':(Date.parse(state.to)-Date.parse(state.from))/864e5<=180?'week':'month')}">${['Dag','Week','Maand'][i]}</button>`).join('')}</div><select id="gran" hidden><option value="auto">Automatisch</option><option value="day">Dag</option><option value="week">Week</option><option value="month">Maand</option></select><button id="chartMode">${chartTable ? "Grafiek tonen" : "Tabel tonen"}</button></div></div><div id="analysisBody" ${analysisCollapsed?"hidden":""}><div id="replacement"></div><div id="chart"></div><div id="dayComparison"></div><details class="detail-fold" id="detailFold"><summary>Onderliggende cijfers & uitsplitsing</summary><div id="detail"></div></details></div></section>
  <details class="panel" id="costOverview"><summary>${state.channel==='all'?'Kostenopbouw & rendement':'Meer marketingcijfers'}</summary><section class="kpis secondary-kpis" aria-label="Aanvullende cijfers">${secondaryMetrics.map(metricCard).join('')}</section>${knownMarketingCosts(cur)}${state.channel==='all'?`<dl class="cost-lines"><div><dt>Product- en orderkosten</dt><dd>${euro(cur.cost)}</dd></div><div><dt>Marketingkosten ${state.daan==='without'?'zonder Daan':'met Daan'}</dt><dd>${euro(cur.spend)}</dd></div><div><dt>Overige bedrijfskosten · 4%</dt><dd>${euro(cur.overhead)}</dd></div></dl><p class="hint">Productkosten zijn geraamd. Open onderliggende cijfers in de grafiek voor de uitsplitsing.</p>`:''}${['all','meta'].includes(state.channel)?`<div class="daan-choice compact"><span>Kosten Daan meetellen</span><div class="daan-toggle" aria-label="Kosten Daan meetellen"><button data-daan="with" aria-pressed="${state.daan!=='without'}">Met Daan</button><button data-daan="without" aria-pressed="${state.daan==='without'}">Zonder Daan</button></div><button class="link" data-daan-details>Vast + bonus bekijken</button></div>`:''}</details>
@@ -686,7 +698,7 @@ function renderUpdateSummary() {
     ["meta", "Meta", metaStamp, "Elke 15 minuten"],
     ["google", "Google Ads", stamp(D.google?.synced_at), "Elke 15 minuten"],
     ["creators", "Influencers", stamp(D.creators?.synced_at), "Elk uur"],
-    ["shopify", "Shopify", D.shopify_check ? "Orders gecontroleerd: " + stamp(D.shopify_check.checked_at) : "Ordergegevens niet gecontroleerd", "Nieuwe orders automatisch"],
+    ["shopify", "Shopify", D.source_status?.shopify?.last_success ? "Bron bijgewerkt: " + stamp(D.source_status.shopify.last_success) : D.shopify_check ? "Orders gecontroleerd: " + stamp(D.shopify_check.checked_at) : "Ordergegevens niet gecontroleerd", "Nieuwe orders automatisch"],
   ];
   $("#updateSummary").innerHTML = `<div class="update-heading"><strong>Data & updates</strong><button id="refreshData" class="quiet">Gegevens verversen</button></div><div class="update-sources">${sources.map(([key,name,time,cadence]) => {
     const bad = !D[key] || E[key] || stale(key);
@@ -1123,14 +1135,14 @@ function renderDetail() {
           ],
         }));
       note =
-        "Deze ordertabel toont commissies. Toegerekende beamerkosten staan in het creatortotaal. Betaalstatus verandert de verdiende commissie niet.";
+        "Deze ordertabel toont commissies. Toegerekende opstartkosten staan in het creatortotaal. Betaalstatus verandert de verdiende commissie niet.";
     } else {
       title = "Creators";
       cols = [
         col("Creator"),
         col("Influencer-orders", "num"),
         col("Toegerekende omzet incl. btw", "eur"),
-        col("Commissies + beamers", "eur"),
+        col("Commissies + opstartkosten", "eur"),
         col("Omzet / kosten", "ratio"),
       ];
       rows = aggregate(
@@ -1146,7 +1158,7 @@ function renderDetail() {
         action: action("creator", r.name),
       }));
       note =
-        "Opstartkosten van alle 41 influencers worden verdeeld naar aandeel in alle geregistreerde influenceromzet, ook de kosten van samenwerkingen zonder orders. Nieuwe omzet kan deze verdeling wijzigen.";
+        "Geregistreerde opstartkosten van alle influencers in de kostentabel worden verdeeld naar aandeel in alle geregistreerde influenceromzet, ook de kosten van samenwerkingen zonder orders. Nieuwe omzet kan deze verdeling wijzigen.";
     }
   } else {
     const available = analysisData().google?.daily_campaigns || [];

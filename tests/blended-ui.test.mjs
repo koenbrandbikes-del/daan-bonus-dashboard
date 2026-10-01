@@ -321,7 +321,8 @@ test("footer reports actual source timestamps, order validation and cadence", as
  assert.equal(footer.querySelectorAll(".update-source").length,4);
  assert.match(footer.textContent,/Elke 15 minuten/);
  assert.match(footer.textContent,/Elk uur/);
- assert.match(footer.textContent,/Orders gecontroleerd:/);
+ assert.match(footer.textContent,/Bron bijgewerkt:/);
+ assert.match(footer.textContent,/Ordergegevens gecontroleerd/);
  assert(footer.querySelector("#refreshData"));
  const failed=await boot("?from=2026-09-23&to=2026-09-29","google.json");
  assert.match(failed.document.querySelectorAll(".update-source")[1].textContent,/Niet beschikbaar/);
@@ -621,9 +622,9 @@ test('first glance has four KPIs, visible interpretation and revenue-profit defa
  const w=await boot('?from=2026-09-24&to=2026-09-30'),d=w.document;
  assert.deepEqual([...d.querySelectorAll('.primary-kpis [data-metric]')].map(b=>b.dataset.metric),['revenue','result','profitMargin','spend']);
  assert.deepEqual([...d.querySelectorAll('.primary-kpis .active')].map(b=>b.dataset.metric),['revenue','result']);
- assert.match(d.querySelector('.steering-summary>p').textContent,/Omzet stijgt/);
- assert.match(d.querySelector('.steering-summary>p').textContent,/Winst/);
- assert.match(d.querySelector('.steering-summary>p').textContent,/Marge/);
+ assert.match(d.querySelector('.steering-summary>p').textContent,/omzet:.*meer/);
+ assert.match(d.querySelector('.steering-summary>p').textContent,/voorlopig resultaat/);
+ assert.match(d.querySelector('.steering-summary>p').textContent,/Winstmarge/);
  for(const id of ['costOverview','marketingMix','returnEstimate','overviewOrders']) assert.equal(d.getElementById(id).open,false);
  assert(d.querySelector('.primary-kpis').compareDocumentPosition(d.querySelector('#marketingMix')) & w.Node.DOCUMENT_POSITION_FOLLOWING);
  d.querySelector('[data-channel=google]').click();d.querySelector('[data-channel=all]').click();
