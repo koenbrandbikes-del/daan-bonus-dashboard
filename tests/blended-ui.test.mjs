@@ -52,17 +52,17 @@ test('compact bottom status opens details and only pulses when all checks pass',
  assert(failed.document.querySelector('#statusBadge').classList.contains('is-warning'));
  assert(failed.document.querySelector('#statusBadge .live-dot.warning'));failed.close();
 });
-test('old without-Daan URLs open with Daan and expose the folded correction allocation',async()=>{
+test('old without-Daan URLs include Daan without a duplicate correction panel',async()=>{
  const w=await boot('?channel=all&daan=without&from=2026-09-01&to=2026-09-30');
  const d=w.document;
  assert.equal(new w.URLSearchParams(w.location.search).get('daan'),'with');
  assert.equal(d.querySelector('.scenario-note'),null);
  assert.equal(d.querySelector('[data-daan=with]').getAttribute('aria-pressed'),'true');
  assert.match(d.querySelector('[data-metric=spend]').textContent,/Inclusief kosten Daan/);
- const panel=d.querySelector('#channelCorrections');assert.equal(panel.open,false);
- assert.match(panel.textContent,/Google non-branded/);assert.match(panel.textContent,/één keer mee/);
+ assert.equal(d.querySelector('#channelCorrections'),null);
+ assert(d.querySelector('[data-margin-row=daanFixed]'));assert(d.querySelector('[data-margin-row=daanBonus]'));
  d.querySelector('#tab-google').click();
- assert.equal(d.querySelector('#channelCorrections').open,false);
+ assert.equal(d.querySelector('#channelCorrections'),null);
  assert.match(d.querySelector('[data-metric=revenue]').textContent,/Na toegerekende omzetcorrecties/);
  w.close();
 });
@@ -75,7 +75,7 @@ test('influencer channel comparison matches its own-order result',async()=>{
  assert.equal(d.querySelector('[data-metric=result] strong').textContent,profit);
  assert.match(d.querySelector('[data-metric=result]').textContent,/eigen orders/);
  d.querySelector('#tab-meta').click();
- assert.doesNotMatch(d.querySelector('.result-limitations')?.textContent||'',/Kanaalresultaat is een raming/);
+ assert.doesNotMatch(d.querySelector('#status .source-limitations')?.textContent||'',/Kanaalresultaat is een raming/);
  assert.match(d.querySelector('#netMarginBuild').textContent,/Kanaalraming/);
  w.close();
 });
@@ -438,7 +438,10 @@ test("channel table excludes branded Google revenue and opens the matching chann
 test("missing source stays visible in details with a neutral data information button", async () => {
   const w = await boot("?from=2026-09-23&to=2026-09-29", "google.json"), d = w.document;
   assert.equal(d.querySelectorAll('.revenue-bar > button').length,0);
-  assert.match(d.querySelector('.result-limitations').textContent,/Brongegevens onvolledig/);
+  assert.equal(d.querySelector('#content .result-limitations'),null);
+  assert.match(d.querySelector('#status .source-limitations').textContent,/Brongegevens onvolledig/);
+  assert.equal(d.querySelector('#status').hidden,true);
+  assert(d.querySelector('#statusBadge').classList.contains('is-warning'));
   assert(!d.querySelector('#statusButton').classList.contains('status-ok'));
   assert.equal(d.querySelector('#statusButton').getAttribute('aria-label'),'Data & updates bekijken');
   d.querySelector('#statusButton').click();
@@ -709,7 +712,7 @@ test('first glance has four KPIs, visible interpretation and revenue-profit defa
 });
 test('full history starts on 5 August and includes both management fees',async()=>{
  const w=await boot('?from=2026-08-05&to=2026-10-01'),d=w.document;
- assert.doesNotMatch(d.querySelector('.result-limitations')?.textContent || '',/historische bonusgegevens Daan ontbreken/);
+ assert.doesNotMatch(d.querySelector('#status .source-limitations')?.textContent || '',/historische bonusgegevens Daan ontbreken/);
  assert.notEqual(d.querySelector('[data-metric=result] strong').textContent,'—');
  assert.equal(d.querySelector('#googleManagement'),null);
  assert(d.querySelector('[data-margin-row=googleFixed]'));
@@ -793,6 +796,7 @@ test('chart channel filters preserve store KPIs and match the corresponding chan
  const w=await boot('?from=2026-09-24&to=2026-09-30&metrics=revenue&gran=day'),d=w.document;
  const store=d.querySelector('[data-metric=revenue] strong').textContent;
  for(const channel of ['meta','google','infl']){
+  d.querySelector('[data-chart-channel=all]').click();
   d.querySelector(`[data-chart-channel=${channel}]`).click();
   assert.equal(d.querySelector('#tab-all').getAttribute('aria-selected'),'true');
   assert.equal(d.querySelector('[data-metric=revenue] strong').textContent,store);
@@ -816,4 +820,72 @@ test('chart channel filters preserve store KPIs and match the corresponding chan
  assert.match(d.querySelector('#acquisitionCompare').textContent,/was €/);
  assert.match(d.querySelector('#marketingMix').textContent,/inclusief Daan/);
  w.close();
+});
+
+test('delayed influencer data is explained only inside the expandable data status',async()=>{
+ const w=await boot('?from=2026-09-24&to=2026-09-30','',(url,data)=>url.includes('creators.json')?{...data,synced_at:new Date(Date.now()-181*60000).toISOString()}:data),d=w.document;
+ assert.equal(d.querySelector('#content .result-limitations'),null);
+ assert.equal(d.querySelector('#status').hidden,true);
+ assert(d.querySelector('#statusBadge').classList.contains('is-warning'));
+ assert.match(d.querySelector('#status .source-limitations').textContent,/Verversing vertraagd: .*Influencers/);
+ d.querySelector('#statusBadge').click();
+ assert.equal(d.querySelector('#status').hidden,false);
+ assert.match(d.querySelector('#status').textContent,/Laatste beschikbare cijfers worden gebruikt/);
+ w.close();
+});
+
+test('multiple channel lines and selected-period totals match each independent channel',async()=>{
+ const w=await boot('?from=2026-09-24&to=2026-09-30&metrics=revenue,profitMargin&gran=day'),d=w.document;
+ const store=[...d.querySelectorAll('.primary-kpis strong')].map(e=>e.textContent);
+ for(const channel of ['meta','google','infl'])d.querySelector(`[data-chart-channel=${channel}]`).click();
+ assert.deepEqual([...d.querySelectorAll('.primary-kpis strong')].map(e=>e.textContent),store);
+ for(const channel of ['meta','google','infl'])assert.equal(d.querySelector(`[data-chart-channel=${channel}]`).getAttribute('aria-pressed'),'true');
+ assert.equal(d.querySelector('#chart').querySelectorAll('svg').length,2);
+ const lines=new Set([...d.querySelectorAll('[data-chart-line]')].map(e=>e.dataset.chartLine));
+ for(const channel of ['meta','google','infl'])assert(lines.has(channel+':revenue'));
+ const restored=await boot(w.location.search);assert.equal(restored.document.querySelectorAll('.chart-channels [data-chart-channel][aria-pressed=true]').length,3);restored.close();
+ d.querySelector('#chartMode').click();
+ const rows=[...d.querySelectorAll('#chart tbody tr')];
+ rows[0].querySelector('[data-bucket]').click();
+ for(const [i,channel] of ['meta','google','infl'].entries()){
+  const ref=await boot(`?channel=${channel}&from=2026-09-24&to=2026-09-30&metrics=revenue,profitMargin&gran=day`),rd=ref.document;
+  rd.querySelector('#chartMode').click();const single=[...rd.querySelectorAll('#chart tbody tr')];
+  for(let j=0;j<rows.length;j++){
+   assert.equal(rows[j].cells[1+i].textContent,single[j].cells[1].textContent);
+   assert.equal(rows[j].cells[4+i].textContent,single[j].cells[2].textContent);
+  }
+  single[0].querySelector('[data-bucket]').click();
+  assert.equal(d.querySelector(`[data-selection-channel=${channel}][data-selection-metric=revenue]`).textContent,rd.querySelector('[data-selection-metric=revenue]').textContent);
+  ref.close();
+ }
+ d.querySelector('#detailFold').open=true;d.querySelector('[data-detail-channel=google]').click();
+ assert.equal(d.querySelector('[data-detail-channel=google]').getAttribute('aria-pressed'),'true');
+ assert.equal(d.querySelector('#detailFold').open,true);
+ d.querySelector('[data-chart-channel=google]').click();assert.equal(d.querySelector('[data-chart-channel=google]').getAttribute('aria-pressed'),'false');
+ d.querySelector('[data-chart-channel=all]').click();assert.equal(d.querySelectorAll('[data-chart-channel][aria-pressed=true]').length,1);
+ assert.equal(d.querySelector('[data-chart-channel=all]').getAttribute('aria-pressed'),'true');
+ w.close();
+});
+test('Blended ROAS presents a ratio movement and baseline without duplicate percentage growth',async()=>{
+ const w=await boot('?from=2026-09-24&to=2026-09-30'),d=w.document;
+ const comparison=d.querySelector('.rendement-comparison');
+ assert.match(comparison.textContent,/Vorige periode .*×/);assert.match(comparison.textContent,/\+.*×/);
+ assert.doesNotMatch(comparison.textContent,/%|▲|▼/);
+ w.close();
+});
+
+test('Meta retains its return reserve and subtracts it once without the duplicate allocation panel',async()=>{
+ const w=await boot('?channel=meta&from=2026-09-24&to=2026-09-30'),d=w.document;
+ assert.equal(d.querySelector('#channelCorrections'),null);
+ const reserve=d.querySelector('#returnForecast');assert(reserve);assert.match(reserve.textContent,/Verwachte terugbetalingen/);
+ assert.equal(d.querySelector('[data-margin-row=result] dd').textContent,d.querySelector('[data-metric=result] strong').textContent);
+ assert.match(d.querySelector('[data-margin-row=returnReserve] dd').textContent,/-/);
+ d.querySelector('#tab-google').click();assert.equal(d.querySelector('#channelCorrections'),null);assert(d.querySelector('#returnForecast'));
+ d.querySelector('#tab-all').click();assert.equal(d.querySelector('#channelCorrections'),null);
+ w.close();
+});
+
+test('invalid channel-comparison URL values fall back to a usable store graph',async()=>{
+ const w=await boot('?chartChannels=unknown,toString&chartChannel=toString&from=2026-09-24&to=2026-09-30'),d=w.document;
+ assert.equal(d.querySelector('[data-chart-channel=all]').getAttribute('aria-pressed'),'true');assert(d.querySelector('#chart svg'));w.close();
 });

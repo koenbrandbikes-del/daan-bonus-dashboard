@@ -117,6 +117,7 @@ const boundDate = d => d < STORE_START ? STORE_START : d;
 const defaults = () => ({
   channel: "all",
   chartChannel: "all",
+  chartChannels: ["all"],
   from: boundDate(shift(today, -7)),
   to: shift(today, -1),
   metrics: ["revenue", "result"],
@@ -134,6 +135,7 @@ function readState() {
   for (const k of [
     "channel",
     "chartChannel",
+    "chartChannels",
     "googleScope",
     "from",
     "to",
@@ -149,8 +151,12 @@ function readState() {
   // Opening a dashboard always includes the real operating cost.
   // Without Daan is a temporary comparison chosen inside the page.
   s.daan="with";
-  if (!(s.channel in names)) s.channel = "all";
-  if (!(s.chartChannel in names)) s.chartChannel = "all";
+  if (!Object.hasOwn(names,s.channel)) s.channel = "all";
+  if (!Object.hasOwn(names,s.chartChannel)) s.chartChannel = "all";
+  s.chartChannels=q.has('chartChannels')?[...new Set(q.get('chartChannels').split(',').filter(c=>Object.hasOwn(names,c)))]:[s.chartChannel];
+  if(!s.chartChannels.length)s.chartChannels=['all'];
+  if(s.chartChannels.length>1)s.chartChannels=s.chartChannels.filter(c=>c!=='all');
+  if(!s.chartChannels.includes(s.chartChannel))s.chartChannel=s.chartChannels[0];
   if (!["previous", "off", "custom"].includes(s.compare))
     s.compare = "previous";
   if (!["auto", "day", "week", "month"].includes(s.gran)) s.gran = "auto";
@@ -220,6 +226,7 @@ function persist(push = true) {
   for (const k of [
     "channel",
     "chartChannel",
+    "chartChannels",
     "googleScope",
     "daan",
     "from",
@@ -327,6 +334,7 @@ function delta(k, cur, prev) {
       : d > 0
         ? "positive"
         : "negative";
+  if(k==='roas')return `<span class="delta-main ${tone}"><span class="delta-badge">${d>0?'+':d<0?'−':''}${ratio(Math.abs(d))}</span></span><span class="delta-base">Vorige periode: ${ratio(prev[k])}</span>`;
   if (k === "profitMargin") return `<span class="delta-main ${tone}"><span class="delta-badge">${d>0?"+":d<0?"−":""}${num(Math.abs(d))} procentpunt</span></span><span class="delta-base">Vorige periode: ${f(prev[k])}</span>`;
   const amount = (d > 0 ? "+" : d < 0 ? "−" : "") + f(Math.abs(d));
   const pct =
@@ -386,11 +394,24 @@ const googleScopeNames = {
 function analysisData() {
   return state.channel === "google" ? googleScopeData(D, state.googleScope) : D;
 }
-function chartChannel() { return state.channel === "all" ? state.chartChannel : state.channel; }
-function chartData() { return chartChannel() === "google" ? googleScopeData(D,state.channel === "all" ? "nonbrand" : state.googleScope) : D; }
+function chartChannels() { return state.channel==='all'?state.chartChannels:[state.channel]; }
+function chartChannel() { return state.channel==='all'?state.chartChannel:state.channel; }
+function chartData(channel=chartChannel()) { return channel==='google'?googleScopeData(D,state.channel==='all'?'nonbrand':state.googleScope):D; }
+function chartKeys() { return chartChannels().length>1?state.metrics.flatMap(k=>chartChannels().map(c=>c+':'+k)):state.metrics; }
+function chartMetric(key) { return key.includes(':')?key.split(':')[1]:key; }
+function chartMetricMeta(key) {
+ const [channel,metric]=key.includes(':')?key.split(':'):[chartChannel(),key];
+ const meta=metricMeta(metric,channel);
+ return {...meta,label:key.includes(':')?`${names[channel]} · ${meta.label}`:meta.label};
+}
 function chartFilter() {
- if(state.channel!=="all")return "";
- return `<div class="chart-channels" role="group" aria-label="Kanaal in grafiek">${Object.entries(names).map(([key,name])=>`<button data-chart-channel="${key}" aria-pressed="${state.chartChannel===key}">${key==='all'?'Totaal winkel':name}</button>`).join('')}</div><p class="hint chart-basis">${state.chartChannel==='all'?'Winkelcijfers uit Shopify.':'Toegerekende kanaalcijfers'+(state.chartChannel==='google'?' · Google non-branded':'')+'.'} Kerncijfers bovenaan blijven het winkeltotaal.</p>`;
+ if(state.channel!=='all')return '';
+ const channels=chartChannels();
+ return `<div class="chart-channels" role="group" aria-label="Kanalen in grafiek">${Object.entries(names).map(([key,name])=>`<button data-chart-channel="${key}" aria-pressed="${channels.includes(key)}">${key==='all'?'Totaal winkel':name}</button>`).join('')}</div><p class="hint chart-basis">${channels.includes('all')?'Winkelcijfers uit Shopify.':'Selecteer één of meer kanalen om de lijnen te vergelijken. Google gebruikt non-branded; kanaalclaims kunnen overlappen.'} Kerncijfers bovenaan blijven het winkeltotaal.</p>`;
+}
+function detailChannelFilter() {
+ if(chartChannels().length<2)return '';
+ return `<div class="chart-channels detail-channel-filter" role="group" aria-label="Kanaal voor onderliggende cijfers">${chartChannels().map(c=>`<button data-detail-channel="${c}" aria-pressed="${chartChannel()===c}">${names[c]}</button>`).join('')}</div>`;
 }
 function googleFilter() {
   if (state.channel !== "google") return "";
@@ -501,12 +522,7 @@ function returnForecastPanel(cur) {
  return `<details class="panel" id="returnForecast"><summary><span>Retourbegroting · nog te verwachten</span><span class="summary-value">${euro(r.impact)}</span></summary><dl class="margin-build"><div class="margin-row"><dt>Verwachte terugbetalingen · excl. btw</dt><dd>${euro(r.refundExcl)}</dd></div><div class="margin-row"><dt>Verwachte retourafhandeling · €20/pakket</dt><dd>${euro(r.handling)}</dd></div><div class="margin-row"><dt>Lagere 4% overhead na terugbetaling</dt><dd>${euro(r.overheadCredit==null?null:-r.overheadCredit)}</dd></div><div class="margin-row total"><dt>Reservering in resultaat</dt><dd>${euro(r.impact)}</dd></div><div class="margin-row"><dt>Resultaat vóór reservering</dt><dd>${euro(cur.actualResult)}</dd></div></dl><p class="hint">Voorlopige winkelbasis: ${num(r.rate*100)}% retourorders, ${r.matureReturns} retouren op ${r.matureOrders} orders van minstens ${r.horizon} dagen oud. Mediaan ${r.median==null?'—':num(r.median)} dagen van bestelling tot verwerking; 95% binnen ${r.p95??'—'} dagen. Laatste retourcontrole: ${fmt(r.asOf)}. ${r.stale?'Controle is ouder dan 48 uur; de leeftijd blijft op dat controlemoment vastgezet.':''}</p><div class="table-wrap"><table><thead><tr><th>Bestelweek</th><th>Orders</th><th>Retourorders</th><th>Gem. vertraging</th><th>Rijpheid</th></tr></thead><tbody>${r.weeks.map(w=>`<tr><td>${fmt(w.week)}</td><td>${w.orders}</td><td>${w.returns}</td><td>${w.meanLag==null?'—':num(w.meanLag)+' dagen'}</td><td>${w.mature?'Voldoende oud':'Nog in ontwikkeling'}</td></tr>`).join('')}</tbody></table></div><p class="hint">Per open order neemt de verwachte resterende kans af met de gemeten vertraging. Al geregistreerde retouren en annuleringen krijgen geen extra reservering. Werkelijke correcties vervangen de raming bij de volgende controle; het model herijkt op nieuwe, voldoende oude orders. Terugbetaaldatum is een benadering van ontvangst, geen vastgelegde pakketontvangstdatum. Eén pakket per retourorder blijft een aanname. Het beperkte aantal retouren maakt deze eerste begroting onzeker. Meta en Google gebruiken het gedeelde winkelpercentage en dezelfde verdeling naar orderaandeel als de werkelijke correcties; influencerorders worden apart gehouden. We doen geen alsof er al genoeg data is voor eigen retourpercentages per advertentiekanaal. ROAS en Daan-bonus behouden hun contractbasis; de begroting verlaagt alleen het resultaat en de winstmarge.</p></details>`;
 }
 function netMarginPanel(cur) {
-  return `<details class="panel net-margin" id="netMarginBuild"><summary><span>Opbouw netto marge</span><span class="summary-value">${cur.profitMargin==null?'—':num(cur.profitMargin)+'%'}</span></summary><dl class="margin-build">${cur.marginBuild.map(r=>`<div class="margin-row ${r.kind}" data-margin-row="${r.key}"><dt>${esc(r.label)}</dt><dd>${r.kind==='percent'?(r.value==null?'—':num(r.value)+'%'):euro(r.value)}</dd></div>`).join('')}</dl><p class="hint">${['meta','google'].includes(state.channel)?'Kanaalraming: product- en betaalkosten volgen de winkelmix vóór correcties. Terugbetalingen en retourkosten worden verdeeld naar orderaandeel; vrijval bij annulering is verwerkt.':state.channel==='infl'?'Eigen gekoppelde Shopify-orders, na correcties; opstartkosten zijn toegerekend naar omzetaandeel.':'Shopify-omzet na gecontroleerde correcties, met alle opgenomen kanaalkosten.'} Aandeel winkelwinst = kanaalresultaat / totaal winkelresultaat over dezelfde periode; overlappende kanaalramingen tellen niet noodzakelijk op tot 100%. Netto marge = resultaat / netto omzet excl. btw. Een onbekend bedrag blijft leeg. Actuele tarieven uit de kostprijssheet gelden ook voor historische orders; ingangsdatums ontbreken. Transport betreft levering naar Nederland. Fulfilment is het tarief per product/bundel uit de sheet; een los klantverzendtarief en korting bij gecombineerde pakketten ontbreken. Atlas bevat €3,06 broncorrectie. Retourafhandeling komt er afzonderlijk bij; teruggekomen producten blijven kosten tot voorraadherstel bekend is.</p>${returnForecastPanel(cur)}${state.channel==='all'?returnSummary(cur)+correctionAllocationPanel(cur):''}</details>`;
-}
-function correctionAllocationPanel(cur) {
-  const a=cur.correctionAllocation;
-  const rows=[['Meta',a.weights?.meta,a.allocations.meta],['Google non-branded',a.weights?.google,a.allocations.google],['Overig',a.weights?.other,a.allocations.other],['Influencers · eigen orders',null,a.direct]];
-  return `<details class="panel" id="channelCorrections"><summary>Retouren & omzetcorrecties per kanaal · verdeling</summary><p>${num(a.totalOrders)} Shopify-orders; ${num(a.excludedInfluencerOrders)} gekoppeld aan influencers. De overige ${num(a.orders)} orders vormen de verdeelbasis. Meta claimt ${num(a.metaOrders)} aankopen; Google non-branded ${num(a.googleNonbrandOrders)}.</p><div class="table-wrap"><table><thead><tr><th>Kanaal</th><th>Aandeel resterende orders</th><th>Omzetcorrectie incl. btw</th><th>Retourafhandeling</th><th>Verlaging resultaat</th></tr></thead><tbody>${rows.map(([name,weight,v])=>`<tr><td>${name}</td><td>${weight==null?(name.startsWith('Influencers')?'Eigen orderkoppeling':'—'):num(weight*100)+'%'}</td><td>${euro(v.refundedIncl)}</td><td>${euro(v.returnCost)}</td><td>${euro(v.profitImpact)}</td></tr>`).join('')}</tbody></table></div><p class="hint">Influencerorders worden rechtstreeks verwerkt en uit de verdeelpot gehaald. De rest volgt Meta-aankopen en Google non-branded aankopen / resterende Shopify-orders. ${a.normalized?'De platformclaims overlappen: aandelen zijn evenredig begrensd tot samen 100%.':'Niet toegerekende aandelen blijven bij overig.'} Een ontbrekende bron geeft geen verzonnen verdeling. Branded Google krijgt geen afzonderlijk deel; in de weergave Alles zit hetzelfde Google-deel één keer.</p><p class="hint">De kanaalraming begint met de winkelmarge vóór correcties. Daarna verwerken we terugbetaalde omzet excl. btw en €20 per geregistreerd retourpakket, met vrijval van productkosten bij annulering en lagere 4% overhead over terugbetaalde omzet. Zo tellen correcties één keer mee. De verdeling verandert alleen kanaalramingen; het Shopify-totaal bevat de volledige correcties al. Dagen in de grafiek gebruiken dezelfde aandelen als de geselecteerde periode. Dit blijft een schatting op basis van de gecontroleerde momentopname.</p></details>`;
+  return `<details class="panel net-margin" id="netMarginBuild"><summary><span>Opbouw netto marge</span><span class="summary-value">${cur.profitMargin==null?'—':num(cur.profitMargin)+'%'}</span></summary><dl class="margin-build">${cur.marginBuild.map(r=>`<div class="margin-row ${r.kind}" data-margin-row="${r.key}"><dt>${esc(r.label)}</dt><dd>${r.kind==='percent'?(r.value==null?'—':num(r.value)+'%'):euro(r.value)}</dd></div>`).join('')}</dl><p class="hint">${['meta','google'].includes(state.channel)?'Kanaalraming: product- en betaalkosten volgen de winkelmix vóór correcties. Terugbetalingen en retourkosten worden verdeeld naar orderaandeel; vrijval bij annulering is verwerkt.':state.channel==='infl'?'Eigen gekoppelde Shopify-orders, na correcties; opstartkosten zijn toegerekend naar omzetaandeel.':'Shopify-omzet na gecontroleerde correcties, met alle opgenomen kanaalkosten.'} Aandeel winkelwinst = kanaalresultaat / totaal winkelresultaat over dezelfde periode; overlappende kanaalramingen tellen niet noodzakelijk op tot 100%. Netto marge = resultaat / netto omzet excl. btw. Een onbekend bedrag blijft leeg. Actuele tarieven uit de kostprijssheet gelden ook voor historische orders; ingangsdatums ontbreken. Transport betreft levering naar Nederland. Fulfilment is het tarief per product/bundel uit de sheet; een los klantverzendtarief en korting bij gecombineerde pakketten ontbreken. Atlas bevat €3,06 broncorrectie. Retourafhandeling komt er afzonderlijk bij; teruggekomen producten blijven kosten tot voorraadherstel bekend is.</p>${returnForecastPanel(cur)}${state.channel==='all'?returnSummary(cur):''}</details>`;
 }
 function marketingMix(cur) {
   const prior=getPrev();
@@ -570,7 +586,9 @@ function resultLimitations(cur, keys) {
   if (E.returns || cur.returnReserve.stale) messages.push("Retourcontrole niet actueel; de reservering gebruikt het laatst gecontroleerde moment.");
   if (E.status) messages.push("Synchronisatiestatus niet beschikbaar; actualiteit is niet volledig controleerbaar.");
   if (E.costs) messages.push("Kostenregister niet vernieuwd: berekening gebruikt de laatst gecontroleerde tarieven.");
-  const unavailable = keys.filter(k => !D[k] || E[k] || stale(k) || !coverage(k));
+  const unavailable = keys.filter(k => !D[k] || E[k] || !coverage(k));
+  const delayed = keys.filter(k => D[k] && !E[k] && coverage(k) && stale(k));
+  if (delayed.length) messages.push(`Verversing vertraagd: ${delayed.map(k=>k==='creators'?'Influencers':names[k]).join(', ')}. Laatste beschikbare cijfers worden gebruikt.`);
   if (unavailable.length) messages.push(`Brongegevens onvolledig: ${unavailable.map(k=>k==='shopify'?'Shopify':k==='creators'?'Influencers':names[k]).join(', ')}. Totalen kunnen onvolledig zijn.`);
   if (!messages.length && cur.result == null) messages.push('Resultaat niet berekenbaar met de beschikbare omzet- en kostengegevens.');
   return messages;
@@ -632,7 +650,6 @@ function render() {
   $("#content").setAttribute("aria-labelledby", "tab-" + state.channel);
   const metrics = ["revenue", "result", "profitMargin", "spend"];
   const secondaryMetrics = state.channel === "all" ? ["cost"] : ["count", "roas", "cpa"];
-  const limitations = resultLimitations(cur, keys);
   const notes = [];
   if(state.channel === "all") notes.push(`Shopify-correcties gecontroleerd op ${D.returns?.model?.asOf || C.returns?.checked_on || "onbekend"}: ${euro(cur.refundedIncl)} terugbetaald en ${euro(cur.returnCost)} extra retourkosten voor orders in deze periode. Dit is een momentopname.`);
   if (keys.some((k) => !D[k] || E[k] || stale(k) || !coverage(k)))
@@ -675,19 +692,17 @@ function render() {
    };
   $("#content").innerHTML =
     `<div class="view-head"><div><p class="eyebrow">${state.channel === "all" ? "HET TOTAALBEELD" : "KANAALANALYSE"}</p><h2>${state.channel === "all" ? "Financieel overzicht" : names[state.channel]}</h2></div><div class="subtitle">${fmt(state.from)} – ${fmt(state.to)} ${state.to.slice(0, 4)}<br>${comparisonText}${state.to === today ? "<br><small>Vandaag loopt nog · vergeleken met hele dagen</small>" : ""}</div></div>
- ${limitations.length ? `<div class="result-limitations" role="status">${limitations.map(t=>`<p>${esc(t)}</p>`).join('')}<button class="link" data-show-status>Bronnen bekijken</button></div>` : ''}
  ${state.daan==='without' && ['all','meta'].includes(state.channel) ? '<p class="scenario-note">Scenario zonder kosten Daan · vergoeding uitgesloten van resultaat</p>' : ''}
  ${googleFilter()}
  <section class="kpis overview-kpis primary-kpis" aria-label="Kerncijfers">${metrics.map(metricCard).join('')}</section>
  <section class="steering-summary" aria-label="Ontwikkeling"><p>${esc(state.compare==='off' ? `Geselecteerde periode: ${euro(cur.revenue)} ${state.channel==='all'?'omzet excl. btw':'toegerekende omzet excl. btw'} en ${euro(cur.result)} ${state.channel==='all'?'voorlopige':'geschatte'} winst.` : steeringSummary(cur,prev))}</p><details class="signals"><summary>${state.channel==='all'?'Toelichting · kosten & retouren':'Schattingen & meetbasis'}</summary>${notes.map(n=>`<div class="signal">${esc(n)}</div>`).join('')}</details></section>
- ${state.channel==='all'?`<div class="overview-rendement"><button class="rendement-metric" title="Omzet incl. btw / alle bekende marketingkosten, inclusief beheer en influencers" data-metric="roas" aria-pressed="${state.metrics.includes('roas')}"><span>Blended ROAS</span><strong>${ratio(cur.roas)}</strong></button><span class="rendement-comparison">${delta('roas',cur,prev)}</span></div>`:''}
- <section class="panel ${analysisCollapsed?'is-collapsed':''}" id="analysis" tabindex="-1"><div class="panel-head"><div><p class="analysis-label">VERDIEP JE IN DE CIJFERS</p><h2><button class="analysis-heading" id="collapseAnalysis" aria-expanded="${!analysisCollapsed}" aria-controls="analysisBody analysisTools">${state.metrics.map((k) => metricMeta(k,chartChannel()).label).join(" & ") || "Analyse"}</button></h2><p class="subtitle">Klik bovenaan maximaal twee cijfers aan om ze hier te vergelijken.</p></div><div class="toolbar" id="analysisTools" ${analysisCollapsed?"hidden":""}><div class="gran-buttons" aria-label="Grafiek groeperen">${['day','week','month'].map((g,i)=>`<button data-gran="${g}" aria-pressed="${state.gran===g || state.gran==='auto' && g===((Date.parse(state.to)-Date.parse(state.from))/864e5<=31?'day':(Date.parse(state.to)-Date.parse(state.from))/864e5<=180?'week':'month')}">${['Dag','Week','Maand'][i]}</button>`).join('')}</div><select id="gran" hidden><option value="auto">Automatisch</option><option value="day">Dag</option><option value="week">Week</option><option value="month">Maand</option></select><button id="chartMode">${chartTable ? "Grafiek tonen" : "Tabel tonen"}</button></div></div><div id="analysisBody" ${analysisCollapsed?"hidden":""}>${chartFilter()}<div id="replacement"></div><div id="chart"></div><div id="dayComparison"></div><details class="detail-fold" id="detailFold"><summary>Onderliggende cijfers & uitsplitsing</summary><div id="detail"></div></details></div></section>
+ ${state.channel==='all'?`<div class="overview-rendement"><button class="rendement-metric" title="Omzet incl. btw / alle bekende marketingkosten, inclusief beheer en influencers" data-metric="roas" aria-pressed="${state.metrics.includes('roas')}"><span>Blended ROAS</span><strong>${ratio(cur.roas)}</strong></button><span class="rendement-comparison">${prev && cur.roas!=null && prev.roas!=null?`<span class="delta-base">Vorige periode ${ratio(prev.roas)}</span><span class="delta-main ${cur.roas>prev.roas?'positive':cur.roas<prev.roas?'negative':'neutral'}">${cur.roas>prev.roas?'+':cur.roas<prev.roas?'−':''}${ratio(Math.abs(cur.roas-prev.roas))}</span>`:delta('roas',cur,prev)}</span></div>`:''}
+ <section class="panel ${analysisCollapsed?'is-collapsed':''}" id="analysis" tabindex="-1"><div class="panel-head"><div><p class="analysis-label">VERDIEP JE IN DE CIJFERS</p><h2><button class="analysis-heading" id="collapseAnalysis" aria-expanded="${!analysisCollapsed}" aria-controls="analysisBody analysisTools">${state.metrics.map((k) => metricMeta(k,chartChannels().length>1?'all':chartChannel()).label).join(" & ") || "Analyse"}</button></h2><p class="subtitle">Klik bovenaan maximaal twee cijfers aan om ze hier te vergelijken.</p></div><div class="toolbar" id="analysisTools" ${analysisCollapsed?"hidden":""}><div class="gran-buttons" aria-label="Grafiek groeperen">${['day','week','month'].map((g,i)=>`<button data-gran="${g}" aria-pressed="${state.gran===g || state.gran==='auto' && g===((Date.parse(state.to)-Date.parse(state.from))/864e5<=31?'day':(Date.parse(state.to)-Date.parse(state.from))/864e5<=180?'week':'month')}">${['Dag','Week','Maand'][i]}</button>`).join('')}</div><select id="gran" hidden><option value="auto">Automatisch</option><option value="day">Dag</option><option value="week">Week</option><option value="month">Maand</option></select><button id="chartMode">${chartTable ? "Grafiek tonen" : "Tabel tonen"}</button></div></div><div id="analysisBody" ${analysisCollapsed?"hidden":""}>${chartFilter()}<div id="replacement"></div><div id="chart"></div><div id="dayComparison"></div><details class="detail-fold" id="detailFold"><summary>Onderliggende cijfers & uitsplitsing</summary>${detailChannelFilter()}<div id="detail"></div></details></div></section>
  ${netMarginPanel(cur)}
  ${channelBenchmark(cur)}
  <details class="panel" id="costOverview"><summary>${state.channel==='all'?'Kostenopbouw & rendement':'Meer marketingcijfers'}</summary><section class="kpis secondary-kpis" aria-label="Aanvullende cijfers">${secondaryMetrics.map(metricCard).join('')}</section>${knownMarketingCosts(cur)}${['all','meta'].includes(state.channel)?`<div class="daan-choice compact"><span>Kosten Daan meetellen</span><div class="daan-toggle" aria-label="Kosten Daan meetellen"><button data-daan="with" aria-pressed="${state.daan!=='without'}">Met Daan</button><button data-daan="without" aria-pressed="${state.daan==='without'}">Zonder Daan</button></div><button class="link" data-daan-details>Vast + bonus bekijken</button></div>`:''}</details>
  ${state.channel==='google' && C.google_management ? `<details class="panel" id="googleManagement"><summary><span>Google-beheer · vaste maandpost</span><span class="summary-value">${euro(cur.googleManagement.fixed)}</span></summary><p class="hint">€${num(C.google_management.monthly_fixed)} excl. btw per kalendermaand, verdeeld over de geselecteerde dagen vanaf 5 augustus. Meegenomen in marketingkosten, winst en netto marge. Bij branded/non-branded naar het advertentiekostenaandeel per dag; zonder advertenties naar non-branded. In het bedrijfsoverzicht één keer de volledige vergoeding. Mailafspraak: 6 uur × €60 excl. btw als uitgangspunt met nacalculatie; hier als vaste maandpost begroot. Google/Microsoft-beheer is hier volledig aan Google toegerekend. Platform-ROAS blijft op advertentiekosten gebaseerd.</p></details>` : ''}
  ${state.channel === "all" ? marketingMix(cur) : ""}
- ${['meta','google'].includes(state.channel) ? correctionAllocationPanel(cur) : ''}
  ${state.channel==='meta' ? `<details class="panel management">
  <summary class="management-heading"><span>Meta-beheer<small>Vaste vergoeding en prestatiebonus</small></span><span class="management-heading-total">${euro(cur.management.total)}</span></summary>
  <div class="management-amounts">
@@ -736,8 +751,11 @@ function renderUpdateSummary() {
 }
 function renderStatus() {
   const keys=['meta','google','creators','shopify'];
-  const healthy=keys.every(k=>D[k] && !E[k] && !stale(k) && coverage(k)) && !E.status && !E.costs && !E.returns && D.returns && Date.now()-Date.parse(D.returns.synced_at)<48*3600e3 &&
-    compute(analysisData(),C,state.from,state.to,state.channel,{includeDaan:state.daan!=='without'}).result!=null;
+  const cur=viewCompute(analysisData(),C,state.from,state.to,state.channel);
+  const viewKeys=state.channel==='all'?keys:state.channel==='infl'?['creators']:[state.channel];
+  const limitations=resultLimitations(cur,viewKeys);
+  const healthy=!limitations.length && keys.every(k=>D[k] && !E[k] && !stale(k) && coverage(k)) && !E.status && !E.costs && !E.returns && D.returns && Date.now()-Date.parse(D.returns.synced_at)<48*3600e3 &&
+    cur.result!=null;
   const timestamps=[D.source_status?.meta?.last_success,D.google?.synced_at,D.creators?.synced_at,D.source_status?.shopify?.last_success].map(t=>Date.parse(t)).filter(Number.isFinite);
   const latest=timestamps.length?new Intl.DateTimeFormat('nl-NL',{timeZone:'Europe/Amsterdam',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(Math.max(...timestamps))):'tijdstip onbekend';
   $('#statusButton').innerHTML=`<span class="live-dot ${healthy?'':'warning'}" aria-hidden="true"></span>`;
@@ -746,9 +764,9 @@ function renderStatus() {
   $('#statusButton').title='Data & updates';
   $('#dashboardStatus').innerHTML=`<button id="statusBadge" class="status-badge ${healthy?'is-healthy':'is-warning'}" aria-expanded="${!$('#status').hidden}" aria-controls="status"><span class="live-dot ${healthy?'':'warning'}" aria-hidden="true"></span><span><strong>${healthy?'Gegevens actueel':'Gegevens controleren'}</strong><small>Laatste bronupdate: ${esc(latest)} · Meta, Google, Shopify, influencers</small></span><span class="badge-arrow" aria-hidden="true">›</span></button>`;
   $('#statusBadge').onclick=()=>{const open=$('#status').hidden;$('#status').hidden=!open;$('#statusBadge').setAttribute('aria-expanded',String(open));$('#statusButton').setAttribute('aria-expanded',String(open));};
-  $('#status').innerHTML=`<div id="updateSummary" aria-live="polite"></div><details class="order-check"><summary>Shopify-ordercontrole</summary>${D.shopify_check ? `<p>${D.shopify_check.orders} unieke orders · ${D.shopify_check.test_orders} testorders uitgesloten. Laatste order: ${esc(D.shopify_check.latest_num)} · ${esc(D.shopify_check.latest_date)}.</p><p>${(()=>{const m=compute(D,C,state.from,state.to,'all');return `Geselecteerde periode: ${num(m.count)} orders · ${euro(m.incl)} omzet incl. btw.`})()}</p><button id="viewShopifyOrders">Shopify-orders bekijken</button>` : '<p>Ordercontrole niet beschikbaar.</p>'}<p class="hint">Dezelfde orderbron als het Meta-dashboard. Controle op unieke ordernummers, datums, bedragen en productregels bij laden; dit is niet het tijdstip van een nieuwe bestelling.</p></details>`;
+  $('#status').innerHTML=`${limitations.length?`<div class="source-limitations hint" role="status">${limitations.map(t=>`<p>${esc(t)}</p>`).join('')}</div>`:''}<div id="updateSummary" aria-live="polite"></div><details class="order-check"><summary>Shopify-ordercontrole</summary>${D.shopify_check ? `<p>${D.shopify_check.orders} unieke orders · ${D.shopify_check.test_orders} testorders uitgesloten. Laatste order: ${esc(D.shopify_check.latest_num)} · ${esc(D.shopify_check.latest_date)}.</p><p>${(()=>{const m=compute(D,C,state.from,state.to,'all');return `Geselecteerde periode: ${num(m.count)} orders · ${euro(m.incl)} omzet incl. btw.`})()}</p><button id="viewShopifyOrders">Shopify-orders bekijken</button>` : '<p>Ordercontrole niet beschikbaar.</p>'}<p class="hint">Dezelfde orderbron als het Meta-dashboard. Controle op unieke ordernummers, datums, bedragen en productregels bij laden; dit is niet het tijdstip van een nieuwe bestelling.</p></details>`;
   renderUpdateSummary();
-  if($('#viewShopifyOrders')) $('#viewShopifyOrders').onclick=()=>{change(()=>{state.channel='all';state.chartChannel='all';state.metrics=['revenue'];state.detail={type:'orders',name:'Alle orders'};state.sub=null;});$('#detailFold').open=true;$('#detail').scrollIntoView({block:'start'});};
+  if($('#viewShopifyOrders')) $('#viewShopifyOrders').onclick=()=>{change(()=>{state.channel='all';state.chartChannel='all';state.chartChannels=['all'];state.metrics=['revenue'];state.detail={type:'orders',name:'Alle orders'};state.sub=null;});$('#detailFold').open=true;$('#detail').scrollIntoView({block:'start'});};
 }
 function chartRows() {
   const days = (new Date(state.to) - new Date(state.from)) / 864e5;
@@ -760,31 +778,37 @@ function chartRows() {
           ? "week"
           : "month"
       : state.gran;
-  return series(chartData(), C, state.from, state.to, chartChannel(), g, {includeDaan:state.daan!=="without"});
+  const channels=chartChannels();
+  const channelRows=channels.map(channel=>series(chartData(channel),C,state.from,state.to,channel,g,{includeDaan:state.daan!=="without"}));
+  if(channels.length===1)return channelRows[0];
+  const indexes=channelRows.map(rows=>new Map(rows.map(row=>[row.from+'|'+row.to,row])));
+  return channelRows[0].map(row=>({...row,...Object.fromEntries(channels.flatMap((channel,i)=>state.metrics.map(metric=>[channel+':'+metric,indexes[i].get(row.from+'|'+row.to)?.[metric]??null])))}));
 }
 function renderDayComparison() {
   const dates=[...selectedDays].filter(d=>d>=state.from && d<=state.to).sort();
   selectedDays=new Set(dates);
   $("#dayComparison").hidden=!dates.length;
   const from=dates[0],to=dates.at(-1);
-  const totals=dates.length ? viewCompute(chartData(),C,from,to,chartChannel()) : null;
-  $("#dayComparison").innerHTML=`<section class="selection-overview" aria-label="Geselecteerde periode">${totals ? `<div class="panel-head"><div><h3>Geselecteerde periode</h3><p class="subtitle">${fmt(from)} – ${fmt(to)} ${to.slice(0,4)} · ${dates.length} ${dates.length===1?'dag':'dagen'}</p></div><button id="clearDays">Selectie wissen</button></div><div class="selection-totals">${state.metrics.map(k=>`<div><span>${metricMeta(k,chartChannel()).label}</span><strong data-selection-metric="${k}">${metricMeta(k).fmt(totals[k])}</strong></div>`).join('')}</div>` : ''}<details class="range-access"><summary>${totals?'Selectie aanpassen':'Periode met datums kiezen'}</summary><label>Van<input id="rangeStart" type="date" min="${state.from}" max="${state.to}" value="${from||state.from}"></label><label>Tot<input id="rangeEnd" type="date" min="${state.from}" max="${state.to}" value="${to||state.to}"></label><button id="applyChartRange">Selecteren</button></details></section>`;
+  const totals=dates.length ? Object.fromEntries(chartChannels().map(channel=>[channel,viewCompute(chartData(channel),C,from,to,channel)])) : null;
+  $("#dayComparison").innerHTML=`<section class="selection-overview" aria-label="Geselecteerde periode">${totals ? `<div class="panel-head"><div><h3>Geselecteerde periode</h3><p class="subtitle">${fmt(from)} – ${fmt(to)} ${to.slice(0,4)} · ${dates.length} ${dates.length===1?'dag':'dagen'}</p></div><button id="clearDays">Selectie wissen</button></div><div class="selection-totals">${chartKeys().map(key=>{const [channel,k]=key.includes(':')?key.split(':'):[chartChannel(),key];return `<div><span>${chartMetricMeta(key).label}</span><strong data-selection-metric="${k}" data-selection-channel="${channel}">${metricMeta(k).fmt(totals[channel][k])}</strong></div>`}).join('')}</div>` : ''}<details class="range-access"><summary>${totals?'Selectie aanpassen':'Periode met datums kiezen'}</summary><label>Van<input id="rangeStart" type="date" min="${state.from}" max="${state.to}" value="${from||state.from}"></label><label>Tot<input id="rangeEnd" type="date" min="${state.from}" max="${state.to}" value="${to||state.to}"></label><button id="applyChartRange">Selecteren</button></details></section>`;
 }
 function renderChart() {
   renderDayComparison();
   if(!state.metrics.length) { $("#chart").innerHTML='<p class="hint">Klik bovenaan op een cijfer om de grafiek te openen.</p>'; return; }
   const rows = chartRows(),
-    keys = state.metrics;
+    keys = chartKeys();
   if (chartTable) {
     $("#chart").innerHTML =
-      `<div class="table-wrap"><table><thead><tr><th>Periode</th>${keys.map((k) => `<th>${metricMeta(k,chartChannel()).label}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr class="${selectedDays.has(r.from)?'selected-bucket':''}"><td><button class="link" aria-pressed="${selectedDays.has(r.from)}" data-bucket="${r.from}|${r.to}">${fmt(r.from)} – ${fmt(r.to)}</button></td>${keys.map((k) => `<td>${metricMeta(k,chartChannel()).fmt(r[k])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+      `<div class="table-wrap"><table><thead><tr><th>Periode</th>${keys.map((k) => `<th>${chartMetricMeta(k).label}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr class="${selectedDays.has(r.from)?'selected-bucket':''}"><td><button class="link" aria-pressed="${selectedDays.has(r.from)}" data-bucket="${r.from}|${r.to}">${fmt(r.from)} – ${fmt(r.to)}</button></td>${keys.map((k) => `<td>${chartMetricMeta(k).fmt(r[k])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
     return;
   }
-  const chartColor = k => keys.indexOf(k) === 0 ? "#38BDF8" : "#FFAD55";
+  const multi=chartChannels().length>1;
+  const chartColor=k=>multi?({meta:'#38BDF8',google:'#FFAD55',infl:'#B98DE0'}[k.split(':')[0]]):keys.indexOf(k)===0?'#38BDF8':'#FFAD55';
+  const dashed=k=>multi && state.metrics.indexOf(chartMetric(k))>0;
   const same = keys.every((k) =>
-    ["revenue", "cost", "spend", "result"].includes(k),
+    ["revenue", "cost", "spend", "result"].includes(chartMetric(k)),
   );
-  const groups = same ? [keys] : keys.map((k) => [k]);
+  const groups = same ? [keys] : state.metrics.map(metric=>keys.filter(k=>chartMetric(k)===metric));
   $("#chart").innerHTML =
     groups
       .map((group) => {
@@ -805,7 +829,7 @@ function renderChart() {
           pw = W - L - R;
         const y = (v) => T + ((max - v) / (max - min)) * ph,
           x = (i) => L + ((i + 0.5) / rows.length) * pw;
-        return `<div class="chart"><div class="legend">${group.map((k) => `<span><i class="dot" style="background:${chartColor(k)}"></i>${metricMeta(k,chartChannel()).label}</span>`).join("")}</div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(group.map((k) => metricMeta(k,chartChannel()).label).join(" en "))} per periode. Exacte waarden via Tabel tonen.">${[min, (min + max) / 2, max].map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 10}" y="${y(v) + 4}" text-anchor="end">${esc(metricMeta(group[0]).fmt(v))}</text>`).join("")}${group
+        return `<div class="chart"><div class="legend">${group.map((k) => `<span><i class="dot" style="background:${chartColor(k)}"></i>${chartMetricMeta(k).label}${dashed(k)?' (gestreept)':''}</span>`).join("")}</div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(group.map((k) => chartMetricMeta(k).label).join(" en "))} per periode. Exacte waarden via Tabel tonen.">${[min, (min + max) / 2, max].map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 10}" y="${y(v) + 4}" text-anchor="end">${esc(chartMetricMeta(group[0]).fmt(v))}</text>`).join("")}${group
           .map((k) => {
             const chunks = [];
             let points = [];
@@ -820,14 +844,14 @@ function renderChart() {
               chunks
                 .map(
                   (p) =>
-                    `<polyline points="${p.join(" ")}" stroke="${chartColor(k)}" stroke-width="2.5" fill="none"/>`,
+                    `<polyline points="${p.join(" ")}" stroke="${chartColor(k)}" stroke-width="2.5" ${dashed(k)?'stroke-dasharray="6 4"':''} data-chart-line="${k}" fill="none"/>`,
                 )
                 .join("") +
               rows
                 .map((r, i) =>
                   r[k] == null
                     ? ""
-                    : `<circle class="point ${selectedDays.has(r.from) ? "selected-point" : ""}" data-bucket="${r.from}|${r.to}" cx="${x(i)}" cy="${y(r[k])}" r="${rows.length > 90 ? 2 : 4}" fill="${chartColor(k)}"><title>${fmt(r.from)}${r.to!==r.from?' – '+fmt(r.to):''}: ${metricMeta(k,chartChannel()).fmt(r[k])}</title></circle>`,
+                    : `<circle class="point ${selectedDays.has(r.from) ? "selected-point" : ""}" data-chart-key="${k}" data-bucket="${r.from}|${r.to}" cx="${x(i)}" cy="${y(r[k])}" r="${rows.length > 90 ? 2 : 4}" fill="${chartColor(k)}"><title>${fmt(r.from)}${r.to!==r.from?' – '+fmt(r.to):''}: ${chartMetricMeta(k).fmt(r[k])}</title></circle>`,
                 )
                 .join("")
             );
@@ -1486,7 +1510,17 @@ function bindContent() {
     const b = e.target.closest("button,[data-bucket]");
     if (!b) return;
     if (b.dataset.chartChannel) {
-      change(()=>{state.chartChannel=b.dataset.chartChannel;state.detail=null;state.sub=null;selectedDays.clear();});
+      change(()=>{
+        const channel=b.dataset.chartChannel;
+        if(channel==='all')state.chartChannels=['all'];
+        else if(state.chartChannels.includes(channel)) {
+          if(state.chartChannels.length>1)state.chartChannels=state.chartChannels.filter(c=>c!==channel);
+        } else state.chartChannels=[...state.chartChannels.filter(c=>c!=='all'),channel];
+        state.chartChannel=state.chartChannels[0];state.detail=null;state.sub=null;
+      });
+    } else if(b.dataset.detailChannel) {
+      change(()=>{state.chartChannel=b.dataset.detailChannel;state.detail=null;state.sub=null;});
+      $('#detailFold').open=true;
     } else if (b.hasAttribute("data-show-status")) {
       $("#status").hidden=false; $("#statusButton").setAttribute("aria-expanded","true"); $("#status").scrollIntoView({block:"start",behavior:"smooth"});
     } else if (b.id === "collapseAnalysis") {
@@ -1601,6 +1635,7 @@ function switchChannel(ch) {
   change(() => {
     state.channel = ch;
     state.chartChannel = "all";
+    state.chartChannels = ["all"];
     state.metrics = ch === "all" ? ["revenue", "result"] : ["result", "profitMargin"];
     state.detail = null;
     state.sub = null;
