@@ -55,3 +55,51 @@ test('Meta Daan switch reconciles profit, costs and chart including company tota
  close(compute(data,costs,f,t,'all',{includeDaan:false}).result-compute(data,costs,f,t,'all').result,withDaan.management.total);
  assert.equal(compute({...data,shopify:null},costs,f,t,'meta',{includeDaan:false}).result,null);
 });
+
+function blockFixture(contributions, snap='2026-09-30') {
+ const fixtureCosts={...costs,meta_management:{monthly_fixed:1500,contract_start:'2026-09-01',bonus_period_days:30,bonus_rate:0.1},returns:null};
+ const shopify={orders:[{d:'2026-09-01',num:'#fixture',items:['LumeWorks Prime'],incl:149}]};
+ const base={meta:{snap,daily_meta:[]},shopify};
+ const margin=149/1.21-43.8-149*fixtureCosts.payment_rate-(149/1.21)*fixtureCosts.overhead_rate;
+ const be=149/margin;
+ for(let d='2026-09-01',i=0;d<=snap;d=shift(d,1),i++) base.meta.daily_meta.push({d,spend:1000,rev7:1000*be+(contributions[i]||0)/0.1,rev1v:0,purch:1});
+ return {data:base,costs:fixtureCosts};
+}
+test('positive and negative days offset without a daily floor and daily costs reconcile',()=>{
+ const f=blockFixture([100,-40]);
+ const full=managementCosts(f.data,f.costs,'2026-09-01','2026-09-30');
+ close(full.bonus,60);close(full.fixed,1500);close(full.total,1560);
+ close(full.daily[0].contribution,100);close(full.daily[1].contribution,-40);
+ close(managementCosts(f.data,f.costs,'2026-09-02','2026-09-02').bonus,-40);
+ close(full.periods[0].closingAdjustment,0);
+ close(full.daily.reduce((n,d)=>n+d.total,0),full.total);
+});
+test('negative block receives one closing correction, not a floor on every loss day',()=>{
+ const f=blockFixture([100,-140]);
+ const m=managementCosts(f.data,f.costs,'2026-09-01','2026-09-30');
+ close(m.bonus,0);close(m.periods[0].rawBonus,-40);
+ close(m.daily[1].contribution,-140);close(m.daily[1].bonus,-140);
+ close(m.daily.at(-1).adjustment,40);
+ assert.equal(m.daily.filter(d=>Math.abs(d.adjustment)>1e-7).length,1);
+ close(m.daily.reduce((n,d)=>n+d.bonus,0),0);
+ close(m.total,1500);
+});
+test('pending block floor is provisional and moves to latest available day',()=>{
+ const f=blockFixture([100,-140],'2026-09-02');
+ const m=managementCosts(f.data,f.costs,'2026-09-01','2026-09-02');
+ close(m.bonus,0);close(m.daily.at(-1).contribution,-140);close(m.daily.at(-1).adjustment,40);
+ assert.equal(m.periods[0].through,'2026-09-02');
+ const later=blockFixture([100,-140,100],'2026-09-03');
+ const n=managementCosts(later.data,later.costs,'2026-09-01','2026-09-03');
+ close(n.bonus,60);close(n.daily[1].bonus,-140);close(n.daily[1].adjustment,0);
+});
+test('missing middle day or duplicate day remains unknown while fixed fee stays known',()=>{
+ for(const variant of ['missing','duplicate']) {
+  const f=blockFixture([100,-40]);
+  if(variant==='missing') f.data.meta.daily_meta.splice(10,1);
+  else f.data.meta.daily_meta.push({...f.data.meta.daily_meta[10]});
+  const m=managementCosts(f.data,f.costs,'2026-09-01','2026-09-30');
+  assert.equal(m.bonus,null);assert.equal(m.total,null);close(m.fixed,1500);
+  assert(m.daily.every(d=>d.bonus===null && d.fixed===50));
+ }
+});

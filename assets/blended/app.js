@@ -15,7 +15,7 @@ import {
   aggregate,
   previous,
   inRange,
-} from "./metrics.js?v=stable-codes-1";
+} from "./metrics.js?v=signed-daan-1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (s) =>
@@ -658,16 +658,16 @@ function render() {
  <summary class="management-heading"><span>Meta-beheer<small>Vaste vergoeding en prestatiebonus</small></span><span class="management-heading-total">${euro(cur.management.total)}</span></summary>
  <div class="management-amounts">
   <div><span>Vaste vergoeding</span><strong>${euro(cur.management.fixed)}</strong><small>€ 1.500 per maand, verdeeld over de geselecteerde dagen.</small></div>
-  <div><span>Prestatiebonus</span><strong>${euro(cur.management.bonus)}</strong><small>Het deel van de bonus dat bij deze periode hoort.</small></div>
+  <div><span>Prestatiebonus</span><strong>${euro(cur.management.bonus)}</strong><small>Dagelijkse bonusopbouw inclusief negatieve verliesdagen en eventuele blokcorrectie.</small></div>
   <div class="management-total"><span>Totaal Meta-beheer</span><strong>${euro(cur.management.total)}</strong><small>${state.daan==='without'?'Uitgesloten van deze analyse.':'Meegenomen in de marketingkosten.'}</small></div>
  </div>
  <p class="management-note">De 4% overige bedrijfskosten wordt apart berekend.</p>
  <details class="management-calculation"><summary>Hoe wordt de bonus berekend?</summary>
- <p>De bonus is 10% van de Meta-omzet boven break-even. Onder break-even is de bonus € 0. Dit is dezelfde berekening als in het Meta-dashboard.</p>
- <p>We berekenen de bonus per contractperiode van 30 dagen. Je selectie kan delen van meerdere contractperiodes bevatten. Het aandeel Meta-advertentiekosten bepaalt welk deel van de bonus hieronder meetelt.</p>
+ <p>Per dag: 10% × (Meta-omzet − advertentiekosten × break-even-ROAS). Verliesdagen geven een negatief bedrag en verlagen de opgebouwde bonus. Alle dagen binnen één contractblok gebruiken dezelfde break-even-ROAS.</p>
+ <p>We tellen de dagbedragen op per contractblok van 30 dagen. Alleen het bloktotaal krijgt een minimum van € 0. Als het saldo negatief is, wordt op de laatste blokdag één correctie geboekt. Bij een lopend blok gebeurt dit voorlopig op de laatste beschikbare dag; dit kan bij nieuwe data veranderen. Je selectie telt de dagbedragen en correcties op de geselecteerde dagen mee.</p>
  <div class="table-wrap"><table><thead><tr><th>Bonusperiode</th><th>Bonus hele periode</th><th>Hiervan in je selectie</th></tr></thead><tbody>${cur.management.periods.map(p=>`<tr><td>${fmt(p.from)} – ${fmt(p.to)}<small>${p.bonus==null?'Nog niet berekenbaar':p.through<p.to?'Voorlopig · bijgewerkt t/m '+fmt(p.through):'Periode afgelopen'}</small></td><td>${euro(p.bonus)}</td><td>${euro(p.allocated)}</td></tr>`).join('')}</tbody></table></div>
- <p class="management-method">Rekenregel: 10% × max(0, Meta-omzet − advertentiekosten × break-even-ROAS). Break-even is gebaseerd op de Shopify-marge na productkosten, betaalkosten en 4% overige bedrijfskosten. De contractperiodes starten op 16 juli 2026. De bonus van een lopende periode kan nog veranderen.</p>
- </details></details>` : ''}
+ <p class="management-method">Rekenregel: 10% × max(0, Meta-omzet − advertentiekosten × break-even-ROAS). Break-even is gebaseerd op de Shopify-marge na productkosten, betaalkosten en 4% overige bedrijfskosten. De contractperiodes starten op 16 juli 2026. De bonus van een lopende periode kan nog veranderen. De vaste vergoeding is € 1.500 gedeeld door de kalenderdagen van de betreffende maand.</p>
+ </details><details class="management-calculation"><summary>Dagelijkse vergoeding & bonusopbouw</summary><p class="hint">Negatieve bonusopbouw verlaagt de kosten op die dag. Blokcorrectie voorkomt een negatieve bonus over het hele contractblok. Ontbrekende brongegevens blijven onbekend; de vaste dagvergoeding is wel bekend.</p><div class="table-wrap"><table><thead><tr><th>Dag</th><th>Vast</th><th>Bonusopbouw</th><th>Blokcorrectie</th><th>Dagkosten</th></tr></thead><tbody>${cur.management.daily.map(r=>`<tr><td>${fmt(r.d)}<small>${r.d.slice(0,4)}</small></td><td>${euro(r.fixed)}</td><td>${euro(r.contribution)}</td><td>${euro(r.adjustment)}</td><td>${euro(r.total)}</td></tr>`).join('')}</tbody></table></div></details></details>` : ''}
  ${state.channel === "infl" ? creatorSummary(D.creators,C) : state.channel === "all" && D.creators?.collaborations ? `<details class="panel creator-overview"><summary><span>Influencers · investering & opbrengst</span><small>${D.creators.collaborations.total} samenwerkingen · ${Math.round(D.creators.collaborations.without_orders/D.creators.collaborations.total*100)}% zonder codebestellingen</small></summary>${creatorSummary(D.creators,C)}</details>` : ""}
  ${state.channel === "all" ? overviewOrders(cur) : ""}
 `;

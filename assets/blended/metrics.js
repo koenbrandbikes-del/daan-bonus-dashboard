@@ -57,42 +57,60 @@ export function finance(orders, costs) {
     orders: orders.length,
   };
 }
-// Fixed fee: calendar-month proration. Bonus: existing Meta contract formula,
-// calculated for each 30-day contract period, allocated by daily media spend.
+// Fixed fee follows calendar days. Signed daily bonus contributions share one
+// break-even rate per contract block; the zero floor is applied only to the
+// block total. A single closing adjustment makes daily costs reconcile to it.
 export function managementCosts(data, costs, from, to) {
   const cfg=costs.meta_management;
-  if(!cfg) return {fixed:0,bonus:0,total:0,periods:[]};
+  if(!cfg) return {fixed:0,bonus:0,total:0,periods:[],daily:[]};
   let fixed=0,bonus=0;
-  const periods=new Map();
+  const periods=new Map(), daily=new Map();
   for(let d=from;d<=to;d=shift(d,1)) {
     if(d<cfg.contract_start) continue;
     const date=new Date(d+'T12:00:00Z');
     const monthDays=new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth()+1,0)).getUTCDate();
-    fixed+=cfg.monthly_fixed/monthDays;
+    const dayFixed=cfg.monthly_fixed/monthDays;
+    fixed+=dayFixed;
     const index=Math.floor((Date.parse(d)-Date.parse(cfg.contract_start))/864e5/cfg.bonus_period_days);
     const start=shift(cfg.contract_start,index*cfg.bonus_period_days);
     if(!periods.has(start)) periods.set(start,[]);
     periods.get(start).push(d);
+    daily.set(d,{d,fixed:dayFixed,contribution:null,adjustment:null,bonus:null,total:null,periodFrom:start});
   }
   const audit=[];
   for(const [start,selected] of periods) {
     const end=shift(start,cfg.bonus_period_days-1);
     const until=data.meta?.snap && data.meta.snap<end ? data.meta.snap : end;
-    const meta=data.meta?.daily_meta?.filter(r=>r.d>=start && r.d<=until);
-    // Contract bonus retains the source Meta-dashboard basis; this audit does
-    // not silently alter the agreed bonus calculation.
+    const meta=data.meta?.daily_meta?.filter(r=>r.d>=start && r.d<=until).sort((a,b)=>a.d.localeCompare(b.d));
+    // Retain the original contract margin basis, excluding manual refunds.
     const f=finance((data.shopify?.orders||[]).filter(o=>!o.test && o.d>=start && o.d<=until),{...costs,returns:null});
     const margin=f.excl-f.cost-f.overhead;
-    if(!meta || !data.shopify || start<'2026-08-01' || !meta.length || meta[0].d>start || f.cost==null || margin<=0) { bonus=null; audit.push({from:start,to:end,bonus:null}); continue; }
-    const spend=sum(meta,'spend'), revenue=sum(meta,r=>(r.rev7||0)+(r.rev1v||0));
+    // Missing days are not zero-spend days. July Shopify coverage is incomplete.
+    const byDate=new Map(meta?.map(r=>[r.d,r]));
+    let complete=!!meta && !!data.shopify && start>='2026-08-01' && until>=start && f.cost!=null && margin>0 && byDate.size===meta.length;
+    for(let d=start;complete && d<=until;d=shift(d,1)) {
+      const row=byDate.get(d);
+      if(!row || !['spend','rev7','rev1v'].every(k=>Number.isFinite(row[k]))) complete=false;
+    }
+    if(!complete || selected.some(d=>d>until)) {
+      bonus=null; audit.push({from:start,to:end,through:until,bonus:null,allocated:null,daily:[]}); continue;
+    }
+    const spend=sum(meta,'spend'), revenue=sum(meta,r=>r.rev7+r.rev1v);
     const be=f.incl/margin;
-    const periodBonus=spend>0?Math.max(0,revenue-spend*be)*cfg.bonus_rate:0;
-    const selectedSpend=sum(meta.filter(r=>selected.includes(r.d)),'spend');
-    const part=spend>0?periodBonus*selectedSpend/spend:0;
+    const contributions=meta.map(r=>({d:r.d,contribution:(r.rev7+r.rev1v-r.spend*be)*cfg.bonus_rate}));
+    const rawBonus=sum(contributions,'contribution');
+    const periodBonus=Math.max(0,rawBonus);
+    const closingAdjustment=periodBonus-rawBonus;
+    const blockDaily=contributions.map(r=>({...r,adjustment:r.d===until?closingAdjustment:0,bonus:r.contribution+(r.d===until?closingAdjustment:0)}));
+    const part=sum(blockDaily.filter(r=>selected.includes(r.d)),'bonus');
     if(bonus!=null) bonus+=part;
-    audit.push({from:start,to:end,through:until,bonus:periodBonus,allocated:part,breakEvenRoas:be,spend,revenue});
+    for(const row of blockDaily) {
+      const selectedDay=daily.get(row.d);
+      if(selectedDay) Object.assign(selectedDay,row,{total:selectedDay.fixed+row.bonus});
+    }
+    audit.push({from:start,to:end,through:until,bonus:periodBonus,rawBonus,closingAdjustment,allocated:part,breakEvenRoas:be,spend,revenue,daily:blockDaily});
   }
-  return {fixed,bonus,total:bonus==null?null:fixed+bonus,periods:audit};
+  return {fixed,bonus,total:bonus==null?null:fixed+bonus,periods:audit,daily:[...daily.values()]};
 }
 export function compute(data, costs, from, to, channel = "all", options = {}) {
   const orders = (data.shopify?.orders || []).filter(

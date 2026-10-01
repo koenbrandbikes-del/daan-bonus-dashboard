@@ -621,7 +621,8 @@ test('first glance has four KPIs, visible interpretation and revenue-profit defa
  const w=await boot('?from=2026-09-24&to=2026-09-30'),d=w.document;
  assert.deepEqual([...d.querySelectorAll('.primary-kpis [data-metric]')].map(b=>b.dataset.metric),['revenue','result','profitMargin','spend']);
  assert.deepEqual([...d.querySelectorAll('.primary-kpis .active')].map(b=>b.dataset.metric),['revenue','result']);
- assert.match(d.querySelector('.steering-summary>p').textContent,/Marketingkosten groeien sneller dan omzet/);
+ assert.match(d.querySelector('.steering-summary>p').textContent,/Omzet stijgt/);
+ assert.match(d.querySelector('.steering-summary>p').textContent,/Winst/);
  assert.match(d.querySelector('.steering-summary>p').textContent,/Marge/);
  for(const id of ['costOverview','marketingMix','returnEstimate','overviewOrders']) assert.equal(d.getElementById(id).open,false);
  assert(d.querySelector('.primary-kpis').compareDocumentPosition(d.querySelector('#marketingMix')) & w.Node.DOCUMENT_POSITION_FOLLOWING);
@@ -647,5 +648,20 @@ test('near-zero and negative previous profit use euro changes, not extreme growt
  assert.doesNotMatch(text,/5\.152|5152/);
  assert.match(text,/€/);
  assert(w.document.querySelector('.channel-benchmark'));
+ w.close();
+});
+
+
+test('Daan detail exposes negative daily accrual and known calendar fixed fees',async()=>{
+ const w=await boot('?from=2026-09-01&to=2026-09-30');
+ const d=w.document,details=[...d.querySelectorAll('.management-calculation')];
+ const daily=details.find(x=>x.querySelector('summary').textContent.includes('Dagelijkse vergoeding'));
+ assert(daily);assert.equal(daily.open,false);
+ const rows=[...daily.querySelectorAll('tbody tr')];
+ assert.equal(rows.length,30);
+ assert(rows.every(r=>r.cells[1].textContent.includes('50')));
+ assert(rows.some(r=>r.cells[2].textContent.includes('-')));
+ assert.match(d.querySelector('.management').textContent,/Verliesdagen geven een negatief bedrag/);
+ assert.match(daily.textContent,/Blokcorrectie/);
  w.close();
 });
