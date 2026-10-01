@@ -15,7 +15,7 @@ import {
   aggregate,
   previous,
   inRange,
-} from "./metrics.js?v=returns-channel-1";
+} from "./metrics.js?v=channel-allocation-1";
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 const esc = (s) =>
@@ -133,7 +133,6 @@ function readState() {
   for (const k of [
     "channel",
     "googleScope",
-    "daan",
     "from",
     "to",
     "compare",
@@ -145,7 +144,9 @@ function readState() {
     if (q.has(k)) s[k] = q.get(k);
   if (!["nonbrand", "brand", "all"].includes(s.googleScope))
     s.googleScope = "nonbrand";
-  if (!["with","without"].includes(s.daan)) s.daan="with";
+  // Opening a dashboard always includes the real operating cost.
+  // Without Daan is a temporary comparison chosen inside the page.
+  s.daan="with";
   if (!(s.channel in names)) s.channel = "all";
   if (!["previous", "off", "custom"].includes(s.compare))
     s.compare = "previous";
@@ -249,7 +250,7 @@ function change(fn) {
 }
 function viewCompute(data,costs,from,to,channel) {
   const base=compute(data,costs,state.from,state.to,channel,{includeDaan:state.daan!=="without"});
-  return compute(data,costs,from,to,channel,{includeDaan:state.daan!=="without", ...(channel!=="all" && from>=state.from && to<=state.to ? {marginRate:base.marginRate} : {})});
+  return compute(data,costs,from,to,channel,{includeDaan:state.daan!=="without", ...(channel!=="all" && from>=state.from && to<=state.to ? {marginRate:base.marginRate,baselineRates:base.baselineRates,correctionWeights:base.correctionAllocation.weights} : {})});
 }
 function metricMeta(k) {
   const all = state.channel === "all";
@@ -264,7 +265,7 @@ function metricMeta(k) {
         ? "Excl. 21% btw"
         : state.channel === "infl"
           ? "Via kortingscodes"
-          : "Volgens kanaalattributie",
+          : "Na toegerekende omzetcorrecties · incl. btw",
       fmt: euro,
     },
     cost: {
@@ -513,7 +514,16 @@ function overviewOrders(cur) {
  return `<tr data-order-search="${esc((o.num+' '+o.items.join(' ')).toLowerCase())}"><td title="${o.refunded_incl ? esc("Terugbetaald: "+euro(o.refunded_incl)+" · retourafhandeling: "+euro(o.return_cost)) : ""}">${esc(o.num)}${o.refunded_incl ? " *" : ""}</td><td title="${esc(orderDate(o))}">${fmt(o.d)}</td><td title="${esc(o.items.join(', '))}">${esc(o.items.map(x=>x.replace(/^LumeWorks /,'')).join(', '))}</td><td>${euro(o.incl)}</td><td>${euro(f.fixed)}</td><td>${euro(f.fees)}</td><td>${margin==null?'—':num(margin)+'%'}</td></tr>`;
  }).join('')}</tbody></table></div><p id="overviewOrderEmpty" class="hint" ${rows.length?'hidden':''}>Geen orders gevonden in deze selectie.</p><p class="order-cost-note">Omzet na gecontroleerde terugbetalingen. Marge na product-, betaal- en retourkosten, vóór marketing en overhead. Datum en producten: volledige details bij aanwijzen.</p></details>`;
 }
+function netMarginPanel(cur) {
+  return `<details class="panel net-margin" id="netMarginBuild"><summary><span>Opbouw netto marge</span><span class="summary-value">${cur.profitMargin==null?'—':num(cur.profitMargin)+'%'}</span></summary><dl class="margin-build">${cur.marginBuild.map(r=>`<div class="margin-row ${r.kind}" data-margin-row="${r.key}"><dt>${esc(r.label)}</dt><dd>${r.kind==='percent'?(r.value==null?'—':num(r.value)+'%'):euro(r.value)}</dd></div>`).join('')}</dl><p class="hint">${['meta','google'].includes(state.channel)?'Kanaalraming: product- en betaalkosten volgen de winkelmix vóór correcties. Terugbetalingen en retourkosten worden verdeeld naar orderaandeel; vrijval bij annulering is verwerkt.':state.channel==='infl'?'Eigen gekoppelde Shopify-orders, na correcties; opstartkosten zijn toegerekend naar omzetaandeel.':'Shopify-omzet na gecontroleerde correcties, met alle opgenomen kanaalkosten.'} Netto marge = resultaat / netto omzet excl. btw. Een onbekend bedrag blijft leeg; tarieven en de retourregistratie blijven momentopnamen.</p></details>`;
+}
+function correctionAllocationPanel(cur) {
+  const a=cur.correctionAllocation;
+  const rows=[['Meta',a.weights?.meta,a.allocations.meta],['Google non-branded',a.weights?.google,a.allocations.google],['Overig',a.weights?.other,a.allocations.other],['Influencers · eigen orders',null,a.direct]];
+  return `<details class="panel" id="channelCorrections"><summary>Retouren & omzetcorrecties per kanaal · verdeling</summary><p>${num(a.totalOrders)} Shopify-orders; ${num(a.excludedInfluencerOrders)} gekoppeld aan influencers. De overige ${num(a.orders)} orders vormen de verdeelbasis. Meta claimt ${num(a.metaOrders)} aankopen; Google non-branded ${num(a.googleNonbrandOrders)}.</p><div class="table-wrap"><table><thead><tr><th>Kanaal</th><th>Aandeel resterende orders</th><th>Omzetcorrectie incl. btw</th><th>Retourafhandeling</th><th>Verlaging resultaat</th></tr></thead><tbody>${rows.map(([name,weight,v])=>`<tr><td>${name}</td><td>${weight==null?(name.startsWith('Influencers')?'Eigen orderkoppeling':'—'):num(weight*100)+'%'}</td><td>${euro(v.refundedIncl)}</td><td>${euro(v.returnCost)}</td><td>${euro(v.profitImpact)}</td></tr>`).join('')}</tbody></table></div><p class="hint">Influencerorders worden rechtstreeks verwerkt en uit de verdeelpot gehaald. De rest volgt Meta-aankopen en Google non-branded aankopen / resterende Shopify-orders. ${a.normalized?'De platformclaims overlappen: aandelen zijn evenredig begrensd tot samen 100%.':'Niet toegerekende aandelen blijven bij overig.'} Een ontbrekende bron geeft geen verzonnen verdeling. Branded Google krijgt geen afzonderlijk deel; in de weergave Alles zit hetzelfde Google-deel één keer.</p><p class="hint">De kanaalraming begint met de winkelmarge vóór correcties. Daarna verwerken we terugbetaalde omzet excl. btw en €20 per geregistreerd retourpakket, met vrijval van productkosten bij annulering en lagere 4% overhead over terugbetaalde omzet. Zo tellen correcties één keer mee. De verdeling verandert alleen kanaalramingen; het Shopify-totaal bevat de volledige correcties al. Dagen in de grafiek gebruiken dezelfde aandelen als de geselecteerde periode. Dit blijft een schatting op basis van de gecontroleerde momentopname.</p></details>`;
+}
 function marketingMix(cur) {
+  const metaResult = compute(D,C,state.from,state.to,"meta",{includeDaan:state.daan!=="without"});
   const influencer = compute(D, C, state.from, state.to, "infl");
   const nonbrand = compute(
     googleScopeData(D, "nonbrand"),
@@ -522,10 +532,6 @@ function marketingMix(cur) {
     state.to,
     "google",
   );
-  const rate =
-    cur.incl > 0 && cur.cost != null
-      ? (cur.cost + cur.overhead) / cur.incl
-      : null;
   const limit = cur.count > 0 && cur.cost != null && cur.revenue != null ? (cur.revenue-cur.cost-cur.overhead)/cur.count : null;
   const purchaseRows = Object.entries(cur.channels).map(([k,v])=>{
     const spend=k==='google'?nonbrand.spend:v.spend;
@@ -542,15 +548,13 @@ function marketingMix(cur) {
     .map(([k, v]) => {
       const rev = k === "google" ? nonbrand.revenue : v.revenue;
       const denominator = k === "google" ? nonbrand.spend : v.spend;
-      const profit = k === "infl" ? influencer.result :
-        rev != null && rate != null && v.spend != null
-          ? rev / (1 + C.assumed_vat) - rev * rate - v.spend
-          : null;
-      return `<tr><td><button class="link" data-channel="${k}">${names[k]} →</button></td><td>${euro(rev)}${k === "google" ? '<small class="row-description">Non-branded</small>' : ""}</td><td>${euro(v.spend)}${k==='infl'?`<small class="row-description">Commissies ${euro(v.commission)} + beamers ${euro(v.giftAllocated)}</small>`:''}${k === "google" ? `<small class="row-description">Waarvan non-branded ${euro(nonbrand.spend)}</small>` : ""}</td><td>${ratio(denominator > 0 && rev != null ? rev / denominator : null)}</td><td>${euro(profit)}</td><td><strong>${profit!=null && rev>0 ? num(profit/(rev/(1+C.assumed_vat))*100)+"%" : "—"}</strong></td></tr>`;
+      const profit = k === "infl" ? influencer.result : k === "meta" ? metaResult.result :
+        nonbrand.result!=null && v.spend!=null && nonbrand.spend!=null ? nonbrand.result-(v.spend-nonbrand.spend) : null;
+      return `<tr><td><button class="link" data-channel="${k}">${names[k]} →</button></td><td>${euro(rev)}${k === "google" ? '<small class="row-description">Non-branded</small>' : ""}</td><td>${euro(v.spend)}${k==='infl'?`<small class="row-description">Commissies ${euro(v.commission)} + opstartkosten ${euro(v.giftAllocated)}</small>`:''}${k === "google" ? `<small class="row-description">Waarvan non-branded ${euro(nonbrand.spend)}</small>` : ""}</td><td>${ratio(denominator > 0 && rev != null ? rev / denominator : null)}</td><td>${euro(profit)}</td><td><strong>${profit!=null && rev>0 ? num(profit/(rev/(1+C.assumed_vat))*100)+"%" : "—"}</strong></td></tr>`;
     })
     .join(
       "",
-     )}${otherRow}</tbody></table></div><p class="hint">Google-ROAS: non-branded omzet / non-branded kosten. Resultaat: geschatte marge minus alle kanaalkosten, inclusief branded bij Google. Winstmarge = geschat resultaat / kanaalomzet excl. btw. Meta en Google zijn gebaseerd op gemiddelde winkelkosten; influencerresultaat gebruikt de eigen gekoppelde orders. Kanaalresultaten zijn niet optelbaar. Overig is het positieve verschil tussen Shopify-omzet incl. btw en de kanaalclaims; kosten en winst zijn niet afzonderlijk toe te rekenen.</p></details><details class="panel" id="acquisitionCompare"><summary>Kosten per aankoop & break-even</summary><p class="hint">Vergelijk bekende marketingkosten per toegerekende aankoop. CAC voor uitsluitend nieuwe klanten is nog niet beschikbaar.</p><div class="table-wrap"><table><thead><tr><th>Kanaal</th><th>Aankopen</th><th>Kosten per aankoop</th><th>Break-even · raming</th><th>Ruimte per aankoop</th></tr></thead><tbody>${purchaseRows}</tbody></table></div><p class="hint">Break-even is één winkelbenchmark: (omzet excl. btw − product-, betaal- en bedrijfskosten) / Shopify-orders. Dezelfde grens geldt hier voor elk kanaal; verschillen in klant- en productmix zijn niet bekend. Positieve ruimte is geen bewezen kanaalwinst. Google gebruikt non-branded conversies; overlap tussen aankoopmetingen kan de kosten per aankoop te laag laten lijken. Influencers: commissies plus geregistreerde opstartkosten, verdeeld naar omzetaandeel.</p></details>`;
+     )}${otherRow}</tbody></table></div><p class="hint">Google-ROAS: non-branded omzet / non-branded kosten. Resultaat: geschatte marge minus alle kanaalkosten, inclusief branded bij Google. Winstmarge = geschat resultaat / kanaalomzet excl. btw. Meta en Google gebruiken de winkelmarge vóór correcties, daarna de verdeling naar orderaandeel. Omzet en winst zijn na toegerekende correcties; influencerresultaat gebruikt de eigen gekoppelde orders. Kanaalresultaten zijn niet optelbaar. Overig is het positieve verschil tussen Shopify-omzet incl. btw en de kanaalclaims; kosten en winst zijn niet afzonderlijk toe te rekenen.</p></details><details class="panel" id="acquisitionCompare"><summary>Kosten per aankoop & break-even</summary><p class="hint">Vergelijk bekende marketingkosten per toegerekende aankoop. CAC voor uitsluitend nieuwe klanten is nog niet beschikbaar.</p><div class="table-wrap"><table><thead><tr><th>Kanaal</th><th>Aankopen</th><th>Kosten per aankoop</th><th>Break-even · raming</th><th>Ruimte per aankoop</th></tr></thead><tbody>${purchaseRows}</tbody></table></div><p class="hint">Break-even is één winkelbenchmark: (omzet excl. btw − product-, betaal- en bedrijfskosten) / Shopify-orders. Dezelfde grens geldt hier voor elk kanaal; verschillen in klant- en productmix zijn niet bekend. Positieve ruimte is geen bewezen kanaalwinst. Google gebruikt non-branded conversies; overlap tussen aankoopmetingen kan de kosten per aankoop te laag laten lijken. Influencers: commissies plus geregistreerde opstartkosten, verdeeld naar omzetaandeel.</p></details>`;
 }
 function resultLimitations(cur, keys) {
   const messages = [];
@@ -561,7 +565,7 @@ function resultLimitations(cur, keys) {
   }
   if (cur.channels.infl.giftTotal==null && ["all","infl"].includes(state.channel)) messages.push("Opstartkosten influencers ontbreken; resultaat niet volledig berekenbaar.");
   if (cur.unknown) messages.push(`${cur.unknown} productregels zonder kostprijs; resultaat niet berekenbaar.`);
-  if (["meta","google"].includes(state.channel)) messages.push("Kanaalresultaat is een raming: retouren en annuleringen beïnvloeden de gemiddelde winkelmarge, maar ontbreken als orderkoppeling met dit kanaal. Dit is geen exact resultaat na kanaalretouren.");
+  if (["meta","google"].includes(state.channel) && !cur.correctionAllocation.weights) messages.push("Verdeling van correcties niet berekenbaar: benodigde order- of kanaalgegevens ontbreken.");
   if (E.status) messages.push("Synchronisatiestatus niet beschikbaar; actualiteit is niet volledig controleerbaar.");
   if (E.costs) messages.push("Kostenregister niet vernieuwd: berekening gebruikt de laatst gecontroleerde tarieven.");
   const unavailable = keys.filter(k => !D[k] || E[k] || stale(k) || !coverage(k));
@@ -672,10 +676,12 @@ function render() {
  ${googleFilter()}
  <section class="kpis overview-kpis primary-kpis" aria-label="Kerncijfers">${metrics.map(metricCard).join('')}</section>
  <section class="steering-summary" aria-label="Ontwikkeling"><p>${esc(state.compare==='off' ? `Geselecteerde periode: ${euro(cur.revenue)} ${state.channel==='all'?'omzet excl. btw':'toegerekende omzet'} en ${euro(cur.result)} ${state.channel==='all'?'voorlopige':'geschatte'} winst.` : steeringSummary(cur,prev))}</p><details class="signals"><summary>${state.channel==='all'?'Toelichting · kosten & retouren':'Schattingen & meetbasis'}</summary>${notes.map(n=>`<div class="signal">${esc(n)}</div>`).join('')}</details></section>
+ ${netMarginPanel(cur)}
  ${channelBenchmark(cur)}
  <section class="panel ${analysisCollapsed?'is-collapsed':''}" id="analysis" tabindex="-1"><div class="panel-head"><div><p class="analysis-label">VERDIEP JE IN DE CIJFERS</p><h2><button class="analysis-heading" id="collapseAnalysis" aria-expanded="${!analysisCollapsed}" aria-controls="analysisBody analysisTools">${state.metrics.map((k) => metricMeta(k).label).join(" & ") || "Analyse"}</button></h2><p class="subtitle">Klik bovenaan maximaal twee cijfers aan om ze hier te vergelijken.</p></div><div class="toolbar" id="analysisTools" ${analysisCollapsed?"hidden":""}><div class="gran-buttons" aria-label="Grafiek groeperen">${['day','week','month'].map((g,i)=>`<button data-gran="${g}" aria-pressed="${state.gran===g || state.gran==='auto' && g===((Date.parse(state.to)-Date.parse(state.from))/864e5<=31?'day':(Date.parse(state.to)-Date.parse(state.from))/864e5<=180?'week':'month')}">${['Dag','Week','Maand'][i]}</button>`).join('')}</div><select id="gran" hidden><option value="auto">Automatisch</option><option value="day">Dag</option><option value="week">Week</option><option value="month">Maand</option></select><button id="chartMode">${chartTable ? "Grafiek tonen" : "Tabel tonen"}</button></div></div><div id="analysisBody" ${analysisCollapsed?"hidden":""}><div id="replacement"></div><div id="chart"></div><div id="dayComparison"></div><details class="detail-fold" id="detailFold"><summary>Onderliggende cijfers & uitsplitsing</summary><div id="detail"></div></details></div></section>
  <details class="panel" id="costOverview"><summary>${state.channel==='all'?'Kostenopbouw & rendement':'Meer marketingcijfers'}</summary><section class="kpis secondary-kpis" aria-label="Aanvullende cijfers">${secondaryMetrics.map(metricCard).join('')}</section>${knownMarketingCosts(cur)}${state.channel==='all'?`<dl class="cost-lines"><div><dt>Product- en orderkosten</dt><dd>${euro(cur.cost)}</dd></div><div><dt>Marketingkosten ${state.daan==='without'?'zonder Daan':'met Daan'}</dt><dd>${euro(cur.spend)}</dd></div><div><dt>Overige bedrijfskosten · 4%</dt><dd>${euro(cur.overhead)}</dd></div></dl><p class="hint">Productkosten zijn geraamd. Open onderliggende cijfers in de grafiek voor de uitsplitsing.</p>`:''}${['all','meta'].includes(state.channel)?`<div class="daan-choice compact"><span>Kosten Daan meetellen</span><div class="daan-toggle" aria-label="Kosten Daan meetellen"><button data-daan="with" aria-pressed="${state.daan!=='without'}">Met Daan</button><button data-daan="without" aria-pressed="${state.daan==='without'}">Zonder Daan</button></div><button class="link" data-daan-details>Vast + bonus bekijken</button></div>`:''}</details>
  ${state.channel === "all" ? marketingMix(cur)+returnSummary(cur) : ""}
+ ${['all','meta','google'].includes(state.channel) ? correctionAllocationPanel(cur) : ''}
  ${['all','meta'].includes(state.channel) ? `<details class="panel management">
  <summary class="management-heading"><span>Meta-beheer<small>Vaste vergoeding en prestatiebonus</small></span><span class="management-heading-total">${euro(cur.management.total)}</span></summary>
  <div class="management-amounts">
@@ -722,10 +728,17 @@ function renderUpdateSummary() {
   };
 }
 function renderStatus() {
-  $('#statusButton').innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.5" r=".8" fill="currentColor" stroke="none"/></svg>';
+  const keys=['meta','google','creators','shopify'];
+  const healthy=keys.every(k=>D[k] && !E[k] && !stale(k) && coverage(k)) && !E.status && !E.costs &&
+    compute(analysisData(),C,state.from,state.to,state.channel,{includeDaan:state.daan!=='without'}).result!=null;
+  const timestamps=[D.source_status?.meta?.last_success,D.google?.synced_at,D.creators?.synced_at,D.source_status?.shopify?.last_success].map(t=>Date.parse(t)).filter(Number.isFinite);
+  const latest=timestamps.length?new Intl.DateTimeFormat('nl-NL',{timeZone:'Europe/Amsterdam',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(Math.max(...timestamps))):'tijdstip onbekend';
+  $('#statusButton').innerHTML=`<span class="live-dot ${healthy?'':'warning'}" aria-hidden="true"></span>`;
   $('#statusButton').className='status-info';
   $('#statusButton').setAttribute('aria-label','Data & updates bekijken');
   $('#statusButton').title='Data & updates';
+  $('#dashboardStatus').innerHTML=`<button id="statusBadge" class="status-badge ${healthy?'is-healthy':'is-warning'}" aria-expanded="${!$('#status').hidden}" aria-controls="status"><span class="live-dot ${healthy?'':'warning'}" aria-hidden="true"></span><span><strong>${healthy?'Gegevens actueel':'Gegevens controleren'}</strong><small>Laatste bronupdate: ${esc(latest)} · Meta, Google, Shopify, influencers</small></span><span class="badge-arrow" aria-hidden="true">›</span></button>`;
+  $('#statusBadge').onclick=()=>{const open=$('#status').hidden;$('#status').hidden=!open;$('#statusBadge').setAttribute('aria-expanded',String(open));$('#statusButton').setAttribute('aria-expanded',String(open));};
   $('#status').innerHTML=`<div id="updateSummary" aria-live="polite"></div><details class="order-check"><summary>Shopify-ordercontrole</summary>${D.shopify_check ? `<p>${D.shopify_check.orders} unieke orders · ${D.shopify_check.test_orders} testorders uitgesloten. Laatste order: ${esc(D.shopify_check.latest_num)} · ${esc(D.shopify_check.latest_date)}.</p><p>${(()=>{const m=compute(D,C,state.from,state.to,'all');return `Geselecteerde periode: ${num(m.count)} orders · ${euro(m.incl)} omzet incl. btw.`})()}</p><button id="viewShopifyOrders">Shopify-orders bekijken</button>` : '<p>Ordercontrole niet beschikbaar.</p>'}<p class="hint">Dezelfde orderbron als het Meta-dashboard. Controle op unieke ordernummers, datums, bedragen en productregels bij laden; dit is niet het tijdstip van een nieuwe bestelling.</p></details>`;
   renderUpdateSummary();
   if($('#viewShopifyOrders')) $('#viewShopifyOrders').onclick=()=>{change(()=>{state.channel='all';state.metrics=['revenue'];state.detail={type:'orders',name:'Alle orders'};state.sub=null;});$('#detailFold').open=true;$('#detail').scrollIntoView({block:'start'});};
@@ -757,7 +770,7 @@ function renderChart() {
     keys = state.metrics;
   if (chartTable) {
     $("#chart").innerHTML =
-      `<div class="table-wrap"><table><thead><tr><th>Periode</th>${keys.map((k) => `<th>${metricMeta(k).label}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr><td><button class="link" data-bucket="${r.from}|${r.to}">${fmt(r.from)} – ${fmt(r.to)}</button></td>${keys.map((k) => `<td>${metricMeta(k).fmt(r[k])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+      `<div class="table-wrap"><table><thead><tr><th>Periode</th>${keys.map((k) => `<th>${metricMeta(k).label}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr class="${selectedDays.has(r.from)?'selected-bucket':''}"><td><button class="link" aria-pressed="${selectedDays.has(r.from)}" data-bucket="${r.from}|${r.to}">${fmt(r.from)} – ${fmt(r.to)}</button></td>${keys.map((k) => `<td>${metricMeta(k).fmt(r[k])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
     return;
   }
   const chartColor = k => keys.indexOf(k) === 0 ? "#38BDF8" : "#FFAD55";
@@ -807,7 +820,7 @@ function renderChart() {
                 .map((r, i) =>
                   r[k] == null
                     ? ""
-                    : `<circle class="point ${selectedDays.has(r.from) ? "selected-point" : ""}" data-bucket="${r.from}|${r.to}" cx="${x(i)}" cy="${y(r[k])}" r="${rows.length > 90 ? 2 : 4}" fill="${chartColor(k)}"><title>${fmt(r.from)}: ${metricMeta(k).fmt(r[k])}</title></circle>`,
+                    : `<circle class="point ${selectedDays.has(r.from) ? "selected-point" : ""}" data-bucket="${r.from}|${r.to}" cx="${x(i)}" cy="${y(r[k])}" r="${rows.length > 90 ? 2 : 4}" fill="${chartColor(k)}"><title>${fmt(r.from)}${r.to!==r.from?' – '+fmt(r.to):''}: ${metricMeta(k).fmt(r[k])}</title></circle>`,
                 )
                 .join("")
             );
@@ -817,7 +830,7 @@ function renderChart() {
           )}${rows.map((r, i) => (i % Math.ceil(rows.length / 7) === 0 || i === rows.length - 1 ? `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${fmt(r.from)}</text>` : "")).join("")}</svg></div>`;
       })
       .join("") +
-    '<p class="chart-help">Sleep over de grafiek om een periode te selecteren. De totalen verschijnen hieronder.</p>';
+    `<p class="chart-help">Klik een punt of sleep om te selecteren. Elk punt omvat de volledige periode ${rows[0]?.from===rows[0]?.to?'van die dag':'die in de tabel staat'}. Dezelfde selectie geldt in grafiek en tabel.</p>`;
   bindChartDrag(rows);
 }
 function selectChartRange(from,to) {
@@ -832,14 +845,22 @@ function bindChartDrag(rows) {
     const overlay=document.createElementNS('http://www.w3.org/2000/svg','rect');
     overlay.setAttribute('y','18');overlay.setAttribute('height','178');overlay.setAttribute('fill','#ffffff18');overlay.setAttribute('stroke','#fff');overlay.setAttribute('pointer-events','none');
     svg.append(overlay);
-    const index=x=>Math.max(0,Math.min(rows.length-1,Math.floor((((x-svg.getBoundingClientRect().left)/svg.getBoundingClientRect().width)*960-72)/868*rows.length)));
+    const index=e=>{
+      const point=e.target?.closest?.('[data-bucket]');
+      if(point){const found=rows.findIndex(r=>point.dataset.bucket===r.from+'|'+r.to);if(found>=0)return found;}
+      const matrix=svg.getScreenCTM?.();
+      let x;
+      if(matrix && svg.createSVGPoint){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY??0;x=p.matrixTransform(matrix.inverse()).x;}
+      else x=(e.clientX-svg.getBoundingClientRect().left)/svg.getBoundingClientRect().width*960;
+      return Math.max(0,Math.min(rows.length-1,Math.round((x-72)/868*rows.length-.5)));
+    };
     const paint=(a,b)=>{overlay.setAttribute('x',String(72+Math.min(a,b)*868/rows.length));overlay.setAttribute('width',String((Math.abs(b-a)+1)*868/rows.length));};
     const picked=rows.map((r,i)=>selectedDays.has(r.from)?i:-1).filter(i=>i>=0);
     if(picked.length) paint(picked[0],picked.at(-1));
     let first=null;
-    svg.onpointerdown=e=>{if(e.button!==0)return;first=index(e.clientX);svg.setPointerCapture?.(e.pointerId);paint(first,first);};
-    svg.onpointermove=e=>{if(first!=null)paint(first,index(e.clientX));};
-    svg.onpointerup=e=>{if(first==null)return;const last=index(e.clientX),a=Math.min(first,last),b=Math.max(first,last);first=null;selectChartRange(rows[a].from,rows[b].to);};
+    svg.onpointerdown=e=>{if(e.button!==0)return;first=index(e);svg.setPointerCapture?.(e.pointerId);paint(first,first);};
+    svg.onpointermove=e=>{if(first!=null)paint(first,index(e));};
+    svg.onpointerup=e=>{if(first==null)return;const last=index(e),a=Math.min(first,last),b=Math.max(first,last);first=null;selectChartRange(rows[a].from,rows[b].to);};
     svg.onpointercancel=()=>{first=null;overlay.setAttribute('width','0');};
   });
 }
@@ -1792,6 +1813,8 @@ async function start() {
       const el = $("#status");
       el.hidden = !el.hidden;
       $("#statusButton").setAttribute("aria-expanded", String(!el.hidden));
+      $("#statusBadge").setAttribute("aria-expanded",String(!el.hidden));
+      if(!el.hidden) el.scrollIntoView({block:'nearest',behavior:'smooth'});
     };
     window.onpopstate = () => {
       state = readState();

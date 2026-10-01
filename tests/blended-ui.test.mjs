@@ -3,6 +3,66 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { JSDOM } from "jsdom";
 const root = new URL("../", import.meta.url);
+test('SVG selection respects the rendered coordinate transform and matches table buckets',async()=>{
+ const w=await boot('?from=2026-09-01&to=2026-09-30&metrics=revenue&gran=week');const d=w.document;
+ let svg=d.querySelector('#chart svg');
+ svg.getBoundingClientRect=()=>({left:0,width:1000});
+ svg.getScreenCTM=()=>({inverse:()=>({})});
+ svg.createSVGPoint=()=>({x:0,y:0,matrixTransform(){return{x:(this.x-200)/.5};}});
+ svg.onpointerdown({button:0,clientX:539.8,clientY:100,pointerId:1});
+ svg.onpointerup({clientX:539.8,clientY:100});
+ assert.match(d.querySelector('#dayComparison .subtitle').textContent,/21 sep – 27 sep/);
+ const selected=d.querySelector('[data-selection-metric=revenue]').textContent;
+ d.querySelector('#chartMode').click();
+ const row=d.querySelector('[data-bucket="2026-09-21|2026-09-27"]');
+ assert.equal(row.getAttribute('aria-pressed'),'true');
+ row.click();assert.equal(d.querySelector('[data-selection-metric=revenue]').textContent,selected);
+ d.querySelector('#chartMode').click();svg=d.querySelector('#chart svg');
+ const point=d.querySelector('[data-bucket="2026-09-07|2026-09-13"]');
+ svg.getBoundingClientRect=()=>({left:0,width:2000});
+ svg.onpointerdown({button:0,clientX:999,target:point,pointerId:2});
+ svg.onpointerup({clientX:999,target:point});
+ assert.match(d.querySelector('#dayComparison .subtitle').textContent,/7 sep – 13 sep/);
+ w.close();
+});
+test('compact bottom status opens details and only pulses when all checks pass',async()=>{
+ const now=new Date(),date=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Amsterdam',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
+ const time=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Amsterdam',hour:'2-digit',minute:'2-digit'}).format(now);
+ const w=await boot('?from=2026-09-24&to=2026-09-30','',(url,data)=>{
+  if(url.includes('meta.json'))return{...data,snap:date,snap_time:time};
+  if(url.includes('google.json')||url.includes('creators.json'))return{...data,synced_at:now.toISOString()};
+  if(url.includes('status.json'))return Object.fromEntries(['meta','google','creators','shopify'].map(k=>[k,{status:'ok',last_success:now.toISOString()}]));
+  return data;
+ });
+ const d=w.document,badge=d.querySelector('#statusBadge');assert(badge.classList.contains('is-healthy'));
+ assert.equal(badge.querySelector('.live-dot.warning'),null);
+ assert(d.querySelector('main').compareDocumentPosition(d.querySelector('#dashboardStatus')) & w.Node.DOCUMENT_POSITION_FOLLOWING);
+ badge.click();assert.equal(d.querySelector('#status').hidden,false);assert.equal(badge.getAttribute('aria-expanded'),'true');
+ badge.click();assert.equal(d.querySelector('#status').hidden,true);
+ for(const channel of ['all','meta','google','infl']){
+  d.querySelector('#tab-'+channel).click();const margin=d.querySelector('#netMarginBuild');
+  assert.equal(margin.open,false);assert.match(margin.textContent,/Netto resultaat/);
+  assert.equal(margin.querySelector('[data-margin-row=result] dd').textContent,d.querySelector('[data-metric=result] strong').textContent);
+ }
+ w.close();
+ const failed=await boot('?from=2026-09-24&to=2026-09-30','google.json');
+ assert(failed.document.querySelector('#statusBadge').classList.contains('is-warning'));
+ assert(failed.document.querySelector('#statusBadge .live-dot.warning'));failed.close();
+});
+test('old without-Daan URLs open with Daan and expose the folded correction allocation',async()=>{
+ const w=await boot('?channel=all&daan=without&from=2026-09-01&to=2026-09-30');
+ const d=w.document;
+ assert.equal(new w.URLSearchParams(w.location.search).get('daan'),'with');
+ assert.equal(d.querySelector('.scenario-note'),null);
+ assert.equal(d.querySelector('[data-daan=with]').getAttribute('aria-pressed'),'true');
+ assert.match(d.querySelector('[data-metric=spend]').textContent,/Inclusief kosten Daan/);
+ const panel=d.querySelector('#channelCorrections');assert.equal(panel.open,false);
+ assert.match(panel.textContent,/Google non-branded/);assert.match(panel.textContent,/één keer mee/);
+ d.querySelector('#tab-google').click();
+ assert.equal(d.querySelector('#channelCorrections').open,false);
+ assert.match(d.querySelector('[data-metric=revenue]').textContent,/Na toegerekende omzetcorrecties/);
+ w.close();
+});
 test('influencer channel comparison matches its own-order result',async()=>{
  const w=await boot('?from=2026-09-01&to=2026-09-30');
  const d=w.document;
@@ -12,7 +72,8 @@ test('influencer channel comparison matches its own-order result',async()=>{
  assert.equal(d.querySelector('[data-metric=result] strong').textContent,profit);
  assert.match(d.querySelector('[data-metric=result]').textContent,/eigen orders/);
  d.querySelector('#tab-meta').click();
- assert.match(d.querySelector('.result-limitations').textContent,/geen exact resultaat na kanaalretouren/);
+ assert.doesNotMatch(d.querySelector('.result-limitations')?.textContent||'',/Kanaalresultaat is een raming/);
+ assert.match(d.querySelector('#netMarginBuild').textContent,/Kanaalraming/);
  w.close();
 });
 async function boot(

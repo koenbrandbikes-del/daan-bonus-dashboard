@@ -37,8 +37,25 @@ met bewaarde incidentduur, bereikbare eigenaar en herstelafspraken.
 - Influencerresultaat gebruikt de eigen gekoppelde Shopify-orders na correcties,
   inclusief behouden product-/betaalkosten, retourafhandeling en kanaalkosten.
   Ontbrekende orderkoppelingen of ongecontroleerde retourvlaggen geven geen resultaat.
-  Meta en Google gebruiken de gemiddelde winkelmarge: correcties beïnvloeden die
-  marge, maar zijn zonder orderattributie niet exact per kanaal verwerkt.
+  Meta en Google gebruiken de winkelmarge vóór correcties en trekken daarna
+  één toegerekend correctiebedrag af. Influencerorders worden uit de pot gehaald.
+  Overige terugbetalingen en retourkosten volgen Meta-aankopen en Google
+  non-branded aankopen / resterende Shopify-orders; bij overlap worden aandelen
+  evenredig begrensd tot 100%. Overig bewaart het restant. Branded krijgt geen
+  eigen correctie; Alles bevat hetzelfde Google-deel één keer.
+  Omzet wordt verminderd met toegerekende terugbetalingen incl. btw; resultaat
+  verwerkt de correctie excl. btw, retourafhandeling, vrijval productkosten bij
+  annulering en vrijval overhead. De grafiek houdt de periode-aandelen en marge
+  vast zodat dag-/week-/maandtotalen aansluiten. Dit is geschatte attributie.
+- Daan telt bij elke opening/herlading mee, ook vanuit oude `daan=without`-links.
+  De uitschakelknop is alleen een tijdelijke, bewuste scenariovergelijking.
+- De verticale margeopbouw gebruikt dezelfde rekencomponenten als de kerncijfers.
+  Subtotalen worden niet nogmaals opgeteld; onbekende bedragen blijven onbekend.
+  Grafiekselectie gebruikt de SVG-schermtransformatie, zodat schalen/zoomen geen
+  afwijkend bucket oplevert. Grafiekpunten en tabelrijen delen dezelfde datumgrenzen.
+- Status onderaan is uitklapbaar. Alleen beschikbare, actuele, dekkende bronnen
+  zonder cache-/statusfout en met berekenbaar resultaat geven groen; bij een
+  afwijking blijft de indicator amber, zonder animatie. Reduced-motion wordt gerespecteerd.
 - Selecties, presets en vergelijking beginnen op 5 augustus 2026; de historische
   Daan-contractberekening behoudt haar eigen oorspronkelijke begindatum.
 - Platformattributie overlapt en wordt achteraf bijgesteld; kanaalwinst is geschat.

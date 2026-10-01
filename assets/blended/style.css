@@ -1600,3 +1600,31 @@ header .live-dot.warning { width:10px; height:10px; }
 #content .steering-summary .signals>summary{display:inline-flex;align-items:center;gap:6px;padding:0;min-height:24px;cursor:pointer}
 #content .steering-summary .signals>summary::after{position:static;transform:none;width:16px;height:16px;background:none;border-radius:0;font-size:18px;line-height:1}
 #content .steering-summary .signals[open]>summary::after{transform:rotate(90deg)}
+
+/* One quiet numeric scale for disclosure headers and the vertical margin ledger. */
+#returnEstimate summary > span:nth-child(2),
+#content .management-heading-total,
+#content .creator-overview>summary small,
+.net-margin .summary-value {font-size:14px;line-height:1.4;font-weight:500;font-variant-numeric:tabular-nums}
+.net-margin .summary-value {margin-left:auto;white-space:nowrap}
+.margin-build {max-width:560px;margin:16px 0 12px;font-size:12px}
+.margin-build .margin-row {display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:14px;align-items:baseline;padding:8px 0;border-bottom:1px solid #ffffff10}
+.margin-build dt {color:var(--muted)}
+.margin-build dd {margin:0;text-align:right;font-size:14px;line-height:1.4;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.margin-build .subtotal dt,.margin-build .total dt,.margin-build .percent dt {color:var(--text);font-weight:600}
+.margin-build .total {border-top:1px solid var(--line);margin-top:6px;padding-top:12px}
+.margin-build .total dd,.margin-build .percent dd {font-weight:700}
+@media(max-width:600px){.margin-build .margin-row{grid-template-columns:minmax(0,1fr) 95px;gap:8px}}
+.channel-benchmark {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 18px;padding:12px;margin-bottom:12px}
+.channel-benchmark>span+span {border-left:1px solid var(--line);padding-left:18px}
+.channel-benchmark details {grid-column:1/-1;margin:2px 0 0;border-top:1px solid #ffffff10;padding-top:5px}
+.channel-benchmark summary {min-height:22px;padding:0}
+#chart .selected-bucket {background:#38bdf812}
+#chart .selected-bucket button {color:#79d5ff}
+.status-badge {display:inline-flex;align-items:center;gap:10px;padding:10px 12px;margin:14px 0 0;border:1px solid var(--line);border-radius:12px;background:#ffffff04;text-align:left;max-width:100%;min-height:50px}
+.status-badge .live-dot {flex-shrink:0}
+.status-badge strong {display:block;font-size:12px;font-weight:600;line-height:1.5}
+.status-badge small {display:block;font-size:10px;color:var(--muted);line-height:1.5;margin-top:2px}
+.status-badge .badge-arrow {margin-left:6px;color:var(--muted);font-size:18px}
+.status-badge[aria-expanded=true] .badge-arrow {transform:rotate(90deg)}
+@media(max-width:600px){.channel-benchmark{gap:8px;font-size:10px}.channel-benchmark>span+span{padding-left:8px}.status-badge small{font-size:10px}}

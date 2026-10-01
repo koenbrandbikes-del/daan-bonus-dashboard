@@ -165,6 +165,60 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
       orders: data.creators ? creators.length : null,
     },
   };
+  // Start the ad estimate before corrections, then deduct the allocated effect
+  // once. Using the already corrected store margin would deduct refunds twice.
+  const beforeCorrections = rows => finance(rows.map(o => ({...o,
+    incl:o.paid_incl ?? o.incl, return_kind:undefined, return_cost:0,
+    return_packages:0, refunded_incl:0})), {...costs,returns:null});
+  const grossFinance = beforeCorrections(orders);
+  const baselineRates=options.baselineRates ?? Object.fromEntries(['fixed','fees','overhead'].map(k=>[k,
+    data.shopify && grossFinance.incl>0 && grossFinance[k]!=null ? grossFinance[k]/grossFinance.incl : null]));
+  const creatorNums = new Set((data.creators?.orders || []).map(o => o.num));
+  const remainingOrders = orders.filter(o => !creatorNums.has(o.num));
+  const remainingFinance = finance(remainingOrders,costs);
+  const remainingGross = beforeCorrections(remainingOrders);
+  const nonbrandRows = data.google?.allocation_nonbrand_daily ??
+    data.google?.daily_campaigns?.filter(r => googleCampaignGroups[r.id] === 'nonbrand');
+  const nonbrandCount = nonbrandRows ? sum(nonbrandRows.filter(o => inRange(o,from,to)),'conv') : null;
+  const denominator = remainingOrders.length;
+  const hasCorrections = remainingFinance.refundedIncl>0 || remainingFinance.returnCost>0;
+  const canAllocate = !!(data.shopify && (!hasCorrections || (data.creators && data.meta && data.google && nonbrandCount!=null)));
+  const rawMeta = denominator > 0 ? channels.meta.orders/denominator : 0;
+  const rawGoogle = denominator > 0 ? nonbrandCount/denominator : 0;
+  const normalization = Math.max(1,rawMeta+rawGoogle);
+  const weights = options.correctionWeights ?? (canAllocate ? {
+    meta:rawMeta/normalization, google:rawGoogle/normalization,
+    other:Math.max(0,1-(rawMeta+rawGoogle)/normalization),
+  } : null);
+  const pool = {
+    refundedIncl:remainingFinance.refundedIncl,
+    returnCost:remainingFinance.returnCost,
+    cancelledCostCredit:remainingGross.fixed!=null && remainingFinance.fixed!=null ? remainingGross.fixed-remainingFinance.fixed : null,
+    overheadCredit:remainingGross.overhead-remainingFinance.overhead,
+    profitImpact:remainingGross.cost!=null && remainingFinance.cost!=null ?
+      (remainingGross.excl-remainingGross.cost-remainingGross.overhead)-
+      (remainingFinance.excl-remainingFinance.cost-remainingFinance.overhead) : null,
+  };
+  const allocations = Object.fromEntries(['meta','google','other'].map(k => [k,
+    Object.fromEntries(Object.entries(pool).map(([name,value]) => [name,
+      weights && value!=null ? value*weights[k] : null]))]));
+  for(const k of ['meta','google']) {
+    const applied = k==='google' && data.google?.allocation_scope==='brand' ?
+      Object.fromEntries(Object.keys(pool).map(key=>[key,0])) : allocations[k];
+    channels[k].grossRevenue=channels[k].revenue;
+    channels[k].corrections=applied;
+    channels[k].revenue=channels[k].grossRevenue!=null && applied.refundedIncl!=null ?
+      channels[k].grossRevenue-applied.refundedIncl : null;
+  }
+  const directFinance=finance(orders.filter(o=>creatorNums.has(o.num)),costs);
+  const directGross=beforeCorrections(orders.filter(o=>creatorNums.has(o.num)));
+  const direct={refundedIncl:directFinance.refundedIncl,returnCost:directFinance.returnCost,
+    profitImpact:directFinance.cost!=null && directGross.cost!=null ?
+      (directGross.excl-directGross.cost-directGross.overhead)-
+      (directFinance.excl-directFinance.cost-directFinance.overhead) : null};
+  const correctionAllocation={pool,weights,allocations,direct,orders:denominator,
+    totalOrders:orders.length,metaOrders:channels.meta.orders,googleNonbrandOrders:nonbrandCount,
+    normalized:canAllocate && normalization>1,excludedInfluencerOrders:orders.length-denominator};
   const giftTotal=influencerInvestment(data.creators,costs);
   const allCreatorRevenue=sum((data.creators?.orders||[]).filter(o=>!o.retour || byNum.get(o.num)?.return_kind),o=>Math.max(0,byNum.get(o.num)?.incl ?? o.omzet_excl*(1+costs.assumed_vat)));
   const giftRate=giftTotal==null?null:allCreatorRevenue>0?giftTotal/allCreatorRevenue:0;
@@ -191,12 +245,50 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
       : channels[channel].revenue;
   const numerator =
     channel === "all" ? (data.shopify ? f.incl : null) : revenue;
-  const marginRate = options.marginRate !== undefined ? options.marginRate : data.shopify && f.incl>0 && f.cost!=null ? (f.excl-f.cost-f.overhead)/f.incl : null;
+  const marginRate = options.marginRate !== undefined ? options.marginRate : data.shopify && grossFinance.incl>0 && grossFinance.cost!=null ? (grossFinance.excl-grossFinance.cost-grossFinance.overhead)/grossFinance.incl : null;
   const creatorOrders=creators.map(o=>byNum.get(o.num));
   const creatorFinance=!unverifiedCreatorReturn && data.creators && creatorOrders.every(Boolean) ? finance(creatorOrders,costs) : null;
-  const result = channel === "infl" ? (creatorFinance && creatorFinance.cost!=null && spend!=null ? creatorFinance.excl-creatorFinance.cost-creatorFinance.overhead-spend : null) : channel !== "all" ? (marginRate!=null && revenue!=null && spend!=null ? revenue*marginRate-spend : null) :
+  const result = channel === "infl" ? (creatorFinance && creatorFinance.cost!=null && spend!=null ? creatorFinance.excl-creatorFinance.cost-creatorFinance.overhead-spend : null) : channel !== "all" ? (marginRate!=null && channels[channel].grossRevenue!=null && channels[channel].corrections.profitImpact!=null && spend!=null ? channels[channel].grossRevenue*marginRate-channels[channel].corrections.profitImpact-spend : null) :
       data.shopify && spend !== null && f.cost !== null ? f.excl-f.cost-spend-f.overhead : null;
-  const netRevenue = channel === "all" ? revenue : revenue / (1 + costs.assumed_vat);
+  const netRevenue = channel === "all" ? revenue : revenue==null?null:revenue / (1 + costs.assumed_vat);
+  const negative=v=>v==null?null:-v;
+  const line=(key,label,value,kind='line')=>({key,label,value,kind});
+  const own=channel==='infl'?creatorFinance:channel==='all'?f:null;
+  const grossOwn=channel==='infl' && creatorOrders.every(Boolean)?beforeCorrections(creatorOrders):grossFinance;
+  const adChannel=['meta','google'].includes(channel)?channels[channel]:null;
+  const correction=adChannel?.corrections;
+  const grossRevenue=own?grossOwn.incl:adChannel?.grossRevenue;
+  const ownNet=own?.incl ?? revenue;
+  const netExcl=own?own.excl:netRevenue;
+  const estimated=(key,credit=0)=>adChannel?.grossRevenue!=null && baselineRates[key]!=null && credit!=null ? adChannel.grossRevenue*baselineRates[key]-credit : null;
+  const marginBuild=[
+    line('gross','Omzet vóór correcties · incl. btw',grossRevenue),
+    line('refunds',own?'Terugbetalingen & annuleringen':'Toegerekende omzetcorrecties',negative(own?own.refundedIncl:correction?.refundedIncl)),
+    line('vat','Btw na omzetcorrecties',ownNet!=null && netExcl!=null ? -(ownNet-netExcl) : null),
+    line('netRevenue','Netto omzet · excl. btw',netExcl,'subtotal'),
+    line('products',own?'Product & levering':'Product & levering · raming',negative(own?own.fixed:estimated('fixed',correction?.cancelledCostCredit))),
+    line('payments',own?'Betaalkosten':'Betaalkosten · raming',negative(own?own.fees:estimated('fees'))),
+    line('returns',own?'Retourafhandeling':'Retourafhandeling · toegerekend',negative(own?own.returnCost:correction?.returnCost)),
+  ];
+  if(channel==='all')marginBuild.push(
+    line('metaAds','Meta-advertenties',negative(channels.meta.mediaSpend)),
+    line('googleAds','Google Ads · inclusief branded',negative(channels.google.spend)),
+  );
+  if(channel==='meta')marginBuild.push(line('metaAds','Meta-advertenties',negative(channels.meta.mediaSpend)));
+  if(channel==='google')marginBuild.push(line('googleAds','Google Ads · geselecteerde campagnes',negative(spend)));
+  if(['all','meta'].includes(channel))marginBuild.push(
+    line('daanFixed','Daan · vaste vergoeding',options.includeDaan===false?0:negative(management.fixed)),
+    line('daanBonus','Daan · bonus',options.includeDaan===false?0:negative(management.bonus)),
+  );
+  if(['all','infl'].includes(channel))marginBuild.push(
+    line('commission','Influencercommissies',negative(channels.infl.commission)),
+    line('startup','Opstartkosten · toegerekend',negative(channels.infl.giftAllocated)),
+  );
+  marginBuild.push(
+    line('overhead','Overige bedrijfskosten · 4%',negative(own?own.overhead:estimated('overhead',correction?.overheadCredit))),
+    line('result','Netto resultaat',result,'total'),
+    line('margin','Netto marge',result!=null && netExcl>0?result/netExcl*100:null,'percent'),
+  );
   return {
     ...f,
     ...(!data.shopify
@@ -213,6 +305,9 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
     spend,
     marginRate,
     creatorFinance,
+    correctionAllocation,
+    baselineRates,
+    marginBuild,
     result,
     profitMargin: result != null && netRevenue > 0 ? result / netRevenue * 100 : null,
     roas: spend > 0 && numerator !== null ? numerator / spend : null,
@@ -230,7 +325,10 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
   };
 }
 export function series(data, costs, from, to, channel, gran = "day", options = {}) {
-  if(channel !== "all") options = {...options, marginRate:compute(data,costs,from,to,channel,options).marginRate};
+  if(channel !== "all") {
+    const total=compute(data,costs,from,to,channel,options);
+    options = {...options, marginRate:total.marginRate, baselineRates:total.baselineRates, correctionWeights:total.correctionAllocation.weights};
+  }
   const buckets = new Map();
   for (let d = from; d <= to; d = shift(d, 1)) {
     let key = d;
@@ -297,6 +395,8 @@ export function googleScopeData(data, scope = "all") {
     ...data,
     google: {
       ...g,
+      allocation_scope: scope,
+      allocation_nonbrand_daily: g.allocation_nonbrand_daily ?? g.daily_campaigns.filter(r => googleCampaignGroups[r.id] === 'nonbrand'),
       daily_google: daily,
       daily_campaigns: selected,
       daily_actions: [],
