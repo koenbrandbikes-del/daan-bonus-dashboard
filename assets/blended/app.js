@@ -390,7 +390,7 @@ function chartChannel() { return state.channel === "all" ? state.chartChannel : 
 function chartData() { return chartChannel() === "google" ? googleScopeData(D,state.channel === "all" ? "nonbrand" : state.googleScope) : D; }
 function chartFilter() {
  if(state.channel!=="all")return "";
- return `<div class="chart-channels" role="group" aria-label="Kanaal in grafiek">${Object.entries(names).map(([key,name])=>`<button data-chart-channel="${key}" aria-pressed="${state.chartChannel===key}">${name}</button>`).join('')}</div><p class="hint chart-basis">${state.chartChannel==='all'?'Winkelcijfers uit Shopify.':'Toegerekende kanaalcijfers'+(state.chartChannel==='google'?' · Google non-branded':'')+'.'} Kerncijfers bovenaan blijven het winkeltotaal.</p>`;
+ return `<div class="chart-channels" role="group" aria-label="Kanaal in grafiek">${Object.entries(names).map(([key,name])=>`<button data-chart-channel="${key}" aria-pressed="${state.chartChannel===key}">${key==='all'?'Totaal winkel':name}</button>`).join('')}</div><p class="hint chart-basis">${state.chartChannel==='all'?'Winkelcijfers uit Shopify.':'Toegerekende kanaalcijfers'+(state.chartChannel==='google'?' · Google non-branded':'')+'.'} Kerncijfers bovenaan blijven het winkeltotaal.</p>`;
 }
 function googleFilter() {
   if (state.channel !== "google") return "";
@@ -603,7 +603,7 @@ function channelBenchmark(cur) {
   const shop=compute(D,C,state.from,state.to,'all',{includeDaan:state.daan!=='without'});
   const limit=shop.count>0 && shop.cost!=null && shop.revenue!=null ? (shop.revenue-shop.cost-shop.overhead-(shop.returnReserve.impact??0))/shop.count : null;
   const room=cur.cpa!=null && limit!=null ? limit-cur.cpa : null;
-  return `<section class="channel-benchmark" aria-label="Kosten per aankoop en break-even"><span>Kosten per aankoop <strong>${euro(cur.cpa)}</strong></span><span>Break-even · winkelraming <strong>${euro(limit)}</strong></span><span>Ruimte per aankoop <strong>${euro(room)}</strong></span><details><summary>Hoe lees je dit?</summary><p>Gemiddelde winkelmarge vóór marketing per Shopify-order, na retourbegroting. Dezelfde benchmark voor ieder kanaal; productmix en overlap in attributie kunnen afwijken. Positieve ruimte is geen bewezen kanaalwinst en kosten per aankoop zijn geen nieuweklant-CAC.</p></details></section>`;
+  return `<section class="channel-benchmark" aria-label="Marketingkosten en ruimte per order"><span>Kosten per aankoop <strong>${euro(cur.cpa)}</strong></span><span>Marge vóór marketing / order <strong>${euro(limit)}</strong></span><span>Resterende ruimte / order <strong>${euro(room)}</strong></span><details><summary>Hoe lees je dit?</summary><p>Gemiddelde winkelmarge vóór marketing per Shopify-order, na retourbegroting. Dezelfde benchmark voor ieder kanaal; productmix en overlap in attributie kunnen afwijken. Positieve ruimte is geen bewezen kanaalwinst en kosten per aankoop zijn geen nieuweklant-CAC.</p></details></section>`;
 }
 let datePickers = [];
 function render() {
