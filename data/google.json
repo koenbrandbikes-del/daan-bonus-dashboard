@@ -998,8 +998,8 @@
   {
    "d": "2026-10-01",
    "spend": 2.99,
-   "rev": 0,
-   "conv": 0,
+   "rev": 47.340432,
+   "conv": 0.986259,
    "id": "23981332205",
    "name": "C | Corporate",
    "type": "SEARCH"
@@ -4019,6 +4019,13 @@
    "rev": 736.207361,
    "conv": 4.940989,
    "name": "ORDER (TrackBee)"
+  },
+  {
+   "d": "2026-10-01",
+   "spend": 0,
+   "rev": 47.340432,
+   "conv": 0.986259,
+   "name": "ORDER (TrackBee)"
   }
  ],
  "daily_intent": [
@@ -4817,8 +4824,8 @@
    "d": "2026-10-01",
    "intent": "brand",
    "spend": 3,
-   "rev": 0,
-   "conv": 0
+   "rev": 47.340432,
+   "conv": 0.986259
   },
   {
    "d": "2026-08-01",
@@ -4891,12 +4898,12 @@
    "conv": 0
   }
  ],
- "details_synced_at": "2026-10-01T08:07:27.560Z",
+ "details_synced_at": "2026-10-01T08:22:27.547Z",
  "source": "google_ads_api",
  "customer_id": "7645288282",
  "currency": "EUR",
  "time_zone": "Europe/Amsterdam",
- "synced_at": "2026-10-01T08:07:27.560Z",
+ "synced_at": "2026-10-01T08:22:27.547Z",
  "coverage_from": "2026-08-01",
  "coverage_to": "2026-10-01",
  "attribution": "Primary conversions and conversion value by ad interaction date; may include non-purchase goals and overlap with other channels.",
@@ -5392,9 +5399,9 @@
   {
    "d": "2026-10-01",
    "spend": 12.76,
-   "conv": 0,
-   "rev": 0,
-   "impr": 1417,
+   "conv": 0.986259,
+   "rev": 47.340432,
+   "impr": 1510,
    "cl": 19
   }
  ],
@@ -5403,9 +5410,9 @@
   "to": "2026-10-01",
   "d": "2026-10-01",
   "spend": 12.76,
-  "conv": 0,
-  "rev": 0,
-  "impr": 1417,
+  "conv": 0.986259,
+  "rev": 47.340432,
+  "impr": 1510,
   "cl": 19
  },
  "gisteren": {
