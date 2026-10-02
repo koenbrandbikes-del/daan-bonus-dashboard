@@ -2654,8 +2654,8 @@
   {
    "d": "2026-09-27",
    "spend": 91.134513,
-   "rev": 0,
-   "conv": 0,
+   "rev": 19.61153404,
+   "conv": 0.089854,
    "id": "23985056312",
    "name": "P | Generiek",
    "type": "PERFORMANCE_MAX"
@@ -2699,8 +2699,17 @@
   {
    "d": "2026-10-02",
    "spend": 73.178095,
-   "rev": 169,
-   "conv": 1,
+   "rev": 725.57846596,
+   "conv": 3.910146,
+   "id": "23985056312",
+   "name": "P | Generiek",
+   "type": "PERFORMANCE_MAX"
+  },
+  {
+   "d": "2026-10-03",
+   "spend": 0.64,
+   "rev": 0,
+   "conv": 0,
    "id": "23985056312",
    "name": "P | Generiek",
    "type": "PERFORMANCE_MAX"
@@ -4012,15 +4021,15 @@
   {
    "d": "2026-09-27",
    "spend": 0,
-   "rev": 467.78803011,
-   "conv": 2,
+   "rev": 476.66201115,
+   "conv": 2.044927,
    "name": "GTM - Aankoop"
   },
   {
    "d": "2026-09-27",
    "spend": 0,
-   "rev": 344.659568,
-   "conv": 1.013741,
+   "rev": 355.397121,
+   "conv": 1.058668,
    "name": "ORDER (TrackBee)"
   },
   {
@@ -4082,15 +4091,15 @@
   {
    "d": "2026-10-02",
    "spend": 0,
-   "rev": 420.74,
-   "conv": 3,
+   "rev": 749.05601896,
+   "conv": 4.955073,
    "name": "GTM - Aankoop"
   },
   {
    "d": "2026-10-02",
    "spend": 0,
-   "rev": 526,
-   "conv": 3,
+   "rev": 754.262447,
+   "conv": 3.955073,
    "name": "ORDER (TrackBee)"
   }
  ],
@@ -4978,12 +4987,12 @@
    "conv": 0
   }
  ],
- "details_synced_at": "2026-10-02T22:22:30.076Z",
+ "details_synced_at": "2026-10-02T22:37:30.082Z",
  "source": "google_ads_api",
  "customer_id": "7645288282",
  "currency": "EUR",
  "time_zone": "Europe/Amsterdam",
- "synced_at": "2026-10-02T22:22:30.076Z",
+ "synced_at": "2026-10-02T22:37:30.082Z",
  "coverage_from": "2026-08-01",
  "coverage_to": "2026-10-03",
  "attribution": "Primary conversions and conversion value by ad interaction date; may include non-purchase goals and overlap with other channels.",
@@ -5447,8 +5456,8 @@
   {
    "d": "2026-09-27",
    "spend": 119.634513,
-   "conv": 3.013741,
-   "rev": 812.44759811,
+   "conv": 3.103595,
+   "rev": 832.05913215,
    "impr": 10808,
    "cl": 149
   },
@@ -5487,38 +5496,38 @@
   {
    "d": "2026-10-02",
    "spend": 101.158095,
-   "conv": 6,
-   "rev": 946.74,
-   "impr": 9418,
+   "conv": 8.910146,
+   "rev": 1503.31846596,
+   "impr": 9427,
    "cl": 138
   },
   {
    "d": "2026-10-03",
-   "spend": 0,
+   "spend": 0.64,
    "conv": 0,
    "rev": 0,
-   "impr": 27,
-   "cl": 0
+   "impr": 115,
+   "cl": 1
   }
  ],
  "vandaag": {
   "from": "2026-10-03",
   "to": "2026-10-03",
   "d": "2026-10-03",
-  "spend": 0,
+  "spend": 0.64,
   "conv": 0,
   "rev": 0,
-  "impr": 27,
-  "cl": 0
+  "impr": 115,
+  "cl": 1
  },
  "gisteren": {
   "from": "2026-10-02",
   "to": "2026-10-02",
   "d": "2026-10-02",
   "spend": 101.158095,
-  "conv": 6,
-  "rev": 946.74,
-  "impr": 9418,
+  "conv": 8.910146,
+  "rev": 1503.31846596,
+  "impr": 9427,
   "cl": 138
  }
 }
