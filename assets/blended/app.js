@@ -1513,7 +1513,7 @@ function bindContent() {
         const channel=b.dataset.chartChannel;
         if(state.chartChannels.includes(channel)) {
           if(state.chartChannels.length>1)state.chartChannels=state.chartChannels.filter(c=>c!==channel);
-        } else state.chartChannels=state.chartChannels.length===1 && state.chartChannels[0]==='all' && channel!=='all' ? [channel] : [...state.chartChannels,channel];
+        } else state.chartChannels=[...state.chartChannels,channel];
         state.chartChannel=state.chartChannels[0];state.detail=null;state.sub=null;
       });
     } else if(b.dataset.detailChannel) {

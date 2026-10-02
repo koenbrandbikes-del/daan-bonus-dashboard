@@ -804,6 +804,7 @@ test('chart channel filters preserve store KPIs and match the corresponding chan
   if(d.querySelector('[data-chart-channel=all]').getAttribute('aria-pressed')!=='true')d.querySelector('[data-chart-channel=all]').click();
   for(const selected of [...d.querySelectorAll('[data-chart-channel][aria-pressed=true]')])if(selected.dataset.chartChannel!=='all')selected.click();
   d.querySelector(`[data-chart-channel=${channel}]`).click();
+  d.querySelector('[data-chart-channel=all]').click();
   assert.equal(d.querySelector('#tab-all').getAttribute('aria-selected'),'true');
   assert.equal(d.querySelector('[data-metric=revenue] strong').textContent,store);
   assert.equal(d.querySelector(`[data-chart-channel=${channel}]`).getAttribute('aria-pressed'),'true');
@@ -844,6 +845,7 @@ test('multiple channel lines and selected-period totals match each independent c
  const w=await boot('?from=2026-09-24&to=2026-09-30&metrics=revenue,profitMargin&gran=day'),d=w.document;
  const store=[...d.querySelectorAll('.primary-kpis strong')].map(e=>e.textContent);
  for(const channel of ['meta','google','infl'])d.querySelector(`[data-chart-channel=${channel}]`).click();
+ d.querySelector('[data-chart-channel=all]').click();
  assert.deepEqual([...d.querySelectorAll('.primary-kpis strong')].map(e=>e.textContent),store);
  for(const channel of ['meta','google','infl'])assert.equal(d.querySelector(`[data-chart-channel=${channel}]`).getAttribute('aria-pressed'),'true');
  assert.equal(d.querySelector('#chart').querySelectorAll('svg').length,2);
@@ -901,7 +903,8 @@ test('Meta and total store remain comparable in lines, tables, selection totals 
  const w=await boot(query),d=w.document;
  const kpis=[...d.querySelectorAll('.primary-kpis strong')].map(e=>e.textContent);
  d.querySelector('[data-chart-channel=meta]').click();
- d.querySelector('[data-chart-channel=all]').click();
+ assert.equal(d.querySelector('[data-chart-channel=all]').getAttribute('aria-pressed'),'true');
+ assert.equal(d.querySelector('[data-chart-channel=meta]').getAttribute('aria-pressed'),'true');
  assert.equal(d.querySelectorAll('[data-chart-channel][aria-pressed=true]').length,2);
  const meta=d.querySelector('[data-chart-line="meta:revenue"]'),all=d.querySelector('[data-chart-line="all:revenue"]');
  assert(meta && all);assert.notEqual(meta.getAttribute('stroke'),all.getAttribute('stroke'));
@@ -911,7 +914,7 @@ test('Meta and total store remain comparable in lines, tables, selection totals 
  assert.equal(restored.document.querySelectorAll('[data-chart-channel][aria-pressed=true]').length,2);restored.close();
  d.querySelector('#chartMode').click();
  const rows=[...d.querySelectorAll('#chart tbody tr')];rows[0].querySelector('[data-bucket]').click();
- for(const [i,channel] of ['meta','all'].entries()){
+ for(const [i,channel] of ['all','meta'].entries()){
   const ref=await boot(query+'&chartChannels='+channel+'&chartChannel='+channel),rd=ref.document;
   rd.querySelector('#chartMode').click();const single=[...rd.querySelectorAll('#chart tbody tr')];
   for(let j=0;j<rows.length;j++)assert.equal(rows[j].cells[i+1].textContent,single[j].cells[1].textContent);
