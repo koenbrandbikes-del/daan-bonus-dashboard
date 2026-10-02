@@ -26,11 +26,11 @@ def verify(revision):
         assert get(path)[0]==200,'Public login asset missing'
     code,headers,body=get('/mcp')
     assert code==401 and 'resource_metadata=' in headers.get('WWW-Authenticate',''),'MCP authentication challenge failed'
-    code,headers,body=get('/.well-known/oauth-protected-resource/mcp')
+    code,headers,body=get('/oauth/resource')
     assert code==200,f'MCP metadata unavailable: HTTP {code}; response {body[:160]!r}'
     metadata=json.loads(body)
     assert metadata['resource']==origin+'/mcp' and metadata.get('engine_ready') is True,'MCP calculation engine failed'
-    code,headers,body=get('/.well-known/oauth-authorization-server')
+    code,headers,body=get('/oauth/.well-known/openid-configuration')
     assert code==200,'OAuth discovery unavailable'
     auth=json.loads(body)
     assert auth['authorization_endpoint']==origin+'/oauth/authorize' and 'S256' in auth['code_challenge_methods_supported'],'OAuth configuration failed'

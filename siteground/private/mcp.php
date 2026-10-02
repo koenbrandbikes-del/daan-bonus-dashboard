@@ -8,7 +8,7 @@ function mcpInit(): void {
  CREATE TABLE IF NOT EXISTS oauth_used_refresh (hash TEXT PRIMARY KEY, link TEXT NOT NULL, expires INTEGER NOT NULL);');
 }
 function mcpUrl(string $route='mcp'): string {global $origin,$base;return $origin.$base.'/'.$route;}
-function mcpIssuer():string {return rtrim(mcpUrl(''),'/');}
+function mcpIssuer():string {return mcpUrl('oauth');}
 function oauthInput(): array {
  $raw=file_get_contents('php://input');if(strlen($raw)>32768)jsonResponse(['error'=>'invalid_request'],413);
  if(str_starts_with($_SERVER['CONTENT_TYPE']??'','application/json')) {
@@ -102,11 +102,11 @@ function mcpReadiness():bool {
 }
 function mcpMachineRoutes():void {
  global $route,$method,$db,$dev,$origin;
- if(!in_array($route,['.well-known/oauth-protected-resource','.well-known/oauth-protected-resource/mcp','.well-known/oauth-authorization-server','oauth/register','oauth/token','oauth/revoke','mcp'],true))return;
+ if(!in_array($route,['.well-known/oauth-protected-resource','.well-known/oauth-protected-resource/mcp','.well-known/oauth-authorization-server','oauth/resource','oauth/.well-known/openid-configuration','oauth/.well-known/oauth-authorization-server','oauth/register','oauth/token','oauth/revoke','mcp'],true))return;
  mcpInit();
- if(str_starts_with($route,'.well-known/')){
+ if(str_starts_with($route,'.well-known/')||in_array($route,['oauth/resource','oauth/.well-known/openid-configuration','oauth/.well-known/oauth-authorization-server'],true)){
   if($method!=='GET')jsonResponse(['error'=>'method_not_allowed'],405);
-  if($route==='.well-known/oauth-authorization-server')jsonResponse(['issuer'=>mcpIssuer(),'authorization_endpoint'=>mcpUrl('oauth/authorize'),'token_endpoint'=>mcpUrl('oauth/token'),'registration_endpoint'=>mcpUrl('oauth/register'),'revocation_endpoint'=>mcpUrl('oauth/revoke'),'response_types_supported'=>['code'],'grant_types_supported'=>['authorization_code','refresh_token'],'token_endpoint_auth_methods_supported'=>['none','client_secret_post','client_secret_basic'],'code_challenge_methods_supported'=>['S256'],'scopes_supported'=>['finance:read'],'authorization_response_iss_parameter_supported'=>true]);
+  if(in_array($route,['.well-known/oauth-authorization-server','oauth/.well-known/openid-configuration','oauth/.well-known/oauth-authorization-server'],true))jsonResponse(['issuer'=>mcpIssuer(),'authorization_endpoint'=>mcpUrl('oauth/authorize'),'token_endpoint'=>mcpUrl('oauth/token'),'registration_endpoint'=>mcpUrl('oauth/register'),'revocation_endpoint'=>mcpUrl('oauth/revoke'),'response_types_supported'=>['code'],'grant_types_supported'=>['authorization_code','refresh_token'],'token_endpoint_auth_methods_supported'=>['none','client_secret_post','client_secret_basic'],'code_challenge_methods_supported'=>['S256'],'scopes_supported'=>['finance:read'],'authorization_response_iss_parameter_supported'=>true]);
   try {$ready=mcpReadiness();}catch(Throwable $e){jsonResponse(['error'=>'temporarily_unavailable','engine_code'=>$e->getCode()],503);}
   jsonResponse(['resource'=>mcpUrl(),'authorization_servers'=>[mcpIssuer()],'scopes_supported'=>['finance:read'],'bearer_methods_supported'=>['header'],'resource_name'=>'LumeWorks financiële gegevens','engine_ready'=>$ready]);
  }
@@ -145,7 +145,7 @@ function mcpMachineRoutes():void {
  // Browser cookies cannot authenticate MCP. Always require a scoped bearer token.
  $authorization=$_SERVER['HTTP_AUTHORIZATION']??$_SERVER['REDIRECT_HTTP_AUTHORIZATION']??'';$token=preg_match('/^Bearer ([a-f0-9]{64})$/D',$authorization,$parts)?$parts[1]:'';
  $q=$db->prepare('SELECT * FROM oauth_links WHERE access=?');$q->execute([hash('sha256',$token)]);$link=$q->fetch(PDO::FETCH_ASSOC);$user=$link?userRow($link['user']):false;
- if(!$link||$link['revoked']||$link['expires']<time()||$link['resource']!==mcpUrl()||!$user||(int)$link['version']!==(int)$user['version']){header('WWW-Authenticate: Bearer resource_metadata="'.mcpUrl('.well-known/oauth-protected-resource/mcp').'", scope="finance:read"');jsonResponse(['error'=>'unauthorized'],401);}
+ if(!$link||$link['revoked']||$link['expires']<time()||$link['resource']!==mcpUrl()||!$user||(int)$link['version']!==(int)$user['version']){header('WWW-Authenticate: Bearer resource_metadata="'.mcpUrl('oauth/resource').'", scope="finance:read"');jsonResponse(['error'=>'unauthorized'],401);}
  oauthRate('mcp-'.$user['name'],600);
  $requestOrigin=$_SERVER['HTTP_ORIGIN']??'';
  if($requestOrigin&&!in_array($requestOrigin,[$origin,'https://chatgpt.com'],true))jsonResponse(['error'=>'invalid_origin'],403);

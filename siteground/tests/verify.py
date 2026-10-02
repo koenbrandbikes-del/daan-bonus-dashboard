@@ -11,8 +11,8 @@ class Health(unittest.TestCase):
   def get(path):
    if path=='/login':return 200,{'X-LumeWorks-Revision':next(logins)},b'name="password"<title>LumeWorks</title>'
    if path=='/mcp':return 401,{'WWW-Authenticate':'Bearer resource_metadata="metadata"'},b''
-   if path=='/.well-known/oauth-protected-resource/mcp':return 200,{},json.dumps({'resource':verify.origin+'/mcp','engine_ready':True}).encode()
-   if path=='/.well-known/oauth-authorization-server':return 200,{},json.dumps({'authorization_endpoint':verify.origin+'/oauth/authorize','code_challenge_methods_supported':['S256']}).encode()
+   if path=='/oauth/resource':return 200,{},json.dumps({'resource':verify.origin+'/mcp','engine_ready':True}).encode()
+   if path=='/oauth/.well-known/openid-configuration':return 200,{},json.dumps({'authorization_endpoint':verify.origin+'/oauth/authorize','code_challenge_methods_supported':['S256']}).encode()
    return (401 if path.startswith('/data') or path.endswith('app.js') else 200),{},b''
   with patch.object(verify,'get',side_effect=get),patch.object(verify.time,'sleep'):verify.verify('new')
  def test_public_financial_data_fails_health_check(self):
