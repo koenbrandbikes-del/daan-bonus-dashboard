@@ -38,16 +38,14 @@ def verify(revision):
     assert code==200,'OAuth discovery unavailable'
     auth=json.loads(body)
     assert auth['authorization_endpoint']==origin+'/oauth/authorize' and 'S256' in auth['code_challenge_methods_supported'],'OAuth configuration failed'
-    # Standard discovery is required for ChatGPT; report hosting interception
-    # without preventing the independently protected preview from publishing.
+    # Verify standard discovery, not just a custom metadata endpoint.
     code,headers,body=get('/.well-known/oauth-authorization-server/oauth')
-    if code!=200:
-        print(f'MCP_CHATGPT_NOT_READY: standard OAuth discovery HTTP {code}; hosting routing must be corrected',flush=True)
-    else:
-        discovery=json.loads(body)
-        assert discovery['issuer']==origin+'/oauth','OAuth issuer mismatch'
-        print('MCP standard OAuth discovery verified',flush=True)
+    assert code==200,f'MCP standard OAuth discovery unavailable: HTTP {code}'
+    discovery=json.loads(body)
+    assert discovery['issuer']==origin+'/oauth' and discovery['authorization_endpoint']==origin+'/oauth/authorize','OAuth issuer mismatch'
+    assert 'S256' in discovery['code_challenge_methods_supported'] and 'authorization_code' in discovery['grant_types_supported'],'OAuth standard discovery incomplete'
+    print('MCP standard OAuth discovery verified',flush=True)
     for path in ['/meta-test','/daan-test']:
         code,headers,body=get(path)
         assert code==200 and b'name="password"' in body and b'daily_meta' not in body,'Test dashboard anonymous protection failed'
-if __name__=='__main__':verify(sys.argv[1]);print('HTTPS, revision, login, anonymous protection, OAuth configuration and live MCP calculation engine verified; see standard-discovery result above')
+if __name__=='__main__':verify(sys.argv[1]);print('HTTPS, revision, login, anonymous protection, OAuth configuration and live MCP calculation engine verified; standard discovery verified')

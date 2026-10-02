@@ -34,10 +34,10 @@ class MCP(unittest.TestCase):
  def test_02_full_financial_tools_pim_and_floris(self):
   for name in ['pim','floris']:
    self.c=Client(self.port);t=self.token(self.authorize(name));init=self.rpc(t['access_token'],'initialize',{'protocolVersion':'2025-11-25'});self.assertEqual(json.loads(init[1])['result']['protocolVersion'],'2025-11-25')
-   tools=json.loads(self.rpc(t['access_token'],'tools/list')[1])['result']['tools'];self.assertEqual(len(tools),7);self.assertTrue(all(x['annotations']['readOnlyHint'] for x in tools))
+   tools=json.loads(self.rpc(t['access_token'],'tools/list')[1])['result']['tools'];self.assertEqual(len(tools),8);self.assertTrue(all(x['annotations']['readOnlyHint'] for x in tools))
    r=self.rpc(t['access_token'],'tools/call',{'name':'get_financial_summary','arguments':{'from':'2026-09-01','to':'2026-09-30','channels':['all','meta','google','infl']}})
    answer=json.loads(r[1])['result'];self.assertFalse(answer['isError'],r[1]);a=answer['structuredContent'];self.assertEqual(a['context']['user'],name);self.assertEqual(len(a['result']['channels']),4);self.assertIsNotNone(a['result']['channels']['meta']['result']);self.assertGreater(len(a['result']['channels']['all']['marginBuild']),8)
-   for tool,args in [('get_data_status',{}),('get_financial_trend',{'from':'2026-09-01','to':'2026-09-07','channels':['all','meta']}),('list_orders',{'from':'2026-09-01','to':'2026-09-30','limit':2}),('read_financial_data',{'source':'creators'}),('explain_financial_methodology',{}),('compare_periods',{'from':'2026-09-08','to':'2026-09-14','compare_from':'2026-09-01','compare_to':'2026-09-07'})]:
+   for tool,args in [('get_data_status',{}),('get_meta_test_review',{'from':'2026-09-01','to':'2026-09-30','monthly_fixed':500}),('get_financial_trend',{'from':'2026-09-01','to':'2026-09-07','channels':['all','meta']}),('list_orders',{'from':'2026-09-01','to':'2026-09-30','limit':2}),('read_financial_data',{'source':'creators'}),('explain_financial_methodology',{}),('compare_periods',{'from':'2026-09-08','to':'2026-09-14','compare_from':'2026-09-01','compare_to':'2026-09-07'})]:
     result=json.loads(self.rpc(t['access_token'],'tools/call',{'name':tool,'arguments':args})[1])['result'];self.assertFalse(result['isError'],tool+str(result));self.assertIn('sources',result['structuredContent']['context'])
  def test_03_pkce_resource_and_code_replay(self):
   p=self.authorize();self.assertEqual(self.c.request('oauth/token','POST',{**p,'code_verifier':'B'*43})[0],400);self.assertEqual(self.c.request('oauth/token','POST',{**p,'resource':'https://other.example/mcp'})[0],400)
@@ -94,4 +94,12 @@ class MCP(unittest.TestCase):
    result=json.loads(subprocess.check_output([security_tests.PHP,str(script)],text=True));self.assertTrue(result[0]);file=root/'public/.well-known/oauth-authorization-server/oauth';self.assertEqual(json.loads(file.read_text()),result[1]);self.assertNotIn('password',file.read_text());self.assertNotIn('access_token',file.read_text());self.assertNotIn('daily_meta',file.read_text());self.assertEqual(file.stat().st_mode&0o777,0o644)
    self.assertTrue(json.loads(subprocess.check_output([security_tests.PHP,str(script)],text=True))[0])
    file.write_text('foreign metadata');self.assertFalse(json.loads(subprocess.check_output([security_tests.PHP,str(script)],text=True))[0]);self.assertEqual(file.read_text(),'foreign metadata')
+ def test_12_full_history_four_channel_trend(self):
+  t=self.token(self.authorize('pim'))
+  r=self.rpc(t['access_token'],'tools/call',{'name':'get_financial_trend','arguments':{'from':'2026-08-05','to':'2026-10-01','channels':['all','meta','google','infl'],'granularity':'day'}})
+  self.assertEqual(r[0],200);answer=json.loads(r[1])['result'];self.assertFalse(answer['isError'],str(answer)[:500]);channels=answer['structuredContent']['result']['channels'];self.assertEqual(set(channels),{'all','meta','google','infl'});self.assertTrue(all(len(rows)==58 for rows in channels.values()))
+ def test_13_preview_scenario_is_read_only_and_reconciles(self):
+  t=self.token(self.authorize('pim'));args={'from':'2026-09-01','to':'2026-09-30','monthly_fixed':500}
+  a=json.loads(self.rpc(t['access_token'],'tools/call',{'name':'get_meta_test_review','arguments':args})[1])['result'];self.assertFalse(a['isError']);r=a['structuredContent']['result'];self.assertTrue(r['contract_unchanged']);self.assertEqual(r['contract']['monthly_fixed'],1500);self.assertEqual(r['scenario']['monthlyFixed'],500);self.assertAlmostEqual(r['scenario']['fixed'],500,places=7);self.assertAlmostEqual(sum(row['companyProfit'] for row in r['daily']),r['scenario']['companyProfit'],places=7)
+  current=json.loads(self.rpc(t['access_token'],'tools/call',{'name':'get_financial_summary','arguments':{'from':args['from'],'to':args['to'],'channel':'meta'}})[1])['result']['structuredContent']['result']['channels']['meta'];self.assertAlmostEqual(current['management']['fixed'],1500,places=7)
 if __name__=='__main__':unittest.main(verbosity=2)

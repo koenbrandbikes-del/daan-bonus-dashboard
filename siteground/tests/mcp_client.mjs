@@ -9,5 +9,5 @@ const client=new Client({name:'lumeworks-integration-test',version:'1.0.0'});
 await client.connect(new StreamableHTTPClientTransport(new URL(url),{requestInit:{headers:{Authorization:'Bearer '+token}}}));
 const list=await client.listTools();
 const answer=await client.callTool({name:'get_financial_summary',arguments:{from:'2026-09-01',to:'2026-09-30',channels:['all','meta']}});
-if(list.tools.length!==7||answer.isError||answer.structuredContent.context.user!=='pim')throw Error('MCP SDK integration failed');
+if(list.tools.length!==8||answer.isError||answer.structuredContent.context.user!=='pim')throw Error('MCP SDK integration failed');
 await client.close();process.stdout.write('SDK_MCP_VERIFIED\n');

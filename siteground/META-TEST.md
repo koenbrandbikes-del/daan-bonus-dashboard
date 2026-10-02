@@ -8,4 +8,4 @@ Influencerretouren volgen rechtstreeks de influencerdata. Overige retourcorrecti
 
 Tests: `node --test tests/meta-review.test.mjs` en `LW_TEST_BASE='' LW_TEST_RELEASE=1 python siteground/tests/meta_review.py`. Publicatie gaat via de bestaande code-only releaseprocedure, met behoud van accounts, database en vorige release. De automatische terugzetting blijft actief bij mislukte controles op login, gegevensafscherming of rekenruntime.
 
-MCP: standaard OAuth-discovery kan door SiteGround worden onderschept. De publicatiecontrole rapporteert dat apart als `MCP_CHATGPT_NOT_READY`. Een bereikbare testomgeving betekent dus niet dat de ChatGPT-verbinding is voltooid. Geen OpenID-provider of ID-tokens worden voorgewend om deze hostingbeperking te omzeilen.
+MCP: standaard OAuth-discovery en de gedeelde rekenruntime zijn live gecontroleerd. De publicatieprocedure vereist voortaan ook succesvolle standaard-discovery, naast login, gegevensafscherming en afgeschermde testlinks. Mislukte controles zetten de vorige coderelease terug. De persoonlijke ChatGPT-koppeling wordt door iedere gebruiker zelf geautoriseerd en is niet door de publicatiecontrole getest.

@@ -11,7 +11,7 @@ class Health(unittest.TestCase):
   def get(path):
    if path=='/login':return 200,{'X-LumeWorks-Revision':next(logins)},b'name="password"<title>LumeWorks</title>'
    if path in ['/meta-test','/daan-test']:return 200,{},b'name="password"'
-   if path=='/.well-known/oauth-authorization-server/oauth':return 404,{},b'hosting not found'
+   if path=='/.well-known/oauth-authorization-server/oauth':return 200,{},json.dumps({'issuer':verify.origin+'/oauth','authorization_endpoint':verify.origin+'/oauth/authorize','code_challenge_methods_supported':['S256'],'grant_types_supported':['authorization_code']}).encode()
    if path=='/mcp':return 401,{'WWW-Authenticate':'Bearer resource_metadata="metadata"'},b''
    if path=='/oauth/resource':return 200,{},json.dumps({'resource':verify.origin+'/mcp','engine_ready':True}).encode()
    if path=='/oauth/.well-known/oauth-authorization-server':return 200,{},json.dumps({'authorization_endpoint':verify.origin+'/oauth/authorize','code_challenge_methods_supported':['S256']}).encode()
