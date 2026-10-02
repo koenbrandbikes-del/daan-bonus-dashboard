@@ -409,7 +409,8 @@ test("footer reports actual source timestamps, order validation and cadence", as
  assert.match(footer.textContent,/Elke 15 minuten/);
  assert.match(footer.textContent,/Elk uur/);
  assert.match(footer.textContent,/Bron bijgewerkt:/);
- assert.match(footer.textContent,/Ordergegevens gecontroleerd/);
+ assert.match(footer.querySelectorAll(".update-source")[3].textContent,/Ordergegevens gecontroleerd|Verversing vertraagd/);
+ assert.match(d.querySelector("#status .order-check").textContent,/\d+ unieke orders/);
  assert(footer.querySelector("#refreshData"));
  const failed=await boot("?from=2026-09-23&to=2026-09-29","google.json");
  assert.match(failed.document.querySelectorAll(".update-source")[1].textContent,/Niet beschikbaar/);
@@ -418,7 +419,8 @@ test("footer reports actual source timestamps, order validation and cadence", as
 
 test("Shopify status explains validation and opens the matching order list", async () => {
  const w=await boot("?from=2026-09-23&to=2026-09-29"),d=w.document;
- assert.match(d.querySelector("#status").textContent,/Ordergegevens gecontroleerd/);
+ assert.match(d.querySelector("#status .order-check").textContent,/Shopify-ordercontrole/);
+ assert.match(d.querySelector("#status .order-check").textContent,/\d+ unieke orders/);
  assert.match(d.querySelector("#status").textContent,/98 orders/);
  assert.doesNotMatch(d.querySelector("#status").textContent,/Controle nog nodig/);
  d.querySelector("#viewShopifyOrders").click();
