@@ -9,6 +9,28 @@ function mcpInit(): void {
 }
 function mcpUrl(string $route='mcp'): string {global $origin,$base;return $origin.$base.'/'.$route;}
 function mcpIssuer():string {return mcpUrl('oauth');}
+// Public protocol metadata only: no accounts, tokens, figures or secrets.
+function mcpAuthorizationMetadata():array {return ['issuer'=>mcpIssuer(),'authorization_endpoint'=>mcpUrl('oauth/authorize'),'token_endpoint'=>mcpUrl('oauth/token'),'registration_endpoint'=>mcpUrl('oauth/register'),'revocation_endpoint'=>mcpUrl('oauth/revoke'),'response_types_supported'=>['code'],'grant_types_supported'=>['authorization_code','refresh_token'],'token_endpoint_auth_methods_supported'=>['none','client_secret_post','client_secret_basic'],'code_challenge_methods_supported'=>['S256'],'scopes_supported'=>['finance:read'],'authorization_response_iss_parameter_supported'=>true];}
+function mcpProvisionDiscovery(string $root):bool {
+ $root=realpath($root);if($root===false||!is_dir($root))return false;
+ $dir=$root;
+ foreach(['.well-known','oauth-authorization-server'] as $part){
+  $dir.='/'.$part;if(is_link($dir))return false;
+  if(!is_dir($dir)){if(file_exists($dir)||!@mkdir($dir,0755))return false;chmod($dir,0755);}
+ }
+ $file=$dir.'/oauth';if(is_link($file)||is_dir($file))return false;
+ $bytes=json_encode(mcpAuthorizationMetadata(),JSON_UNESCAPED_SLASHES|JSON_THROW_ON_ERROR);
+ $receipt=LW_PRIVATE.'/oauth-discovery-sha';$expected=is_file($receipt)?trim(file_get_contents($receipt)):null;
+ if(is_file($file)){
+  $actual=hash_file('sha256',$file);
+  if(hash_equals(hash('sha256',$bytes),$actual))return true;
+  if($expected===null||!hash_equals($expected,$actual))return false;
+ }
+ $tmp=tempnam($dir,'.oauth-');if($tmp===false)return false;
+ if(file_put_contents($tmp,$bytes)!==strlen($bytes)){unlink($tmp);return false;}
+ chmod($tmp,0644);if(!rename($tmp,$file)){unlink($tmp);return false;}
+ file_put_contents($receipt,hash('sha256',$bytes),LOCK_EX);chmod($receipt,0600);return true;
+}
 function oauthInput(): array {
  $raw=file_get_contents('php://input');if(strlen($raw)>32768)jsonResponse(['error'=>'invalid_request'],413);
  if(str_starts_with($_SERVER['CONTENT_TYPE']??'','application/json')) {
@@ -106,9 +128,12 @@ function mcpMachineRoutes():void {
  mcpInit();
  if(str_starts_with($route,'.well-known/')||in_array($route,['oauth/resource','.well-known/oauth-authorization-server/oauth','oauth/.well-known/oauth-authorization-server'],true)){
   if($method!=='GET')jsonResponse(['error'=>'method_not_allowed'],405);
-  if(in_array($route,['.well-known/oauth-authorization-server','.well-known/oauth-authorization-server/oauth','oauth/.well-known/oauth-authorization-server'],true))jsonResponse(['issuer'=>mcpIssuer(),'authorization_endpoint'=>mcpUrl('oauth/authorize'),'token_endpoint'=>mcpUrl('oauth/token'),'registration_endpoint'=>mcpUrl('oauth/register'),'revocation_endpoint'=>mcpUrl('oauth/revoke'),'response_types_supported'=>['code'],'grant_types_supported'=>['authorization_code','refresh_token'],'token_endpoint_auth_methods_supported'=>['none','client_secret_post','client_secret_basic'],'code_challenge_methods_supported'=>['S256'],'scopes_supported'=>['finance:read'],'authorization_response_iss_parameter_supported'=>true]);
+  if(in_array($route,['.well-known/oauth-authorization-server','.well-known/oauth-authorization-server/oauth','oauth/.well-known/oauth-authorization-server'],true))jsonResponse(mcpAuthorizationMetadata());
   try {$ready=mcpReadiness();}catch(Throwable $e){jsonResponse(['error'=>'temporarily_unavailable','engine_code'=>$e->getCode()],503);}
-  jsonResponse(['resource'=>mcpUrl(),'authorization_servers'=>[mcpIssuer()],'scopes_supported'=>['finance:read'],'bearer_methods_supported'=>['header'],'resource_name'=>'LumeWorks financiële gegevens','engine_ready'=>$ready]);
+  $published=false;
+  $script=realpath($_SERVER['SCRIPT_FILENAME']??'');$root=realpath($_SERVER['DOCUMENT_ROOT']??'');
+  if(!$dev&&$script&&$root&&basename($script)==='index.php'&&dirname($script)===$root){try{$published=mcpProvisionDiscovery($root);}catch(Throwable){$published=false;}}
+  jsonResponse(['standard_discovery_published'=>$published,'resource'=>mcpUrl(),'authorization_servers'=>[mcpIssuer()],'scopes_supported'=>['finance:read'],'bearer_methods_supported'=>['header'],'resource_name'=>'LumeWorks financiële gegevens','engine_ready'=>$ready]);
  }
  if($route==='oauth/register'){
   if($method!=='POST')jsonResponse(['error'=>'method_not_allowed'],405);oauthRate('oauth-register',100);$a=oauthInput();

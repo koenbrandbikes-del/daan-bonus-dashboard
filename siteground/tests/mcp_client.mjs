@@ -1,7 +1,10 @@
+import {discoverAuthorizationServerMetadata} from '../../cloudflare-worker/node_modules/@modelcontextprotocol/sdk/dist/esm/client/auth.js';
 import {Client} from '../../cloudflare-worker/node_modules/@modelcontextprotocol/sdk/dist/esm/client/index.js';
 import {StreamableHTTPClientTransport} from '../../cloudflare-worker/node_modules/@modelcontextprotocol/sdk/dist/esm/client/streamableHttp.js';
 let raw='';for await(const chunk of process.stdin)raw+=chunk;
 const {url,token}=JSON.parse(raw);
+const discovery=await discoverAuthorizationServerMetadata(new URL(url.replace(/\/mcp$/, '/oauth')));
+if(!discovery||!discovery.code_challenge_methods_supported.includes('S256'))throw Error('OAuth SDK discovery failed');
 const client=new Client({name:'lumeworks-integration-test',version:'1.0.0'});
 await client.connect(new StreamableHTTPClientTransport(new URL(url),{requestInit:{headers:{Authorization:'Bearer '+token}}}));
 const list=await client.listTools();

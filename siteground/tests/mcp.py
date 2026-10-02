@@ -85,4 +85,13 @@ class MCP(unittest.TestCase):
    for key in ['revenue','result','actualResult','spend','cost','fees','overhead','profitMargin']:
     if expected[channel][key] is None:self.assertIsNone(actual[channel][key])
     else:self.assertAlmostEqual(actual[channel][key],expected[channel][key],places=7,msg=f'{channel} {key}')
+ def test_11_public_discovery_materialization_is_metadata_only(self):
+  import tempfile,pathlib,subprocess
+  with tempfile.TemporaryDirectory() as d:
+   root=pathlib.Path(d);(root/'private').mkdir();(root/'public').mkdir()
+   php="<?php define('LW_PRIVATE',"+repr(str(root/'private'))+");$origin='https://cijfers.lumeworks.nl';$base='';require "+repr(str(security_tests.ROOT/'siteground/private/mcp.php'))+";echo json_encode([mcpProvisionDiscovery("+repr(str(root/'public'))+"),mcpAuthorizationMetadata()]);"
+   script=root/'test.php';script.write_text(php)
+   result=json.loads(subprocess.check_output([security_tests.PHP,str(script)],text=True));self.assertTrue(result[0]);file=root/'public/.well-known/oauth-authorization-server/oauth';self.assertEqual(json.loads(file.read_text()),result[1]);self.assertNotIn('password',file.read_text());self.assertNotIn('access_token',file.read_text());self.assertNotIn('daily_meta',file.read_text());self.assertEqual(file.stat().st_mode&0o777,0o644)
+   self.assertTrue(json.loads(subprocess.check_output([security_tests.PHP,str(script)],text=True))[0])
+   file.write_text('foreign metadata');self.assertFalse(json.loads(subprocess.check_output([security_tests.PHP,str(script)],text=True))[0]);self.assertEqual(file.read_text(),'foreign metadata')
 if __name__=='__main__':unittest.main(verbosity=2)
