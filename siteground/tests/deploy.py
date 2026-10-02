@@ -50,6 +50,8 @@ class Deploy(unittest.TestCase):
    b='{"old":true}';sha=hashlib.sha256(b.encode()).hexdigest();versions[path]={'sha':sha};db.execute('INSERT INTO datasets VALUES(?,?,?,?)',(path,b,sha,1))
   db.commit();db.close()
   payload=data_bundle('a'*40,versions)
+  invalid=copy.deepcopy(payload);bad=b'{"unexpected":true}';invalid['files']['data/shopify.json']['data']=base64.b64encode(bad).decode();invalid['files']['data/shopify.json']['sha256']=hashlib.sha256(bad).hexdigest()
+  self.assertNotEqual(self.runPackage(invalid).returncode,0)
   self.assertEqual(self.runPackage(payload).returncode,0)
   db=sqlite3.connect(dbpath);self.assertEqual(db.execute('SELECT password_hash FROM users').fetchone()[0],'KEEP-HASH')
   for path,item in payload['files'].items():self.assertEqual(db.execute('SELECT sha FROM datasets WHERE path=?',(path,)).fetchone()[0],item['sha256'])

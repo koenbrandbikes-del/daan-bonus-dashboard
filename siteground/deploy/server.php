@@ -23,7 +23,11 @@ if(in_array($m['action']??'',['data-status','data-sync'],true)){
   if(!in_array($name,$dataPaths,true))stopDeploy('DATA_PATH');
   $bytes=base64_decode($item['data']??'',true);
   if($bytes===false||strlen($bytes)>8*1024*1024||hash('sha256',$bytes)!==($item['sha256']??''))stopDeploy('DATA_HASH');
-  $json=json_decode($bytes,true,512,JSON_THROW_ON_ERROR);if(!is_array($json)||!$json)stopDeploy('DATA_EMPTY');$decoded[$name]=$bytes;
+  $json=json_decode($bytes,true,512,JSON_THROW_ON_ERROR);if(!is_array($json)||!$json)stopDeploy('DATA_EMPTY');
+  $required=['data/meta.json'=>['daily_meta'],'data/google.json'=>['daily_google'],'data/shopify.json'=>['orders'],'data/creators.json'=>['creators','orders'],'data/returns.json'=>['daily'],'data/status.json'=>['meta','google','shopify'],'assets/blended/costs.json'=>['items']];
+  foreach($required[$name] as $field)if(!isset($json[$field])||!is_array($json[$field]))stopDeploy('DATA_SCHEMA');
+  if($name==='data/returns.json'&&($json['complete']??false)!==true)stopDeploy('RETURNS_INCOMPLETE');
+  $decoded[$name]=$bytes;
  }
  if(!is_dir($p.'/data-backups')&&!mkdir($p.'/data-backups',0700))stopDeploy('DATA_BACKUP_DIR');
  $backup=$p.'/data-backups/state-'.gmdate('Ymd-His').'-'.bin2hex(random_bytes(4)).'.sqlite';
