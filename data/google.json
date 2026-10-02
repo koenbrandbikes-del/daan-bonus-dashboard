@@ -1583,8 +1583,8 @@
   {
    "d": "2026-10-02",
    "spend": 2.06,
-   "rev": 0,
-   "conv": 0,
+   "rev": 308.67,
+   "conv": 2,
    "id": "23981395562",
    "name": "T | Generiek | B2C",
    "type": "SEARCH"
@@ -4078,6 +4078,20 @@
    "rev": 364.890432,
    "conv": 1.986259,
    "name": "ORDER (TrackBee)"
+  },
+  {
+   "d": "2026-10-02",
+   "spend": 0,
+   "rev": 139.67,
+   "conv": 1,
+   "name": "GTM - Aankoop"
+  },
+  {
+   "d": "2026-10-02",
+   "spend": 0,
+   "rev": 169,
+   "conv": 1,
+   "name": "ORDER (TrackBee)"
   }
  ],
  "daily_intent": [
@@ -4897,8 +4911,8 @@
    "d": "2026-10-02",
    "intent": "other",
    "spend": 2.07,
-   "rev": 0,
-   "conv": 0
+   "rev": 308.67,
+   "conv": 2
   },
   {
    "d": "2026-08-01",
@@ -4964,12 +4978,12 @@
    "conv": 0
   }
  ],
- "details_synced_at": "2026-10-02T10:22:30.062Z",
+ "details_synced_at": "2026-10-02T10:52:30.094Z",
  "source": "google_ads_api",
  "customer_id": "7645288282",
  "currency": "EUR",
  "time_zone": "Europe/Amsterdam",
- "synced_at": "2026-10-02T10:22:30.062Z",
+ "synced_at": "2026-10-02T10:52:30.094Z",
  "coverage_from": "2026-08-01",
  "coverage_to": "2026-10-02",
  "attribution": "Primary conversions and conversion value by ad interaction date; may include non-purchase goals and overlap with other channels.",
@@ -5473,9 +5487,9 @@
   {
    "d": "2026-10-02",
    "spend": 35.950771,
-   "conv": 0,
-   "rev": 0,
-   "impr": 2528,
+   "conv": 2,
+   "rev": 308.67,
+   "impr": 2852,
    "cl": 38
   }
  ],
@@ -5484,9 +5498,9 @@
   "to": "2026-10-02",
   "d": "2026-10-02",
   "spend": 35.950771,
-  "conv": 0,
-  "rev": 0,
-  "impr": 2528,
+  "conv": 2,
+  "rev": 308.67,
+  "impr": 2852,
   "cl": 38
  },
  "gisteren": {
