@@ -801,7 +801,8 @@ test('chart channel filters preserve store KPIs and match the corresponding chan
  const w=await boot('?from=2026-09-24&to=2026-09-30&metrics=revenue&gran=day'),d=w.document;
  const store=d.querySelector('[data-metric=revenue] strong').textContent;
  for(const channel of ['meta','google','infl']){
-  d.querySelector('[data-chart-channel=all]').click();
+  if(d.querySelector('[data-chart-channel=all]').getAttribute('aria-pressed')!=='true')d.querySelector('[data-chart-channel=all]').click();
+  for(const selected of [...d.querySelectorAll('[data-chart-channel][aria-pressed=true]')])if(selected.dataset.chartChannel!=='all')selected.click();
   d.querySelector(`[data-chart-channel=${channel}]`).click();
   assert.equal(d.querySelector('#tab-all').getAttribute('aria-selected'),'true');
   assert.equal(d.querySelector('[data-metric=revenue] strong').textContent,store);
@@ -867,7 +868,7 @@ test('multiple channel lines and selected-period totals match each independent c
  assert.equal(d.querySelector('[data-detail-channel=google]').getAttribute('aria-pressed'),'true');
  assert.equal(d.querySelector('#detailFold').open,true);
  d.querySelector('[data-chart-channel=google]').click();assert.equal(d.querySelector('[data-chart-channel=google]').getAttribute('aria-pressed'),'false');
- d.querySelector('[data-chart-channel=all]').click();assert.equal(d.querySelectorAll('[data-chart-channel][aria-pressed=true]').length,1);
+ d.querySelector('[data-chart-channel=all]').click();assert.equal(d.querySelectorAll('[data-chart-channel][aria-pressed=true]').length,3);
  assert.equal(d.querySelector('[data-chart-channel=all]').getAttribute('aria-pressed'),'true');
  w.close();
 });
@@ -893,4 +894,31 @@ test('Meta retains its return reserve and subtracts it once without the duplicat
 test('invalid channel-comparison URL values fall back to a usable store graph',async()=>{
  const w=await boot('?chartChannels=unknown,toString&chartChannel=toString&from=2026-09-24&to=2026-09-30'),d=w.document;
  assert.equal(d.querySelector('[data-chart-channel=all]').getAttribute('aria-pressed'),'true');assert(d.querySelector('#chart svg'));w.close();
+});
+
+test('Meta and total store remain comparable in lines, tables, selection totals and restored URLs',async()=>{
+ const query='?from=2026-09-24&to=2026-09-30&metrics=revenue&gran=day';
+ const w=await boot(query),d=w.document;
+ const kpis=[...d.querySelectorAll('.primary-kpis strong')].map(e=>e.textContent);
+ d.querySelector('[data-chart-channel=meta]').click();
+ d.querySelector('[data-chart-channel=all]').click();
+ assert.equal(d.querySelectorAll('[data-chart-channel][aria-pressed=true]').length,2);
+ const meta=d.querySelector('[data-chart-line="meta:revenue"]'),all=d.querySelector('[data-chart-line="all:revenue"]');
+ assert(meta && all);assert.notEqual(meta.getAttribute('stroke'),all.getAttribute('stroke'));
+ assert.match(d.querySelector('#chart').textContent,/Totaal winkel/);
+ assert.deepEqual([...d.querySelectorAll('.primary-kpis strong')].map(e=>e.textContent),kpis);
+ const restored=await boot(w.location.search);
+ assert.equal(restored.document.querySelectorAll('[data-chart-channel][aria-pressed=true]').length,2);restored.close();
+ d.querySelector('#chartMode').click();
+ const rows=[...d.querySelectorAll('#chart tbody tr')];rows[0].querySelector('[data-bucket]').click();
+ for(const [i,channel] of ['meta','all'].entries()){
+  const ref=await boot(query+'&chartChannels='+channel+'&chartChannel='+channel),rd=ref.document;
+  rd.querySelector('#chartMode').click();const single=[...rd.querySelectorAll('#chart tbody tr')];
+  for(let j=0;j<rows.length;j++)assert.equal(rows[j].cells[i+1].textContent,single[j].cells[1].textContent);
+  single[0].querySelector('[data-bucket]').click();
+  assert.equal(d.querySelector('[data-selection-channel='+channel+'][data-selection-metric=revenue]').textContent,rd.querySelector('[data-selection-metric=revenue]').textContent);ref.close();
+ }
+ d.querySelector('[data-chart-channel=google]').click();assert.equal(d.querySelector('[data-chart-channel=all]').getAttribute('aria-pressed'),'true');
+ d.querySelector('[data-chart-channel=all]').click();assert.equal(d.querySelector('[data-chart-channel=all]').getAttribute('aria-pressed'),'false');
+ w.close();
 });

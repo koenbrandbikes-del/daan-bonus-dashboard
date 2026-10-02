@@ -155,7 +155,6 @@ function readState() {
   if (!Object.hasOwn(names,s.chartChannel)) s.chartChannel = "all";
   s.chartChannels=q.has('chartChannels')?[...new Set(q.get('chartChannels').split(',').filter(c=>Object.hasOwn(names,c)))]:[s.chartChannel];
   if(!s.chartChannels.length)s.chartChannels=['all'];
-  if(s.chartChannels.length>1)s.chartChannels=s.chartChannels.filter(c=>c!=='all');
   if(!s.chartChannels.includes(s.chartChannel))s.chartChannel=s.chartChannels[0];
   if (!["previous", "off", "custom"].includes(s.compare))
     s.compare = "previous";
@@ -402,16 +401,16 @@ function chartMetric(key) { return key.includes(':')?key.split(':')[1]:key; }
 function chartMetricMeta(key) {
  const [channel,metric]=key.includes(':')?key.split(':'):[chartChannel(),key];
  const meta=metricMeta(metric,channel);
- return {...meta,label:key.includes(':')?`${names[channel]} · ${meta.label}`:meta.label};
+ return {...meta,label:key.includes(':')?`${channel==='all'?'Totaal winkel':names[channel]} · ${meta.label}`:meta.label};
 }
 function chartFilter() {
  if(state.channel!=='all')return '';
  const channels=chartChannels();
- return `<div class="chart-channels" role="group" aria-label="Kanalen in grafiek">${Object.entries(names).map(([key,name])=>`<button data-chart-channel="${key}" aria-pressed="${channels.includes(key)}">${key==='all'?'Totaal winkel':name}</button>`).join('')}</div><p class="hint chart-basis">${channels.includes('all')?'Winkelcijfers uit Shopify.':'Selecteer één of meer kanalen om de lijnen te vergelijken. Google gebruikt non-branded; kanaalclaims kunnen overlappen.'} Kerncijfers bovenaan blijven het winkeltotaal.</p>`;
+ return `<div class="chart-channels" role="group" aria-label="Kanalen in grafiek">${Object.entries(names).map(([key,name])=>`<button data-chart-channel="${key}" aria-pressed="${channels.includes(key)}">${key==='all'?'Totaal winkel':name}</button>`).join('')}</div><p class="hint chart-basis">${channels.length===1 && channels[0]==='all'?'Winkelcijfers uit Shopify.':'Selecteer één of meer kanalen en eventueel het winkeltotaal om de lijnen te vergelijken. Google gebruikt non-branded; kanaalclaims kunnen overlappen.'} Kerncijfers bovenaan blijven het winkeltotaal.</p>`;
 }
 function detailChannelFilter() {
  if(chartChannels().length<2)return '';
- return `<div class="chart-channels detail-channel-filter" role="group" aria-label="Kanaal voor onderliggende cijfers">${chartChannels().map(c=>`<button data-detail-channel="${c}" aria-pressed="${chartChannel()===c}">${names[c]}</button>`).join('')}</div>`;
+ return `<div class="chart-channels detail-channel-filter" role="group" aria-label="Kanaal voor onderliggende cijfers">${chartChannels().map(c=>`<button data-detail-channel="${c}" aria-pressed="${chartChannel()===c}">${c==='all'?'Totaal winkel':names[c]}</button>`).join('')}</div>`;
 }
 function googleFilter() {
   if (state.channel !== "google") return "";
@@ -803,7 +802,7 @@ function renderChart() {
     return;
   }
   const multi=chartChannels().length>1;
-  const chartColor=k=>multi?({meta:'#38BDF8',google:'#FFAD55',infl:'#B98DE0'}[k.split(':')[0]]):keys.indexOf(k)===0?'#38BDF8':'#FFAD55';
+  const chartColor=k=>multi?({all:'#8BE0BE',meta:'#38BDF8',google:'#FFAD55',infl:'#B98DE0'}[k.split(':')[0]]):keys.indexOf(k)===0?'#38BDF8':'#FFAD55';
   const dashed=k=>multi && state.metrics.indexOf(chartMetric(k))>0;
   const same = keys.every((k) =>
     ["revenue", "cost", "spend", "result"].includes(chartMetric(k)),
@@ -1512,10 +1511,9 @@ function bindContent() {
     if (b.dataset.chartChannel) {
       change(()=>{
         const channel=b.dataset.chartChannel;
-        if(channel==='all')state.chartChannels=['all'];
-        else if(state.chartChannels.includes(channel)) {
+        if(state.chartChannels.includes(channel)) {
           if(state.chartChannels.length>1)state.chartChannels=state.chartChannels.filter(c=>c!==channel);
-        } else state.chartChannels=[...state.chartChannels.filter(c=>c!=='all'),channel];
+        } else state.chartChannels=state.chartChannels.length===1 && state.chartChannels[0]==='all' && channel!=='all' ? [channel] : [...state.chartChannels,channel];
         state.chartChannel=state.chartChannels[0];state.detail=null;state.sub=null;
       });
     } else if(b.dataset.detailChannel) {
