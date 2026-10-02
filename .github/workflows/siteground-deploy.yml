@@ -37,6 +37,7 @@ jobs:
           LW_TEST_BASE='' LW_TEST_RELEASE=1 python siteground/tests/security.py
           python siteground/tests/private_producers.py
           python siteground/tests/deploy.py
+          python siteground/tests/verify.py
       - name: Prepare code-only release
         run: python siteground/deploy/bundle.py "$GITHUB_SHA" > /tmp/lumeworks-release.json
       - name: Publish and verify; restore on failed verification

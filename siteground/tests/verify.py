@@ -1,0 +1,18 @@
+import pathlib,sys,unittest
+from unittest.mock import patch
+sys.path.insert(0,str(pathlib.Path(__file__).resolve().parents[1]/'deploy'))
+import verify
+class Health(unittest.TestCase):
+ def test_old_revision_is_never_accepted(self):
+  with patch.object(verify,'get',return_value=(200,{'X-LumeWorks-Revision':'old'},b'name="password"<title>LumeWorks</title>')),patch.object(verify.time,'sleep'):
+   with self.assertRaises(AssertionError):verify.verify('new')
+ def test_activation_delay_and_protected_routes(self):
+  logins=iter(['old','new'])
+  def get(path):
+   if path=='/login':return 200,{'X-LumeWorks-Revision':next(logins)},b'name="password"<title>LumeWorks</title>'
+   return (401 if path.startswith('/data') or path.endswith('app.js') else 200),{},b''
+  with patch.object(verify,'get',side_effect=get),patch.object(verify.time,'sleep'):verify.verify('new')
+ def test_public_financial_data_fails_health_check(self):
+  with patch.object(verify,'get',return_value=(200,{'X-LumeWorks-Revision':'new'},b'name="password"<title>LumeWorks</title>')):
+   with self.assertRaises(AssertionError):verify.verify('new')
+if __name__=='__main__':unittest.main(verbosity=2)
