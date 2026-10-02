@@ -1,0 +1,26 @@
+name: Diagnose SiteGround HTTPS connection
+on:
+  push:
+    paths: ['.github/workflows/siteground-connection-check.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compare public HTTPS responses without credentials
+        run: |
+          curl -sS --connect-timeout 15 --max-time 30 -D /tmp/headers -o /tmp/body -w 'curl HTTP %{http_code}\n' https://cijfers.lumeworks.nl/login
+          python3 - <<'PY'
+          import pathlib,re,urllib.request,urllib.error
+          for line in pathlib.Path('/tmp/headers').read_text().splitlines():
+              if line.lower().startswith(('http/','server:','x-proxy-cache:','x-lumeworks-revision:')):print(line)
+          print('curl title:',re.findall(r'<title[^>]*>(.*?)</title>',pathlib.Path('/tmp/body').read_text(),re.I)[:1])
+          try:
+              r=urllib.request.urlopen('https://cijfers.lumeworks.nl/login',timeout=30)
+          except urllib.error.HTTPError as e:r=e
+          b=r.read().decode(errors='replace')
+          print('urllib HTTP:',r.status,'server:',r.headers.get('server'),'title:',re.findall(r'<title[^>]*>(.*?)</title>',b,re.I)[:1])
+          print('screening words:',[w for w in ['robot','automated','bot','forbidden','access denied','verify you are human','blocked'] if w in b.lower()])
+          PY
