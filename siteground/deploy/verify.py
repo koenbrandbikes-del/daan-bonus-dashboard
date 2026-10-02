@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import sys,time,subprocess,tempfile,pathlib,email
+import sys,time,subprocess,tempfile,pathlib,email,json
 origin='https://cijfers.lumeworks.nl'
 def get(path):
     # Use the standard curl HTTPS client; SiteGround rejects urllib requests.
@@ -24,4 +24,14 @@ def verify(revision):
         assert get(path)[0]==401,'Anonymous data protection failed'
     for path in ['/login.css','/login.js','/manifest.webmanifest']:
         assert get(path)[0]==200,'Public login asset missing'
-if __name__=='__main__':verify(sys.argv[1]);print('HTTPS, deployed revision, login assets and anonymous protection verified')
+    code,headers,body=get('/mcp')
+    assert code==401 and 'resource_metadata=' in headers.get('WWW-Authenticate',''),'MCP authentication challenge failed'
+    code,headers,body=get('/.well-known/oauth-protected-resource/mcp')
+    assert code==200,'MCP metadata unavailable'
+    metadata=json.loads(body)
+    assert metadata['resource']==origin+'/mcp' and metadata.get('engine_ready') is True,'MCP calculation engine failed'
+    code,headers,body=get('/.well-known/oauth-authorization-server')
+    assert code==200,'OAuth discovery unavailable'
+    auth=json.loads(body)
+    assert auth['authorization_endpoint']==origin+'/oauth/authorize' and 'S256' in auth['code_challenge_methods_supported'],'OAuth configuration failed'
+if __name__=='__main__':verify(sys.argv[1]);print('HTTPS, revision, login, anonymous protection, OAuth discovery and live MCP calculation engine verified')

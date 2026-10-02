@@ -14,10 +14,15 @@ def build(output,credentials,php,origin,base,data_root=None,code_only=False):
     private.mkdir(mode=0o700)
     for name in ['app.php','login.php','account.php','.htaccess']:
         shutil.copy2(SOURCE/'private'/name,private/name)
+    app_source=(private/'app.php').read_text()
+    implementation=(SOURCE/'private/mcp.php').read_text().removeprefix('<?php')
+    (private/'app.php').write_text(app_source.replace('// __MCP_IMPLEMENTATION__',implementation))
     (public/'private-path.php').write_text("<?php return dirname(__DIR__,2).'/lumeworks-private';\n")
     static=private/'static';static.mkdir()
     shutil.copytree(ROOT/'assets/blended',static/'assets/blended',ignore=shutil.ignore_patterns('*.json'))
     shutil.copy2(ROOT/'assets/product-costs.js',static/'assets/product-costs.js')
+    from build_mcp_model import model
+    (static/'assets/blended/mcp-model.js').write_text(model())
     for name in ['login.css','login.js','device.js','sw.js','manifest.webmanifest']:
         shutil.copy2(SOURCE/'private'/name,static/name)
     # Icons reuse the established finance monogram, rendered at installable sizes.
