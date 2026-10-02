@@ -135,5 +135,9 @@ class Security(unittest.TestCase):
         self.assertIn('assets/product-costs.js',seen)
     def test_27_back_button_and_background_protection(self):
         script=self.c.request('device.js')[1];self.assertIn("addEventListener('pagehide'",script);self.assertIn("if(!document.hidden)",script)
+    def test_28_account_is_outside_the_three_slot_date_toolbar(self):
+        self.c.login();html=self.c.request('')[1]
+        self.assertLess(html.index('class="account-link"'),html.index('class="controls"'))
+        css=self.c.request('assets/blended/account.css')[1];self.assertIn('grid-template-columns:minmax(0,1fr) auto',css);self.assertIn('grid-row:2',css)
 
 if __name__=='__main__':unittest.main(verbosity=2)
