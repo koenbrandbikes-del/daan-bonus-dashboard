@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Real HTTP integration against PHP + SQLite; no mocked authentication."""
 import hashlib,hmac,http.client,json,os,pathlib,re,secrets,shutil,socket,sqlite3,subprocess,tempfile,time,unittest,urllib.parse
-ROOT=pathlib.Path(__file__).resolve().parents[2];PHP=os.getenv('LW_PHP_BIN','php');BASE='/cijfers';PASSWORD='Test7xQ9mK2z'
+ROOT=pathlib.Path(__file__).resolve().parents[2];PHP=os.getenv('LW_PHP_BIN','php');BASE=os.getenv('LW_TEST_BASE','/cijfers');PASSWORD='Test7xQ9mK2z'
 class Client:
     def __init__(self,port):self.port=port;self.cookies={}
     def request(self,path='',method='GET',body=None,headers=None):
@@ -25,7 +25,7 @@ class Security(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.tmp=tempfile.TemporaryDirectory();cls.dir=pathlib.Path(cls.tmp.name);cls.release=cls.dir/'release';credentials=cls.dir/'credentials.json';credentials.write_text(json.dumps({n:PASSWORD for n in ['koen','floris','pim','bas']}))
-        subprocess.run(['python',str(ROOT/'siteground/scripts/build.py'),'--output',str(cls.release),'--php',PHP,'--credentials',str(credentials)],check=True,stdout=subprocess.DEVNULL)
+        subprocess.run(['python',str(ROOT/'siteground/scripts/build.py'),'--output',str(cls.release),'--php',PHP,'--credentials',str(credentials),'--base',BASE],check=True,stdout=subprocess.DEVNULL)
         cls.private=cls.release/'lumeworks-private';cls.config=json.loads((cls.private/'config.json').read_text());cls.secret=cls.config['sync_secret']
         sock=socket.socket();sock.bind(('127.0.0.1',0));cls.port=sock.getsockname()[1];sock.close()
         router=cls.dir/'router.php';router.write_text('<?php if(isset($_SERVER["HTTP_X_TEST_TLS"])) {$_SERVER["HTTPS"]="on";$_SERVER["REMOTE_ADDR"]="192.0.2.1";} require '+repr(str(cls.release/'public/index.php'))+';')
@@ -139,5 +139,18 @@ class Security(unittest.TestCase):
         self.c.login();html=self.c.request('')[1]
         self.assertLess(html.index('class="account-link"'),html.index('class="controls"'))
         css=self.c.request('assets/blended/account.css')[1];self.assertIn('grid-template-columns:minmax(0,1fr) auto',css);self.assertIn('grid-row:2',css)
+
+    def test_29_clean_login_and_safe_error_rendering(self):
+        html=self.c.request('login')[1]
+        for old in ['JOUW OVERZICHT','Inzicht begint hier.','<h1>Cijfers</h1>']:
+            self.assertNotIn(old,html)
+        self.assertIn('Welkom terug.',html)
+        self.assertIn('aria-live="polite"',html)
+        token=self.c.csrf()
+        result=self.c.request('login','POST',{'csrf':token,'username':'<script>alert(1)</script>','password':'DO-NOT-ECHO-ME'})
+        self.assertEqual(result[0],401)
+        self.assertIn('&lt;script&gt;',result[1])
+        self.assertNotIn('DO-NOT-ECHO-ME',result[1])
+        self.assertIn('aria-describedby="loginError"',result[1])
 
 if __name__=='__main__':unittest.main(verbosity=2)

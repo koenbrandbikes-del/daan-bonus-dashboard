@@ -24,4 +24,6 @@ jobs:
       - name: Test real login, revocation, protected files, HMAC and PWA
         run: |
           python siteground/tests/security.py
+          LW_TEST_BASE="" python siteground/tests/security.py
+          node --test siteground/tests/login.test.mjs
           python siteground/tests/private_producers.py
