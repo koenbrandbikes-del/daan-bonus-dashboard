@@ -12,6 +12,9 @@ test("campaign groups include full PMAX and reconcile to account totals", () => 
   assert(google.daily_campaigns.every((r) => googleCampaignGroups[r.id]));
   const brand = googleScopeData({ google }, "brand").google,
     nonbrand = googleScopeData({ google }, "nonbrand").google;
+  // Separate account/campaign requests are not one intraday transaction.
+  // Keep strict reconciliation on days before the snapshot's Amsterdam day.
+  const snapshotDay=google.coverage_to;
   assert(nonbrand.daily_campaigns.some((r) => r.name === "P | Generiek"));
   assert(
     brand.daily_campaigns.every((r) =>
@@ -19,6 +22,7 @@ test("campaign groups include full PMAX and reconcile to account totals", () => 
     ),
   );
   for (let i = 0; i < google.daily_google.length; i++)
+    if(google.daily_google[i].d<snapshotDay)
     for (const k of ["spend", "rev", "conv"])
       assert(
         Math.abs(

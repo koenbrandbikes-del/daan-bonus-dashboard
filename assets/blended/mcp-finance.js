@@ -6,13 +6,21 @@ function mcpRun(input) {
   for(const key of ['meta','google','shopify','creators']) {
     try {data[key]=validateSource(key,datasets[key]);}catch(e){warnings.push(`${key}: ${e.message}`);}
   }
+  if(data.google && Array.isArray(data.google.daily_campaigns)) {
+    const snapshotDay=String(data.google.coverage_to);
+    for(const row of data.google.daily_google){
+      const detail=data.google.daily_campaigns.filter(x=>x.d===row.d);
+      const mismatch=['spend','rev','conv'].some(key=>Math.abs(detail.reduce((n,x)=>n+x[key],0)-row[key])>.011);
+      if(mismatch){warnings.push(`Google ${row.d}: account- en campagnerapport sluiten niet aan; afzonderlijke meetmomenten. ${row.d<snapshotDay?'Afgeronde dag: winst blijft onbekend.':'Lopende dag: kanaalvergelijkingen zijn voorlopig.'}`);if(row.d<snapshotDay){delete data.google;break;}}
+    }
+  }
   try {data.returns=validateReturns(datasets.returns);}catch(e){warnings.push(`returns: ${e.message}`);}
   if(data.returns?.cost_basis!==JSON.stringify([costs.items,costs.assumed_vat,costs.payment_rate,costs.overhead_rate])) {
     delete data.returns;warnings.push('Retourbegroting ontbreekt of gebruikt andere kostentarieven.');
   }
   data.source_status=datasets.status;
   const sourceInfo=Object.fromEntries(Object.entries(datasets).map(([key,value])=>[key,{
-    synced_at:value.synced_at??null,snapshot:value.snap??null,snapshot_time:value.snap_time??null,
+    synced_at:value.synced_at??null,details_synced_at:value.details_synced_at??null,snapshot:value.snap??null,snapshot_time:value.snap_time??null,
     coverage_from:value.coverage_from??null,coverage_to:value.coverage_to??null,
     last_row:(value.daily_meta??value.daily_google??value.orders??value.daily??[]).map(x=>x.d).filter(Boolean).sort().at(-1)??null,
     private_import:versions[key]??null

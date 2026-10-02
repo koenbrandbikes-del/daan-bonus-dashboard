@@ -13,7 +13,9 @@ test("live campaign detail totals reconcile to daily account totals", () => {
     fs.readFileSync(new URL("../data/google.json", import.meta.url)),
   );
   assert(d.daily_campaigns.length);
+  const snapshotDay=d.coverage_to;
   for (const day of d.daily_google) {
+    if(day.d>=snapshotDay)continue; // Intraday requests can observe different moments.
     const rows = d.daily_campaigns.filter((r) => r.d === day.d);
     for (const k of ["spend", "rev", "conv"])
       assert.ok(
