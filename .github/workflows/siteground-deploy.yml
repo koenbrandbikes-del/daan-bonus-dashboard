@@ -28,6 +28,7 @@ jobs:
           sudo apt-get install -y php-cli php-sqlite3
           python -m pip install Pillow
           npm ci
+          npm ci --prefix cloudflare-worker
       - name: Test before publishing
         run: |
           npm test
