@@ -69,7 +69,9 @@ function mcpCompute(array $request,string $name):array {
 function mcpEngine():array {
  $code=defined('LW_CODE')?LW_CODE:LW_PRIVATE;
  $asset=file_get_contents($code.'/static/assets/blended/mcp-engine.js');
- if(!preg_match('/^\/\/ sha256:([a-f0-9]{64})\n([A-Za-z0-9+\/=\n]+)$/D',$asset,$m))throw new RuntimeException('Rekenmodule ontbreekt.');
+ $parts=explode("\n",$asset,2);
+ if(count($parts)!==2||!preg_match('/^\/\/ sha256:([a-f0-9]{64})$/D',$parts[0],$m))throw new RuntimeException('Rekenmodule ontbreekt.');
+ $m[2]=$parts[1];
  $runtime=LW_PRIVATE.'/mcp-engine-'.$m[1];
  if(!is_file($runtime)) {
   $bytes=base64_decode($m[2],true);if($bytes===false||hash('sha256',$bytes)!==$m[1])throw new RuntimeException('Rekenmodule onjuist.');
@@ -86,7 +88,7 @@ function mcpExecute(string $input):array {
  // Input must be fully written; financial inputs are never shell arguments.
  $offset=0;while($offset<strlen($input)){$n=fwrite($pipes[0],substr($input,$offset));if(!$n){proc_terminate($proc);throw new RuntimeException('Rekenmodule onderbroken.');}$offset+=$n;}fclose($pipes[0]);
  $output=stream_get_contents($pipes[1],8*1024*1024+1);$error=stream_get_contents($pipes[2],2048);fclose($pipes[1]);fclose($pipes[2]);$exit=proc_close($proc);
- if($exit!==0||strlen($output)>8*1024*1024)throw new RuntimeException('Berekening niet beschikbaar of ongeldige invoer. Controleer datums, kanalen en bronstatus.');
+ if($exit!==0||strlen($output)>8*1024*1024)throw new RuntimeException('Berekening niet beschikbaar of ongeldige invoer. Controleer datums, kanalen en bronstatus.', $exit);
  return json_decode($output,true,512,JSON_THROW_ON_ERROR);
 }
 function mcpReadiness():bool {
@@ -105,7 +107,7 @@ function mcpMachineRoutes():void {
  if(str_starts_with($route,'.well-known/')){
   if($method!=='GET')jsonResponse(['error'=>'method_not_allowed'],405);
   if($route==='.well-known/oauth-authorization-server')jsonResponse(['issuer'=>mcpIssuer(),'authorization_endpoint'=>mcpUrl('oauth/authorize'),'token_endpoint'=>mcpUrl('oauth/token'),'registration_endpoint'=>mcpUrl('oauth/register'),'revocation_endpoint'=>mcpUrl('oauth/revoke'),'response_types_supported'=>['code'],'grant_types_supported'=>['authorization_code','refresh_token'],'token_endpoint_auth_methods_supported'=>['none','client_secret_post','client_secret_basic'],'code_challenge_methods_supported'=>['S256'],'scopes_supported'=>['finance:read'],'authorization_response_iss_parameter_supported'=>true]);
-  try {$ready=mcpReadiness();}catch(Throwable){jsonResponse(['error'=>'temporarily_unavailable'],503);}
+  try {$ready=mcpReadiness();}catch(Throwable $e){jsonResponse(['error'=>'temporarily_unavailable','engine_code'=>$e->getCode()],503);}
   jsonResponse(['resource'=>mcpUrl(),'authorization_servers'=>[mcpIssuer()],'scopes_supported'=>['finance:read'],'bearer_methods_supported'=>['header'],'resource_name'=>'LumeWorks financiële gegevens','engine_ready'=>$ready]);
  }
  if($route==='oauth/register'){

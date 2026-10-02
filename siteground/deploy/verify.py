@@ -27,7 +27,7 @@ def verify(revision):
     code,headers,body=get('/mcp')
     assert code==401 and 'resource_metadata=' in headers.get('WWW-Authenticate',''),'MCP authentication challenge failed'
     code,headers,body=get('/.well-known/oauth-protected-resource/mcp')
-    assert code==200,'MCP metadata unavailable'
+    assert code==200,f'MCP metadata unavailable: HTTP {code}; response {body[:160]!r}'
     metadata=json.loads(body)
     assert metadata['resource']==origin+'/mcp' and metadata.get('engine_ready') is True,'MCP calculation engine failed'
     code,headers,body=get('/.well-known/oauth-authorization-server')
