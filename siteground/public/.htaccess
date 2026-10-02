@@ -1,0 +1,12 @@
+Options -Indexes -MultiViews
+DirectoryIndex index.php
+RewriteEngine On
+# Route *every* request, including existing files, through the allowlisted controller.
+RewriteRule ^index\.php$ - [L]
+RewriteRule ^ index.php [END,QSA]
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "same-origin"
+  Header always set Cache-Control "no-store, private"
+</IfModule>

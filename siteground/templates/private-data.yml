@@ -1,0 +1,33 @@
+# Install as a workflow ONLY after secrets + private storage + repository privacy are ready.
+name: Private creators sync
+on:
+  schedule:
+    - cron: '41 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: private-creators
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      LW_STORAGE_ORIGIN: ${{ vars.LW_STORAGE_ORIGIN }}
+      LW_STORAGE_SECRET: ${{ secrets.LW_STORAGE_SECRET }}
+      LW_SHEETS_SERVICE_ACCOUNT: ${{ secrets.LW_SHEETS_SERVICE_ACCOUNT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Capture private revision before reading the sheet
+        run: python siteground/scripts/upload_data.py --paths data/creators.json --capture /tmp/creators-revision.json
+      - name: Install authenticated producer dependencies
+        run: python -m pip install -r siteground/requirements-producers.txt
+      - name: Read and validate creators sheet
+        run: python siteground/scripts/sync_private_creators.py
+      - name: Upload protected data
+        run: python siteground/scripts/upload_data.py --paths data/creators.json --expected-revisions /tmp/creators-revision.json
+      # No public data commit, Pages artifact, or Pages deployment.

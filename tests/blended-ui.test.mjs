@@ -29,15 +29,16 @@ test('SVG selection respects the rendered coordinate transform and matches table
  w.close();
 });
 test('compact bottom status opens details and only pulses when all checks pass',async()=>{
- const now=new Date(),date=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Amsterdam',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
+ const fixtureMeta=JSON.parse(fs.readFileSync(new URL('data/meta.json',root),'utf8'));
+ const now=new Date(fixtureMeta.snap+'T11:10:00Z'),date=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Amsterdam',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
  const time=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Amsterdam',hour:'2-digit',minute:'2-digit'}).format(now);
  const w=await boot('?from=2026-09-24&to=2026-09-30','',(url,data)=>{
   if(url.includes('meta.json'))return{...data,snap:date,snap_time:time};
-  if(url.includes('google.json')||url.includes('creators.json'))return{...data,synced_at:now.toISOString()};
+  if(url.includes('google.json')||url.includes('creators.json')||url.includes('returns.json'))return{...data,synced_at:now.toISOString()};
   if(url.includes('status.json'))return Object.fromEntries(['meta','google','creators','shopify'].map(k=>[k,{status:'ok',last_success:now.toISOString()}]));
   return data;
- });
- const d=w.document,badge=d.querySelector('#statusBadge');assert(badge.classList.contains('is-healthy'));
+ },now);
+ const d=w.document,badge=d.querySelector('#statusBadge');assert(badge.classList.contains('is-healthy'),d.querySelector('#status').textContent);
  assert.equal(badge.querySelector('.live-dot.warning'),null);
  assert(d.querySelector('main').compareDocumentPosition(d.querySelector('#dashboardStatus')) & w.Node.DOCUMENT_POSITION_FOLLOWING);
  badge.click();assert.equal(d.querySelector('#status').hidden,false);assert.equal(badge.getAttribute('aria-expanded'),'true');
@@ -83,6 +84,7 @@ async function boot(
   query = "",
   failSource = "",
   transform = (url, data) => data,
+  fixedNow = null,
 ) {
   const dom = new JSDOM(
       fs.readFileSync(new URL("blended.html", root), "utf8"),
@@ -92,6 +94,7 @@ async function boot(
       },
     ),
     w = dom.window;
+  if(fixedNow){const NativeDate=w.Date;w.Date=class extends NativeDate{constructor(...args){super(...(args.length?args:[fixedNow.getTime()]));}static now(){return fixedNow.getTime();}};}
   w.fetch = async (url) => {
     if (url.includes(failSource) && failSource) throw Error("Unavailable");
     return {

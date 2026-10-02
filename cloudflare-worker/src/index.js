@@ -56,6 +56,8 @@ const BREAKDOWN_REFRESH_MIN_MS = 55 * 60 * 1000;
 const BREAKDOWN_POLL_MS = 2000;
 const BREAKDOWN_MAX_POLLS = 15; // 15 × 2s = 30s max wachttijd per dag, dan niet-fataal opgeven
 
+import { privateStorageEnabled, privateGet, privatePut } from "./private-storage.js";
+
 import { fetchGoogleData } from "./googleAds.js";
 
 import { handleMcpRequest, handleInternalMcpRequest } from "./mcp.js";
@@ -70,6 +72,7 @@ export {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if(["/mcp","/mcp-intern"].includes(url.pathname) && privateStorageEnabled(env)) return new Response("MCP access disabled after private migration",{status:403});
 
     if (request.method === "GET" && url.pathname === "/run-meta-sync") {
       if (!env.META_SYNC_TRIGGER_KEY || url.searchParams.get("key") !== env.META_SYNC_TRIGGER_KEY) {
@@ -127,7 +130,7 @@ export default {
     }
 
     try {
-      const result = await mergeOrderIntoRepo(order, env.GITHUB_TOKEN);
+      const result = await mergeOrderIntoRepo(order, env);
       return new Response(JSON.stringify(result), { status: 200, headers: { "content-type": "application/json" } });
     } catch (e) {
       console.error("merge mislukt:", e.message);
@@ -143,18 +146,18 @@ export default {
 
 export async function runGoogleSync(env) {
   try {
-    const file = await ghGetFile(env.GITHUB_TOKEN, "data/google.json");
+    const file = await ghGetFile(env, "data/google.json");
     const data = await fetchGoogleData(env.GOOGLE_ADS_SERVICE_ACCOUNT, file ? JSON.parse(file.content) : {});
     for (let attempt=1; attempt<=3; attempt++) {
-      const latest = attempt===1 ? file : await ghGetFile(env.GITHUB_TOKEN, "data/google.json");
+      const latest = attempt===1 ? file : await ghGetFile(env, "data/google.json");
       if (latest && JSON.parse(latest.content).synced_at > data.synced_at) return {ok:true,skipped:true};
-      const put=await ghPutFile(env.GITHUB_TOKEN,"data/google.json",JSON.stringify(data,null,1)+"\n",latest?.sha,`Google Ads sync ${data.coverage_to}`);
-      if(put.ok) { await updateStatus(env.GITHUB_TOKEN,"google",true,null); return {ok:true,days:data.daily_google.length}; }
+      const put=await ghPutFile(env,"data/google.json",JSON.stringify(data,null,1)+"\n",latest?.sha,`Google Ads sync ${data.coverage_to}`);
+      if(put.ok) { await updateStatus(env,"google",true,null); return {ok:true,days:data.daily_google.length}; }
       if(put.status!==409 || attempt===3) throw new Error(`Google data write HTTP ${put.status}`);
       await sleep(300*attempt);
     }
   } catch(e) {
-    await updateStatus(env.GITHUB_TOKEN,"google",false,e.message);
+    await updateStatus(env,"google",false,e.message);
     throw e;
   }
 }
@@ -249,7 +252,7 @@ async function runMetaSync(env) {
   let LOOKBACK_FROM = addDaysStr(TODAY, -(LOOKBACK_DAYS - 1));
   if (LOOKBACK_FROM < CLEAN_S) LOOKBACK_FROM = CLEAN_S;
 
-  const file = await ghGetFile(env.GITHUB_TOKEN, META_PATH);
+  const file = await ghGetFile(env, META_PATH);
   const existing = file ? JSON.parse(file.content) : { daily_meta: [], daily_ads: [] };
 
   const dailyMeta = new Map((existing.daily_meta || []).map((d) => [d.d, {
@@ -279,12 +282,12 @@ async function runMetaSync(env) {
 
   const errors = validateMeta(dailyMeta, dailyAds);
   if (errors.length) {
-    await updateStatus(env.GITHUB_TOKEN, "meta", false, errors.join("; "));
+    await updateStatus(env, "meta", false, errors.join("; "));
     throw new Error("validatie mislukt: " + errors.join("; "));
   }
   if (existingDayCount > 0 && dailyMeta.size < existingDayCount) {
     const msg = `nieuwe dataset (${dailyMeta.size} dagen) kleiner dan bestaande (${existingDayCount}) — niet overschreven`;
-    await updateStatus(env.GITHUB_TOKEN, "meta", false, msg);
+    await updateStatus(env, "meta", false, msg);
     throw new Error(msg);
   }
 
@@ -314,12 +317,12 @@ async function runMetaSync(env) {
   };
 
   const put = await ghPutFile(
-    env.GITHUB_TOKEN, META_PATH, JSON.stringify(metaOut, null, 1) + "\n",
+    env, META_PATH, JSON.stringify(metaOut, null, 1) + "\n",
     file ? file.sha : null, `Meta cron-sync ${TODAY} ${metaOut.snap_time}`
   );
   if (!put.ok) throw new Error(`PUT ${META_PATH} ${put.status}: ${put.text}`);
 
-  await updateStatus(env.GITHUB_TOKEN, "meta", true, null);
+  await updateStatus(env, "meta", true, null);
   return { ok: true, days: dailyMeta.size, snap: TODAY, snap_time: metaOut.snap_time, breakdown_refreshed: refreshBreakdown };
 }
 
@@ -589,7 +592,9 @@ async function ghRequest(path, token, init) {
   });
 }
 
-async function ghGetFile(token, path) {
+async function ghGetFile(env, path) {
+  if(privateStorageEnabled(env))return privateGet(env,path);
+  const token=env.GITHUB_TOKEN;
   const r = await ghRequest(`/repos/${REPO}/contents/${path}?ref=${BRANCH}`, token);
   if (!r.ok) {
     if (r.status === 404) return null;
@@ -611,7 +616,9 @@ async function ghGetFile(token, path) {
   return { content: decodeBase64(blobJson.content), sha: json.sha };
 }
 
-async function ghPutFile(token, path, content, sha, message) {
+async function ghPutFile(env, path, content, sha, message) {
+  if(privateStorageEnabled(env))return privatePut(env,path,content,sha);
+  const token=env.GITHUB_TOKEN;
   const body = { message, content: encodeBase64(content), branch: BRANCH };
   if (sha) body.sha = sha;
   const r = await ghRequest(`/repos/${REPO}/contents/${path}`, token, {

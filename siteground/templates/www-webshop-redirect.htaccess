@@ -1,0 +1,6 @@
+# Only for a dedicated www SiteGround document root after confirming apex remains Shopify.
+# Do not install in the Shopify store or blindly change DNS.
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !^/cijfers(?:/|$)
+RewriteRule ^ https://lumeworks.nl%{REQUEST_URI} [R=302,L,NE]
+# Preserve query strings automatically. Change 302 to 301 only after live verification.

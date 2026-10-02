@@ -23,7 +23,7 @@ await Promise.all([
  check('page-and-assets',async()=>{
   const text=async path=>{const r=await fetch(new URL(path,base),{signal:AbortSignal.timeout(8000),cache:'no-cache'});if(!r.ok)throw Error(path+': HTTP '+r.status);return r.text();};
   const html=await text('blended.html');
-  if(!html.includes('<title>LumeWorks • Financieel</title>')) throw Error('Onverwachte pagina');
+  if(!html.includes('<title>LumeWorks • Cijfers</title>')) throw Error('Onverwachte pagina');
   const paths=[...html.matchAll(/(?:src|href)="(assets\/[^" ]+)"/g)].map(m=>m[1]);
   if(!paths.length)throw Error('Pagina-assets ontbreken');
   await Promise.all(paths.map(async path=>{if(!(await text(path)).trim())throw Error('Leeg bestand: '+path);}));

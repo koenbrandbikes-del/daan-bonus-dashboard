@@ -1,0 +1,27 @@
+name: Cijfers security tests
+on:
+  push:
+    paths: ['siteground/**', 'cloudflare-worker/src/private-storage.js', '.github/workflows/cijfers-security.yml']
+  pull_request:
+    paths: ['siteground/**', 'cloudflare-worker/src/**', '.github/workflows/cijfers-security.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  php-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install build and PHP runtime dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y php-cli php-sqlite3
+          python -m pip install Pillow
+      - name: Test real login, revocation, protected files, HMAC and PWA
+        run: |
+          python siteground/tests/security.py
+          python siteground/tests/private_producers.py
