@@ -1,16 +1,16 @@
 {
  "snap": "2026-10-02",
- "snap_time": "01:45",
+ "snap_time": "02:00",
  "tb": {
   "vandaag": {
    "from": "2026-10-02",
    "to": "2026-10-02",
-   "spend": 7.93,
+   "spend": 8.33,
    "rev7": 0,
    "rev1v": 0,
    "purch": 0,
-   "impr": 683,
-   "cl": 10
+   "impr": 737,
+   "cl": 12
   },
   "gisteren": {
    "from": "2026-10-01",
@@ -25,12 +25,12 @@
   "week": {
    "from": "2026-09-28",
    "to": "2026-10-02",
-   "spend": 1720.75,
+   "spend": 1721.15,
    "rev7": 6145,
    "rev1v": 1166.5,
    "purch": 44,
-   "impr": 182987,
-   "cl": 3135
+   "impr": 183041,
+   "cl": 3137
   },
   "prevweek": {
    "from": "2026-09-21",
@@ -55,12 +55,12 @@
   "aug_clean": {
    "from": "2026-08-05",
    "to": "2026-10-02",
-   "spend": 22904.7,
+   "spend": 22905.1,
    "rev7": 62150.4,
    "rev1v": 6367.5,
    "purch": 430,
-   "impr": 2487695,
-   "cl": 55148
+   "impr": 2487749,
+   "cl": 55150
   }
  },
  "daily_meta": [
@@ -588,12 +588,12 @@
   },
   {
    "d": "2026-10-02",
-   "spend": 7.93,
+   "spend": 8.33,
    "rev7": 0,
    "rev1v": 0,
    "purch": 0,
-   "impr": 683,
-   "cl": 10
+   "impr": 737,
+   "cl": 12
   }
  ],
  "daily_ads": [
@@ -6198,7 +6198,7 @@
      "cpc": 0.63,
      "atc": 5,
      "impr": 10890,
-     "reach": 10054,
+     "reach": 10062,
      "linkCl": 132
     },
     {
@@ -6247,54 +6247,54 @@
    "ads": [
     {
      "n": "001_002",
-     "spend": 4.13,
+     "spend": 4.31,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 1.12,
-     "cpc": 1.03,
+     "ctr": 1.58,
+     "cpc": 0.72,
      "atc": 0,
-     "impr": 357,
-     "reach": 340,
+     "impr": 380,
+     "reach": 374,
      "linkCl": 3
     },
     {
      "n": "Cycle 2 - relaunch",
-     "spend": 2.83,
+     "spend": 2.91,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 0.44,
-     "cpc": 2.83,
+     "ctr": 0.41,
+     "cpc": 2.91,
      "atc": 0,
-     "impr": 229,
-     "reach": 213,
+     "impr": 241,
+     "reach": 231,
      "linkCl": 1
     },
     {
      "n": "Cycle 6",
-     "spend": 0.88,
+     "spend": 1,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
-     "ctr": 5.43,
-     "cpc": 0.18,
+     "ctr": 4.55,
+     "cpc": 0.2,
      "atc": 0,
-     "impr": 92,
-     "reach": 63,
+     "impr": 110,
+     "reach": 101,
      "linkCl": 4
     },
     {
      "n": "007 BOF statics - 6",
-     "spend": 0.09,
+     "spend": 0.11,
      "rev7": 0,
      "rev1v": 0,
      "purch": 0,
      "ctr": 0,
      "cpc": 0,
      "atc": 0,
-     "impr": 5,
-     "reach": 4,
+     "impr": 6,
+     "reach": 6,
      "linkCl": 0
     }
    ]
