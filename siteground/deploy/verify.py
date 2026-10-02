@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-import sys,time,urllib.request,urllib.error
+import sys,time,subprocess,tempfile,pathlib,email
 origin='https://cijfers.lumeworks.nl'
 def get(path):
-    try:
-        with urllib.request.urlopen(origin+path,timeout=30) as r:return r.status,r.headers,r.read()
-    except urllib.error.HTTPError as e:return e.code,e.headers,e.read()
+    # Use the standard curl HTTPS client; SiteGround rejects urllib requests.
+    # Certificate/hostname validation remains enabled, without cookies or credentials.
+    with tempfile.TemporaryDirectory() as work:
+        headers=pathlib.Path(work)/'headers';body=pathlib.Path(work)/'body'
+        result=subprocess.run(['curl','--silent','--show-error','--location','--max-redirs','3','--connect-timeout','15','--max-time','30','--dump-header',str(headers),'--output',str(body),'--write-out','%{http_code}',origin+path],check=True,capture_output=True,text=True)
+        blocks=headers.read_text().strip().split('\n\n');last=blocks[-1].split('\n',1)[1]
+        return int(result.stdout),email.message_from_string(last),body.read_bytes()
 def verify(revision):
     # Give the newly activated code a short, bounded interval to become visible.
     # Never accept an old revision, an error page or an unprotected data route.
