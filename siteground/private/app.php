@@ -196,8 +196,8 @@ if($method==='POST' && in_array($route,['logout','logout-all','password'],true))
     if($route==='password') {
         $current=is_string($_POST['current']??null)?$_POST['current']:'';
         $password=is_string($_POST['new']??null)?$_POST['new']:'';
-        if(strlen($password)<16 || strlen($password)>128 || !password_verify($current,$user['password'])) {
-            http_response_code(422);$accountError='Gebruik je huidige wachtwoord en een nieuw wachtwoord van 16–128 tekens.';
+        if(strlen($password)<12 || strlen($password)>128 || !password_verify($current,$user['password'])) {
+            http_response_code(422);$accountError='Gebruik je huidige wachtwoord en een nieuw wachtwoord van 12–128 tekens.';
             require LW_PRIVATE.'/account.php';exit;
         }
         $hash=password_hash($password,PASSWORD_ARGON2ID,['memory_cost'=>65536,'time_cost'=>3,'threads'=>1]);

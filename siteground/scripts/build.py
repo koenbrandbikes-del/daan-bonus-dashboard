@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Build a private, relocatable SiteGround deployment. Never put output in git/public_html."""
-import argparse, hashlib, json, os, pathlib, secrets, shutil, sqlite3, subprocess
+import argparse, hashlib, json, os, pathlib, secrets, string, shutil, sqlite3, subprocess
 ROOT=pathlib.Path(__file__).resolve().parents[2]
 SOURCE=ROOT/'siteground'
 DATA_PATHS=['data/meta.json','data/google.json','data/shopify.json','data/creators.json','data/returns.json','data/status.json','assets/blended/costs.json']
@@ -25,8 +25,8 @@ def build(output,credentials,php,origin,base,data_root=None):
     icon=Image.open(ROOT/'assets/blended/apple-touch-finance.png').convert('RGBA')
     for size in [192,512]:icon.resize((size,size),Image.Resampling.LANCZOS).save(static/f'app-icon-{size}.png')
     html=(ROOT/'blended.html').read_text().replace('<html lang="nl">','<html lang="nl" data-secured="true" class="session-hidden">')
-    html=html.replace('LumeWorks • Financieel','LumeWorks • Cijfers').replace('href="blended.html"','href="__BASE__/"')
-    html=html.replace('</head>','<link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Cijfers"><link rel="stylesheet" href="assets/blended/account.css"><script defer src="device.js"></script></head>')
+    html=html.replace('<title>LumeWorks • Financieel</title>','<title>LumeWorks</title>').replace('<title>LumeWorks • Cijfers</title>','<title>LumeWorks</title>').replace('href="blended.html"','href="__BASE__/"')
+    html=html.replace('</head>','<link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="LumeWorks"><link rel="stylesheet" href="assets/blended/account.css"><script defer src="device.js"></script></head>')
     html=html.replace('<div class="controls">','<a class="account-link" href="__BASE__/account" aria-label="Je account">__USER__ <span aria-hidden="true">⌄</span></a><div class="controls">')
     html=html.replace('<main id="content"','<div id="sessionRetry" class="panel" hidden><p>Verbinding controleren. Je cijfers worden afgeschermd tot je sessie is bevestigd.</p><button>Opnieuw proberen</button></div><main id="content"')
     html=html.replace('</footer>','<details class="app-help"><summary>Cijfers als app bewaren</summary><p>iPhone: Safari → Delen → Zet op beginscherm. Android: browsermenu → App installeren. Laptop: installeren in Chrome/Edge of toevoegen aan Dock in Safari.</p><button id="installApp" hidden>App installeren</button></details></footer>')
@@ -50,7 +50,13 @@ def build(output,credentials,php,origin,base,data_root=None):
     if credentials:
         creds=json.loads(pathlib.Path(credentials).read_text())
     else:
-        creds={name:secrets.token_urlsafe(21) for name in ['koen','floris','pim','bas']}
+        alphabet=string.ascii_letters+string.digits
+        creds={}
+        for name in ['koen','floris','pim','bas']:
+            while True:
+                password=''.join(secrets.choice(alphabet) for _ in range(12))
+                if any(c.isupper() for c in password) and any(c.islower() for c in password) and any(c.isdigit() for c in password):
+                    creds[name]=password;break
     if set(creds)!=set(['koen','floris','pim','bas']):raise SystemExit('Exactly four named accounts required.')
     php_code='$a=json_decode(stream_get_contents(STDIN),true);$o=[];foreach($a as $k=>$v){$o[$k]=password_hash($v,PASSWORD_ARGON2ID,["memory_cost"=>65536,"time_cost"=>3,"threads"=>1]);}echo json_encode($o);'
     hashes=json.loads(subprocess.check_output([php,'-r',php_code],input=json.dumps({**creds,'dummy':secrets.token_urlsafe(32)}).encode()))

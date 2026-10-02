@@ -1,6 +1,6 @@
-# LumeWorks • Cijfers — SiteGround voorbereiding
+# LumeWorks — SiteGround voorbereiding
 
-Doel: https://www.lumeworks.nl/cijfers/ . Vier gelijkwaardige accounts: koen, floris, pim, bas.
+Doel: https://www.lumeworks.nl/cijfers/ . Vier gelijkwaardige accounts: koen, floris, pim, bas. Willekeurige startwachtwoorden van 12 letters/cijfers. Tab- en appnaam: LumeWorks.
 Deze release is een voorbereid installatiepakket; de huidige GitHub Pages-site wordt hiermee niet automatisch beveiligd.
 
 ## Indeling en vereisten

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Real HTTP integration against PHP + SQLite; no mocked authentication."""
 import hashlib,hmac,http.client,json,os,pathlib,re,secrets,shutil,socket,sqlite3,subprocess,tempfile,time,unittest,urllib.parse
-ROOT=pathlib.Path(__file__).resolve().parents[2];PHP=os.getenv('LW_PHP_BIN','php');BASE='/cijfers';PASSWORD='Testing-only-random-32-chars!_'
+ROOT=pathlib.Path(__file__).resolve().parents[2];PHP=os.getenv('LW_PHP_BIN','php');BASE='/cijfers';PASSWORD='Test7xQ9mK2z'
 class Client:
     def __init__(self,port):self.port=port;self.cookies={}
     def request(self,path='',method='GET',body=None,headers=None):
@@ -49,7 +49,7 @@ class Security(unittest.TestCase):
             with self.subTest(path=path):
                 r=self.c.request(path);self.assertIn(r[0],[401,404]);self.assertNotIn('daily_meta',r[1]);self.assertNotIn(self.secret,r[1])
     def test_02_login_visuals_public(self):
-        r=self.c.request('login');self.assertEqual(r[0],200);self.assertIn('LumeWorks • Cijfers',r[1]);self.assertIn('autocomplete="current-password"',r[1]);self.assertNotIn('daily_meta',r[1])
+        r=self.c.request('login');self.assertEqual(r[0],200);self.assertIn('<title>LumeWorks</title>',r[1]);self.assertIn('autocomplete="current-password"',r[1]);self.assertNotIn('daily_meta',r[1])
         for p in ['login.css','login.js','device.js','manifest.webmanifest','app-icon-192.png','assets/blended/lumeworks-logo.svg']:
             # PNG is binary: check separately to avoid UTF8 decoding.
             if p.endswith('.png'):continue
@@ -87,7 +87,7 @@ class Security(unittest.TestCase):
         with sqlite3.connect(self.private/'state.sqlite') as db:db.execute('UPDATE devices SET expires=0 WHERE selector=?',(selector,))
         self.assertEqual(self.c.request('api/session')[0],401)
     def test_15_password_change_revokes_all(self):
-        self.c.login('floris');other=Client(self.port);other.login('floris');csrf=self.c.csrf('account');new=secrets.token_urlsafe(24)
+        self.c.login('floris');other=Client(self.port);other.login('floris');csrf=self.c.csrf('account');new='New8kL4rT6sQ'
         self.assertEqual(self.c.request('password','POST',{'csrf':csrf,'current':PASSWORD,'new':new})[0],303)
         self.assertEqual(other.request('api/session')[0],401);self.assertEqual(self.c.login('floris',password=PASSWORD)[0],401);self.assertEqual(self.c.login('floris',password=new)[0],303)
         # Restore fixture without exposing hashes/passwords in logs.
