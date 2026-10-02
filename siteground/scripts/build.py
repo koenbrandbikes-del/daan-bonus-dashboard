@@ -5,7 +5,7 @@ ROOT=pathlib.Path(__file__).resolve().parents[2]
 SOURCE=ROOT/'siteground'
 DATA_PATHS=['data/meta.json','data/google.json','data/shopify.json','data/creators.json','data/returns.json','data/status.json','assets/blended/costs.json']
 
-def build(output,credentials,php,origin,base,data_root=None):
+def build(output,credentials,php,origin,base,data_root=None,code_only=False):
     output=pathlib.Path(output).resolve()
     if output.exists(): raise SystemExit('Output already exists; use a new release directory.')
     output.mkdir(parents=True,mode=0o700)
@@ -47,6 +47,8 @@ def build(output,credentials,php,origin,base,data_root=None):
     app=app.replace('  }\n}\n', '  }\n}\n')
     app+='\ndocument.addEventListener("click",e=>{if(e.target.closest("#retryLoad"))location.reload();});\n'
     (static/'assets/blended/app.js').write_text(app)
+    if code_only:
+        return
     if credentials:
         creds=json.loads(pathlib.Path(credentials).read_text())
     else:
@@ -78,5 +80,5 @@ def build(output,credentials,php,origin,base,data_root=None):
     print('Built release with four hashed accounts, private datasets and protected app.')
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--output',required=True);p.add_argument('--credentials');p.add_argument('--php',default='php');p.add_argument('--origin',default='https://www.lumeworks.nl');p.add_argument('--base',default='/cijfers');p.add_argument('--data-root');a=p.parse_args()
-    build(a.output,a.credentials,a.php,a.origin,a.base,a.data_root)
+    p=argparse.ArgumentParser();p.add_argument('--output',required=True);p.add_argument('--credentials');p.add_argument('--php',default='php');p.add_argument('--origin',default='https://www.lumeworks.nl');p.add_argument('--base',default='/cijfers');p.add_argument('--data-root');p.add_argument('--code-only',action='store_true');a=p.parse_args()
+    build(a.output,a.credentials,a.php,a.origin,a.base,a.data_root,a.code_only)

@@ -26,6 +26,15 @@ class Security(unittest.TestCase):
     def setUpClass(cls):
         cls.tmp=tempfile.TemporaryDirectory();cls.dir=pathlib.Path(cls.tmp.name);cls.release=cls.dir/'release';credentials=cls.dir/'credentials.json';credentials.write_text(json.dumps({n:PASSWORD for n in ['koen','floris','pim','bas']}))
         subprocess.run(['python',str(ROOT/'siteground/scripts/build.py'),'--output',str(cls.release),'--php',PHP,'--credentials',str(credentials),'--base',BASE],check=True,stdout=subprocess.DEVNULL)
+        if os.getenv('LW_TEST_RELEASE')=='1':
+            import base64,sys
+            sys.path.insert(0,str(ROOT/'siteground/deploy'))
+            from bundle import bundle
+            private=cls.release/'lumeworks-private'; revision='a'*40; code=private/'releases'/revision
+            for name,item in bundle(revision)['files'].items():
+                target=code/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(base64.b64decode(item['data']))
+            (private/'current-release.txt').write_text(revision)
+            (private/'app.php').write_bytes((ROOT/'siteground/deploy/entry.php').read_bytes())
         cls.private=cls.release/'lumeworks-private';cls.config=json.loads((cls.private/'config.json').read_text());cls.secret=cls.config['sync_secret']
         sock=socket.socket();sock.bind(('127.0.0.1',0));cls.port=sock.getsockname()[1];sock.close()
         router=cls.dir/'router.php';router.write_text('<?php if(isset($_SERVER["HTTP_X_TEST_TLS"])) {$_SERVER["HTTPS"]="on";$_SERVER["REMOTE_ADDR"]="192.0.2.1";} require '+repr(str(cls.release/'public/index.php'))+';')

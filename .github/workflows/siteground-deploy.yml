@@ -1,0 +1,67 @@
+name: Publish private LumeWorks dashboard
+on:
+  push:
+    branches: [main]
+    paths: ['siteground/**', 'assets/blended/**', 'assets/product-costs.js', 'blended.html', 'tests/**', 'package*.json', '.github/workflows/siteground-deploy.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lumeworks-siteground-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y php-cli php-sqlite3
+          python -m pip install Pillow
+          npm ci
+      - name: Test before publishing
+        run: |
+          npm test
+          node --test siteground/tests/login.test.mjs
+          python siteground/tests/security.py
+          LW_TEST_BASE='' LW_TEST_RELEASE=1 python siteground/tests/security.py
+          python siteground/tests/private_producers.py
+          python siteground/tests/deploy.py
+      - name: Prepare code-only release
+        run: python siteground/deploy/bundle.py "$GITHUB_SHA" > /tmp/lumeworks-release.json
+      - name: Publish and verify; restore on failed verification
+        env:
+          LW_DEPLOY_KEY: ${{ secrets.LW_DEPLOY_KEY }}
+          LW_DEPLOY_KNOWN_HOSTS: ${{ secrets.LW_DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          if [ -z "$LW_DEPLOY_KEY" ] || [ -z "$LW_DEPLOY_KNOWN_HOSTS" ]; then
+            echo 'Deployment is not activated. Run the one-time Mac setup.'
+            exit 1
+          fi
+          umask 077
+          mkdir -p /tmp/lumeworks-ssh
+          printf '%s\n' "$LW_DEPLOY_KEY" > /tmp/lumeworks-ssh/key
+          printf '%s\n' "$LW_DEPLOY_KNOWN_HOSTS" > /tmp/lumeworks-ssh/known_hosts
+          chmod 600 /tmp/lumeworks-ssh/*
+          unset LW_DEPLOY_KEY LW_DEPLOY_KNOWN_HOSTS
+          ssh_args=(-i /tmp/lumeworks-ssh/key -p 18765 -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/tmp/lumeworks-ssh/known_hosts -o ConnectTimeout=20)
+          target=u1734-7dodpdhgoz4q@it6.siteground.eu
+          cleanup() { rm -f /tmp/lumeworks-ssh/key /tmp/lumeworks-ssh/known_hosts; }
+          trap cleanup EXIT
+          ssh "${ssh_args[@]}" "$target" < /tmp/lumeworks-release.json
+          if ! python siteground/deploy/verify.py "$GITHUB_SHA"; then
+            printf '{"action":"rollback","revision":"%s"}' "$GITHUB_SHA" | ssh "${ssh_args[@]}" "$target"
+            echo 'Live verification failed; previous code restored.'
+            exit 1
+          fi
+          echo "Verified private dashboard release $GITHUB_SHA"

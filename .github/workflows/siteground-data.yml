@@ -1,0 +1,27 @@
+name: Sync private LumeWorks data
+on:
+  push:
+    branches: [main]
+    paths: ['data/*.json', 'assets/blended/costs.json', '.github/workflows/siteground-data.yml', 'siteground/deploy/data_bundle.py', 'siteground/deploy/sync-data.sh']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lumeworks-siteground-production
+  cancel-in-progress: false
+jobs:
+  data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Upload validated data with revision checks and private backup
+        env:
+          LW_DEPLOY_KEY: ${{ secrets.LW_DEPLOY_KEY }}
+          LW_DEPLOY_KNOWN_HOSTS: ${{ secrets.LW_DEPLOY_KNOWN_HOSTS }}
+        run: GITHUB_SHA="$(git rev-parse HEAD)" bash siteground/deploy/sync-data.sh
