@@ -1016,8 +1016,8 @@
   {
    "d": "2026-10-02",
    "spend": 12.97,
-   "rev": 343.37,
-   "conv": 2,
+   "rev": 469.07,
+   "conv": 3,
    "id": "23981332205",
    "name": "C | Corporate",
    "type": "SEARCH"
@@ -2699,8 +2699,8 @@
   {
    "d": "2026-10-02",
    "spend": 73.178095,
-   "rev": 0,
-   "conv": 0,
+   "rev": 169,
+   "conv": 1,
    "id": "23985056312",
    "name": "P | Generiek",
    "type": "PERFORMANCE_MAX"
@@ -4082,15 +4082,15 @@
   {
    "d": "2026-10-02",
    "spend": 0,
-   "rev": 295.04,
-   "conv": 2,
+   "rev": 420.74,
+   "conv": 3,
    "name": "GTM - Aankoop"
   },
   {
    "d": "2026-10-02",
    "spend": 0,
-   "rev": 357,
-   "conv": 2,
+   "rev": 526,
+   "conv": 3,
    "name": "ORDER (TrackBee)"
   }
  ],
@@ -4904,8 +4904,8 @@
    "d": "2026-10-02",
    "intent": "brand",
    "spend": 11.69,
-   "rev": 343.37,
-   "conv": 2
+   "rev": 469.07,
+   "conv": 3
   },
   {
    "d": "2026-10-02",
@@ -4978,12 +4978,12 @@
    "conv": 0
   }
  ],
- "details_synced_at": "2026-10-02T22:07:30.135Z",
+ "details_synced_at": "2026-10-02T22:22:30.076Z",
  "source": "google_ads_api",
  "customer_id": "7645288282",
  "currency": "EUR",
  "time_zone": "Europe/Amsterdam",
- "synced_at": "2026-10-02T22:07:30.135Z",
+ "synced_at": "2026-10-02T22:22:30.076Z",
  "coverage_from": "2026-08-01",
  "coverage_to": "2026-10-03",
  "attribution": "Primary conversions and conversion value by ad interaction date; may include non-purchase goals and overlap with other channels.",
@@ -5487,9 +5487,9 @@
   {
    "d": "2026-10-02",
    "spend": 101.158095,
-   "conv": 4,
-   "rev": 652.04,
-   "impr": 9355,
+   "conv": 6,
+   "rev": 946.74,
+   "impr": 9418,
    "cl": 138
   },
   {
@@ -5497,7 +5497,7 @@
    "spend": 0,
    "conv": 0,
    "rev": 0,
-   "impr": 0,
+   "impr": 27,
    "cl": 0
   }
  ],
@@ -5508,7 +5508,7 @@
   "spend": 0,
   "conv": 0,
   "rev": 0,
-  "impr": 0,
+  "impr": 27,
   "cl": 0
  },
  "gisteren": {
@@ -5516,9 +5516,9 @@
   "to": "2026-10-02",
   "d": "2026-10-02",
   "spend": 101.158095,
-  "conv": 4,
-  "rev": 652.04,
-  "impr": 9355,
+  "conv": 6,
+  "rev": 946.74,
+  "impr": 9418,
   "cl": 138
  }
 }
