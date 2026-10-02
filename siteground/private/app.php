@@ -100,6 +100,7 @@ if (str_starts_with($route,'api/storage/')) {
 }
 
 // __MCP_IMPLEMENTATION__
+// __META_REVIEW_IMPLEMENTATION__
 mcpMachineRoutes();
 // Only the login visuals and app metadata are public. Everything else needs a session.
 $publicFiles=['login.css'=>'text/css','login.js'=>'text/javascript','device.js'=>'text/javascript','sw.js'=>'text/javascript','manifest.webmanifest'=>'application/manifest+json','assets/blended/lumeworks-logo.svg'=>'image/svg+xml','assets/blended/favicon-finance.svg'=>'image/svg+xml','assets/blended/favicon-finance.png'=>'image/png','assets/blended/apple-touch-finance.png'=>'image/png','app-icon-192.png'=>'image/png','app-icon-512.png'=>'image/png'];
@@ -133,9 +134,11 @@ function revokeDevice(): void {
 function signIn(array $user,bool $remember): void {
     global $db;
     $oauthRequest=$_SESSION['oauth_request']??null;
+    $returnTo=$_SESSION['return_to']??null;
     revokeDevice();session_regenerate_id(true);
     $_SESSION=['user'=>$user['name'],'version'=>$user['version'],'issued'=>time(),'last'=>time(),'csrf'=>bin2hex(random_bytes(32))];
     if($oauthRequest)$_SESSION['oauth_request']=$oauthRequest;
+    if(in_array($returnTo,['meta-test','daan-test'],true))$_SESSION['return_to']=$returnTo;
     if($remember) {
         $selector=bin2hex(random_bytes(16));$validator=bin2hex(random_bytes(32));$expires=time()+30*86400;
         $q=$db->prepare('INSERT INTO devices VALUES(?,?,?,?,?)');$q->execute([$selector,hash('sha256',$validator),$user['name'],$expires,time()]);
@@ -179,7 +182,7 @@ if($route==='login' && $method==='POST') {
         $ok=strlen($password)<=1024 && password_verify($password,$hash);
         if($candidate && $ok) {
             $q=$db->prepare('DELETE FROM attempts WHERE kind="user" AND key=?');$q->execute([$name]);
-            signIn($candidate,isset($_POST['remember']));redirect(isset($_SESSION['oauth_request'])?'oauth/authorize':'');
+            signIn($candidate,isset($_POST['remember']));$target=isset($_SESSION['oauth_request'])?'oauth/authorize':($_SESSION['return_to']??'');unset($_SESSION['return_to']);redirect($target);
         }
         $q=$db->prepare('INSERT INTO attempts VALUES(?,?,?)');$q->execute(['ip',$ip,time()]);$q->execute(['user',$name,time()]);
         http_response_code(401);$error='Gebruikersnaam of wachtwoord klopt niet.';
@@ -192,6 +195,7 @@ if($route==='login') {
 }
 oauthConsent();
 if(!$user) {
+    if(in_array($route,['meta-test','daan-test'],true)){$_SESSION['return_to']=$route;redirect('login');}
     if(str_starts_with($route,'data/') || str_starts_with($route,'api/') || str_ends_with($route,'.json'))jsonResponse(['error'=>'Login required'],401);
     if($route==='' || $route==='blended.html') redirect('login');
     http_response_code(401);exit('Log in om Cijfers te openen.');
@@ -215,6 +219,7 @@ if($method==='POST' && in_array($route,['logout','logout-all','password'],true))
     revokeDevice();$_SESSION=[];session_destroy();cookie('LWCSSESSION','',time()-3600);redirect('login');
 }
 if(!in_array($method,['GET','HEAD'],true)){http_response_code(405);exit;}
+if(in_array($route,['meta-test','daan-test'],true))metaReviewPage($route);
 if($route==='account') {require LW_PRIVATE.'/account.php';exit;}
 if($route==='api/session')jsonResponse(['user'=>$user['name']]);
 if(in_array($route,$dataPaths,true)) {

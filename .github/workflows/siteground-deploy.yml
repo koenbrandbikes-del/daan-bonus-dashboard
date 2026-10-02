@@ -36,6 +36,7 @@ jobs:
           python siteground/tests/security.py
           LW_TEST_BASE='' LW_TEST_RELEASE=1 python siteground/tests/security.py
           LW_TEST_BASE='' LW_TEST_RELEASE=1 python siteground/tests/mcp.py
+          LW_TEST_BASE='' LW_TEST_RELEASE=1 python siteground/tests/meta_review.py
           python siteground/tests/private_producers.py
           python siteground/tests/deploy.py
           python siteground/tests/verify.py

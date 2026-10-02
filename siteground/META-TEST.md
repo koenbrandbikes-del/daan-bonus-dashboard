@@ -1,0 +1,11 @@
+# Beveiligde Meta/Daan testomgeving
+
+Nieuwe routes: `/meta-test` en `/daan-test`. Bestaande publieke dashboards, kostenregister en bonusafspraak worden niet gewijzigd. Toegang verloopt via de vier bestaande accounts, dezelfde sessies, apparaatcookies en uitlogbeveiliging. Financiële datasets en modules zijn voor anonieme bezoekers afgesloten en worden niet in browseropslag bewaard.
+
+Het testmodel toont huidige afspraak naast een scenario. Standaard blijft de vaste vergoeding €1500 per maand, verdeeld over kalenderdagen. €500 en €2000 zijn uitsluitend niet-opgeslagen scenario's. De bestaande bonusfactor en 30-daagse contractblokken blijven gelijk. Het scenario trekt eerst werkelijke en begrote retourlast en de vaste vergoeding af; verliesdagen tellen negatief mee. Alleen op het volledige contractblok wordt de bonus op minimaal nul begrensd. Open blokken en late retourcorrecties blijven voorlopig. Dit verandert geen betaling of overeenkomst.
+
+Influencerretouren volgen rechtstreeks de influencerdata. Overige retourcorrecties kunnen naar kanaalomzet of de bestaande orderverdeling worden toegerekend. Omzetaandelen met overlappende Meta/Google-attributie worden genormaliseerd. Ontbrekende retourdata geeft onbekende winst, nooit een schijnbaar gunstige nul. BEROAS inclusief vaste vergoeding/bonus is indicatief bij dezelfde productmix en proportionele retourlast. ROAS gebruikt de brondefinitie inclusief btw; financiële opbrengsten en winst zijn exclusief btw en worden zo gelabeld.
+
+Tests: `node --test tests/meta-review.test.mjs` en `LW_TEST_BASE='' LW_TEST_RELEASE=1 python siteground/tests/meta_review.py`. Publicatie gaat via de bestaande code-only releaseprocedure, met behoud van accounts, database en vorige release. De automatische terugzetting blijft actief bij mislukte controles op login, gegevensafscherming of rekenruntime.
+
+MCP: standaard OAuth-discovery kan door SiteGround worden onderschept. De publicatiecontrole rapporteert dat apart als `MCP_CHATGPT_NOT_READY`. Een bereikbare testomgeving betekent dus niet dat de ChatGPT-verbinding is voltooid. Geen OpenID-provider of ID-tokens worden voorgewend om deze hostingbeperking te omzeilen.
