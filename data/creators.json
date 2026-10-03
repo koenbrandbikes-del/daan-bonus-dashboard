@@ -1,5 +1,5 @@
 {
- "synced_at": "2026-10-03T02:19:36Z",
+ "synced_at": "2026-10-03T08:33:46Z",
  "source": "Creators Google Sheet · tab 'Sales' (ieder uur gesynchroniseerd)",
  "sync_interval_minutes": 60,
  "collaborations": {
@@ -7,7 +7,7 @@
   "with_orders": 20,
   "without_orders": 21,
   "basis": "Instellingen + volledige Sales-tab; bestellingen via kortingscode, inclusief eventuele retouren",
-  "through": "2026-09-30"
+  "through": "2026-10-02"
  },
  "startup_costs": {
   "source": "Extra kosten influencers",
@@ -479,12 +479,12 @@
   ]
  },
  "totals": {
-  "orders": 89,
+  "orders": 90,
   "retouren": 0,
-  "omzet_excl": 10355.74,
-  "commissie": 1114.34,
+  "omzet_excl": 10481.44,
+  "commissie": 1126.91,
   "betaald": 53.64,
-  "openstaand": 1060.7
+  "openstaand": 1073.27
  },
  "creators": [
   {
@@ -551,16 +551,16 @@
    "openstaand": 56.82
   },
   {
-   "creator": "Roxanne",
-   "orders": 3,
+   "creator": "Marianne",
+   "orders": 4,
    "retouren": 0,
-   "omzet_excl": 346.62,
-   "commissie": 34.66,
+   "omzet_excl": 472.32,
+   "commissie": 47.23,
    "betaald": 0.0,
-   "openstaand": 34.66
+   "openstaand": 47.23
   },
   {
-   "creator": "Marianne",
+   "creator": "Roxanne",
    "orders": 3,
    "retouren": 0,
    "omzet_excl": 346.62,
@@ -1823,6 +1823,19 @@
    "omzet_excl": 110.83,
    "commissie_pct": 15.0,
    "commissie": 16.62,
+   "status": "Openstaand",
+   "retour": false
+  },
+  {
+   "d": "2026-10-02",
+   "creator": "Marianne",
+   "code": "mary10",
+   "num": "#1665",
+   "product": "LumeWorks Prime",
+   "herkomst": "Google",
+   "omzet_excl": 125.7,
+   "commissie_pct": 10.0,
+   "commissie": 12.57,
    "status": "Openstaand",
    "retour": false
   }
