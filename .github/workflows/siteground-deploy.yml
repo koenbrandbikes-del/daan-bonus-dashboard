@@ -32,6 +32,8 @@ jobs:
       - name: Test before publishing
         run: |
           npm test
+          node --test siteground/tests/original_meta.test.mjs
+          LW_TEST_BASE='' LW_TEST_RELEASE=1 python siteground/tests/original_meta.py
           node --test siteground/tests/login.test.mjs
           python siteground/tests/security.py
           LW_TEST_BASE='' LW_TEST_RELEASE=1 python siteground/tests/security.py

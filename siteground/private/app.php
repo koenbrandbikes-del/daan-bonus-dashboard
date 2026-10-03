@@ -4,6 +4,8 @@ declare(strict_types=1);
 $cfg = json_decode(file_get_contents(LW_PRIVATE.'/config.json'), true, 32, JSON_THROW_ON_ERROR);
 $base = rtrim($cfg['base_path'], '/');
 $origin = rtrim($cfg['origin'], '/');
+$originalMeta = defined('LW_ORIGINAL_META') && LW_ORIGINAL_META === true;
+if($originalMeta){$base='';$origin='https://meta.lumeworks.nl';}
 $dev = PHP_SAPI === 'cli-server' && getenv('LW_TEST_HTTP') === '1' && in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1','::1'], true);
 $https = ($_SERVER['HTTPS'] ?? '') === 'on';
 if (!$dev && !$https) { http_response_code(400); exit('HTTPS is vereist.'); }
@@ -19,7 +21,8 @@ header('Referrer-Policy: same-origin');
 header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
 if (!$dev) header('Strict-Transport-Security: max-age=31536000');
 $cspNonce = base64_encode(random_bytes(18));
-header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-$cspNonce'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'");
+$connections=$originalMeta ? "'self' https://script.google.com https://script.googleusercontent.com" : "'self'";
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-$cspNonce'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src $connections; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'");
 
 $db = new PDO('sqlite:'.LW_PRIVATE.'/state.sqlite', null, null, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
 $db->exec('PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;');
@@ -219,7 +222,7 @@ if($method==='POST' && in_array($route,['logout','logout-all','password'],true))
     revokeDevice();$_SESSION=[];session_destroy();cookie('LWCSSESSION','',time()-3600);redirect('login');
 }
 if(!in_array($method,['GET','HEAD'],true)){http_response_code(405);exit;}
-if(in_array($route,['meta-test','daan-test'],true))metaReviewPage($route);
+if(in_array($route,['meta-test','daan-test'],true)){if($originalMeta){http_response_code(404);exit;}metaReviewPage($route);}
 if($route==='account') {require LW_PRIVATE.'/account.php';exit;}
 if($route==='api/session')jsonResponse(['user'=>$user['name']]);
 if(in_array($route,$dataPaths,true)) {
@@ -228,6 +231,7 @@ if(in_array($route,$dataPaths,true)) {
     header('Content-Type: application/json; charset=utf-8');session_write_close();if($method!=='HEAD')echo $record['content'];exit;
 }
 if($route==='' || $route==='blended.html') {
+    if($originalMeta)originalMetaDashboard();
     header('Content-Type: text/html; charset=utf-8');
     $html=file_get_contents(LW_PRIVATE.'/dashboard.html');
     $html=str_replace(['__USER__','__BASE__'],[h(ucfirst($user['name'])),$base],$html);
@@ -239,3 +243,5 @@ if(preg_match('#^assets/(?:blended/[a-zA-Z0-9_/-]+|product-costs)\.(js|css|svg|p
     session_write_close();if($method!=='HEAD')readfile(LW_PRIVATE.'/static/'.$route);exit;
 }
 http_response_code(404);echo 'Niet gevonden.';
+
+// __ORIGINAL_META_IMPLEMENTATION__

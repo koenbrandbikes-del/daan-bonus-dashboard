@@ -17,7 +17,8 @@ def build(output,credentials,php,origin,base,data_root=None,code_only=False):
     app_source=(private/'app.php').read_text()
     implementation=(SOURCE/'private/mcp.php').read_text().removeprefix('<?php')
     review=(SOURCE/'private/meta-review.php').read_text().removeprefix('<?php')
-    (private/'app.php').write_text(app_source.replace('// __MCP_IMPLEMENTATION__',implementation).replace('// __META_REVIEW_IMPLEMENTATION__',review))
+    from build_meta_dashboard import php_implementation
+    (private/'app.php').write_text(app_source.replace('// __MCP_IMPLEMENTATION__',implementation).replace('// __META_REVIEW_IMPLEMENTATION__',review).replace('// __ORIGINAL_META_IMPLEMENTATION__',php_implementation()))
     (public/'private-path.php').write_text("<?php return dirname(__DIR__,2).'/lumeworks-private';\n")
     static=private/'static';static.mkdir()
     shutil.copytree(ROOT/'assets/blended',static/'assets/blended',ignore=shutil.ignore_patterns('*.json'))
