@@ -12,17 +12,23 @@ def dashboard():
     # Only the secured Meta build shares the finance/return engine with Cijfers.
     # The public original stays unchanged; the private cost basis is dynamic.
     source = source.replace('1/(1/CX.be-SCALE_T)', 'lwTargetRoas(CX.be,SCALE_T)').replace('1/(1/CX.be-SCALE_H)', 'lwTargetRoas(CX.be,SCALE_H)')
+    source = source.replace('Augustus (v.a. 5 aug)', 'Sinds start (5 aug)').replace('aug:      {label:"Augustus"', 'aug:      {label:"Sinds start"').replace('aug:{main:"Augustus",range:"(v.a. 5 aug)"}', 'aug:{main:"Sinds start",range:"(5 aug)"}')
     source = source.replace('const metricLabel=isRoas?"Meta ROAS":"CAC";', 'const metricLabel=isRoas?"Netto Meta ROAS":"CAC";')
     source = source.replace('const dailySource = kpiDailySeriesFiltered(filterStrategy,filterPlatform,filterPlacement);', 'const dailySource = isRoas?lwNetDailySource(rangeFrom,rangeTo):kpiDailySeriesFiltered(filterStrategy,filterPlatform,filterPlacement);')
+    source = source.replace('Hypothetische ROAS incl. BTW', 'Netto ROAS na retouren').replace('Hypothetisch adspend per dag', 'Advertentiebudget per dag')
+    source = source.replace('<div class="sl">ROAS – BEROAS</div>', '<div class="sl">Netto resultaat</div>')
+    source = source.replace('<div class="sim-cards">', '<p id="lwSimBasis" class="lw-finance-note"></p><div class="sim-cards">')
+    source = source.replace('+ \'worden.</strong><br>\' + String((e && e.message) || e).replace(/</g,"&lt;") + \'</div>\';', '+ \'worden.</strong><p>Controleer je verbinding en probeer opnieuw. We tonen geen oude bedragen als actuele cijfers.</p><button type="button" onclick="location.reload()">Opnieuw proberen</button></div>\';')
     engine = []
-    for path in ['assets/blended/return-reserve.js', 'assets/blended/meta-management.js', 'assets/blended/metrics.js']:
+    for path in ['assets/blended/data.js', 'assets/blended/return-reserve.js', 'assets/blended/meta-management.js', 'assets/blended/metrics.js']:
         part = (ROOT / path).read_text()
         part = re.sub(r'^import[^\n]*\n', '', part, flags=re.M)
         part = re.sub(r'\bexport (?=(?:async )?(?:function|const|let|class))', '', part)
         engine.append(part)
     bridge = (ROOT / 'siteground/private/original-meta-finance.js').read_text()
-    source = source.replace('/* ═══ INIT ═', 'const lwFinanceEngine=(()=>{\n' + '\n'.join(engine) + '\nreturn {compute,series};})();\n' + bridge + '\n/* ═══ INIT ═', 1)
+    source = source.replace('/* ═══ INIT ═', 'const lwFinanceEngine=(()=>{\n' + '\n'.join(engine) + '\nreturn {compute,series,validateSource,validateReturns,validateCosts,simulate:options=>simulateMetaScenario(compute,contractManagementCosts,lwFinancialData,lwFinancialCosts,options)};})();\n' + bridge + '\n/* ═══ INIT ═', 1)
     source = source.replace('</head>', '<style>.kpi-item[data-kpi=profitMargin]{cursor:default}.lw-finance{margin:12px 0 20px;border:1px solid #ffffff1a;border-radius:14px;background:#151b4033}.lw-finance summary{display:flex;justify-content:space-between;gap:16px;cursor:pointer;padding:16px;font-size:13px}.lw-finance summary span{font-variant-numeric:tabular-nums}.lw-finance-body{padding:0 16px 16px}.lw-finance-row{display:flex;justify-content:space-between;align-items:baseline;gap:20px;padding:8px 0;font-size:12px;border-bottom:1px solid #ffffff08}.lw-finance-row strong{font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}.lw-finance-row.total,.lw-finance-row.subtotal{border-top:1px solid #ffffff25;margin-top:5px;padding-top:12px}.lw-daan-breakdown{padding:0 10px 12px;border-bottom:1px solid #ffffff15}.lw-daan-breakdown .table-wrap{overflow-x:auto}.lw-daan-breakdown table{width:100%;font-size:11px;text-align:right;font-variant-numeric:tabular-nums}.lw-daan-breakdown td,.lw-daan-breakdown th{padding:6px 8px;white-space:nowrap}.lw-daan-breakdown td:first-child,.lw-daan-breakdown th:first-child{text-align:left}.lw-finance summary.lw-finance-row{padding:8px 0;font-size:12px}.lw-finance-note{font-size:11px;line-height:1.6;color:#93a2b8;margin:12px 0 0}.kpi-headline{line-height:1.6}</style></head>')
+    source = source.replace('</head>', '<style>' + (ROOT / 'siteground/private/original-meta-ceo.css').read_text() + '</style></head>')
     handlers = []
     def event_attribute(match):
         event, body = match.groups()

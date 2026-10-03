@@ -1,6 +1,6 @@
 // Preserve the existing 10% ROAS-gap formula; include its own cost from 1 October.
 export function solveMetaBonus(revenue,marginBeforeBonus,spend,rate){
- if(![revenue,marginBeforeBonus,spend,rate].every(Number.isFinite))return null;
+ if(![revenue,marginBeforeBonus,spend,rate].every(Number.isFinite)||revenue<0||spend<0||rate<0||rate>1)return null;
  if(revenue<=0 || marginBeforeBonus<=spend || rate===0)return 0;
  // B = rate * (R - S * R / (P - B)). Stable smaller quadratic root.
  const k=rate*revenue;
@@ -44,4 +44,26 @@ export function makeDynamicManagement(compute,contractManagement){
   const days=[...daily.values()],bonus=days.some(r=>r.bonus==null)?null:days.reduce((n,r)=>n+r.bonus,0);
   return {fixed:selected.fixed,bonus,total:bonus==null?null:selected.fixed+bonus,periods,daily:days};
  };
+}
+
+// Planning estimate with the same net revenue, return costs and bonus solver.
+// This is a new 30-day scenario, not a revision of historical contract payouts.
+export function simulateMetaScenario(compute,contractManagement,data,costs,{from,to,dailySpend,roas,referenceFrom,referenceTo}){
+ const validDate=d=>typeof d==='string' && /^\d{4}-\d{2}-\d{2}$/.test(d) && Number.isFinite(Date.parse(d)) && new Date(d).toISOString().slice(0,10)===d;
+ if(![from,to,referenceFrom,referenceTo].every(validDate)||from>to||referenceFrom>referenceTo||from<'2026-10-01'||!Number.isFinite(dailySpend)||dailySpend<0||dailySpend>1e9||!Number.isFinite(roas)||roas<0||roas>100)return {available:false,reason:'Ongeldige scenarioperiode of invoer'};
+ const days=Math.round((Date.parse(to)-Date.parse(from))/864e5)+1;
+ if(days>366)return {available:false,reason:'Scenario maximaal één jaar'};
+ const dates=new Set((data.meta?.daily_meta||[]).filter(r=>r.d>=referenceFrom&&r.d<=referenceTo).map(r=>r.d));
+ for(let d=referenceFrom;d<=referenceTo;d=new Date(Date.parse(d)+864e5).toISOString().slice(0,10))if(!dates.has(d))return {available:false,reason:'Meta-dag ontbreekt in de kostenreferentie'};
+ const basis=compute(data,costs,referenceFrom,referenceTo,'meta',{skipManagement:true,includeDaan:false});
+ if(basis.result==null||!basis.returnReserve.available||!(basis.expectedRevenueIncl>0)||!costs.meta_management)return {available:false,reason:'Kostenmix of retourbegroting ontbreekt'};
+ const contributionRate=(basis.result+basis.channels.meta.mediaSpend)/basis.expectedRevenueIncl;
+ const fixed=contractManagement(data,costs,from,to).fixed;
+ const spend=dailySpend*days,revenue=spend*roas,availableBeforeBonus=revenue*contributionRate-fixed;
+ const bonus=solveMetaBonus(revenue,availableBeforeBonus,spend,costs.meta_management.bonus_rate);
+ if(bonus==null)return {available:false,reason:'Scenario kon niet worden berekend'};
+ const result=availableBeforeBonus-spend-bonus;
+ return {available:true,from,to,days,referenceFrom,referenceTo,spend,revenue,fixed,bonus,totalDaan:fixed+bonus,result,
+  contributionRate,breakEvenRoas:revenue>0 && availableBeforeBonus-bonus>0?revenue/(availableBeforeBonus-bonus):null,
+  profitMargin:revenue>0?result/(revenue/(1+costs.assumed_vat))*100:null};
 }

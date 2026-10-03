@@ -368,6 +368,7 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
         }
       : {}),
     expectedRevenueIncl,
+    availableBeforeAds:metaAvailable,
     breakEvenRoas:metaAvailable>0 && expectedRevenueIncl>0?expectedRevenueIncl/metaAvailable:null,
     revenue:netRevenue,
     revenueIncl:numerator,

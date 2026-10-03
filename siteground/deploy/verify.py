@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import sys,time,subprocess,tempfile,pathlib,email,json
+import sys,time,subprocess,tempfile,pathlib,email,json,re,html
 origin='https://cijfers.lumeworks.nl'
 def get(path):
     # Use the standard curl HTTPS client; SiteGround rejects urllib requests.
@@ -17,6 +17,11 @@ def verify(revision):
         actual=headers.get('X-LumeWorks-Revision')
         if code==200 and actual==revision:break
         print(f'Login check: HTTP {code}; revision {actual or "missing"}; attempt {attempt+1}/6',flush=True)
+        if code==202 and attempt==0:
+            title=re.search(r'<title[^>]*>(.*?)</title>',body.decode('utf-8',errors='replace'),re.I|re.S)
+            if title:
+                hint=' '.join(html.unescape(title[1]).split())[:100]
+                print('Unexpected response title: '+hint,flush=True)
         if attempt<5:
             # Retry transient upstream responses normally, without bypassing challenges.
             retry=headers.get('Retry-After','')

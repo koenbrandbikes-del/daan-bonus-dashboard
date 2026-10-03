@@ -2,13 +2,14 @@
 // Private build only: retain the bonus rate and periods; use the requested dynamic cost basis.
 let lwFinancialData, lwFinancialCosts, lwFinancialError;
 try {
-  lwFinancialCosts=_loadJSON('assets/blended/costs.json');
+  lwFinancialCosts=lwFinanceEngine.validateCosts(_loadJSON('assets/blended/costs.json'));
   if(!lwFinancialCosts.meta_management || !Number.isFinite(lwFinancialCosts.meta_management.bonus_rate) || !Number.isFinite(lwFinancialCosts.assumed_vat))throw Error('Kostenbasis ontbreekt');
   lwFinancialData={meta:_META,google:_GOOGLE,shopify:_SHOPIFY,
     creators:_loadJSON('data/creators.json'),returns:_loadJSON('data/returns.json')};
-  if(lwFinancialData.returns?.version!==2 || !lwFinancialData.returns.complete)
-    throw Error('Retourregistratie is onvolledig');
-} catch(error){lwFinancialError='Financiële onderbouwing kon niet worden geladen. Vernieuw de pagina.';}
+  for(const key of ['meta','google','shopify','creators'])lwFinanceEngine.validateSource(key,lwFinancialData[key]);
+  lwFinanceEngine.validateReturns(lwFinancialData.returns);
+  if(lwFinancialData.returns.cost_basis!==JSON.stringify([lwFinancialCosts.items,lwFinancialCosts.assumed_vat,lwFinancialCosts.payment_rate,lwFinancialCosts.overhead_rate]))throw Error('Retourbegroting gebruikt andere kostentarieven');
+} catch(error){lwFinancialError='Financiële onderbouwing niet beschikbaar: '+error.message+'. Vernieuw de pagina.';}
 const lwMoney=v=>v==null?'—':eur(v);
 const lwExactMoney=v=>v==null?'—':v.toLocaleString('nl-NL',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2});
 function lwTargetRoas(be,pct){
@@ -26,8 +27,8 @@ function lwNetMetrics(m){
   const reserve=m.returnReserve;
   // Expected refund revenue includes VAT; operating result remains excluding VAT.
   const rev=m.expectedRevenueIncl;
-  const bruto=m.actualResult==null?null:m.actualResult+m.spend;
-  return {rev,bruto,net:m.result,roas:m.roas};
+  const bruto=m.availableBeforeAds;
+  return {rev,bruto,net:m.result,roas:m.roas,profitMargin:m.profitMargin};
 }
 function lwNetDailySource(from,to){
  if(lwFinancialError || filtersActive())return [];
@@ -46,26 +47,34 @@ function lwPaintFinance(){
     node.classList.remove('good','warn','bad');
     if(['net','profitMargin'].includes(key) && !filtered && v.net!=null)node.classList.add(v.net>=0?'good':'bad');
   }
-  tile('rev','Netto Meta-omzet',filtered?'—':lwMoney(v.rev),filtered?'niet op advertentiegroep herleidbaar':'incl. btw · na echte en begrote retouren');
-  tile('roas','Netto Meta ROAS',!filtered && v.roas!=null?x2(v.roas):'—',filtered?'niet op advertentiegroep herleidbaar':'na echte en begrote retouren');
-  tile('bruto','Marge vóór ads',filtered?'—':lwMoney(v.bruto),filtered?'niet op advertentiegroep herleidbaar':'excl. btw · na werkelijke correcties');
+  tile('rev','Netto omzet',filtered?'—':lwMoney(v.rev),filtered?'niet op advertentiegroep herleidbaar':'incl. btw · na retouren');
+  tile('roas','Netto ROAS',!filtered && v.roas!=null?x2(v.roas):'—',filtered?'niet op advertentiegroep herleidbaar':'omzet / advertentiekosten');
+  tile('bruto','Marge vóór advertenties',filtered?'—':lwMoney(v.bruto),filtered?'niet op advertentiegroep herleidbaar':'na Daan en retourbegroting');
   const netTile=document.querySelector('[data-kpi="net"]');
   if(netTile && !document.querySelector('[data-kpi="profitMargin"]')){
     const marginTile=document.createElement('div');marginTile.className='kpi-item';marginTile.dataset.kpi='profitMargin';
+    marginTile.addEventListener('click',()=>toggleKpiChart('profitMargin'));
     marginTile.innerHTML='<div class="kpi-lbl"></div><div class="kpi-val"></div><div class="kpi-sub"></div>';
     netTile.after(marginTile);
   }
-  tile('profitMargin','Netto winstmarge',!filtered && m?.profitMargin!=null?m.profitMargin.toLocaleString('nl-NL',{maximumFractionDigits:1})+'%':'—',filtered?'bekijk het volledige account':'na alle kosten · omzet excl. btw');
-  tile('net','Netto resultaat',filtered?'—':lwMoney(v.net),filtered?'bekijk het volledige account':m && !m.returnReserve.available?'incl. Daan · retourbegroting niet beschikbaar':'incl. Daan en begrote retouren · excl. btw');
+  tile('profitMargin','Netto winstmarge',!filtered && m?.profitMargin!=null?m.profitMargin.toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%':'—',filtered?'bekijk het volledige account':'doel '+Math.round(SCALE_T*100)+'%');
+  tile('net','Netto resultaat',filtered?'—':lwMoney(v.net),filtered?'bekijk het volledige account':m && !m.returnReserve.available?'incl. Daan · retourbegroting niet beschikbaar':'na alle kosten · excl. btw');
+  const attribution=document.querySelector('[data-kpi="attr"]');if(attribution){attribution.querySelector('.kpi-lbl').textContent='Meta-attributie';attribution.querySelector('.kpi-sub').textContent='platformclaim · kan overlappen';}
+  lwArrangeKpis();
+  const marginCard=document.querySelector('[data-kpi="profitMargin"]');
+  if(marginCard && !filtered && m?.profitMargin!=null && m.profitMargin>=0 && m.profitMargin<SCALE_T*100){marginCard.classList.remove('good');marginCard.classList.add('warn');}
   const headline=document.getElementById('kpiHeadline');
   headline.className='kpi-headline';
   // No narrative that merely repeats a KPI. Keep actionable data errors only.
   headline.textContent=lwFinancialError || (m?.result==null?'Netto resultaat nog niet vast te stellen: controleer de financiële onderbouwing.':filtered?'Financieel resultaat is alleen beschikbaar voor het volledige account; wis de analysefilters voor de financiële vergelijking.':'');
+  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Amsterdam',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  if(!headline.textContent && lwFinancialData?.meta.snap<today)headline.textContent='Laatste Meta-dag: '+fmtS(lwFinancialData.meta.snap)+'. De gegevens lopen achter; controleer de gegevensaanvoer.';
+  if(P==='aug'){for(const id of ['mSpendSub','mPurchSub']){const node=document.getElementById(id);if(node)node.textContent='';}}
   const available=m && m.result!=null?m.result+m.channels.meta.mediaSpend:null;
   const be=m?.breakEvenRoas ?? null;
   document.getElementById('mBe').textContent=be==null?'—':x2(be);
   document.getElementById('mBeSub').textContent='incl. retouren, begroting en Daan';
-  document.getElementById('mScaleSub').textContent='incl. dynamische bonus · marge excl. btw';
+  document.getElementById('mScaleSub').textContent='doel bij de huidige kostenmix';
   document.getElementById('bonusAmt').textContent=lwMoney(m?.management.bonus);
   document.getElementById('bonusBadge').textContent=lwFinancialCosts?.meta_management?'ROAS-bonus '+(lwFinancialCosts.meta_management.bonus_rate*100)+'% · eigen bonus in BEROAS vanaf 1 okt':'Kostenbasis ontbreekt';
   document.getElementById('roasHeroLbl').textContent='NETTO META ROAS';
@@ -79,7 +88,7 @@ function lwPaintFinance(){
   else document.getElementById('gaugeOuter').innerHTML='<p class="lw-finance-note">Geen haalbare break-even-ROAS bij deze kostenbasis.</p>';
   let details=document.getElementById('lwFinanceDetails');
   if(!details){details=document.createElement('details');details.id='lwFinanceDetails';details.className='lw-finance';document.getElementById('kpiHeadline').after(details);}
-  if(!m){details.innerHTML='<summary>Financiële onderbouwing</summary><p>'+lwFinancialError+'</p>';return;}
+  if(!m){details.innerHTML='<summary>Financiële onderbouwing</summary><p>'+lwEscapeAttr(lwFinancialError)+'</p>';return;}
   const baseRows=m.marginBuild.filter(r=>r.key!=='margin');
   const reserve=m.returnReserve,w=m.correctionAllocation.weights;
   const find=key=>baseRows.find(r=>r.key===key)?.value;
@@ -104,13 +113,14 @@ function lwPaintFinance(){
   document.getElementById('beSummary').innerHTML='<div class="be-stat"><div class="be-lbl">Operationele BEROAS</div><div class="be-val">'+(be==null?'—':x2(be))+'</div></div><p class="lw-finance-note">Inclusief retouren, begroting en vaste vergoeding. Zie de volledige kostenopbouw hierboven. De producttabel hieronder toont alleen de kostprijssheet.</p>';
   renderKpiChart();
 }
+const lwKeyboardCards=new WeakSet();
 const lwOriginalKpiBar=renderKpiBar;
-renderKpiBar=function(...args){lwOriginalKpiBar(...args);lwPaintFinance();};
+renderKpiBar=function(...args){if(args[5]==='juli'){args[3]=null;args[4]=null;args[5]=null;}lwOriginalKpiBar(...args);lwPaintFinance();};
 const lwOriginalAggregate=kpiAggregate;
 kpiAggregate=function(gran,from,to,seg,platform,placement){
   const original=lwOriginalAggregate(gran,from,to,seg,platform,placement);
   if(!lwFinancialData || lwFinancialError || (seg&&seg!=='all') || (platform&&platform!=='all') || (placement&&placement!=='all'))
-    return original.map(r=>({...r,rev:null,roas:null,bruto:null,net:null}));
+    return original.map(r=>({...r,rev:null,roas:null,bruto:null,net:null,profitMargin:null}));
   const start=from||'2026-08-05',end=to||SNAP;
   const corrected=new Map(lwFinanceEngine.series(lwFinancialData,lwFinancialCosts,start,end,'meta',gran).map(r=>[gran==='month'?r.key.slice(0,7):r.key,r]));
   return original.map(r=>({...r,...lwNetMetrics(corrected.get(r.key))}));
@@ -119,3 +129,45 @@ KPI_META.rev.label='Netto Meta-omzet · incl. btw';
 KPI_META.roas.label='Netto Meta ROAS';
 KPI_META.bruto.label='Marge vóór ads · excl. btw';
 KPI_META.net.label='Netto resultaat · incl. Daan en retouren';
+KPI_META.profitMargin={label:'Netto winstmarge',fmt:v=>v==null?'—':v.toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'};
+const lwOriginalKpiToggle=toggleKpiChart;
+toggleKpiChart=function(key){lwOriginalKpiToggle(key);for(const node of document.querySelectorAll('.kpi-item[role=button]'))node.setAttribute('aria-pressed',String(kpiChartSel.includes(node.dataset.kpi)));};
+
+function lwArrangeKpis(){
+ const strip=document.getElementById('kpiStrip');
+ if(!strip)return;
+ let ads=document.getElementById('lwAdsDetails');
+ if(!ads){ads=document.createElement('details');ads.id='lwAdsDetails';ads.className='lw-ads-details';ads.innerHTML='<summary>Advertenties & analyse <span aria-hidden="true">⌄</span></summary><div class="lw-secondary-kpis"></div>';strip.after(ads);}
+ const primary=['net','profitMargin','rev','roas'].map(k=>strip.querySelector('[data-kpi="'+k+'"]')).filter(Boolean);
+ const secondary=['spend','purch','cac','bruto','attr'].map(k=>strip.querySelector('[data-kpi="'+k+'"]')).filter(Boolean);
+ strip.replaceChildren(...primary);
+ ads.querySelector('.lw-secondary-kpis').replaceChildren(...secondary);
+ const filters=document.getElementById('filterBar');if(filters)ads.append(filters);
+ ads.querySelector('summary').firstChild.textContent=filtersActive()?'Advertenties & analyse · filters actief ':'Advertenties & analyse ';
+ let basis=document.getElementById('lwKpiBasis');if(!basis){basis=document.createElement('p');basis.id='lwKpiBasis';basis.className='lw-kpi-basis';strip.after(basis);}
+ const pd=PERIODS[P]||PERIODS.aug;
+ basis.textContent='Winst excl. btw · inclusief Daan en retourbegroting'+(pd.to===SNAP?' · laatste dag kan nog wijzigen':'');
+ for(const card of [...primary,...secondary]){
+  card.setAttribute('role','button');card.setAttribute('tabindex','0');card.setAttribute('aria-pressed',String(kpiChartSel.includes(card.dataset.kpi)));
+  if(lwKeyboardCards.has(card))continue;lwKeyboardCards.add(card);
+  card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();card.click();card.setAttribute('aria-pressed',String(kpiChartSel.includes(card.dataset.kpi)));}});
+ }
+}
+
+updateSim=function(){
+ if(!lwFinancialData||lwFinancialError||SNAP<'2026-10-01'){
+  for(const id of ['simBonus','simDiff'])document.getElementById(id).textContent='—';
+  return;
+ }
+ const input=document.getElementById('simSpend'),slider=document.getElementById('simSlider');
+ const roas=Number(slider.value),dailySpend=input.value.trim()===''?NaN:Number(input.value);
+ const from=SNAP,to=new Date(Date.parse(from)+29*864e5).toISOString().slice(0,10);
+ const referenceFrom=new Date(Math.max(Date.parse('2026-08-05'),Date.parse(SNAP)-29*864e5)).toISOString().slice(0,10);
+ const scenario=lwFinanceEngine.simulate({from,to,dailySpend,roas,referenceFrom,referenceTo:SNAP});
+ document.getElementById('simRval').textContent=x2(roas);
+ document.getElementById('simBonus').textContent=scenario.available?lwMoney(scenario.bonus):'—';
+ document.getElementById('simDiff').textContent=scenario.available?lwMoney(scenario.result):'—';
+ document.getElementById('simSpendTotal').textContent=scenario.available?lwMoney(scenario.spend)+' advertenties · '+fmtS(from)+'–'+fmtS(to)+' (30 dagen)':'Vul een geldig dagbudget in; nul is toegestaan.';
+ const note=document.getElementById('lwSimBasis');
+ if(note)note.textContent=scenario.available?'Scenario, geen afrekening. Kostenmix '+fmtS(referenceFrom)+'–'+fmtS(SNAP)+', inclusief retourbegroting. Daan: '+lwExactMoney(scenario.fixed)+' vast + '+lwExactMoney(scenario.bonus)+' bonus. De vaste vergoeding volgt kalenderdagen.':'Scenario niet beschikbaar: '+scenario.reason;
+};

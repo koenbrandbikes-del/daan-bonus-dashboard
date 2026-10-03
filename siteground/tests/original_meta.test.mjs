@@ -1,3 +1,4 @@
+import {simulateMetaScenario} from '../../assets/blended/meta-management.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
@@ -54,7 +55,7 @@ test('secured financial values share audited costs with a dynamic bonus, preserv
  };
  const original=await render(source);const secured=await render(html);
  try{
-  for(const id of ['simSlider','ordHdr','adsHdr'])assert.equal(secured.window.document.getElementById(id).textContent,original.window.document.getElementById(id).textContent);
+  for(const id of ['simSlider','adsHdr'])assert.equal(secured.window.document.getElementById(id).textContent,original.window.document.getElementById(id).textContent);
   const values=d=>[...d.window.document.querySelectorAll('[data-kpi="spend"] .kpi-val,[data-kpi="purch"] .kpi-val,[data-kpi="cac"] .kpi-val')].map(n=>n.textContent);
   assert.deepEqual(values(secured),values(original));
   const compare=()=>{
@@ -67,13 +68,18 @@ test('secured financial values share audited costs with a dynamic bonus, preserv
    const shared=compute(data,costs,period.from,period.to,'meta');
    assert.ok(Math.abs(shared.result-expected.result)<1e-7);
    assert.equal(secured.window.document.querySelector('[data-kpi="roas"] .kpi-val').textContent,shared.roas.toFixed(2)+'×');
-   assert.equal(secured.window.document.querySelector('[data-kpi="profitMargin"] .kpi-val').textContent,shared.profitMargin.toLocaleString('nl-NL',{maximumFractionDigits:1})+'%');
-   assert.equal(secured.window.document.getElementById('kpiHeadline').textContent,'');
+   assert.equal(secured.window.document.querySelector('[data-kpi="profitMargin"] .kpi-val').textContent,shared.profitMargin.toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%');
+   assert.ok(!secured.window.document.getElementById('kpiHeadline').textContent.includes('houdt'));
+   assert.ok(!secured.window.document.getElementById('kpiHeadline').textContent.includes('verlies na kosten'));
+   assert.deepEqual([...secured.window.document.querySelectorAll('#kpiStrip > [data-kpi]')].map(n=>n.dataset.kpi),['net','profitMargin','rev','roas']);
+   assert.equal(secured.window.document.querySelectorAll('#lwAdsDetails [data-kpi]').length,5);
+   assert.equal(secured.window.document.querySelector('#lwAdsDetails').open,false);
    const ledger=secured.window.document.getElementById('lwFinanceDetails');
    assert.ok(ledger.textContent.includes('Begrote retouren'));
    assert.ok(ledger.textContent.includes('Daan · vergoeding'));
    assert.ok(ledger.querySelector('[data-daan-breakdown] summary'));
    assert.ok(ledger.querySelector('[data-return-breakdown] summary'));
+   assert.equal(secured.window.document.getElementById('periodBtnTxt').textContent.includes('Augustus'),false);
    assert.ok(ledger.querySelector('[data-return-breakdown]').textContent.includes('Werkelijke terugbetalingen'));
    assert.ok(ledger.querySelector('[data-return-breakdown]').textContent.includes('Google telt alleen non-branded mee'));
    assert.ok(ledger.querySelector('[data-daan-breakdown]').textContent.includes('vaste vergoeding blijft behouden'));
@@ -93,6 +99,12 @@ test('secured financial values share audited costs with a dynamic bonus, preserv
   await new Promise(resolve=>setTimeout(resolve,0));
   assert.deepEqual(values(secured),values(original));
   compare();
+  const margin=secured.window.document.querySelector('[data-kpi="profitMargin"]');
+  margin.dispatchEvent(new secured.window.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+  assert.equal(margin.getAttribute('aria-pressed'),'true');
+  assert.ok(secured.window.document.getElementById('kpiChartWrap').classList.contains('open'));
+  margin.dispatchEvent(new secured.window.KeyboardEvent('keydown',{key:' ',bubbles:true}));
+  assert.equal(margin.getAttribute('aria-pressed'),'false');
   const slider=secured.window.document.getElementById('simSlider');slider.value='3';slider.dispatchEvent(new secured.window.Event('input',{bubbles:true}));
   assert.equal(slider.value,'3');
  }finally{original.window.close();secured.window.close();}
@@ -117,4 +129,54 @@ test('October fixed-point bonus exactly satisfies the original ROAS-gap formula 
   assert.ok(b>=0 && b<=Math.max(0,margin-spend));
  }
  assert.equal(solveMetaBonus(100,20,25,.1),0);
+});
+
+test('planning scenario uses the exact bonus solver, calendar fee and signed company profit',()=>{
+ const options={from:'2026-10-03',to:'2026-11-01',dailySpend:200,roas:3,referenceFrom:'2026-09-02',referenceTo:'2026-10-01'};
+ const s=simulateMetaScenario(compute,managementCosts,data,costs,options);
+ assert.equal(s.available,true);assert.equal(s.days,30);assert.equal(s.spend,6000);
+ assert.ok(Math.abs(s.fixed-(29*1500/31+1500/30))<1e-7);
+ assert.ok(Math.abs(s.result+s.bonus+s.fixed+s.spend-s.revenue*s.contributionRate)<1e-7);
+ if(s.bonus>0)assert.ok(Math.abs(s.bonus-.1*(s.revenue-s.spend*s.breakEvenRoas))<1e-7);
+ const zero=simulateMetaScenario(compute,managementCosts,data,costs,{...options,dailySpend:0});assert.equal(zero.bonus,0);assert.equal(zero.result,-zero.fixed);
+ const loss=simulateMetaScenario(compute,managementCosts,data,costs,{...options,roas:.5});assert.equal(loss.bonus,0);assert.ok(loss.result<0);
+ assert.equal(simulateMetaScenario(compute,managementCosts,{...data,returns:undefined},costs,options).available,false);
+ assert.equal(simulateMetaScenario(compute,managementCosts,{...data,meta:{...data.meta,daily_meta:data.meta.daily_meta.filter(r=>r.d!=='2026-09-15')}},costs,options).available,false);
+ assert.equal(solveMetaBonus(100,30,-1,.1),null);assert.equal(solveMetaBonus(100,30,10,-.1),null);
+});
+
+test('invalid costs, duplicate Meta days and mismatched return basis never show a financial result',async()=>{
+ const product=readFileSync('assets/product-costs.js','utf8');
+ for(const issue of ['costs','meta','returns']){
+  const errors=[];const vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
+  const d=new JSDOM(html.replace(/<script src="assets\/product-costs.js[^>]*><\/script>/,'<script>'+product+'</script>'),{
+   url:'https://meta.lumeworks.nl/',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,
+   beforeParse(w){w.fetch=async()=>({ok:true,status:200,json:async()=>({})});w.XMLHttpRequest=class{
+    open(method,url){this.url=url;}send(){this.status=200;const source=JSON.parse(readFileSync(this.url,'utf8'));
+     if(issue==='costs'&&this.url.includes('costs.json'))source.items['LumeWorks Atlas']+=1;
+     if(issue==='meta'&&this.url==='data/meta.json')source.daily_meta.push({...source.daily_meta.at(-1)});
+     if(issue==='returns'&&this.url==='data/returns.json')source.cost_basis='different tariffs';
+     this.responseText=JSON.stringify(source);
+    }
+   };}
+  });
+  await new Promise(resolve=>d.window.addEventListener('load',resolve,{once:true}));
+  try{
+   assert.deepEqual(errors,[],issue);
+   assert.equal(d.window.document.querySelector('[data-kpi="net"] .kpi-val').textContent,'—',issue);
+   assert.equal(d.window.document.querySelector('[data-kpi="profitMargin"] .kpi-val').textContent,'—',issue);
+   assert.ok(d.window.document.getElementById('kpiHeadline').textContent.includes('niet beschikbaar'),issue);
+   assert.equal(d.window.document.querySelector('#kpiStrip .good'),null,issue);
+  }finally{d.window.close();}
+ }
+});
+
+test('source outage offers a safe retry instead of showing stale financial placeholders',async()=>{
+ const product=readFileSync('assets/product-costs.js','utf8'),vc=new VirtualConsole();vc.on('jsdomError',()=>{});
+ const d=new JSDOM(html.replace(/<script src="assets\/product-costs.js[^>]*><\/script>/,'<script>'+product+'</script>'),{
+  url:'https://meta.lumeworks.nl/',runScripts:'dangerously',virtualConsole:vc,
+  beforeParse(w){w.XMLHttpRequest=class{open(method,url){this.url=url;}send(){this.status=503;this.responseText='unavailable';}};}
+ });
+ await new Promise(resolve=>d.window.addEventListener('load',resolve,{once:true}));
+ try{assert.ok(d.window.document.body.textContent.includes('Opnieuw proberen'));assert.equal(d.window.document.querySelector('[data-kpi="net"]'),null);assert.ok(d.window.document.querySelector('button[data-lw-click]'));}finally{d.window.close();}
 });
