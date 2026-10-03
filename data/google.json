@@ -2726,15 +2726,15 @@
   {
    "d": "2026-10-02",
    "spend": 73.178095,
-   "rev": 725.57846596,
-   "conv": 3.910146,
+   "rev": 894.57846596,
+   "conv": 4.910146,
    "id": "23985056312",
    "name": "P | Generiek",
    "type": "PERFORMANCE_MAX"
   },
   {
    "d": "2026-10-03",
-   "spend": 50.048629,
+   "spend": 57.018629,
    "rev": 0,
    "conv": 0,
    "id": "23985056312",
@@ -3310,7 +3310,7 @@
   },
   {
    "d": "2026-10-03",
-   "spend": 1.93,
+   "spend": 2.24,
    "rev": 0,
    "conv": 0,
    "id": "23989624267",
@@ -4134,8 +4134,8 @@
   {
    "d": "2026-10-02",
    "spend": 0,
-   "rev": 754.262447,
-   "conv": 3.955073,
+   "rev": 923.262447,
+   "conv": 4.955073,
    "name": "ORDER (TrackBee)"
   }
  ],
@@ -4962,7 +4962,7 @@
   {
    "d": "2026-10-03",
    "intent": "brand",
-   "spend": 3.3699999999999997,
+   "spend": 3.6799999999999997,
    "rev": 0,
    "conv": 0
   },
@@ -5037,12 +5037,12 @@
    "conv": 0
   }
  ],
- "details_synced_at": "2026-10-03T13:52:30.049Z",
+ "details_synced_at": "2026-10-03T14:07:30.061Z",
  "source": "google_ads_api",
  "customer_id": "7645288282",
  "currency": "EUR",
  "time_zone": "Europe/Amsterdam",
- "synced_at": "2026-10-03T13:52:30.049Z",
+ "synced_at": "2026-10-03T14:07:30.061Z",
  "coverage_from": "2026-08-01",
  "coverage_to": "2026-10-03",
  "attribution": "Primary conversions and conversion value by ad interaction date; may include non-purchase goals and overlap with other channels.",
@@ -5546,37 +5546,37 @@
   {
    "d": "2026-10-02",
    "spend": 101.158095,
-   "conv": 8.910146,
-   "rev": 1503.31846596,
+   "conv": 9.910146,
+   "rev": 1672.31846596,
    "impr": 9421,
    "cl": 138
   },
   {
    "d": "2026-10-03",
-   "spend": 59.668629,
+   "spend": 61.018629,
    "conv": 0,
    "rev": 0,
-   "impr": 4348,
-   "cl": 58
+   "impr": 4451,
+   "cl": 60
   }
  ],
  "vandaag": {
   "from": "2026-10-03",
   "to": "2026-10-03",
   "d": "2026-10-03",
-  "spend": 59.668629,
+  "spend": 61.018629,
   "conv": 0,
   "rev": 0,
-  "impr": 4348,
-  "cl": 58
+  "impr": 4451,
+  "cl": 60
  },
  "gisteren": {
   "from": "2026-10-02",
   "to": "2026-10-02",
   "d": "2026-10-02",
   "spend": 101.158095,
-  "conv": 8.910146,
-  "rev": 1503.31846596,
+  "conv": 9.910146,
+  "rev": 1672.31846596,
   "impr": 9421,
   "cl": 138
  }
