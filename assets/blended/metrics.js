@@ -353,6 +353,7 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
     line('margin','Netto marge',result!=null && netExcl>0?result/netExcl*100:null,'percent'),
   );
   const expectedRevenueIncl=numerator==null?null:reserveModel.available && reserveParts.refundExcl!=null?numerator-reserveParts.refundExcl*(1+costs.assumed_vat):numerator;
+  const netProfitMargin=channel==='meta' ? (result!=null && expectedRevenueIncl>0?result/(expectedRevenueIncl/(1+costs.assumed_vat))*100:null) : result != null && netRevenue > 0 ? result / netRevenue * 100 : null;
   const metaAvailable=channel==='meta' && result!=null?result+channels.meta.mediaSpend:null;
   return {
     ...f,
@@ -375,11 +376,11 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
     creatorFinance,
     correctionAllocation,
     baselineRates,
-    marginBuild,
+    marginBuild:marginBuild.map(r=>r.key==='margin'?{...r,value:netProfitMargin}:r),
     result,
     actualResult,
     returnReserve:{...reserveModel,...reserveParts,impact:reserveImpact,storeImpact:reserveModel.impact,creatorImpact:creatorReserve,remainingImpact:remainingReserve},
-    profitMargin: channel==='meta' ? (result!=null && expectedRevenueIncl>0?result/(expectedRevenueIncl/(1+costs.assumed_vat))*100:null) : result != null && netRevenue > 0 ? result / netRevenue * 100 : null,
+    profitMargin:netProfitMargin,
     roas: channel==='meta' ? (channels.meta.mediaSpend>0 && expectedRevenueIncl!=null?expectedRevenueIncl/channels.meta.mediaSpend:null) : (channel==='google'?channels.google.mediaSpend:spend) > 0 && numerator !== null ? numerator / (channel==='google'?channels.google.mediaSpend:spend) : null,
     count:
       channel === "all"
