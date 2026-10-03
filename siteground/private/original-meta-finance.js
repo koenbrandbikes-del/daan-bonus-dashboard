@@ -11,8 +11,8 @@ try {
 } catch(error){lwFinancialError='Financiële onderbouwing kon niet worden geladen. Vernieuw de pagina.';}
 const lwMoney=v=>v==null?'—':eur(v);
 function lwTargetRoas(be,pct){
- const rate=lwFinancialCosts?.meta_management?.bonus_rate??0,vat=1+(lwFinancialCosts?.assumed_vat??0);
- return be>0 && 1/be-rate-pct/vat>0 && 1-rate*be>0?(1-rate*be)/(1/be-rate-pct/vat):null;
+ const vat=1+(lwFinancialCosts?.assumed_vat??0);
+ return be>0 && 1/be-pct/vat>0?1/(1/be-pct/vat):null;
 }
 function lwFinancial(from,to){
   if(lwFinancialError)return null;
@@ -27,6 +27,12 @@ function lwNetMetrics(m){
   const rev=m.revenueIncl==null?null:m.revenueIncl-(reserve.available?reserve.refundExcl*(1+lwFinancialCosts.assumed_vat):0);
   const bruto=m.actualResult==null?null:m.actualResult+m.spend;
   return {rev,bruto,net:m.result,roas:media>0 && rev!=null?rev/media:null};
+}
+function lwNetDailySource(from,to){
+ if(lwFinancialError || filtersActive())return [];
+ return lwFinanceEngine.series(lwFinancialData,lwFinancialCosts,from,to,'meta','day').map(r=>({
+  d:r.key,spend:r.channels.meta.mediaSpend,purch:r.count,rev:lwNetMetrics(r).rev,pro:0,shopRev:0
+ }));
 }
 function lwPaintFinance(){
   const pd=PERIODS[P]||PERIODS.aug, m=lwFinancial(pd.from,pd.to), v=lwNetMetrics(m);
@@ -47,13 +53,13 @@ function lwPaintFinance(){
   headline.className='kpi-headline';
   headline.textContent=lwFinancialError || (m?.result==null?'Netto resultaat nog niet vast te stellen: controleer de financiële onderbouwing.':
     'Meta '+(m.result>=0?'houdt '+lwMoney(m.result)+' over':'maakt '+lwMoney(-m.result)+' verlies')+' na kosten, Daan en retouren.'+(filtered?' Financieel resultaat geldt voor het volledige account.':''));
-  const available=m && m.result!=null && m.management.bonus!=null?m.result+m.channels.meta.mediaSpend+m.management.bonus:null;
+  const available=m && m.result!=null?m.result+m.channels.meta.mediaSpend:null;
   const be=available>0 && v.rev>0?v.rev/available:null;
   document.getElementById('mBe').textContent=be==null?'—':x2(be);
-  document.getElementById('mBeSub').textContent='na retouren, begroting en vaste vergoeding';
+  document.getElementById('mBeSub').textContent='incl. retouren, begroting en Daan';
   document.getElementById('mScaleSub').textContent='incl. dynamische bonus · marge excl. btw';
   document.getElementById('bonusAmt').textContent=lwMoney(m?.management.bonus);
-  document.getElementById('bonusBadge').textContent=lwFinancialCosts?.meta_management?'Dynamische kostenbasis · '+(lwFinancialCosts.meta_management.bonus_rate*100)+'% · per contractblok':'Kostenbasis ontbreekt';
+  document.getElementById('bonusBadge').textContent=lwFinancialCosts?.meta_management?'ROAS-bonus '+(lwFinancialCosts.meta_management.bonus_rate*100)+'% · eigen bonus in BEROAS vanaf 1 okt':'Kostenbasis ontbreekt';
   document.getElementById('roasHeroLbl').textContent='NETTO META ROAS';
   document.getElementById('roasHeroVal').textContent=v.roas==null?'—':x2(v.roas);
   document.getElementById('roasDelta').textContent='Na werkelijke en begrote retouren';
@@ -77,7 +83,7 @@ function lwPaintFinance(){
   const model=reserve.available?'Retourbegroting: '+(reserve.rate*100).toFixed(2)+'% retourorders · '+reserve.matureOrders+' afgeronde orders · mediaan '+reserve.median+' dagen · horizon '+reserve.horizon+' dagen.':reserve.reason;
   const expected='<details class="lw-finance-note"><summary style="padding:8px 0">Uitsplitsing en break-evenberekening</summary><p>Retourkosten: '+lwMoney(-find('returns'))+' werkelijke afhandeling + '+(reserve.available?lwMoney(reserve.impact):'onbekende begroting')+' nog verwachte retouren. Reeds terugbetaalde omzet staat apart bij omzetcorrecties.</p>'+
     (reserve.available?'<p>Begrote retouren: '+lwMoney(reserve.refundExcl)+' retouromzet excl. btw + '+lwMoney(reserve.handling)+' afhandeling − '+lwMoney(reserve.overheadCredit)+' correctie overige kosten.</p>':'')+
-    '<p>Daan: '+lwMoney(-find('daanFixed'))+' vast + '+lwMoney(find('daanBonus')==null?null:-find('daanBonus'))+' bonus.</p><p>De kostprijssheet levert product- en leveringskosten. Betaalkosten, overige kosten, werkelijke retouren, retourbegroting en vaste vergoeding worden daarnaast verwerkt.</p><p>Operationele BEROAS = netto Meta-omzet incl. btw ('+lwMoney(v.rev)+') ÷ beschikbare marge vóór advertenties en bonus ('+lwMoney(available)+') = '+(be==null?'niet haalbaar':x2(be))+'. Bonus: '+(lwFinancialCosts.meta_management.bonus_rate*100)+'% × (netto omzet − advertentiekosten × BEROAS), per contractblok. Verliesdagen tellen mee; het bloktotaal heeft minimum nul. De bonus is nul op break-even en telt daarom niet opnieuw in zijn eigen kostenbasis.</p></details>';
+    '<p>Daan: '+lwMoney(-find('daanFixed'))+' vast + '+lwMoney(find('daanBonus')==null?null:-find('daanBonus'))+' bonus.</p><p>De kostprijssheet levert product- en leveringskosten. Betaalkosten, overige kosten, werkelijke retouren, retourbegroting en Daan worden daarnaast verwerkt.</p><p>Operationele BEROAS = netto Meta-omzet incl. btw ('+lwMoney(v.rev)+') ÷ beschikbare marge vóór advertenties, na Daan ('+lwMoney(available)+') = '+(be==null?'niet haalbaar':x2(be))+'. Bonus: '+(lwFinancialCosts.meta_management.bonus_rate*100)+'% × (netto omzet − advertentiekosten × BEROAS), per contractblok. Vanaf 1 oktober wordt de eigen bonus in de BEROAS verwerkt; bonus en BEROAS worden tegelijk opgelost. Vóór 1 oktober blijft de oorspronkelijke bonusberekening behouden. Verliesdagen tellen mee; het bloktotaal heeft minimum nul.</p></details>';
   details.innerHTML='<summary>Netto marge en retouren <span>'+lwMoney(m.result)+'</span></summary><div class="lw-finance-body"><p class="lw-finance-note">Percentages van netto omzet excl. btw, na werkelijke omzetcorrecties.</p>'+lines+expected+
     '<p class="lw-finance-note">'+lwEscapeAttr(model||'Retourbegroting niet beschikbaar')+(reserve.stale?' Retourbron is ouder dan 48 uur; begroting is niet verder afgebouwd.':'')+'</p>'+
     '<p class="lw-finance-note">'+(w?'Meta krijgt '+(w.meta*100).toFixed(1)+'% van de niet-influencercorrecties op basis van aankopen. Google telt alleen non-branded mee.':'Kanaaltoewijzing ontbreekt.')+' €'+(lwFinancialCosts.returns?.cost_per_return??20)+' per ontvangen retourpakket; annuleringen tellen niet als retourpakket. Werkelijke retouren vervangen de begroting automatisch.</p></div>';

@@ -12,6 +12,8 @@ def dashboard():
     # Only the secured Meta build shares the finance/return engine with Cijfers.
     # The public original stays unchanged; the private cost basis is dynamic.
     source = source.replace('1/(1/CX.be-SCALE_T)', 'lwTargetRoas(CX.be,SCALE_T)').replace('1/(1/CX.be-SCALE_H)', 'lwTargetRoas(CX.be,SCALE_H)')
+    source = source.replace('const metricLabel=isRoas?"Meta ROAS":"CAC";', 'const metricLabel=isRoas?"Netto Meta ROAS":"CAC";')
+    source = source.replace('const dailySource = kpiDailySeriesFiltered(filterStrategy,filterPlatform,filterPlacement);', 'const dailySource = isRoas?lwNetDailySource(rangeFrom,rangeTo):kpiDailySeriesFiltered(filterStrategy,filterPlatform,filterPlacement);')
     engine = []
     for path in ['assets/blended/return-reserve.js', 'assets/blended/metrics.js']:
         part = (ROOT / path).read_text()

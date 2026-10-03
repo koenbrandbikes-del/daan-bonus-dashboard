@@ -4,7 +4,7 @@ import {execFileSync} from 'node:child_process';
 import {readFileSync} from 'node:fs';
 import {JSDOM,VirtualConsole} from 'jsdom';
 import {compute,series,managementCosts} from '../../assets/blended/metrics.js';
-import {makeDynamicManagement} from '../private/dynamic-meta-costs.js';
+import {makeDynamicManagement,solveMetaBonus} from '../private/dynamic-meta-costs.js';
 const dynamicManagement=makeDynamicManagement(compute,managementCosts);
 const data=Object.fromEntries(['meta','google','shopify','creators','returns'].map(k=>[k,JSON.parse(readFileSync('data/'+k+'.json','utf8'))]));
 const costs=JSON.parse(readFileSync('assets/blended/costs.json','utf8'));
@@ -88,14 +88,23 @@ test('secured financial values share audited costs with a dynamic bonus, preserv
  }finally{original.window.close();secured.window.close();}
 });
 test('return risk and the fixed fee raise break-even and reduce the block bonus without double deductions',()=>{
- const from='2026-09-14',to='2026-09-30';
+ const from='2026-10-01',to='2026-10-01';
  const dynamic=dynamicManagement(data,costs,from,to);
  const old=managementCosts(data,costs,from,to);
  assert(dynamic.bonus<old.bonus);
  assert.equal(dynamic.fixed,old.fixed);
  assert.ok(Math.abs(dynamic.daily.reduce((n,r)=>n+r.bonus,0)-dynamic.bonus)<1e-7);
- for(const p of dynamic.periods){assert.equal(p.bonus,Math.max(0,p.rawBonus));assert.ok(p.breakEvenRoas>0);}
+ for(const p of dynamic.periods){assert.ok(Math.abs(p.bonus-Math.max(0,p.rawBonus))<1e-7);assert.ok(p.breakEvenRoas>0);}
  const noFixed=dynamicManagement(data,{...costs,meta_management:{...costs.meta_management,monthly_fixed:0}},from,to);
  assert(noFixed.bonus>dynamic.bonus);
  const unavailable=dynamicManagement({...data,returns:undefined},costs,from,to);assert.equal(unavailable.bonus,null);
+});
+test('October fixed-point bonus exactly satisfies the original ROAS-gap formula and leaves history untouched',()=>{
+ assert.deepEqual(dynamicManagement(data,costs,'2026-09-14','2026-09-30'),managementCosts(data,costs,'2026-09-14','2026-09-30'));
+ for(const [revenue,margin,spend,rate] of [[1210,500,200,.1],[100,20,10,.1],[3000,1000,999,.1],[3000,1000,1200,.1]]){
+  const b=solveMetaBonus(revenue,margin,spend,rate),be=revenue/(margin-b);
+  assert.ok(Math.abs(b-Math.max(0,rate*(revenue-spend*be)))<1e-8);
+  assert.ok(b>=0 && b<=Math.max(0,margin-spend));
+ }
+ assert.equal(solveMetaBonus(100,20,25,.1),0);
 });
