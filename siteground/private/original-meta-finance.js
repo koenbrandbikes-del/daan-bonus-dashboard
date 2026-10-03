@@ -84,6 +84,7 @@ function lwPaintFinance(){
   document.getElementById('mBe').textContent=be==null?'—':x2(be);
   document.getElementById('mBeSub').textContent='incl. retouren, begroting en Daan';
   document.getElementById('mScaleSub').textContent='doel bij de huidige kostenmix';
+  document.getElementById('bonusLbl').textContent='BONUS IN SELECTIE';
   document.getElementById('bonusAmt').textContent=lwMoney(m?.management.bonus);
   document.getElementById('bonusBadge').textContent=lwFinancialCosts?.meta_management?'ROAS-bonus '+(lwFinancialCosts.meta_management.bonus_rate*100)+'% · eigen bonus in BEROAS vanaf 1 okt':'Kostenbasis ontbreekt';
   document.getElementById('roasHeroLbl').textContent='NETTO META ROAS';
