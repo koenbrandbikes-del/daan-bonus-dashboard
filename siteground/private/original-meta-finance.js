@@ -3,6 +3,7 @@
 let lwFinancialData, lwFinancialCosts, lwFinancialError;
 try {
   lwFinancialCosts=_loadJSON('assets/blended/costs.json');
+  if(!lwFinancialCosts.meta_management || !Number.isFinite(lwFinancialCosts.meta_management.bonus_rate) || !Number.isFinite(lwFinancialCosts.assumed_vat))throw Error('Kostenbasis ontbreekt');
   lwFinancialData={meta:_META,google:_GOOGLE,shopify:_SHOPIFY,
     creators:_loadJSON('data/creators.json'),returns:_loadJSON('data/returns.json')};
   if(lwFinancialData.returns?.version!==2 || !lwFinancialData.returns.complete)
@@ -48,13 +49,13 @@ function lwPaintFinance(){
   document.getElementById('mBeSub').textContent='na retouren, begroting en vaste vergoeding';
   document.getElementById('mScaleSub').textContent='incl. dynamische bonus · marge excl. btw';
   document.getElementById('bonusAmt').textContent=lwMoney(m?.management.bonus);
-  document.getElementById('bonusBadge').textContent='Dynamische kostenbasis · '+(lwFinancialCosts.meta_management.bonus_rate*100)+'% · per contractblok';
+  document.getElementById('bonusBadge').textContent=lwFinancialCosts?.meta_management?'Dynamische kostenbasis · '+(lwFinancialCosts.meta_management.bonus_rate*100)+'% · per contractblok':'Kostenbasis ontbreekt';
   document.getElementById('roasHeroLbl').textContent='NETTO META ROAS';
   document.getElementById('roasHeroVal').textContent=v.roas==null?'—':x2(v.roas);
   document.getElementById('roasDelta').textContent='Na werkelijke en begrote retouren';
   document.getElementById('mRoas').textContent=v.roas==null?'—':x2(v.roas);
   document.getElementById('mRoasSub').textContent='na retourcorrecties';
-  const bonusRate=lwFinancialCosts.meta_management.bonus_rate;
+  const bonusRate=lwFinancialCosts?.meta_management?.bonus_rate??0;
   const target=pct=>be!=null && 1/be-bonusRate-pct/(1+lwFinancialCosts.assumed_vat)>0 && 1-bonusRate*be>0?
     (1-bonusRate*be)/(1/be-bonusRate-pct/(1+lwFinancialCosts.assumed_vat)):null;
   document.getElementById('mScale').textContent=target(SCALE_T)==null?'—':x2(target(SCALE_T));
