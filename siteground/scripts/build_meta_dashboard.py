@@ -16,7 +16,11 @@ def dashboard():
         part = (ROOT / path).read_text()
         part = re.sub(r'^import[^\n]*\n', '', part, flags=re.M)
         part = re.sub(r'\bexport (?=(?:async )?(?:function|const|let|class))', '', part)
+        if path.endswith('metrics.js'):
+            part = part.replace('const management=managementCosts(data,costs,from,to);', 'const management=options.skipManagement?{fixed:0,bonus:0,total:0,periods:[],daily:[]}:managementCosts(data,costs,from,to);')
         engine.append(part)
+    dynamic = (ROOT / 'siteground/private/dynamic-meta-costs.js').read_text().replace('export function ', 'function ')
+    engine.append(dynamic + '\nmanagementCosts=makeDynamicManagement(compute,managementCosts);')
     bridge = (ROOT / 'siteground/private/original-meta-finance.js').read_text()
     source = source.replace('/* ═══ INIT ═', 'const lwFinanceEngine=(()=>{\n' + '\n'.join(engine) + '\nreturn {compute,series};})();\n' + bridge + '\n/* ═══ INIT ═', 1)
     source = source.replace('</head>', '<style>.lw-finance{margin:12px 0 20px;border:1px solid #ffffff1a;border-radius:14px;background:#151b4033}.lw-finance summary{display:flex;justify-content:space-between;gap:16px;cursor:pointer;padding:16px;font-size:13px}.lw-finance summary span{font-variant-numeric:tabular-nums}.lw-finance-body{padding:0 16px 16px}.lw-finance-row{display:flex;justify-content:space-between;align-items:baseline;gap:20px;padding:8px 0;font-size:12px;border-bottom:1px solid #ffffff08}.lw-finance-row strong{font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}.lw-finance-row.total,.lw-finance-row.subtotal{border-top:1px solid #ffffff25;margin-top:5px;padding-top:12px}.lw-finance-note{font-size:11px;line-height:1.6;color:#93a2b8;margin:12px 0 0}.kpi-headline{line-height:1.6}</style></head>')

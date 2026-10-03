@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {readFileSync} from 'node:fs';
 import {JSDOM,VirtualConsole} from 'jsdom';
-import {compute,series} from '../../assets/blended/metrics.js';
+import {compute,series,managementCosts} from '../../assets/blended/metrics.js';
+import {makeDynamicManagement} from '../private/dynamic-meta-costs.js';
+const dynamicManagement=makeDynamicManagement(compute,managementCosts);
 const data=Object.fromEntries(['meta','google','shopify','creators','returns'].map(k=>[k,JSON.parse(readFileSync('data/'+k+'.json','utf8'))]));
 const costs=JSON.parse(readFileSync('assets/blended/costs.json','utf8'));
 
@@ -34,7 +36,7 @@ test('handler compilation handles dynamic names safely and keeps financial sourc
  assert.ok(html.includes('location.replace("login")'));
 });
 
-test('secured financial values match Cijfers, preserving original bonus and controls',async()=>{
+test('secured financial values share audited costs with a dynamic bonus, preserving controls',async()=>{
  const product=readFileSync('assets/product-costs.js','utf8');
  const source=readFileSync('index.html','utf8');
  const render=async document=>{
@@ -53,19 +55,25 @@ test('secured financial values match Cijfers, preserving original bonus and cont
  const original=await render(source);const secured=await render(html);
  try{
   for(const id of ['simSlider','ordHdr','adsHdr'])assert.equal(secured.window.document.getElementById(id).textContent,original.window.document.getElementById(id).textContent);
-  const values=d=>[...d.window.document.querySelectorAll('.bonus-amt,.mc-val,[data-kpi="spend"] .kpi-val,[data-kpi="purch"] .kpi-val,[data-kpi="cac"] .kpi-val')].map(n=>n.textContent);
+  const values=d=>[...d.window.document.querySelectorAll('[data-kpi="spend"] .kpi-val,[data-kpi="purch"] .kpi-val,[data-kpi="cac"] .kpi-val')].map(n=>n.textContent);
   assert.deepEqual(values(secured),values(original));
   const compare=()=>{
    const period=secured.window.eval('PERIODS[P]');
-   const expected=compute(data,costs,period.from,period.to,'meta');
+   const expected=compute(data,costs,period.from,period.to,'meta',{includeDaan:false});
+   const management=dynamicManagement(data,costs,period.from,period.to);
+   expected.result=expected.result==null || management.total==null?null:expected.result-management.total;
    const money=v=>'€'+v.toLocaleString('nl-NL',{minimumFractionDigits:0,maximumFractionDigits:0});
    assert.equal(secured.window.document.querySelector('[data-kpi="net"] .kpi-val').textContent,expected.result==null?'—':money(expected.result));
    const ledger=secured.window.document.getElementById('lwFinanceDetails');
    assert.ok(ledger.textContent.includes('Begrote retouren'));
-   assert.ok(ledger.textContent.includes('Daan · vaste vergoeding'));
+   assert.ok(ledger.textContent.includes('Daan · vergoeding'));
+   assert.equal(ledger.querySelectorAll('[data-finance-key="returns"]').length,1);
+   assert.equal(ledger.querySelectorAll('[data-finance-key="returnReserve"]').length,0);
+   assert.ok(ledger.querySelector('[data-finance-key="returns"] strong').textContent.includes('%'));
    assert.ok(ledger.textContent.includes('annuleringen tellen niet als retourpakket'));
    const points=secured.window.eval('kpiAggregate("day",PERIODS[P].from,PERIODS[P].to,"all","all","all")');
-   const reference=series(data,costs,period.from,period.to,'meta','day');
+   const reference=series(data,costs,period.from,period.to,'meta','day',{includeDaan:false});
+   for(const r of reference){const management=dynamicManagement(data,costs,r.from,r.to);r.result=r.result==null || management.total==null?null:r.result-management.total;}
    const byDate=new Map(reference.map(r=>[r.key,r]));
    for(const p of points)assert.ok(Math.abs(p.net-byDate.get(p.key).result)<1e-7);
   };
@@ -78,4 +86,16 @@ test('secured financial values match Cijfers, preserving original bonus and cont
   const slider=secured.window.document.getElementById('simSlider');slider.value='3';slider.dispatchEvent(new secured.window.Event('input',{bubbles:true}));
   assert.equal(slider.value,'3');
  }finally{original.window.close();secured.window.close();}
+});
+test('return risk and the fixed fee raise break-even and reduce the block bonus without double deductions',()=>{
+ const from='2026-09-14',to='2026-09-30';
+ const dynamic=dynamicManagement(data,costs,from,to);
+ const old=managementCosts(data,costs,from,to);
+ assert(dynamic.bonus<old.bonus);
+ assert.equal(dynamic.fixed,old.fixed);
+ assert.ok(Math.abs(dynamic.daily.reduce((n,r)=>n+r.bonus,0)-dynamic.bonus)<1e-7);
+ for(const p of dynamic.periods){assert.equal(p.bonus,Math.max(0,p.rawBonus));assert.ok(p.breakEvenRoas>0);}
+ const noFixed=dynamicManagement(data,{...costs,meta_management:{...costs.meta_management,monthly_fixed:0}},from,to);
+ assert(noFixed.bonus>dynamic.bonus);
+ const unavailable=dynamicManagement({...data,returns:undefined},costs,from,to);assert.equal(unavailable.bonus,null);
 });

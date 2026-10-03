@@ -1,5 +1,5 @@
 // Same source datasets and financial engine as cijfers.lumeworks.nl.
-// Loaded into the private build only. Contractual bonus/BEROAS are not rewritten.
+// Private build only: retain the bonus rate and periods; use the requested dynamic cost basis.
 let lwFinancialData, lwFinancialCosts, lwFinancialError;
 try {
   lwFinancialCosts=_loadJSON('assets/blended/costs.json');
@@ -42,20 +42,43 @@ function lwPaintFinance(){
   headline.className='kpi-headline';
   headline.textContent=lwFinancialError || (m?.result==null?'Netto resultaat nog niet vast te stellen: controleer de financiële onderbouwing.':
     'Meta '+(m.result>=0?'houdt '+lwMoney(m.result)+' over':'maakt '+lwMoney(-m.result)+' verlies')+' na kosten, Daan en retouren.'+(filtered?' Financieel resultaat geldt voor het volledige account.':''));
-  document.getElementById('mBeSub').textContent='contractbasis · bonus';
-  document.getElementById('mScaleSub').textContent='contractbasis · vóór retourcorrecties';
-  document.getElementById('bonusBadge').textContent='Volgens bestaande bonusregeling · niet herberekend voor retouren';
+  const available=m && m.result!=null && m.management.bonus!=null?m.result+m.channels.meta.mediaSpend+m.management.bonus:null;
+  const be=available>0 && v.rev>0?v.rev/available:null;
+  document.getElementById('mBe').textContent=be==null?'—':x2(be);
+  document.getElementById('mBeSub').textContent='na retouren, begroting en vaste vergoeding';
+  document.getElementById('mScaleSub').textContent='incl. dynamische bonus · marge excl. btw';
+  document.getElementById('bonusAmt').textContent=lwMoney(m?.management.bonus);
+  document.getElementById('bonusBadge').textContent='Dynamische kostenbasis · '+(lwFinancialCosts.meta_management.bonus_rate*100)+'% · per contractblok';
+  document.getElementById('roasHeroLbl').textContent='NETTO META ROAS';
+  document.getElementById('roasHeroVal').textContent=v.roas==null?'—':x2(v.roas);
+  document.getElementById('roasDelta').textContent='Na werkelijke en begrote retouren';
+  document.getElementById('mRoas').textContent=v.roas==null?'—':x2(v.roas);
+  document.getElementById('mRoasSub').textContent='na retourcorrecties';
+  const bonusRate=lwFinancialCosts.meta_management.bonus_rate;
+  const target=pct=>be!=null && 1/be-bonusRate-pct/(1+lwFinancialCosts.assumed_vat)>0 && 1-bonusRate*be>0?
+    (1-bonusRate*be)/(1/be-bonusRate-pct/(1+lwFinancialCosts.assumed_vat)):null;
+  document.getElementById('mScale').textContent=target(SCALE_T)==null?'—':x2(target(SCALE_T));
+  if(be!=null && target(SCALE_H)!=null && v.roas!=null){CX.be=be;renderGauge(be,target(SCALE_T),target(SCALE_H),v.roas,m.count);updateSim();}
+  else document.getElementById('gaugeOuter').innerHTML='<p class="lw-finance-note">Geen haalbare break-even-ROAS bij deze kostenbasis.</p>';
   let details=document.getElementById('lwFinanceDetails');
   if(!details){details=document.createElement('details');details.id='lwFinanceDetails';details.className='lw-finance';document.getElementById('kpiHeadline').after(details);}
   if(!m){details.innerHTML='<summary>Financiële onderbouwing</summary><p>'+lwFinancialError+'</p>';return;}
-  const rows=m.marginBuild.filter(r=>r.key!=='margin');
+  const baseRows=m.marginBuild.filter(r=>r.key!=='margin');
   const reserve=m.returnReserve,w=m.correctionAllocation.weights;
-  const lines=rows.map(r=>'<div class="lw-finance-row '+r.kind+'"><span>'+lwEscapeAttr(r.label)+'</span><strong>'+lwMoney(r.value)+'</strong></div>').join('');
+  const find=key=>baseRows.find(r=>r.key===key)?.value;
+  const add=(a,b)=>a==null||b==null?null:a+b;
+  const combinedReturns=add(find('returns'),reserve.available?find('returnReserve'):0);
+  const rows=baseRows.filter(r=>!['returnReserve','daanBonus'].includes(r.key)).map(r=>r.key==='returns'?{...r,label:'Retourkosten',value:combinedReturns}:r.key==='daanFixed'?{...r,label:'Daan · vergoeding',value:add(r.value,find('daanBonus'))}:r);
+  const percentage=(value,kind)=>value==null||!(m.revenue>0)?'—':((kind==='total'?value:Math.abs(value))/m.revenue*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
+  const lines=rows.map(r=>'<div class="lw-finance-row '+r.kind+'" data-finance-key="'+r.key+'"><span>'+lwEscapeAttr(r.label)+'</span><strong>'+lwMoney(r.value)+' <span style="font-weight:400;color:#93a2b8">— '+percentage(r.value,r.kind)+'</span></strong></div>').join('');
   const model=reserve.available?'Retourbegroting: '+(reserve.rate*100).toFixed(2)+'% retourorders · '+reserve.matureOrders+' afgeronde orders · mediaan '+reserve.median+' dagen · horizon '+reserve.horizon+' dagen.':reserve.reason;
-  const expected=reserve.available?'<div class="lw-finance-note">Nog verwacht: '+lwMoney(reserve.refundExcl)+' retouromzet excl. btw + '+lwMoney(reserve.handling)+' afhandeling − '+lwMoney(reserve.overheadCredit)+' correctie overige kosten.</div>':'';
-  details.innerHTML='<summary>Netto marge en retouren <span>'+lwMoney(m.result)+'</span></summary><div class="lw-finance-body">'+lines+expected+
+  const expected='<details class="lw-finance-note"><summary style="padding:8px 0">Uitsplitsing en break-evenberekening</summary><p>Retourkosten: '+lwMoney(-find('returns'))+' werkelijke afhandeling + '+(reserve.available?lwMoney(reserve.impact):'onbekende begroting')+' nog verwachte retouren. Reeds terugbetaalde omzet staat apart bij omzetcorrecties.</p>'+
+    (reserve.available?'<p>Begrote retouren: '+lwMoney(reserve.refundExcl)+' retouromzet excl. btw + '+lwMoney(reserve.handling)+' afhandeling − '+lwMoney(reserve.overheadCredit)+' correctie overige kosten.</p>':'')+
+    '<p>Daan: '+lwMoney(-find('daanFixed'))+' vast + '+lwMoney(find('daanBonus')==null?null:-find('daanBonus'))+' bonus.</p><p>De kostprijssheet levert product- en leveringskosten. Betaalkosten, overige kosten, werkelijke retouren, retourbegroting en vaste vergoeding worden daarnaast verwerkt.</p><p>Operationele BEROAS = netto Meta-omzet incl. btw ('+lwMoney(v.rev)+') ÷ beschikbare marge vóór advertenties en bonus ('+lwMoney(available)+') = '+(be==null?'niet haalbaar':x2(be))+'. Bonus: '+(lwFinancialCosts.meta_management.bonus_rate*100)+'% × (netto omzet − advertentiekosten × BEROAS), per contractblok. Verliesdagen tellen mee; het bloktotaal heeft minimum nul. De bonus is nul op break-even en telt daarom niet opnieuw in zijn eigen kostenbasis.</p></details>';
+  details.innerHTML='<summary>Netto marge en retouren <span>'+lwMoney(m.result)+'</span></summary><div class="lw-finance-body"><p class="lw-finance-note">Percentages van netto omzet excl. btw, na werkelijke omzetcorrecties.</p>'+lines+expected+
     '<p class="lw-finance-note">'+lwEscapeAttr(model||'Retourbegroting niet beschikbaar')+(reserve.stale?' Retourbron is ouder dan 48 uur; begroting is niet verder afgebouwd.':'')+'</p>'+
     '<p class="lw-finance-note">'+(w?'Meta krijgt '+(w.meta*100).toFixed(1)+'% van de niet-influencercorrecties op basis van aankopen. Google telt alleen non-branded mee.':'Kanaaltoewijzing ontbreekt.')+' €'+(lwFinancialCosts.returns?.cost_per_return??20)+' per ontvangen retourpakket; annuleringen tellen niet als retourpakket. Werkelijke retouren vervangen de begroting automatisch.</p></div>';
+  document.getElementById('beSummary').innerHTML='<div class="be-stat"><div class="be-lbl">Operationele BEROAS</div><div class="be-val">'+(be==null?'—':x2(be))+'</div></div><p class="lw-finance-note">Inclusief retouren, begroting en vaste vergoeding. Zie de volledige kostenopbouw hierboven. De producttabel hieronder toont alleen de kostprijssheet.</p>';
 }
 const lwOriginalKpiBar=renderKpiBar;
 renderKpiBar=function(...args){lwOriginalKpiBar(...args);lwPaintFinance();};
