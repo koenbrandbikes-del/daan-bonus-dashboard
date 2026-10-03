@@ -13,7 +13,7 @@ const costs=JSON.parse(readFileSync('assets/blended/costs.json','utf8'));
 const html=execFileSync('python',['-c','import sys;sys.path.insert(0,"siteground/scripts");from build_meta_dashboard import dashboard;print(dashboard())'],{maxBuffer:4e6}).toString();
 const dom=new JSDOM(html);
 test('one original dashboard retains compensation, simulator, ads and orders',()=>{
- for(const id of ['simSlider','adTagMenu','acc-sim','acc-be','acc-ord'])assert.ok(dom.window.document.getElementById(id),id);
+ for(const id of ['adTagMenu','acc-be','acc-ord'])assert.ok(dom.window.document.getElementById(id),id);
  assert.ok(html.includes('BONUS_PCT   = 0.10'));
  assert.ok(!html.includes('href="meta-test"'));
  assert.ok(!html.includes('href="daan-test"'));
@@ -55,7 +55,7 @@ test('secured financial values share audited costs with a dynamic bonus, preserv
  };
  const original=await render(source);const secured=await render(html);
  try{
-  for(const id of ['simSlider','adsHdr'])assert.equal(secured.window.document.getElementById(id).textContent,original.window.document.getElementById(id).textContent);
+  for(const id of ['adsHdr'])assert.equal(secured.window.document.getElementById(id).textContent,original.window.document.getElementById(id).textContent);
   const values=d=>[...d.window.document.querySelectorAll('[data-kpi="spend"] .kpi-val,[data-kpi="purch"] .kpi-val,[data-kpi="cac"] .kpi-val')].map(n=>n.textContent);
   assert.deepEqual(values(secured),values(original));
   const compare=()=>{
@@ -129,8 +129,18 @@ test('secured financial values share audited costs with a dynamic bonus, preserv
   assert.ok(secured.window.document.getElementById('kpiChartWrap').classList.contains('open'));
   margin.dispatchEvent(new secured.window.KeyboardEvent('keydown',{key:' ',bubbles:true}));
   assert.equal(margin.getAttribute('aria-pressed'),'false');
-  const slider=secured.window.document.getElementById('simSlider');slider.value='3';slider.dispatchEvent(new secured.window.Event('input',{bubbles:true}));
-  assert.equal(slider.value,'3');
+  assert.equal(secured.window.document.getElementById('acc-sim'),null);
+  assert.ok(secured.window.document.getElementById('lwRevenueSlider'));
+  margin.dispatchEvent(new secured.window.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+  assert.ok(secured.window.document.querySelector('.chart-zero-line'));
+  const gate=secured.window.document.querySelector('.chart-threshold-hit');
+  const old=Number(gate.getAttribute('aria-valuenow'));
+  gate.dispatchEvent(new secured.window.KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}));
+  assert.ok(Number(gate.getAttribute('aria-valuenow'))>old);
+  const compareMonth=secured.window.document.querySelector('[data-meta-period=lastmonth]');
+  compareMonth.checked=true;compareMonth.dispatchEvent(new secured.window.Event('change',{bubbles:true}));
+  assert.equal(secured.window.document.querySelectorAll('[data-period-line]').length,2);
+  assert.equal(secured.window.document.getElementById('lwMonthBonus').textContent,savedMonth);
  }finally{original.window.close();secured.window.close();}
 });
 test('return risk and the fixed fee raise break-even and reduce the block bonus without double deductions',()=>{

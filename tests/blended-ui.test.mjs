@@ -106,7 +106,7 @@ async function boot(
   w.eval(fs.readFileSync(new URL("assets/product-costs.js", root), "utf8"));
   w.matchMedia = () => ({ matches: true });
   w.HTMLElement.prototype.scrollIntoView = () => {};
-  const scripts = ["return-reserve.js", "meta-management.js", "metrics.js", "data.js", "date-picker.js", "creator-summary.js", "app.js"]
+  const scripts = ["return-reserve.js", "meta-management.js", "metrics.js", "data.js", "date-picker.js", "creator-summary.js", "chart-reference.js", "app.js"]
     .map((f) =>
       fs
         .readFileSync(new URL("assets/blended/" + f, root), "utf8")
@@ -326,7 +326,7 @@ test("video feedback: today comparison, direct metric chooser, channel columns a
     /Waarvan non-branded/,
   );
   d.querySelector("[data-channel=google]").click();
-  assert.equal(d.querySelector(".kpi").dataset.metric, "revenue");
+  assert.equal(d.querySelector(".kpi").dataset.metric, "result");
   const heads = [...d.querySelectorAll("#detail th")].map((n) => n.textContent);
   assert.match(heads[1], /waarde/);
   assert.match(heads[2], /Uitgaven/);
@@ -555,7 +555,7 @@ test('analysis collapses and salary breakdown is grouped; every channel exposes 
  salary.querySelector('summary').click();assert.equal(salary.open,true);
  d.querySelector('#collapseAnalysis').click();assert.equal(d.querySelector('#analysisBody').hidden,true);
  d.querySelector('#collapseAnalysis').click();assert.equal(d.querySelector('#analysisBody').hidden,false);
- assert.match(d.querySelector('#marketingMix thead').textContent,/Winstmarge/);
+ assert.match(d.querySelector('#marketingMix thead').textContent,/winstmarge/i);
  for(const channel of ['meta','google','infl']){
   d.querySelector('#tab-'+channel).click();
   assert.match(d.querySelector('[data-metric=result]').textContent,/% van omzet excl. btw/);
@@ -569,7 +569,7 @@ test("channel profit margin is selectable, charted and responds to Daan costs", 
  const value=()=>d.querySelector('[data-metric=profitMargin] strong').textContent;
  const before=value();
  assert.match(before,/%/);
- assert.match(d.querySelector('#chart').textContent,/Winstmarge/);
+ assert.match(d.querySelector('#chart').textContent,/winstmarge/i);
  assert.match(d.querySelector('[data-metric=profitMargin] .delta').textContent,/procentpunt/);
  d.querySelector('[data-daan=without]').click();
  assert.notEqual(value(),before);
@@ -577,7 +577,7 @@ test("channel profit margin is selectable, charted and responds to Daan costs", 
   d.querySelector('#tab-'+channel).click();
   assert(d.querySelector('[data-metric=result]').classList.contains('active'));
   assert(d.querySelector('[data-metric=profitMargin]').classList.contains('active'));
-  assert.match(d.querySelector('#chart').textContent,/Winstmarge/);
+  assert.match(d.querySelector('#chart').textContent,/winstmarge/i);
  }
  w.close();
 });
@@ -585,11 +585,11 @@ test("channel profit margin is selectable, charted and responds to Daan costs", 
 test("overview offers net profit percentage with period comparison and chart",async()=>{
  const w=await boot('?from=2026-09-23&to=2026-09-29&metrics=profitMargin');
  const d=w.document,card=d.querySelector('[data-metric=profitMargin]');
- assert.match(card.textContent,/Winstmarge/);
+ assert.match(card.textContent,/winstmarge/i);
  assert.match(card.querySelector('strong').textContent,/%/);
  assert.match(card.querySelector('.delta').textContent,/procentpunt/);
- assert.match(d.querySelector('#chart').textContent,/Winstmarge/);
- assert.equal(d.querySelector('[data-metric=result] .label').textContent,'Nettowinst · voorlopig');
+ assert.match(d.querySelector('#chart').textContent,/winstmarge/i);
+ assert.equal(d.querySelector('[data-metric=result] .label').textContent,'Netto resultaat');
  w.close();
 });
 
@@ -704,15 +704,14 @@ test('period presets show the applied choice and remain usable after repeated op
 
 test('first glance has four KPIs, visible interpretation and revenue-profit default',async()=>{
  const w=await boot('?from=2026-09-24&to=2026-09-30'),d=w.document;
- assert.deepEqual([...d.querySelectorAll('.primary-kpis [data-metric]')].map(b=>b.dataset.metric),['revenue','result','profitMargin','spend']);
- assert.deepEqual([...d.querySelectorAll('.primary-kpis .active')].map(b=>b.dataset.metric),['revenue','result']);
- assert.match(d.querySelector('.steering-summary>p').textContent,/omzet:.*meer/);
- assert.match(d.querySelector('.steering-summary>p').textContent,/voorlopig resultaat/);
- assert.match(d.querySelector('.steering-summary>p').textContent,/Winstmarge/);
+ assert.deepEqual([...d.querySelectorAll('.primary-kpis [data-metric]')].map(b=>b.dataset.metric),['result','profitMargin','revenue','spend']);
+ assert.deepEqual([...d.querySelectorAll('.primary-kpis .active')].map(b=>b.dataset.metric),['result','revenue']);
+ assert.equal(d.querySelector('.steering-summary>p'),null);
+ assert.ok(d.querySelector('.steering-summary details'));
  for(const id of ['costOverview','marketingMix','returnEstimate','overviewOrders']) assert.equal(d.getElementById(id).open,false);
  assert(d.querySelector('.primary-kpis').compareDocumentPosition(d.querySelector('#marketingMix')) & w.Node.DOCUMENT_POSITION_FOLLOWING);
  d.querySelector('[data-channel=google]').click();d.querySelector('[data-channel=all]').click();
- assert.match(d.querySelector('#collapseAnalysis').textContent,/Omzet excl. btw & Nettowinst/);
+ assert.match(d.querySelector('#collapseAnalysis').textContent,/Omzet excl. btw & Netto resultaat/);
  w.close();
 });
 test('full history starts on 5 August and includes both management fees',async()=>{
@@ -923,5 +922,28 @@ test('Meta and total store remain comparable in lines, tables, selection totals 
  }
  d.querySelector('[data-chart-channel=google]').click();assert.equal(d.querySelector('[data-chart-channel=all]').getAttribute('aria-pressed'),'true');
  d.querySelector('[data-chart-channel=all]').click();assert.equal(d.querySelector('[data-chart-channel=all]').getAttribute('aria-pressed'),'false');
+ w.close();
+});
+
+
+test('CFO reference controls and checked period lines use exact financial data without changing main KPIs',async()=>{
+ const w=await boot('?from=2026-10-01&to=2026-10-03&metrics=result'),d=w.document;
+ assert.match(d.title,/Resultaat & groei/);
+ const before=d.querySelector('[data-metric=result] strong').textContent;
+ assert.ok(d.querySelector('#chart .chart-zero-line'));
+ const gate=d.querySelector('#chart .chart-threshold-hit');
+ gate.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}));
+ assert.ok(Number(gate.getAttribute('aria-valuenow'))>0);
+ assert.equal(d.querySelector('[data-metric=result] strong').textContent,before);
+ const month=d.querySelector('[data-period-compare=lastmonth]');assert.equal(month.disabled,false);
+ month.checked=true;month.dispatchEvent(new w.Event('change'));
+ assert.equal(d.querySelectorAll('#chart [data-period-line]').length,2);
+ assert.match(d.querySelector('#chart').textContent,/Vorige maand/);
+ assert.equal(d.querySelector('[data-metric=result] strong').textContent,before);
+ const week=d.querySelector('[data-period-compare=lastweek]');week.checked=true;week.dispatchEvent(new w.Event('change'));
+ assert.equal(d.querySelectorAll('#chart [data-period-line]').length,3);
+ assert.equal(month.checked,true);
+ d.querySelector('#chartMode').click();assert.equal(d.querySelectorAll('#chart th').length,4);
+ d.querySelector('[data-clear-periods]').click();assert.equal(d.querySelector('[data-period-line]'),null);
  w.close();
 });

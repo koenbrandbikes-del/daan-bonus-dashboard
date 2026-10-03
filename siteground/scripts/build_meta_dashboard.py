@@ -19,6 +19,15 @@ def dashboard():
     source = source.replace('<div class="sl">ROAS – BEROAS</div>', '<div class="sl">Netto resultaat</div>')
     source = source.replace('<div class="sim-cards">', '<p id="lwSimBasis" class="lw-finance-note"></p><div class="sim-cards">')
     source = source.replace('+ \'worden.</strong><br>\' + String((e && e.message) || e).replace(/</g,"&lt;") + \'</div>\';', '+ \'worden.</strong><p>Controleer je verbinding en probeer opnieuw. We tonen geen oude bedragen als actuele cijfers.</p><button type="button" onclick="location.reload()">Opnieuw proberen</button></div>\';')
+    source = re.sub(r'  <div class="acc-item" id="acc-sim">.*?(?=  <div class="acc-item" id="acc-be">)', '', source, flags=re.S)
+    source = source.replace('let yMin=Math.min(...allVals), yMax=Math.max(...allVals);', 'let yMin=Math.min(0,...allVals), yMax=Math.max(0,...allVals);')
+    source = source.replace('let yMin=Math.min(...allRatioVals), yMax=Math.max(...allRatioVals);', 'let yMin=Math.min(0,...allRatioVals), yMax=Math.max(0,...allRatioVals);')
+    source = source.replace('attachKpiChartHover(plot,data,xAt,padL,padR,W,H,padT,padB);', 'attachKpiChartHover(plot,data,xAt,padL,padR,W,H,padT,padB); lwChartTools.attachChartReference(document.getElementById("kpiChartSvg"),{min:yMin,max:yMax,left:padL,right:W-padR,top:padT,bottom:H-padB,format:fmtY,series:plot.map(s=>({label:s.meta.label,values:s.vals})),key:"meta:"+kpiChartSel.join(":")+":"+rangeFrom+":"+rangeTo,unit:kpiChartGran==="week"?"weken":kpiChartGran==="month"?"maanden":"dagen"});')
+    source = source.replace('attachRatioChartHover(data,ratio3,xAt,W,metric);', 'attachRatioChartHover(data,ratio3,xAt,W,metric); lwChartTools.attachChartReference(document.getElementById("kpiChartSvg"),{min:yMin,max:yMax,left:padL,right:W-padR,top:roasTop,bottom:roasBot,format:fmtRatio,series:[{label:metricLabel,values:data.map(valOf)}],key:"meta:"+metric+":"+rangeFrom+":"+rangeTo,unit:"dagen"});')
+    source = re.sub(r'  /\* simulator —.*?\n  document.getElementById\("footerDate"\)', '  document.getElementById("footerDate")', source, flags=re.S)
+    chart_tools = (ROOT / 'assets/blended/chart-reference.js').read_text().replace('export ', '')
+    source = source.replace('/* ═══ INIT ═', 'const lwChartTools=(()=>{' + chart_tools + ';return {attachChartReference,comparisonRanges,periodComparisonChart};})();\n/* ═══ INIT ═', 1)
+    source = source.replace('</head>', '<style>'+(ROOT / 'assets/blended/chart-reference.css').read_text()+'</style></head>')
     engine = []
     for path in ['assets/blended/data.js', 'assets/blended/return-reserve.js', 'assets/blended/meta-management.js', 'assets/blended/metrics.js']:
         part = (ROOT / path).read_text()

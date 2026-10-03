@@ -1,3 +1,4 @@
+import {attachChartReference,comparisonRanges,periodComparisonChart} from "./chart-reference.js?v=cfo-1";
 import { creatorSummary } from "./creator-summary.js?v=startup-costs-1";
 import { createDatePicker } from "./date-picker.js?v=store-start-1";
 import { load } from "./data.js?v=management-start-2";
@@ -290,11 +291,11 @@ function metricMeta(k, channel = state.channel) {
       fmt: euro,
     },
     result: {
-      label: channel==="infl" ? "Resultaat · eigen orders" : channel!=="all" ? "Nettowinst · geschat" : "Nettowinst · voorlopig",
+      label: channel==="infl" ? "Resultaat · eigen orders" : channel!=="all" ? "Nettowinst · geschat" : "Netto resultaat",
       sub: channel==="meta" ? (state.daan==="without" ? "Zonder kosten Daan" : "Inclusief kosten Daan") : "Inclusief 4% overhead",
       fmt: euro,
     },
-    profitMargin: { label: "Winstmarge", sub: all ? "Van omzet excl. btw · voorlopig" : "Van kanaalomzet excl. btw · geschat", fmt: v => v == null ? "—" : num(v) + "%" },
+    profitMargin: { label: "Netto winstmarge", sub: all ? "Van omzet excl. btw · voorlopig" : "Van kanaalomzet excl. btw · geschat", fmt: v => v == null ? "—" : v.toLocaleString("nl-NL",{minimumFractionDigits:1,maximumFractionDigits:1}) + "%" },
     roas: {
       label: all ? "Blended ROAS" : channel === "meta" ? "Netto Meta ROAS" : "Kanaalrendement",
       sub: all
@@ -623,7 +624,9 @@ function channelBenchmark(cur) {
   return `<section class="channel-benchmark" aria-label="Marketingkosten en ruimte per order"><span>Kosten per aankoop <strong>${euro(cur.cpa)}</strong></span><span>Marge vóór marketing / order <strong>${euro(limit)}</strong></span><span>Resterende ruimte / order <strong>${euro(room)}</strong></span><details><summary>Hoe lees je dit?</summary><p>Gemiddelde winkelmarge vóór marketing per Shopify-order, na retourbegroting. Dezelfde benchmark voor ieder kanaal; productmix en overlap in attributie kunnen afwijken. Positieve ruimte is geen bewezen kanaalwinst en kosten per aankoop zijn geen nieuweklant-CAC.</p></details></section>`;
 }
 let datePickers = [];
+const periodCompareSelected=new Set();
 function render() {
+  updatePeriodCompareOptions();
   datePickers.forEach((p) => p.update());
   const cur = viewCompute(analysisData(), C, state.from, state.to, state.channel),
     p = getPrev();
@@ -647,7 +650,7 @@ function render() {
     )
     .join("");
   $("#content").setAttribute("aria-labelledby", "tab-" + state.channel);
-  const metrics = ["revenue", "result", "profitMargin", "spend"];
+  const metrics = ["result", "profitMargin", "revenue", "spend"];
   const secondaryMetrics = state.channel === "all" ? ["cost"] : ["count", "roas", "cpa"];
   const notes = [];
   if(state.channel === "all") notes.push(`Shopify-correcties gecontroleerd op ${D.returns?.model?.asOf || C.returns?.checked_on || "onbekend"}: ${euro(cur.refundedIncl)} terugbetaald en ${euro(cur.returnCost)} extra retourkosten voor orders in deze periode. Dit is een momentopname.`);
@@ -687,14 +690,14 @@ function render() {
   const profitShare=cur.result!=null && storeResult>0 ? cur.result/storeResult*100 : null;
   const metricCard = (k) => {
      const m = metricMeta(k);
-     return `<button class="kpi ${state.metrics.includes(k) ? "active" : ""}" data-metric="${k}" aria-pressed="${state.metrics.includes(k)}"><span class="label">${m.label}</span><strong>${m.fmt(cur[k])}</strong><small>${k === "result" && state.channel === "all" && cur.result != null && cur.revenue > 0 ? (state.daan==="without" ? "Zonder kosten Daan" : (cur.returnReserve.available?"Met Daan · na retourbegroting":"Met Daan · na 4% overhead")) : k === "result" && state.channel!=="all" ? (cur.result!=null && cur.revenue>0 ? num(cur.profitMargin)+"% van omzet excl. btw · geschat"+(cur.returnReserve.available?" · na retourbegroting":"") : "Marge niet beschikbaar") : k === "cost" && cur.cost != null && cur.revenue > 0 ? num((cur.cost / cur.revenue) * 100) + "% van omzet · geraamde basis" : k === "revenue" && state.channel === "all" ? num(cur.count) + " orders · " + euro(cur.incl) + " incl. btw" : m.sub}${k==='result' && state.channel!=='all' ? `<span class="profit-share" title="Aandeel van ${euro(storeResult)} winkelwinst; kanaalramingen kunnen overlappen">${profitShare==null?'Aandeel winkelwinst niet beschikbaar':num(profitShare)+'% van winkelwinst'}</span>` : ''}</small><small class="delta">${delta(k, cur, prev)}</small></button>`;
+     return `<button class="kpi ${state.metrics.includes(k) ? "active" : ""} ${k==='result' && cur.result!=null?(cur.result<0?'result-negative':'result-positive'):''}" data-metric="${k}" aria-pressed="${state.metrics.includes(k)}"><span class="label">${m.label}</span><strong>${m.fmt(cur[k])}</strong><small>${k === "result" && state.channel === "all" && cur.result != null && cur.revenue > 0 ? (state.daan==="without" ? "Zonder kosten Daan" : (cur.returnReserve.available?"Met Daan · na retourbegroting":"Met Daan · na 4% overhead")) : k === "result" && state.channel!=="all" ? (cur.result!=null && cur.revenue>0 ? num(cur.profitMargin)+"% van omzet excl. btw · geschat"+(cur.returnReserve.available?" · na retourbegroting":"") : "Marge niet beschikbaar") : k === "cost" && cur.cost != null && cur.revenue > 0 ? num((cur.cost / cur.revenue) * 100) + "% van omzet · geraamde basis" : k === "revenue" && state.channel === "all" ? num(cur.count) + " orders · " + euro(cur.incl) + " incl. btw" : m.sub}${k==='result' && state.channel!=='all' ? `<span class="profit-share" title="Aandeel van ${euro(storeResult)} winkelwinst; kanaalramingen kunnen overlappen">${profitShare==null?'Aandeel winkelwinst niet beschikbaar':num(profitShare)+'% van winkelwinst'}</span>` : ''}</small><small class="delta">${delta(k, cur, prev)}</small></button>`;
    };
   $("#content").innerHTML =
-    `<div class="view-head"><div><p class="eyebrow">${state.channel === "all" ? "HET TOTAALBEELD" : "KANAALANALYSE"}</p><h2>${state.channel === "all" ? "Cijfers" : names[state.channel]}</h2></div><div class="subtitle">${fmt(state.from)} – ${fmt(state.to)} ${state.to.slice(0, 4)}<br>${comparisonText}${state.to === today ? "<br><small>Vandaag loopt nog · vergeleken met hele dagen</small>" : ""}</div></div>
+    `<div class="view-head"><div><p class="eyebrow">${state.channel === "all" ? "HET TOTAALBEELD" : "KANAALANALYSE"}</p><h2>${state.channel === "all" ? "Resultaat & groei" : names[state.channel]}</h2></div><div class="subtitle">${fmt(state.from)} – ${fmt(state.to)} ${state.to.slice(0, 4)}<br>${comparisonText}${state.to === today ? "<br><small>Vandaag loopt nog · vergeleken met hele dagen</small>" : ""}</div></div>
  ${state.daan==='without' && ['all','meta'].includes(state.channel) ? '<p class="scenario-note">Scenario zonder kosten Daan · vergoeding uitgesloten van resultaat</p>' : ''}
  ${googleFilter()}
- <section class="kpis overview-kpis primary-kpis" aria-label="Kerncijfers">${metrics.map(metricCard).join('')}</section>
- <section class="steering-summary" aria-label="Ontwikkeling"><p>${esc(state.compare==='off' ? `Geselecteerde periode: ${euro(cur.revenue)} ${state.channel==='all'?'omzet excl. btw':'toegerekende omzet excl. btw'} en ${euro(cur.result)} ${state.channel==='all'?'voorlopige':'geschatte'} winst.` : steeringSummary(cur,prev))}</p><details class="signals"><summary>${state.channel==='all'?'Toelichting · kosten & retouren':'Schattingen & meetbasis'}</summary>${notes.map(n=>`<div class="signal">${esc(n)}</div>`).join('')}</details></section>
+ <section class="kpis overview-kpis primary-kpis" aria-label="Kerncijfers">${metrics.map(metricCard).join('')}</section><p class="finance-basis">Voorlopig resultaat · excl. btw · inclusief opgenomen beheer, retourbegroting en 4% bedrijfskosten${cur.returnReserve.available?` · retourraming ${euro(cur.returnReserve.impact)}`:" · retourraming ontbreekt"}</p>
+ <section class="steering-summary" aria-label="Ontwikkeling">${(()=>{const signal=decisionSignal(cur,prev);return signal?`<p class="decision-signal">${esc(signal)}</p>`:"";})()}<details class="signals"><summary>${state.channel==='all'?'Toelichting · kosten & retouren':'Schattingen & meetbasis'}</summary>${notes.map(n=>`<div class="signal">${esc(n)}</div>`).join('')}</details></section>
  ${state.channel==='all'?`<div class="overview-rendement"><button class="rendement-metric" title="Omzet incl. btw / alle bekende marketingkosten, inclusief beheer en influencers" data-metric="roas" aria-pressed="${state.metrics.includes('roas')}"><span>Blended ROAS</span><strong>${ratio(cur.roas)}</strong></button><span class="rendement-comparison">${prev && cur.roas!=null && prev.roas!=null?`<span class="delta-base">Vorige periode ${ratio(prev.roas)}</span><span class="delta-main ${cur.roas>prev.roas?'positive':cur.roas<prev.roas?'negative':'neutral'}">${cur.roas>prev.roas?'+':cur.roas<prev.roas?'−':''}${ratio(Math.abs(cur.roas-prev.roas))}</span>`:delta('roas',cur,prev)}</span></div>`:''}
  <section class="panel ${analysisCollapsed?'is-collapsed':''}" id="analysis" tabindex="-1"><div class="panel-head"><div><p class="analysis-label">VERDIEP JE IN DE CIJFERS</p><h2><button class="analysis-heading" id="collapseAnalysis" aria-expanded="${!analysisCollapsed}" aria-controls="analysisBody analysisTools">${state.metrics.map((k) => metricMeta(k,chartChannels().length>1?'all':chartChannel()).label).join(" & ") || "Analyse"}</button></h2><p class="subtitle">Klik bovenaan maximaal twee cijfers aan om ze hier te vergelijken.</p></div><div class="toolbar" id="analysisTools" ${analysisCollapsed?"hidden":""}><div class="gran-buttons" aria-label="Grafiek groeperen">${['day','week','month'].map((g,i)=>`<button data-gran="${g}" aria-pressed="${state.gran===g || state.gran==='auto' && g===((Date.parse(state.to)-Date.parse(state.from))/864e5<=31?'day':(Date.parse(state.to)-Date.parse(state.from))/864e5<=180?'week':'month')}">${['Dag','Week','Maand'][i]}</button>`).join('')}</div><select id="gran" hidden><option value="auto">Automatisch</option><option value="day">Dag</option><option value="week">Week</option><option value="month">Maand</option></select><button id="chartMode">${chartTable ? "Grafiek tonen" : "Tabel tonen"}</button></div></div><div id="analysisBody" ${analysisCollapsed?"hidden":""}>${chartFilter()}<div id="replacement"></div><div id="chart"></div><div id="dayComparison"></div><details class="detail-fold" id="detailFold"><summary>Onderliggende cijfers & uitsplitsing</summary>${detailChannelFilter()}<div id="detail"></div></details></div></section>
  ${netMarginPanel(cur)}
@@ -796,6 +799,8 @@ function renderChart() {
   if(!state.metrics.length) { $("#chart").innerHTML='<p class="hint">Klik bovenaan op een cijfer om de grafiek te openen.</p>'; return; }
   const rows = chartRows(),
     keys = chartKeys();
+  const granControls=document.querySelector("#analysisTools .gran-buttons");if(granControls)granControls.hidden=periodCompareSelected.size>0;
+  if(periodCompareSelected.size){renderPeriodComparison();return;}
   if (chartTable) {
     $("#chart").innerHTML =
       `<div class="table-wrap"><table><thead><tr><th>Periode</th>${keys.map((k) => `<th>${chartMetricMeta(k).label}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr class="${selectedDays.has(r.from)?'selected-bucket':''}"><td><button class="link" aria-pressed="${selectedDays.has(r.from)}" data-bucket="${r.from}|${r.to}">${fmt(r.from)} – ${fmt(r.to)}</button></td>${keys.map((k) => `<td>${chartMetricMeta(k).fmt(r[k])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
@@ -812,7 +817,7 @@ function renderChart() {
     groups
       .map((group) => {
         const vals = rows.flatMap((r) =>
-          group.map((k) => r[k]).filter((v) => v !== null),
+          group.map((k) => r[k]).filter(Number.isFinite),
         );
         if (!vals.length)
           return '<div class="empty">Geen betrouwbare gegevens voor deze selectie.</div>';
@@ -862,6 +867,7 @@ function renderChart() {
       .join("") +
     `<p class="chart-help">Klik een punt of sleep om te selecteren. Elk punt omvat de volledige periode ${rows[0]?.from===rows[0]?.to?'van die dag':'die in de tabel staat'}. Dezelfde selectie geldt in grafiek en tabel.</p>`;
   bindChartDrag(rows);
+  document.querySelectorAll("#chart svg").forEach((svg,i)=>{const group=groups[i],vals=rows.flatMap(r=>group.map(k=>r[k])).filter(Number.isFinite);if(!vals.length)return;attachChartReference(svg,{min:Math.min(0,...vals),max:Math.max(1,...vals),left:72,right:940,top:18,bottom:196,format:chartMetricMeta(group[0]).fmt,series:group.map(k=>({label:chartMetricMeta(k).label,values:rows.map(r=>r[k])})),key:"cijfers:"+group.join(":")+":"+state.from+":"+state.to,unit:state.gran==='week'?'weken':state.gran==='month'?'maanden':'periodes'});});
 }
 function selectChartRange(from,to) {
   if(!validDate(from)||!validDate(to)||from>to||from<state.from||to>state.to) return;
@@ -1781,6 +1787,7 @@ async function start() {
           }),
       }),
     ];
+    updatePeriodCompareOptions();
     $("#tabs").onclick = (e) => {
       const b = e.target.closest("[data-channel]");
       if (b) switchChannel(b.dataset.channel);
@@ -1869,4 +1876,40 @@ async function start() {
       `<div class="panel error"><h2>Overzicht kon niet geladen worden</h2><p>${esc(e.message)}</p><button onclick="location.reload()">Opnieuw proberen</button></div>`;
   }
 }
+
+
+
+function decisionSignal(cur,prev){
+ if(cur.result==null)return 'Netto resultaat is niet vast te stellen: bekijk de ontbrekende gegevens in de datastatus.';
+ if(cur.result<0)return 'Verlies in deze periode. Open de kostenopbouw om te zien welke posten het resultaat drukken.';
+ if(prev?.result!=null && cur.revenue>prev.revenue && cur.result<prev.result)return 'Omzet groeit, maar resultaat daalt. Vergelijk marketingkosten en de netto marge.';
+ if(prev?.revenue>0 && prev.spend>0 && cur.spend>prev.spend && cur.spend/prev.spend>cur.revenue/prev.revenue)return 'Marketingkosten groeien sneller dan omzet. Controleer het rendement per kanaal.';
+ return '';
+}
+function selectedComparisonRanges(){
+ const ranges=comparisonRanges(state.from,state.to,STORE_START);
+ return ranges.filter(r=>periodCompareSelected.has(r.key)&&r.available);
+}
+function updatePeriodCompareOptions(){
+ const host=document.getElementById('comparePeriodMenu');if(!host)return;
+ let block=host.querySelector('.period-comparison-options');
+ if(!block){block=document.createElement('div');block.className='period-comparison-options';host.querySelector('.cal-pad').previousElementSibling.before(block);}
+ const ranges=comparisonRanges(state.from,state.to,STORE_START);
+ for(const r of ranges)if(!r.available)periodCompareSelected.delete(r.key);
+ block.innerHTML='<strong>LIJNEN VERGELIJKEN</strong>'+ranges.map(r=>`<label><input type="checkbox" data-period-compare="${r.key}" ${periodCompareSelected.has(r.key)&&r.available?'checked':''} ${r.available?'':'disabled'}><span>${r.label}<br><small>${r.available?fmt(r.from)+' – '+fmt(r.to):'Vóór start winkel; niet beschikbaar'}</small></span></label>`).join('')+'<button type="button" data-clear-periods>Vergelijkingslijnen wissen</button>';
+ for(const input of block.querySelectorAll('input'))input.addEventListener('change',()=>{if(input.checked)periodCompareSelected.add(input.dataset.periodCompare);else periodCompareSelected.delete(input.dataset.periodCompare);renderChart();});
+ block.querySelector('button').addEventListener('click',()=>{periodCompareSelected.clear();updatePeriodCompareOptions();renderChart();});
+}
+function renderPeriodComparison(){
+ const host=document.getElementById('chart');host.replaceChildren();
+ const ranges=[{key:'current',label:'Geselecteerd',from:state.from,to:state.to},...selectedComparisonRanges()];
+ for(const channel of chartChannels())for(const metric of state.metrics){
+  const box=document.createElement('div');host.append(box);
+  const lines=ranges.map(range=>{const rows=series(chartData(channel),C,range.from,range.to,channel,'day',{includeDaan:state.daan!=='without'});return {label:range.label+' · '+fmt(range.from)+'–'+fmt(range.to),values:rows.map(r=>r[metric]),dates:rows.map(r=>fmt(r.from))};});
+  const meta=metricMeta(metric,channel);
+  if(chartTable){box.className='table-wrap';box.innerHTML=`<table><caption>${esc(names[channel])} · ${esc(meta.label)} · dagwaarden vanaf start periode</caption><thead><tr><th>Dag</th>${lines.map(l=>`<th>${esc(l.label)}</th>`).join('')}</tr></thead><tbody>${Array.from({length:Math.max(...lines.map(l=>l.values.length))},(_,i)=>`<tr><td>${i+1}</td>${lines.map(l=>`<td>${l.dates[i]?esc(l.dates[i])+': ':''}${meta.fmt(l.values[i]??null)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;}
+  else periodComparisonChart(box,lines,{format:meta.fmt,key:'cijfers-period:'+channel+':'+metric,title:names[channel]+' · '+meta.label});
+ }
+}
+
 start();

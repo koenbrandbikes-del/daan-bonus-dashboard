@@ -62,6 +62,7 @@ function lwPaintFinance(){
   const attribution=document.querySelector('[data-kpi="attr"]');if(attribution){attribution.querySelector('.kpi-lbl').textContent='Meta-attributie';attribution.querySelector('.kpi-sub').textContent='platformclaim · kan overlappen';}
   lwArrangeKpis();
   lwPaintDaanMonth();
+  lwUpdatePeriodComparison();
   const beRow=document.getElementById('mBe')?.closest('.mrow');
   const bonusCell=document.getElementById('bonusAmt')?.closest('.mc');
   const extraRow=document.getElementById('mSpend')?.closest('.mrow');
@@ -168,23 +169,7 @@ function lwArrangeKpis(){
  }
 }
 
-updateSim=function(){
- if(!lwFinancialData||lwFinancialError||SNAP<'2026-10-01'){
-  for(const id of ['simBonus','simDiff'])document.getElementById(id).textContent='—';
-  return;
- }
- const input=document.getElementById('simSpend'),slider=document.getElementById('simSlider');
- const roas=Number(slider.value),dailySpend=input.value.trim()===''?NaN:Number(input.value);
- const from=SNAP,to=new Date(Date.parse(from)+29*864e5).toISOString().slice(0,10);
- const referenceFrom=new Date(Math.max(Date.parse('2026-08-05'),Date.parse(SNAP)-29*864e5)).toISOString().slice(0,10);
- const scenario=lwFinanceEngine.simulate({from,to,dailySpend,roas,referenceFrom,referenceTo:SNAP});
- document.getElementById('simRval').textContent=x2(roas);
- document.getElementById('simBonus').textContent=scenario.available?lwMoney(scenario.bonus):'—';
- document.getElementById('simDiff').textContent=scenario.available?lwMoney(scenario.result):'—';
- document.getElementById('simSpendTotal').textContent=scenario.available?lwMoney(scenario.spend)+' advertenties · '+fmtS(from)+'–'+fmtS(to)+' (30 dagen)':'Vul een geldig dagbudget in; nul is toegestaan.';
- const note=document.getElementById('lwSimBasis');
- if(note)note.textContent=scenario.available?'Scenario, geen afrekening. Kostenmix '+fmtS(referenceFrom)+'–'+fmtS(SNAP)+', inclusief retourbegroting. Daan: '+lwExactMoney(scenario.fixed)+' vast + '+lwExactMoney(scenario.bonus)+' bonus. De vaste vergoeding volgt kalenderdagen.':'Scenario niet beschikbaar: '+scenario.reason;
-};
+updateSim=function(){};
 
 
 // The calendar-month view is independent of the analysis period and filters.
@@ -226,3 +211,30 @@ function lwPaintDaanScenario(){
  put('lwGrowthBasis',scenario.available?'Scenario voor de hele maand, geen opgebouwde bonus. Netto omzet incl. btw, winst excl. btw. Advertentiebudget groeit mee bij dezelfde netto ROAS ('+x2(roas)+'). Productkosten en retouren volgen de kostenmix van de afgelopen 30 dagen; de vaste basis blijft gelijk. De huidige dag kan nog wijzigen.':'Scenario niet beschikbaar: '+scenario.reason);
  document.getElementById('lwRevenueSlider').setAttribute('aria-valuetext',scenario.available?lwMoney(scenario.revenue)+' netto maandomzet; '+lwMoney(scenario.bonus)+' verwachte bonus':'Scenario niet beschikbaar');
 }
+
+const lwComparePeriods=new Set();
+function lwUpdatePeriodComparison(){
+ const menu=document.getElementById('periodMenu');if(!menu)return;
+ let block=menu.querySelector('.period-comparison-options');
+ if(!block){block=document.createElement('div');block.className='period-comparison-options';menu.querySelector('.cal-pad').previousElementSibling.before(block);}
+ const pd=PERIODS[P]||PERIODS.aug,ranges=lwChartTools.comparisonRanges(pd.from,pd.to);
+ for(const r of ranges)if(!r.available)lwComparePeriods.delete(r.key);
+ block.innerHTML='<strong>VERGELIJKEN MET · LIJNEN</strong>'+ranges.map(r=>'<label><input type="checkbox" data-meta-period="'+r.key+'" '+(lwComparePeriods.has(r.key)&&r.available?'checked ':'')+(r.available?'':'disabled')+'><span>'+r.label+'<br><small>'+(r.available?fmtS(r.from)+'–'+fmtS(r.to):'Vóór start winkel; niet beschikbaar')+'</small></span></label>').join('')+'<button type="button">Vergelijkingslijnen wissen</button>';
+ for(const input of block.querySelectorAll('input'))input.addEventListener('change',()=>{if(input.checked)lwComparePeriods.add(input.dataset.metaPeriod);else lwComparePeriods.delete(input.dataset.metaPeriod);if(!kpiChartSel.length)toggleKpiChart('net');else renderKpiChart();});
+ block.querySelector('button').addEventListener('click',()=>{lwComparePeriods.clear();lwUpdatePeriodComparison();renderKpiChart();});
+}
+const lwBaseChartRender=renderKpiChart;
+renderKpiChart=function(){
+ if(!lwComparePeriods.size||!kpiChartSel.length){lwBaseChartRender();return;}
+ const wrap=document.getElementById('kpiChartWrap');if(!wrap)return;wrap.classList.add('open');wrap.replaceChildren();
+ if(filtersActive()){wrap.textContent='Wis de analysefilters om perioden met dezelfde financiële basis te vergelijken.';return;}
+ const pd=PERIODS[P]||PERIODS.aug,ranges=[{key:'current',label:'Geselecteerd',from:pd.from,to:pd.to},...lwChartTools.comparisonRanges(pd.from,pd.to).filter(r=>r.available&&lwComparePeriods.has(r.key))];
+ for(const metric of kpiChartSel){
+  const box=document.createElement('div');wrap.append(box);
+  const lines=ranges.map(range=>{
+   const rows=kpiAggregate('day',range.from,range.to,'all','all','all');
+   return {label:range.label+' · '+fmtS(range.from)+'–'+fmtS(range.to),values:rows.map(r=>r[metric]),dates:rows.map(r=>fmtS(r.key))};
+  });
+  lwChartTools.periodComparisonChart(box,lines,{format:KPI_META[metric].fmt,key:'meta-period:'+metric,title:KPI_META[metric].label});
+ }
+};
