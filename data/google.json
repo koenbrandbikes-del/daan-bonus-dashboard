@@ -719,8 +719,8 @@
   {
    "d": "2026-08-30",
    "spend": 7.41,
-   "rev": 0,
-   "conv": 0,
+   "rev": 205.77979422,
+   "conv": 1.333332,
    "id": "23981332205",
    "name": "C | Corporate",
    "type": "SEARCH"
@@ -998,8 +998,8 @@
   {
    "d": "2026-09-30",
    "spend": 9.15,
-   "rev": 578.922591,
-   "conv": 3.986259,
+   "rev": 681.81279678,
+   "conv": 4.652927,
    "id": "23981332205",
    "name": "C | Corporate",
    "type": "SEARCH"
@@ -1600,7 +1600,7 @@
   },
   {
    "d": "2026-10-03",
-   "spend": 3.32,
+   "spend": 4.02,
    "rev": 0,
    "conv": 0,
    "id": "23981395562",
@@ -2734,7 +2734,7 @@
   },
   {
    "d": "2026-10-03",
-   "spend": 64.738629,
+   "spend": 67.708629,
    "rev": 0,
    "conv": 0,
    "id": "23985056312",
@@ -3310,7 +3310,7 @@
   },
   {
    "d": "2026-10-03",
-   "spend": 3.27,
+   "spend": 4.08,
    "rev": 0,
    "conv": 0,
    "id": "23989624267",
@@ -3686,15 +3686,15 @@
   {
    "d": "2026-08-30",
    "spend": 0,
-   "rev": 149,
-   "conv": 1,
+   "rev": 242.11324022,
+   "conv": 1.666666,
    "name": "GTM - Aankoop"
   },
   {
    "d": "2026-08-30",
    "spend": 0,
-   "rev": 149,
-   "conv": 1,
+   "rev": 261.666554,
+   "conv": 1.666666,
    "name": "ORDER (TrackBee)"
   },
   {
@@ -4099,15 +4099,15 @@
   {
    "d": "2026-09-30",
    "spend": 0,
-   "rev": 769.9554522,
-   "conv": 5.95473,
+   "rev": 816.51221198,
+   "conv": 6.288064,
    "name": "GTM - Aankoop"
   },
   {
    "d": "2026-09-30",
    "spend": 0,
-   "rev": 736.207361,
-   "conv": 4.940989,
+   "rev": 792.540807,
+   "conv": 5.274323,
    "name": "ORDER (TrackBee)"
   },
   {
@@ -4676,8 +4676,8 @@
    "d": "2026-08-30",
    "intent": "brand",
    "spend": 8.06,
-   "rev": 0,
-   "conv": 0
+   "rev": 205.77979422,
+   "conv": 1.333332
   },
   {
    "d": "2026-08-31",
@@ -5032,17 +5032,17 @@
   {
    "d": "2026-10-03",
    "intent": "other",
-   "spend": 3.8599999999999994,
+   "spend": 4.56,
    "rev": 0,
    "conv": 0
   }
  ],
- "details_synced_at": "2026-10-03T15:37:30.072Z",
+ "details_synced_at": "2026-10-03T15:52:30.111Z",
  "source": "google_ads_api",
  "customer_id": "7645288282",
  "currency": "EUR",
  "time_zone": "Europe/Amsterdam",
- "synced_at": "2026-10-03T15:37:30.072Z",
+ "synced_at": "2026-10-03T15:52:30.111Z",
  "coverage_from": "2026-08-01",
  "coverage_to": "2026-10-03",
  "attribution": "Primary conversions and conversion value by ad interaction date; may include non-purchase goals and overlap with other channels.",
@@ -5282,8 +5282,8 @@
   {
    "d": "2026-08-30",
    "spend": 78.65,
-   "conv": 2,
-   "rev": 298,
+   "conv": 3.333332,
+   "rev": 503.77979422,
    "impr": 10630,
    "cl": 126
   },
@@ -5530,8 +5530,8 @@
   {
    "d": "2026-09-30",
    "spend": 153.25,
-   "conv": 10.895719,
-   "rev": 1506.1628132,
+   "conv": 11.562387,
+   "rev": 1609.05301898,
    "impr": 9329,
    "cl": 147
   },
@@ -5553,22 +5553,22 @@
   },
   {
    "d": "2026-10-03",
-   "spend": 78.088629,
+   "spend": 82.568629,
    "conv": 0,
    "rev": 0,
-   "impr": 5195,
-   "cl": 74
+   "impr": 5318,
+   "cl": 80
   }
  ],
  "vandaag": {
   "from": "2026-10-03",
   "to": "2026-10-03",
   "d": "2026-10-03",
-  "spend": 78.088629,
+  "spend": 82.568629,
   "conv": 0,
   "rev": 0,
-  "impr": 5195,
-  "cl": 74
+  "impr": 5318,
+  "cl": 80
  },
  "gisteren": {
   "from": "2026-10-02",
