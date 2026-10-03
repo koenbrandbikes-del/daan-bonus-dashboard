@@ -106,7 +106,7 @@ async function boot(
   w.eval(fs.readFileSync(new URL("assets/product-costs.js", root), "utf8"));
   w.matchMedia = () => ({ matches: true });
   w.HTMLElement.prototype.scrollIntoView = () => {};
-  const scripts = ["return-reserve.js", "metrics.js", "data.js", "date-picker.js", "creator-summary.js", "app.js"]
+  const scripts = ["return-reserve.js", "meta-management.js", "metrics.js", "data.js", "date-picker.js", "creator-summary.js", "app.js"]
     .map((f) =>
       fs
         .readFileSync(new URL("assets/blended/" + f, root), "utf8")

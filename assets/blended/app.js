@@ -296,12 +296,12 @@ function metricMeta(k, channel = state.channel) {
     },
     profitMargin: { label: "Winstmarge", sub: all ? "Van omzet excl. btw · voorlopig" : "Van kanaalomzet excl. btw · geschat", fmt: v => v == null ? "—" : num(v) + "%" },
     roas: {
-      label: all ? "Blended ROAS" : "Kanaalrendement",
+      label: all ? "Blended ROAS" : channel === "meta" ? "Netto Meta ROAS" : "Kanaalrendement",
       sub: all
         ? "Omzet incl. btw / bekende marketingkosten"
         : channel === "infl"
           ? "Inclusief toegerekende opstartkosten"
-          : channel === "google" ? "Platform-ROAS · omzet incl. btw / advertentiekosten" : "Kanaalomzet incl. btw / alle kanaalkosten",
+          : channel === "meta" ? "Na echte en begrote retouren · omzet incl. btw / advertentiekosten" : channel === "google" ? "Platform-ROAS · omzet incl. btw / advertentiekosten" : "Kanaalomzet incl. btw / alle kanaalkosten",
       fmt: ratio,
     },
     cpa: { label: "Kosten per aankoop", sub: "Per toegerekende aankoop", fmt: euro },
@@ -714,7 +714,7 @@ function render() {
  <p>Per dag: 10% × (Meta-omzet − advertentiekosten × break-even-ROAS). Verliesdagen geven een negatief bedrag en verlagen de opgebouwde bonus. Alle dagen binnen één contractblok gebruiken dezelfde break-even-ROAS. De financiële berekening begint op 5 augustus; eerdere dagen tellen hierin niet mee.</p>
  <p>We tellen de dagbedragen op per contractblok van 30 dagen. Alleen het bloktotaal krijgt een minimum van € 0. Als het saldo negatief is, wordt op de laatste blokdag één correctie geboekt. Bij een lopend blok gebeurt dit voorlopig op de laatste beschikbare dag; dit kan bij nieuwe data veranderen. Je selectie telt de dagbedragen en correcties op de geselecteerde dagen mee.</p>
  <div class="table-wrap"><table><thead><tr><th>Bonusperiode</th><th>Bonus hele periode</th><th>Hiervan in je selectie</th></tr></thead><tbody>${cur.management.periods.map(p=>`<tr><td>${fmt(p.from)} – ${fmt(p.to)}<small>${p.bonus==null?'Nog niet berekenbaar':p.through<p.to?'Voorlopig · bijgewerkt t/m '+fmt(p.through):'Periode afgelopen'}</small></td><td>${euro(p.bonus)}</td><td>${euro(p.allocated)}</td></tr>`).join('')}</tbody></table></div>
- <p class="management-method">Rekenregel: 10% × max(0, Meta-omzet − advertentiekosten × break-even-ROAS). Break-even is gebaseerd op de Shopify-marge na productkosten, betaalkosten en 4% overige bedrijfskosten. De contractperiodes starten op 16 juli 2026. De bonus van een lopende periode kan nog veranderen. De vaste vergoeding is € 1.500 gedeeld door de kalenderdagen van de betreffende maand.</p>
+ <p class="management-method">Rekenregel: 10% × max(0, Meta-omzet − advertentiekosten × break-even-ROAS). Vanaf 1 oktober omvat de break-evenbasis productkosten, betaalkosten, 4% overige bedrijfskosten, werkelijke en begrote retouren, de vaste vergoeding en de eigen bonus. Bonus en BEROAS worden tegelijk opgelost. Vóór 1 oktober blijft de oorspronkelijke bonusberekening behouden. De contractperiodes starten op 16 juli 2026. De bonus van een lopende periode kan nog veranderen. De vaste vergoeding is € 1.500 gedeeld door de kalenderdagen van de betreffende maand.</p>
  </details><details class="management-calculation"><summary>Dagelijkse vergoeding & bonusopbouw</summary><p class="hint">Negatieve bonusopbouw verlaagt de kosten op die dag. Blokcorrectie voorkomt een negatieve bonus over het hele contractblok. Ontbrekende brongegevens blijven onbekend; de vaste dagvergoeding is wel bekend.</p><div class="table-wrap"><table><thead><tr><th>Dag</th><th>Vast</th><th>Bonusopbouw</th><th>Blokcorrectie</th><th>Dagkosten</th></tr></thead><tbody>${cur.management.daily.map(r=>`<tr><td>${fmt(r.d)}<small>${r.d.slice(0,4)}</small></td><td>${euro(r.fixed)}</td><td>${euro(r.contribution)}</td><td>${euro(r.adjustment)}</td><td>${euro(r.total)}</td></tr>`).join('')}</tbody></table></div></details></details>` : ''}
  ${state.channel === "infl" ? creatorSummary(D.creators,C) : ""}
  ${state.channel === "all" ? overviewOrders(cur) : ""}

@@ -3,7 +3,7 @@ import pathlib,re
 ROOT=pathlib.Path(__file__).resolve().parents[2]
 def model():
     parts=[]
-    for path in ['assets/product-costs.js','assets/blended/data.js','assets/blended/return-reserve.js','assets/blended/metrics.js','assets/blended/meta-review.js','assets/blended/mcp-finance.js']:
+    for path in ['assets/product-costs.js','assets/blended/data.js','assets/blended/return-reserve.js','assets/blended/meta-management.js','assets/blended/metrics.js','assets/blended/meta-review.js','assets/blended/mcp-finance.js']:
         source=(ROOT/path).read_text()
         source=re.sub(r'^import[^\n]*\n','',source,flags=re.M)
         source=re.sub(r'\bexport (?=(?:async )?(?:function|const|let|class))','',source)

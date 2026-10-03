@@ -1,3 +1,4 @@
+import { makeDynamicManagement } from "./meta-management.js?v=shared-meta-1";
 import { returnReserve,auditedFinance,applyAudit } from "./return-reserve.js?v=return-reserve-1";
 export function influencerInvestment(data, costs) {
   const gift=costs.influencer_gifting;
@@ -78,7 +79,7 @@ export function finance(orders, costs) {
 // Fixed fee follows calendar days. Signed daily bonus contributions share one
 // break-even rate per contract block; the zero floor is applied only to the
 // block total. A single closing adjustment makes daily costs reconcile to it.
-export function managementCosts(data, costs, from, to) {
+export function contractManagementCosts(data, costs, from, to) {
   const cfg=costs.meta_management;
   if(!cfg) return {fixed:0,bonus:0,total:0,periods:[],daily:[]};
   let fixed=0,bonus=0;
@@ -131,6 +132,7 @@ export function managementCosts(data, costs, from, to) {
   }
   return {fixed,bonus,total:bonus==null?null:fixed+bonus,periods:audit,daily:[...daily.values()]};
 }
+export const managementCosts = makeDynamicManagement(compute, contractManagementCosts);
 // Calendar-day fee. Split scopes by each day's media spend so daily charts
 // and branded + non-branded views reconcile to the company fee exactly once.
 export function googleManagementCosts(data,costs,from,to) {
@@ -270,7 +272,7 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
   channels.infl.giftTotal=giftTotal;
   channels.infl.giftAllocated=channels.infl.revenue!=null && giftRate!=null?Math.max(0,channels.infl.revenue)*giftRate:null;
   channels.infl.spend=channels.infl.commission!=null && channels.infl.giftAllocated!=null?channels.infl.commission+channels.infl.giftAllocated:null;
-  const management=managementCosts(data,costs,from,to);
+  const management=options.skipManagement?{fixed:0,bonus:0,total:0,periods:[],daily:[]}:managementCosts(data,costs,from,to);
   const googleManagement=googleManagementCosts(data,costs,from,to);
   channels.google.mediaSpend=channels.google.spend;
   channels.google.managementFee=googleManagement.fixed;
@@ -350,6 +352,8 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
     line('result','Netto resultaat',result,'total'),
     line('margin','Netto marge',result!=null && netExcl>0?result/netExcl*100:null,'percent'),
   );
+  const expectedRevenueIncl=numerator==null?null:reserveModel.available && reserveParts.refundExcl!=null?numerator-reserveParts.refundExcl*(1+costs.assumed_vat):numerator;
+  const metaAvailable=channel==='meta' && result!=null?result+channels.meta.mediaSpend:null;
   return {
     ...f,
     ...(!data.shopify
@@ -362,6 +366,8 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
           overhead: null,
         }
       : {}),
+    expectedRevenueIncl,
+    breakEvenRoas:metaAvailable>0 && expectedRevenueIncl>0?expectedRevenueIncl/metaAvailable:null,
     revenue:netRevenue,
     revenueIncl:numerator,
     spend,
@@ -373,15 +379,15 @@ export function compute(data, costs, from, to, channel = "all", options = {}) {
     result,
     actualResult,
     returnReserve:{...reserveModel,...reserveParts,impact:reserveImpact,storeImpact:reserveModel.impact,creatorImpact:creatorReserve,remainingImpact:remainingReserve},
-    profitMargin: result != null && netRevenue > 0 ? result / netRevenue * 100 : null,
-    roas: (channel==='google'?channels.google.mediaSpend:spend) > 0 && numerator !== null ? numerator / (channel==='google'?channels.google.mediaSpend:spend) : null,
+    profitMargin: channel==='meta' ? (result!=null && expectedRevenueIncl>0?result/(expectedRevenueIncl/(1+costs.assumed_vat))*100:null) : result != null && netRevenue > 0 ? result / netRevenue * 100 : null,
+    roas: channel==='meta' ? (channels.meta.mediaSpend>0 && expectedRevenueIncl!=null?expectedRevenueIncl/channels.meta.mediaSpend:null) : (channel==='google'?channels.google.mediaSpend:spend) > 0 && numerator !== null ? numerator / (channel==='google'?channels.google.mediaSpend:spend) : null,
     count:
       channel === "all"
         ? data.shopify
           ? f.orders
           : null
         : channels[channel].orders,
-    cpa: spend != null && (channel === "all" ? f.orders : channels[channel].orders) > 0 ? spend / (channel === "all" ? f.orders : channels[channel].orders) : null,
+    cpa: channel==='meta' ? (channels.meta.mediaSpend!=null && channels.meta.orders>0?channels.meta.mediaSpend/channels.meta.orders:null) : spend != null && (channel === "all" ? f.orders : channels[channel].orders) > 0 ? spend / (channel === "all" ? f.orders : channels[channel].orders) : null,
     channels,
     management,
     googleManagement,

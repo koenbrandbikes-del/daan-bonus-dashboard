@@ -24,9 +24,9 @@ function lwNetMetrics(m){
   const media=m.channels.meta.mediaSpend;
   const reserve=m.returnReserve;
   // Expected refund revenue includes VAT; operating result remains excluding VAT.
-  const rev=m.revenueIncl==null?null:m.revenueIncl-(reserve.available?reserve.refundExcl*(1+lwFinancialCosts.assumed_vat):0);
+  const rev=m.expectedRevenueIncl;
   const bruto=m.actualResult==null?null:m.actualResult+m.spend;
-  return {rev,bruto,net:m.result,roas:media>0 && rev!=null?rev/media:null};
+  return {rev,bruto,net:m.result,roas:m.roas};
 }
 function lwNetDailySource(from,to){
  if(lwFinancialError || filtersActive())return [];
@@ -43,18 +43,25 @@ function lwPaintFinance(){
     node.querySelector('.kpi-val').textContent=value;
     node.querySelector('.kpi-sub').textContent=note;
     node.classList.remove('good','warn','bad');
-    if(key==='net' && !filtered && v.net!=null)node.classList.add(v.net>=0?'good':'bad');
+    if(['net','profitMargin'].includes(key) && !filtered && v.net!=null)node.classList.add(v.net>=0?'good':'bad');
   }
   tile('rev','Netto Meta-omzet',filtered?'—':lwMoney(v.rev),filtered?'niet op advertentiegroep herleidbaar':'incl. btw · na echte en begrote retouren');
   tile('roas','Netto Meta ROAS',!filtered && v.roas!=null?x2(v.roas):'—',filtered?'niet op advertentiegroep herleidbaar':'na echte en begrote retouren');
   tile('bruto','Marge vóór ads',filtered?'—':lwMoney(v.bruto),filtered?'niet op advertentiegroep herleidbaar':'excl. btw · na werkelijke correcties');
+  const netTile=document.querySelector('[data-kpi="net"]');
+  if(netTile && !document.querySelector('[data-kpi="profitMargin"]')){
+    const marginTile=document.createElement('div');marginTile.className='kpi-item';marginTile.dataset.kpi='profitMargin';
+    marginTile.innerHTML='<div class="kpi-lbl"></div><div class="kpi-val"></div><div class="kpi-sub"></div>';
+    netTile.after(marginTile);
+  }
+  tile('profitMargin','Netto winstmarge',!filtered && m?.profitMargin!=null?m.profitMargin.toLocaleString('nl-NL',{maximumFractionDigits:1})+'%':'—',filtered?'bekijk het volledige account':'na alle kosten · omzet excl. btw');
   tile('net','Netto resultaat',filtered?'—':lwMoney(v.net),filtered?'bekijk het volledige account':m && !m.returnReserve.available?'incl. Daan · retourbegroting niet beschikbaar':'incl. Daan en begrote retouren · excl. btw');
   const headline=document.getElementById('kpiHeadline');
   headline.className='kpi-headline';
-  headline.textContent=lwFinancialError || (m?.result==null?'Netto resultaat nog niet vast te stellen: controleer de financiële onderbouwing.':
-    'Meta '+(m.result>=0?'houdt '+lwMoney(m.result)+' over':'maakt '+lwMoney(-m.result)+' verlies')+' na kosten, Daan en retouren.'+(filtered?' Financieel resultaat geldt voor het volledige account.':''));
+  // No narrative that merely repeats a KPI. Keep actionable data errors only.
+  headline.textContent=lwFinancialError || (m?.result==null?'Netto resultaat nog niet vast te stellen: controleer de financiële onderbouwing.':filtered?'Financieel resultaat is alleen beschikbaar voor het volledige account; wis de analysefilters voor de financiële vergelijking.':'');
   const available=m && m.result!=null?m.result+m.channels.meta.mediaSpend:null;
-  const be=available>0 && v.rev>0?v.rev/available:null;
+  const be=m?.breakEvenRoas ?? null;
   document.getElementById('mBe').textContent=be==null?'—':x2(be);
   document.getElementById('mBeSub').textContent='incl. retouren, begroting en Daan';
   document.getElementById('mScaleSub').textContent='incl. dynamische bonus · marge excl. btw';
@@ -79,7 +86,15 @@ function lwPaintFinance(){
   const combinedReturns=add(find('returns'),reserve.available?find('returnReserve'):0);
   const rows=baseRows.filter(r=>!['returnReserve','daanBonus'].includes(r.key)).map(r=>r.key==='returns'?{...r,label:'Retourkosten',value:combinedReturns}:r.key==='daanFixed'?{...r,label:'Daan · vergoeding',value:add(r.value,find('daanBonus'))}:r);
   const percentage=(value,kind)=>value==null||!(m.revenue>0)?'—':((kind==='total'?value:Math.abs(value))/m.revenue*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
-  const lines=rows.map(r=>'<div class="lw-finance-row '+r.kind+'" data-finance-key="'+r.key+'"><span>'+lwEscapeAttr(r.label)+'</span><strong>'+lwMoney(r.value)+' <span style="font-weight:400;color:#93a2b8">— '+percentage(r.value,r.kind)+'</span></strong></div>').join('');
+  const compensationOpen=details.querySelector('[data-daan-breakdown]')?.open;
+  const compensation='<div class="lw-daan-breakdown"><div class="lw-finance-row"><span>Vaste vergoeding</span><strong>'+lwMoney(m.management.fixed)+'</strong></div><div class="lw-finance-row"><span>Bonus in deze selectie</span><strong>'+lwMoney(m.management.bonus)+'</strong></div><p class="lw-finance-note">Een negatieve dagbijdrage verlaagt de opgebouwde bonus. De bonus over het contractblok wordt nooit negatief; de vaste vergoeding blijft behouden.</p><div class="table-wrap"><table><thead><tr><th>Dag</th><th>Vast</th><th>Bonusbijdrage</th><th>Blokcorrectie</th><th>Totaal</th></tr></thead><tbody>'+m.management.daily.map(r=>'<tr><td>'+r.d.slice(8,10)+'-'+r.d.slice(5,7)+'</td><td>'+lwMoney(r.fixed)+'</td><td>'+lwMoney(r.contribution)+'</td><td>'+lwMoney(r.adjustment)+'</td><td>'+lwMoney(r.total)+'</td></tr>').join('')+'</tbody></table></div></div>';
+  const returnsOpen=details.querySelector('[data-return-breakdown]')?.open;
+  const returnBackground='<div class="lw-daan-breakdown"><div class="lw-finance-row"><span>Werkelijke retourafhandeling · toegerekend</span><strong>'+lwMoney(-find('returns'))+'</strong></div>'+(reserve.available?'<div class="lw-finance-row"><span>Nog verwachte retouromzet · excl. btw</span><strong>'+lwMoney(reserve.refundExcl)+'</strong></div><div class="lw-finance-row"><span>Nog verwachte afhandeling</span><strong>'+lwMoney(reserve.handling)+'</strong></div><div class="lw-finance-row"><span>Correctie overige kosten</span><strong>− '+lwMoney(reserve.overheadCredit)+'</strong></div><p class="lw-finance-note">Totaal begroting = verwachte retouromzet + afhandeling − correctie overige kosten. Historische retourorders: '+(reserve.rate*100).toLocaleString('nl-NL',{maximumFractionDigits:2})+'% op basis van '+reserve.matureOrders+' afgeronde winkelorders. Mediaan '+reserve.median+' dagen tot retour; begrotingshorizon '+reserve.horizon+' dagen. Dit winkelgemiddelde wordt bij nieuwe gegevens opnieuw berekend.</p>':'<p class="lw-finance-note">Retourbegroting niet beschikbaar: '+lwEscapeAttr(reserve.reason||'onvoldoende gegevens')+'</p>')+'<p class="lw-finance-note">'+lwMoney(lwFinancialCosts.returns?.cost_per_return??20)+' afhandeling per ontvangen retourpakket. Annuleringen zijn geen ontvangen retourpakket. Werkelijke terugbetalingen staan al bij omzetcorrecties en worden hier niet opnieuw afgetrokken. Werkelijke retouren vervangen de begroting automatisch. Zonder betrouwbare orderkoppeling krijgt Meta '+(w?.meta==null?'een onbekend aandeel':(w.meta*100).toLocaleString('nl-NL',{maximumFractionDigits:1})+'%')+' van de niet-influencerretouren, op basis van aankopen; Google telt alleen non-branded mee.</p></div>';
+  const lines=rows.map(r=>{
+   const content='<span>'+lwEscapeAttr(r.label)+(['daanFixed','returns'].includes(r.key)?' <span aria-hidden="true">▾</span>':'')+'</span><strong>'+lwMoney(r.value)+' <span style="font-weight:400;color:#93a2b8">— '+percentage(r.value,r.kind)+'</span></strong>';
+   if(r.key==='returns')return '<details data-return-breakdown'+(returnsOpen?' open':'')+'><summary class="lw-finance-row" data-finance-key="returns">'+content+'</summary>'+returnBackground+'</details>';
+   return r.key==='daanFixed'?'<details data-daan-breakdown'+(compensationOpen?' open':'')+'><summary class="lw-finance-row" data-finance-key="daanFixed">'+content+'</summary>'+compensation+'</details>':'<div class="lw-finance-row '+r.kind+'" data-finance-key="'+r.key+'">'+content+'</div>';
+  }).join('');
   const model=reserve.available?'Retourbegroting: '+(reserve.rate*100).toFixed(2)+'% retourorders · '+reserve.matureOrders+' afgeronde orders · mediaan '+reserve.median+' dagen · horizon '+reserve.horizon+' dagen.':reserve.reason;
   const expected='<details class="lw-finance-note"><summary style="padding:8px 0">Uitsplitsing en break-evenberekening</summary><p>Retourkosten: '+lwMoney(-find('returns'))+' werkelijke afhandeling + '+(reserve.available?lwMoney(reserve.impact):'onbekende begroting')+' nog verwachte retouren. Reeds terugbetaalde omzet staat apart bij omzetcorrecties.</p>'+
     (reserve.available?'<p>Begrote retouren: '+lwMoney(reserve.refundExcl)+' retouromzet excl. btw + '+lwMoney(reserve.handling)+' afhandeling − '+lwMoney(reserve.overheadCredit)+' correctie overige kosten.</p>':'')+
