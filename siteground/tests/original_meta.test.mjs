@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {readFileSync} from 'node:fs';
 import {JSDOM,VirtualConsole} from 'jsdom';
+import {compute,series} from '../../assets/blended/metrics.js';
+const data=Object.fromEntries(['meta','google','shopify','creators','returns'].map(k=>[k,JSON.parse(readFileSync('data/'+k+'.json','utf8'))]));
+const costs=JSON.parse(readFileSync('assets/blended/costs.json','utf8'));
 
 const html=execFileSync('python',['-c','import sys;sys.path.insert(0,"siteground/scripts");from build_meta_dashboard import dashboard;print(dashboard())'],{maxBuffer:4e6}).toString();
 const dom=new JSDOM(html);
@@ -31,7 +34,7 @@ test('handler compilation handles dynamic names safely and keeps financial sourc
  assert.ok(html.includes('location.replace("login")'));
 });
 
-test('original and secured dashboard render the same financial values; controls respond',async()=>{
+test('secured financial values match Cijfers, preserving original bonus and controls',async()=>{
  const product=readFileSync('assets/product-costs.js','utf8');
  const source=readFileSync('index.html','utf8');
  const render=async document=>{
@@ -50,12 +53,28 @@ test('original and secured dashboard render the same financial values; controls 
  const original=await render(source);const secured=await render(html);
  try{
   for(const id of ['simSlider','ordHdr','adsHdr'])assert.equal(secured.window.document.getElementById(id).textContent,original.window.document.getElementById(id).textContent);
-  const values=d=>[...d.window.document.querySelectorAll('.bonus-amt,.mc-val,.kpi-val')].map(n=>n.textContent);
+  const values=d=>[...d.window.document.querySelectorAll('.bonus-amt,.mc-val,[data-kpi="spend"] .kpi-val,[data-kpi="purch"] .kpi-val,[data-kpi="cac"] .kpi-val')].map(n=>n.textContent);
   assert.deepEqual(values(secured),values(original));
+  const compare=()=>{
+   const period=secured.window.eval('PERIODS[P]');
+   const expected=compute(data,costs,period.from,period.to,'meta');
+   const money=v=>'€'+v.toLocaleString('nl-NL',{minimumFractionDigits:0,maximumFractionDigits:0});
+   assert.equal(secured.window.document.querySelector('[data-kpi="net"] .kpi-val').textContent,expected.result==null?'—':money(expected.result));
+   const ledger=secured.window.document.getElementById('lwFinanceDetails');
+   assert.ok(ledger.textContent.includes('Begrote retouren'));
+   assert.ok(ledger.textContent.includes('Daan · vaste vergoeding'));
+   assert.ok(ledger.textContent.includes('annuleringen tellen niet als retourpakket'));
+   const points=secured.window.eval('kpiAggregate("day",PERIODS[P].from,PERIODS[P].to,"all","all","all")');
+   const reference=series(data,costs,period.from,period.to,'meta','day');
+   const byDate=new Map(reference.map(r=>[r.key,r]));
+   for(const p of points)assert.ok(Math.abs(p.net-byDate.get(p.key).result)<1e-7);
+  };
+  compare();
   secured.window.document.querySelector('[data-p="vandaag"]').click();
   original.window.document.querySelector('[data-p="vandaag"]').click();
   await new Promise(resolve=>setTimeout(resolve,0));
   assert.deepEqual(values(secured),values(original));
+  compare();
   const slider=secured.window.document.getElementById('simSlider');slider.value='3';slider.dispatchEvent(new secured.window.Event('input',{bubbles:true}));
   assert.equal(slider.value,'3');
  }finally{original.window.close();secured.window.close();}

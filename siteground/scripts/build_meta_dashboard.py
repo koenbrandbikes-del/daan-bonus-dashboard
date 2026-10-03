@@ -9,6 +9,17 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 def dashboard():
     source = (ROOT / 'index.html').read_text()
+    # Only the secured Meta build shares the finance/return engine with Cijfers.
+    # The public original and contractual bonus calculation remain unchanged.
+    engine = []
+    for path in ['assets/blended/return-reserve.js', 'assets/blended/metrics.js']:
+        part = (ROOT / path).read_text()
+        part = re.sub(r'^import[^\n]*\n', '', part, flags=re.M)
+        part = re.sub(r'\bexport (?=(?:async )?(?:function|const|let|class))', '', part)
+        engine.append(part)
+    bridge = (ROOT / 'siteground/private/original-meta-finance.js').read_text()
+    source = source.replace('/* ═══ INIT ═', 'const lwFinanceEngine=(()=>{\n' + '\n'.join(engine) + '\nreturn {compute,series};})();\n' + bridge + '\n/* ═══ INIT ═', 1)
+    source = source.replace('</head>', '<style>.lw-finance{margin:12px 0 20px;border:1px solid #ffffff1a;border-radius:14px;background:#151b4033}.lw-finance summary{display:flex;justify-content:space-between;gap:16px;cursor:pointer;padding:16px;font-size:13px}.lw-finance summary span{font-variant-numeric:tabular-nums}.lw-finance-body{padding:0 16px 16px}.lw-finance-row{display:flex;justify-content:space-between;align-items:baseline;gap:20px;padding:8px 0;font-size:12px;border-bottom:1px solid #ffffff08}.lw-finance-row strong{font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}.lw-finance-row.total,.lw-finance-row.subtotal{border-top:1px solid #ffffff25;margin-top:5px;padding-top:12px}.lw-finance-note{font-size:11px;line-height:1.6;color:#93a2b8;margin:12px 0 0}.kpi-headline{line-height:1.6}</style></head>')
     handlers = []
     def event_attribute(match):
         event, body = match.groups()
