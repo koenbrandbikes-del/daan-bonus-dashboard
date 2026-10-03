@@ -74,6 +74,9 @@ test('secured financial values share audited costs with a dynamic bonus, preserv
    assert.deepEqual([...secured.window.document.querySelectorAll('#kpiStrip > [data-kpi]')].map(n=>n.dataset.kpi),['net','profitMargin','rev','roas']);
    assert.equal(secured.window.document.querySelectorAll('#lwAdsDetails [data-kpi]').length,5);
    assert.equal(secured.window.document.querySelector('#lwAdsDetails').open,false);
+   assert.equal(secured.window.document.getElementById('mRoas').closest('.mc').hidden,true);
+   assert.equal(secured.window.document.getElementById('mSpend').closest('.mrow').hidden,true);
+   assert.equal(secured.window.document.getElementById('bonusAmt').closest('.mrow'),secured.window.document.getElementById('mBe').closest('.mrow'));
    const ledger=secured.window.document.getElementById('lwFinanceDetails');
    assert.ok(ledger.textContent.includes('Begrote retouren'));
    assert.ok(ledger.textContent.includes('Daan · vergoeding'));

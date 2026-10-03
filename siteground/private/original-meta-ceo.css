@@ -22,3 +22,6 @@
 @media(max-width:700px){#kpiStrip .kpi-item{padding:16px 12px}#kpiStrip .kpi-lbl{font-size:9px;letter-spacing:.03em}#kpiStrip .kpi-val{font-size:24px}.lw-secondary-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.lw-secondary-kpis .kpi-item:nth-child(2n){border-right:0}.lw-secondary-kpis .kpi-item{border-bottom:1px solid #ffffff12}}
 @media(max-width:520px){#kpiStrip{grid-template-columns:repeat(2,minmax(0,1fr))}#kpiStrip .kpi-item:nth-child(2n){border-right:0}#kpiStrip .kpi-item:nth-child(-n+2){border-bottom:1px solid #ffffff12}#kpiStrip .kpi-lbl{font-size:10px}#kpiStrip .kpi-sub{font-size:10px}.lw-finance-row{gap:12px}.lw-finance-row strong{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.kpi-item{transition:none}}
+
+#kpiCompareCap:empty{display:none}
+.mrow[hidden],.mc[hidden]{display:none}

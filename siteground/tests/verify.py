@@ -1,4 +1,4 @@
-import pathlib,sys,unittest,json
+import pathlib,sys,unittest,json,subprocess
 from unittest.mock import patch
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parents[1]/'deploy'))
 import verify
@@ -20,4 +20,17 @@ class Health(unittest.TestCase):
  def test_public_financial_data_fails_health_check(self):
   with patch.object(verify,'get',return_value=(200,{'X-LumeWorks-Revision':'new'},b'name="password"<title>LumeWorks</title>')):
    with self.assertRaises(AssertionError):verify.verify('new')
+class Transport(unittest.TestCase):
+ def test_timeout_retried_once_without_altering_the_response(self):
+  result=(401,{},b'authentication required')
+  with patch.object(verify,'_get_once',side_effect=[subprocess.CalledProcessError(28,['curl']),result]) as call,patch.object(verify.time,'sleep'):
+   self.assertEqual(verify.get('/data/meta.json'),result);self.assertEqual(call.call_count,2)
+ def test_certificate_failure_is_never_retried_or_bypassed(self):
+  with patch.object(verify,'_get_once',side_effect=subprocess.CalledProcessError(60,['curl'])) as call,patch.object(verify.time,'sleep'):
+   with self.assertRaises(subprocess.CalledProcessError):verify.get('/login')
+   self.assertEqual(call.call_count,1)
+ def test_persistent_timeout_remains_a_failure(self):
+  with patch.object(verify,'_get_once',side_effect=subprocess.CalledProcessError(28,['curl'])) as call,patch.object(verify.time,'sleep'):
+   with self.assertRaises(subprocess.CalledProcessError):verify.get('/login')
+   self.assertEqual(call.call_count,2)
 if __name__=='__main__':unittest.main(verbosity=2)

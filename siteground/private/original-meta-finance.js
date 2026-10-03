@@ -61,6 +61,14 @@ function lwPaintFinance(){
   tile('net','Netto resultaat',filtered?'—':lwMoney(v.net),filtered?'bekijk het volledige account':m && !m.returnReserve.available?'incl. Daan · retourbegroting niet beschikbaar':'na alle kosten · excl. btw');
   const attribution=document.querySelector('[data-kpi="attr"]');if(attribution){attribution.querySelector('.kpi-lbl').textContent='Meta-attributie';attribution.querySelector('.kpi-sub').textContent='platformclaim · kan overlappen';}
   lwArrangeKpis();
+  const beRow=document.getElementById('mBe')?.closest('.mrow');
+  const bonusCell=document.getElementById('bonusAmt')?.closest('.mc');
+  const extraRow=document.getElementById('mSpend')?.closest('.mrow');
+  if(beRow && bonusCell)beRow.append(bonusCell);
+  const repeatedRoas=document.getElementById('mRoas')?.closest('.mc');if(repeatedRoas)repeatedRoas.hidden=true;
+  if(extraRow)extraRow.hidden=true;
+  for(const badge of document.querySelectorAll('.capi-badge'))if(badge.textContent.startsWith('Tracking v.a.'))badge.remove();
+
   const marginCard=document.querySelector('[data-kpi="profitMargin"]');
   if(marginCard && !filtered && m?.profitMargin!=null && m.profitMargin>=0 && m.profitMargin<SCALE_T*100){marginCard.classList.remove('good');marginCard.classList.add('warn');}
   const headline=document.getElementById('kpiHeadline');
@@ -94,14 +102,18 @@ function lwPaintFinance(){
   const find=key=>baseRows.find(r=>r.key===key)?.value;
   const add=(a,b)=>a==null||b==null?null:a+b;
   const combinedReturns=add(find('returns'),reserve.available?find('returnReserve'):0);
-  const rows=baseRows.filter(r=>!['returnReserve','daanBonus'].includes(r.key)).map(r=>r.key==='returns'?{...r,label:'Retourkosten',value:combinedReturns}:r.key==='daanFixed'?{...r,label:'Daan · vergoeding',value:add(r.value,find('daanBonus'))}:r);
+  const rows=baseRows.filter(r=>!['returnReserve','daanBonus'].includes(r.key)).map(r=>r.key==='returns'?{...r,label:'Retourkosten',value:combinedReturns}:r.key==='daanFixed'?{...r,label:'Daan · vergoeding',value:add(r.value,find('daanBonus'))}:r.key==='source_adjustment'?{...r,label:'Verschil kostprijssheet · raming'}:r);
   const percentage=(value,kind)=>kind==='total'?(m.profitMargin==null?'—':m.profitMargin.toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'):value==null||!(m.revenue>0)?'—':((kind==='total'?value:Math.abs(value))/m.revenue*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
   const compensationOpen=details.querySelector('[data-daan-breakdown]')?.open;
   const compensation='<div class="lw-daan-breakdown"><div class="lw-finance-row"><span>Vaste vergoeding</span><strong>'+lwExactMoney(m.management.fixed)+'</strong></div><div class="lw-finance-row"><span>Bonus in deze selectie</span><strong>'+lwExactMoney(m.management.bonus)+'</strong></div><p class="lw-finance-note">Een negatieve dagbijdrage verlaagt de opgebouwde bonus. De bonus over het contractblok wordt nooit negatief; de vaste vergoeding blijft behouden.</p><div class="table-wrap"><table><thead><tr><th>Dag</th><th>Vast</th><th>Bonusbijdrage</th><th>Blokcorrectie</th><th>Totaal</th></tr></thead><tbody>'+m.management.daily.map(r=>'<tr><td>'+r.d.slice(8,10)+'-'+r.d.slice(5,7)+'</td><td>'+lwExactMoney(r.fixed)+'</td><td>'+lwExactMoney(r.contribution)+'</td><td>'+lwExactMoney(r.adjustment)+'</td><td>'+lwExactMoney(r.total)+'</td></tr>').join('')+'</tbody></table></div></div>';
   const returnsOpen=details.querySelector('[data-return-breakdown]')?.open;
   const returnBackground='<div class="lw-daan-breakdown"><div class="lw-finance-row"><span>Werkelijke retourafhandeling · toegerekend</span><strong>'+lwMoney(-find('returns'))+'</strong></div>'+(reserve.available?'<div class="lw-finance-row"><span>Nog verwachte retouromzet · excl. btw</span><strong>'+lwMoney(reserve.refundExcl)+'</strong></div><div class="lw-finance-row"><span>Nog verwachte afhandeling</span><strong>'+lwMoney(reserve.handling)+'</strong></div><div class="lw-finance-row"><span>Correctie overige kosten</span><strong>− '+lwMoney(reserve.overheadCredit)+'</strong></div><p class="lw-finance-note">Totaal begroting = verwachte retouromzet + afhandeling − correctie overige kosten. Historische retourorders: '+(reserve.rate*100).toLocaleString('nl-NL',{maximumFractionDigits:2})+'% op basis van '+reserve.matureOrders+' afgeronde winkelorders. Mediaan '+reserve.median+' dagen tot retour; begrotingshorizon '+reserve.horizon+' dagen. Dit winkelgemiddelde wordt bij nieuwe gegevens opnieuw berekend.</p>':'<p class="lw-finance-note">Retourbegroting niet beschikbaar: '+lwEscapeAttr(reserve.reason||'onvoldoende gegevens')+'</p>')+'<p class="lw-finance-note">'+lwMoney(lwFinancialCosts.returns?.cost_per_return??20)+' afhandeling per ontvangen retourpakket; annuleringen tellen niet als retourpakket. Werkelijke terugbetalingen staan al bij omzetcorrecties en worden hier niet opnieuw afgetrokken. Werkelijke retouren vervangen de begroting automatisch. Zonder betrouwbare orderkoppeling krijgt Meta '+(w?.meta==null?'een onbekend aandeel':(w.meta*100).toLocaleString('nl-NL',{maximumFractionDigits:1})+'%')+' van de niet-influencerretouren, op basis van aankopen; Google telt alleen non-branded mee.</p></div>';
   const lines=rows.map(r=>{
-   const content='<span>'+lwEscapeAttr(r.label)+(['daanFixed','returns'].includes(r.key)?' <span aria-hidden="true">▾</span>':'')+'</span><strong>'+lwMoney(r.value)+' <span style="font-weight:400;color:#93a2b8">— '+percentage(r.value,r.kind)+'</span></strong>';
+   const content='<span>'+lwEscapeAttr(r.label)+(['daanFixed','returns','source_adjustment'].includes(r.key)?' <span aria-hidden="true">▾</span>':'')+'</span><strong>'+lwMoney(r.value)+' <span style="font-weight:400;color:#93a2b8">— '+percentage(r.value,r.kind)+'</span></strong>';
+   if(r.key==='source_adjustment'){
+    const gaps=Object.entries(lwFinancialCosts.item_components||{}).filter(([,parts])=>parts.source_adjustment!==0).map(([name,parts])=>lwEscapeAttr(name)+': '+lwExactMoney(parts.source_adjustment)+' per stuk').join('; ');
+    return '<details data-cost-breakdown><summary class="lw-finance-row" data-finance-key="source_adjustment">'+content+'</summary><p class="lw-finance-note">De totale kostprijs in de sheet wijkt af van de uitgesplitste onderdelen. Het verschil is meegenomen om de winst niet te hoog te tonen. De oorzaak moet nog in de sheet worden bevestigd. '+gaps+'.</p></details>';
+   }
    if(r.key==='returns')return '<details data-return-breakdown'+(returnsOpen?' open':'')+'><summary class="lw-finance-row" data-finance-key="returns">'+content+'</summary>'+returnBackground+'</details>';
    return r.key==='daanFixed'?'<details data-daan-breakdown'+(compensationOpen?' open':'')+'><summary class="lw-finance-row" data-finance-key="daanFixed">'+content+'</summary>'+compensation+'</details>':'<div class="lw-finance-row '+r.kind+'" data-finance-key="'+r.key+'">'+content+'</div>';
   }).join('');

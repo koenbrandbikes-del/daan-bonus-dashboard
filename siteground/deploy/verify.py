@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys,time,subprocess,tempfile,pathlib,email,json,re,html
 origin='https://cijfers.lumeworks.nl'
-def get(path):
+def _get_once(path):
     # Use the standard curl HTTPS client; SiteGround rejects urllib requests.
     # Certificate/hostname validation remains enabled, without cookies or credentials.
     with tempfile.TemporaryDirectory() as work:
@@ -9,6 +9,15 @@ def get(path):
         result=subprocess.run(['curl','--silent','--show-error','--location','--max-redirs','3','--connect-timeout','15','--max-time','30','--dump-header',str(headers),'--output',str(body),'--write-out','%{http_code}',origin+path],check=True,capture_output=True,text=True)
         blocks=headers.read_text().strip().split('\n\n');last=blocks[-1].split('\n',1)[1]
         return int(result.stdout),email.message_from_string(last),body.read_bytes()
+def get(path):
+    # One bounded retry for transport faults only. TLS failures and incorrect
+    # status/protection/revision responses never become a successful check.
+    for attempt in range(2):
+        try:return _get_once(path)
+        except subprocess.CalledProcessError as error:
+            if attempt or error.returncode not in (5,6,7,28,52,56):raise
+            print('Transport fault during live verification; one retry.',flush=True)
+            time.sleep(2)
 def verify(revision):
     # Give the newly activated code a short, bounded interval to become visible.
     # Never accept an old revision, an error page or an unprotected data route.
