@@ -10,6 +10,10 @@ try {
     throw Error('Retourregistratie is onvolledig');
 } catch(error){lwFinancialError='Financiële onderbouwing kon niet worden geladen. Vernieuw de pagina.';}
 const lwMoney=v=>v==null?'—':eur(v);
+function lwTargetRoas(be,pct){
+ const rate=lwFinancialCosts?.meta_management?.bonus_rate??0,vat=1+(lwFinancialCosts?.assumed_vat??0);
+ return be>0 && 1/be-rate-pct/vat>0 && 1-rate*be>0?(1-rate*be)/(1/be-rate-pct/vat):null;
+}
 function lwFinancial(from,to){
   if(lwFinancialError)return null;
   try{return lwFinanceEngine.compute(lwFinancialData,lwFinancialCosts,from,to,'meta');}
@@ -55,9 +59,7 @@ function lwPaintFinance(){
   document.getElementById('roasDelta').textContent='Na werkelijke en begrote retouren';
   document.getElementById('mRoas').textContent=v.roas==null?'—':x2(v.roas);
   document.getElementById('mRoasSub').textContent='na retourcorrecties';
-  const bonusRate=lwFinancialCosts?.meta_management?.bonus_rate??0;
-  const target=pct=>be!=null && 1/be-bonusRate-pct/(1+lwFinancialCosts.assumed_vat)>0 && 1-bonusRate*be>0?
-    (1-bonusRate*be)/(1/be-bonusRate-pct/(1+lwFinancialCosts.assumed_vat)):null;
+  const target=pct=>lwTargetRoas(be,pct);
   document.getElementById('mScale').textContent=target(SCALE_T)==null?'—':x2(target(SCALE_T));
   if(be!=null && target(SCALE_H)!=null && v.roas!=null){CX.be=be;renderGauge(be,target(SCALE_T),target(SCALE_H),v.roas,m.count);updateSim();}
   else document.getElementById('gaugeOuter').innerHTML='<p class="lw-finance-note">Geen haalbare break-even-ROAS bij deze kostenbasis.</p>';
@@ -80,6 +82,7 @@ function lwPaintFinance(){
     '<p class="lw-finance-note">'+lwEscapeAttr(model||'Retourbegroting niet beschikbaar')+(reserve.stale?' Retourbron is ouder dan 48 uur; begroting is niet verder afgebouwd.':'')+'</p>'+
     '<p class="lw-finance-note">'+(w?'Meta krijgt '+(w.meta*100).toFixed(1)+'% van de niet-influencercorrecties op basis van aankopen. Google telt alleen non-branded mee.':'Kanaaltoewijzing ontbreekt.')+' €'+(lwFinancialCosts.returns?.cost_per_return??20)+' per ontvangen retourpakket; annuleringen tellen niet als retourpakket. Werkelijke retouren vervangen de begroting automatisch.</p></div>';
   document.getElementById('beSummary').innerHTML='<div class="be-stat"><div class="be-lbl">Operationele BEROAS</div><div class="be-val">'+(be==null?'—':x2(be))+'</div></div><p class="lw-finance-note">Inclusief retouren, begroting en vaste vergoeding. Zie de volledige kostenopbouw hierboven. De producttabel hieronder toont alleen de kostprijssheet.</p>';
+  renderKpiChart();
 }
 const lwOriginalKpiBar=renderKpiBar;
 renderKpiBar=function(...args){lwOriginalKpiBar(...args);lwPaintFinance();};

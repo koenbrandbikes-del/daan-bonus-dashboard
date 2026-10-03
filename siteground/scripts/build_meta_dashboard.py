@@ -10,7 +10,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 def dashboard():
     source = (ROOT / 'index.html').read_text()
     # Only the secured Meta build shares the finance/return engine with Cijfers.
-    # The public original and contractual bonus calculation remain unchanged.
+    # The public original stays unchanged; the private cost basis is dynamic.
+    source = source.replace('1/(1/CX.be-SCALE_T)', 'lwTargetRoas(CX.be,SCALE_T)').replace('1/(1/CX.be-SCALE_H)', 'lwTargetRoas(CX.be,SCALE_H)')
     engine = []
     for path in ['assets/blended/return-reserve.js', 'assets/blended/metrics.js']:
         part = (ROOT / path).read_text()
