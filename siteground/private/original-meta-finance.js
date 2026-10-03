@@ -61,6 +61,7 @@ function lwPaintFinance(){
   tile('net','Netto resultaat',filtered?'—':lwMoney(v.net),filtered?'bekijk het volledige account':m && !m.returnReserve.available?'incl. Daan · retourbegroting niet beschikbaar':'na alle kosten · excl. btw');
   const attribution=document.querySelector('[data-kpi="attr"]');if(attribution){attribution.querySelector('.kpi-lbl').textContent='Meta-attributie';attribution.querySelector('.kpi-sub').textContent='platformclaim · kan overlappen';}
   lwArrangeKpis();
+  lwPaintDaanMonth();
   const beRow=document.getElementById('mBe')?.closest('.mrow');
   const bonusCell=document.getElementById('bonusAmt')?.closest('.mc');
   const extraRow=document.getElementById('mSpend')?.closest('.mrow');
@@ -183,3 +184,44 @@ updateSim=function(){
  const note=document.getElementById('lwSimBasis');
  if(note)note.textContent=scenario.available?'Scenario, geen afrekening. Kostenmix '+fmtS(referenceFrom)+'–'+fmtS(SNAP)+', inclusief retourbegroting. Daan: '+lwExactMoney(scenario.fixed)+' vast + '+lwExactMoney(scenario.bonus)+' bonus. De vaste vergoeding volgt kalenderdagen.':'Scenario niet beschikbaar: '+scenario.reason;
 };
+
+
+// The calendar-month view is independent of the analysis period and filters.
+// Allocation and contractual bonus floors remain owned by the shared engine.
+function lwPaintDaanMonth(){
+ let card=document.getElementById('lwDaanMonth');
+ if(!card){
+  card=document.createElement('section');card.id='lwDaanMonth';card.className='lw-daan-month';card.setAttribute('aria-labelledby','lwDaanMonthTitle');
+  card.innerHTML='<div class="lw-month-heading"><h2 id="lwDaanMonthTitle">Jouw maandvergoeding</h2><span id="lwDaanMonthDate"></span></div><div class="lw-month-values"><div><span>Basis per maand</span><strong id="lwMonthFixed">—</strong></div><div class="lw-month-bonus"><span>Bonus opgebouwd</span><strong id="lwMonthBonus">—</strong></div><div><span>Basis + bonus</span><strong id="lwMonthTotal">—</strong></div></div><p id="lwMonthNote" class="lw-finance-note"></p><details class="lw-month-plan"><summary>Wat levert meer omzet op? <span aria-hidden="true">⌄</span></summary><div class="lw-month-plan-body"><label for="lwRevenueSlider">Verwachte netto maandomzet <output id="lwRevenueValue" for="lwRevenueSlider">—</output></label><input id="lwRevenueSlider" type="range" min="0" max="300" step="5" value="100" aria-describedby="lwGrowthBasis"><p id="lwGrowthPace" class="lw-finance-note"></p><div class="lw-month-values"><div><span>Verwachte maandbonus</span><strong id="lwGrowthBonus">—</strong></div><div><span>Totale vergoeding</span><strong id="lwGrowthTotal">—</strong></div><div><span>Netto winst LumeWorks</span><strong id="lwGrowthProfit">—</strong></div></div><p id="lwGrowthFixed" class="lw-finance-note"></p><p id="lwGrowthBasis" class="lw-finance-note"></p></div></details>';
+  document.getElementById('lwKpiBasis').after(card);
+  card.querySelector('input').addEventListener('input',lwPaintDaanScenario);
+ }
+ const from=SNAP.slice(0,7)+'-01';
+ const m=lwFinancial(from,SNAP),fixed=lwFinancialCosts?.meta_management?.monthly_fixed;
+ const bonus=m?.management.bonus,total=bonus==null||!Number.isFinite(fixed)?null:fixed+bonus;
+ document.getElementById('lwDaanMonthDate').textContent=new Date(SNAP+'T12:00:00Z').toLocaleDateString('nl-NL',{month:'long',year:'numeric',timeZone:'Europe/Amsterdam'})+' · t/m '+fmtS(SNAP);
+ document.getElementById('lwMonthFixed').textContent=lwFinancialError?'—':lwMoney(fixed);
+ document.getElementById('lwMonthBonus').textContent=lwMoney(bonus);
+ document.getElementById('lwMonthTotal').textContent=lwMoney(total);
+ document.getElementById('lwMonthNote').textContent=m?'Voorlopig, geen uitbetaling. De basis geldt voor de hele maand; de bonus is de bijdrage van '+fmtS(from)+'–'+fmtS(SNAP)+'. Retouren en verliesdagen kunnen de bonus wijzigen. De bestaande afrekening per contractblok blijft gelden.':'Maandvergoeding niet beschikbaar: controleer de financiële gegevens.';
+ lwPaintDaanScenario();
+}
+function lwPaintDaanScenario(){
+ const from=SNAP.slice(0,7)+'-01',to=new Date(Date.UTC(Number(SNAP.slice(0,4)),Number(SNAP.slice(5,7)),0)).toISOString().slice(0,10);
+ const elapsed=Number(SNAP.slice(8,10)),days=Number(to.slice(8,10));
+ const m=lwFinancial(from,SNAP),scale=Number(document.getElementById('lwRevenueSlider').value)/100;
+ const referenceFrom=new Date(Math.max(Date.parse('2026-08-05'),Date.parse(SNAP)-29*864e5)).toISOString().slice(0,10);
+ const spend=m?.channels.meta.mediaSpend,roas=m?.roas;
+ const scenario=lwFinancialError?{available:false,reason:'Financiële gegevens ontbreken'}:lwFinanceEngine.simulate({from,to,dailySpend:spend/elapsed*scale,roas,referenceFrom,referenceTo:SNAP});
+ const put=(id,v)=>document.getElementById(id).textContent=v;
+ put('lwRevenueValue',scenario.available?lwMoney(scenario.revenue):'—');
+ put('lwGrowthBonus',scenario.available?lwMoney(scenario.bonus):'—');
+ put('lwGrowthTotal',scenario.available?lwMoney(scenario.totalDaan):'—');
+ put('lwGrowthProfit',scenario.available?lwMoney(scenario.result):'—');
+ document.getElementById('lwGrowthProfit').className=scenario.available?(scenario.result<0?'lw-negative':'lw-positive'):'';
+ const pace=scale===1?'Huidig maandtempo':scale>1?'+'+Math.round((scale-1)*100)+'% omzet ten opzichte van huidig maandtempo':Math.round(scale*100)+'% van huidig maandtempo';
+ put('lwGrowthPace',pace+' · '+days+' kalenderdagen');
+ put('lwGrowthFixed',scenario.available?'Vaste basis Daan: '+lwMoney(scenario.fixed)+' · '+(scenario.revenue>0?(scenario.fixed/(scenario.revenue/(1+lwFinancialCosts.assumed_vat))*100).toLocaleString('nl-NL',{maximumFractionDigits:1})+'% van omzet excl. btw':'geen omzet')+' · advertenties '+lwMoney(scenario.spend):'');
+ put('lwGrowthBasis',scenario.available?'Scenario voor de hele maand, geen opgebouwde bonus. Netto omzet incl. btw, winst excl. btw. Advertentiebudget groeit mee bij dezelfde netto ROAS ('+x2(roas)+'). Productkosten en retouren volgen de kostenmix van de afgelopen 30 dagen; de vaste basis blijft gelijk. De huidige dag kan nog wijzigen.':'Scenario niet beschikbaar: '+scenario.reason);
+ document.getElementById('lwRevenueSlider').setAttribute('aria-valuetext',scenario.available?lwMoney(scenario.revenue)+' netto maandomzet; '+lwMoney(scenario.bonus)+' verwachte bonus':'Scenario niet beschikbaar');
+}

@@ -97,11 +97,32 @@ test('secured financial values share audited costs with a dynamic bonus, preserv
    for(const p of points)assert.ok(Math.abs(p.net-byDate.get(p.key).result)<1e-7);
   };
   compare();
+  const doc=secured.window.document,snap=data.meta.snap,monthFrom=snap.slice(0,7)+'-01';
+  const month=compute(data,costs,monthFrom,snap,'meta');
+  const cash=v=>'€'+v.toLocaleString('nl-NL',{maximumFractionDigits:0});
+  assert.equal(doc.getElementById('lwMonthFixed').textContent,cash(costs.meta_management.monthly_fixed));
+  assert.equal(doc.getElementById('lwMonthBonus').textContent,cash(month.management.bonus));
+  assert.equal(doc.getElementById('lwMonthTotal').textContent,cash(costs.meta_management.monthly_fixed+month.management.bonus));
+  const savedMonth=doc.getElementById('lwMonthBonus').textContent;
+  const growth=doc.getElementById('lwRevenueSlider');
+  const to=new Date(Date.UTC(Number(snap.slice(0,4)),Number(snap.slice(5,7)),0)).toISOString().slice(0,10);
+  const referenceFrom=new Date(Math.max(Date.parse('2026-08-05'),Date.parse(snap)-29*864e5)).toISOString().slice(0,10);
+  for(const scale of [0,100,200,300]){
+   growth.value=String(scale);growth.dispatchEvent(new secured.window.Event('input',{bubbles:true}));
+   const scenario=simulateMetaScenario(compute,managementCosts,data,costs,{from:monthFrom,to,dailySpend:month.channels.meta.mediaSpend/Number(snap.slice(8,10))*scale/100,roas:month.roas,referenceFrom,referenceTo:snap});
+   assert.equal(doc.getElementById('lwGrowthBonus').textContent,cash(scenario.bonus));
+   assert.equal(doc.getElementById('lwGrowthProfit').textContent,cash(scenario.result));
+   assert.ok(Math.abs(scenario.fixed-costs.meta_management.monthly_fixed)<1e-7);
+   assert.equal(doc.getElementById('lwMonthBonus').textContent,savedMonth);
+   if(scale===0){assert.equal(scenario.bonus,0);assert.equal(scenario.result,-scenario.fixed);}
+  }
+  growth.value='100';growth.dispatchEvent(new secured.window.Event('input',{bubbles:true}));
   secured.window.document.querySelector('[data-p="vandaag"]').click();
   original.window.document.querySelector('[data-p="vandaag"]').click();
   await new Promise(resolve=>setTimeout(resolve,0));
   assert.deepEqual(values(secured),values(original));
   compare();
+  assert.equal(doc.getElementById('lwMonthBonus').textContent,savedMonth);
   const margin=secured.window.document.querySelector('[data-kpi="profitMargin"]');
   margin.dispatchEvent(new secured.window.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
   assert.equal(margin.getAttribute('aria-pressed'),'true');
